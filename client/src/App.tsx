@@ -177,15 +177,19 @@ const recognitionPracticeQuestions: Question[] = [
 ];
 
 const valuePracticeQuestions: Question[] = [
+  q("val-count-0", "numbers", { en: "The basket is empty. How many bananas?", ms: "Bakul kosong. Ada berapa pisang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
   q("val-count-1", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "count", emoji: "🍌", count: 1 }),
-  q("val-count-3", "numbers", { en: "How many mangoes are there?", ms: "Ada berapa mangga?" }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🥭", count: 3 }),
-  q("val-count-5", "numbers", { en: "How many leaves are there?", ms: "Ada berapa daun?" }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🍃", count: 5 }),
-  q("val-count-0", "numbers", { en: "The basket is empty. How many coconuts?", ms: "Bakul kosong. Ada berapa kelapa?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🥥", count: 0, container: "basket" }),
-  q("val-group-4", "numbers", { en: "Which group shows 4?", ms: "Kumpulan mana tunjuk 4?" }, [2, 4, 6], 4, { kind: "groupChoices", emoji: "🌸", groups: [2, 4, 6] }),
-  q("val-group-7", "numbers", { en: "Which group shows 7?", ms: "Kumpulan mana tunjuk 7?" }, [5, 7, 9], 7, { kind: "groupChoices", emoji: "🪨", groups: [5, 7, 9] }),
-  q("val-group-9", "numbers", { en: "Which group shows 9?", ms: "Kumpulan mana tunjuk 9?" }, [6, 8, 9], 9, { kind: "groupChoices", emoji: "🐚", groups: [6, 8, 9] }),
+  q("val-count-2", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "count", emoji: "🍌", count: 2 }),
+  q("val-count-3", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍌", count: 3 }),
+  q("val-count-4", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "count", emoji: "🍌", count: 4 }),
+  q("val-count-5", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🍌", count: 5 }),
+  q("val-count-6", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "count", emoji: "🍌", count: 6 }),
+  q("val-count-7", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "count", emoji: "🍌", count: 7 }),
+  q("val-count-8", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [6, 7, 8, 9], 8, { kind: "count", emoji: "🍌", count: 8 }),
+  q("val-count-9", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🍌", count: 9 }),
+  q("val-group-4", "numbers", { en: "Which banana group shows 4?", ms: "Kumpulan pisang mana tunjuk 4?" }, [2, 4, 6], 4, { kind: "groupChoices", emoji: "🍌", groups: [2, 4, 6] }),
+  q("val-group-7", "numbers", { en: "Which banana group shows 7?", ms: "Kumpulan pisang mana tunjuk 7?" }, [5, 7, 9], 7, { kind: "groupChoices", emoji: "🍌", groups: [5, 7, 9] }),
 ];
-
 const sequencingPracticeQuestions: Question[] = [
   q("seq-full-3", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [2, 3, 4, 5], 3, { kind: "sequence", nums: [0, 1, 2, "?", 4, 5, 6, 7, 8, 9] }),
   q("seq-full-6", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [4, 5, 6, 7], 6, { kind: "sequence", nums: [0, 1, 2, 3, 4, 5, "?", 7, 8, 9] }),
@@ -201,8 +205,8 @@ const sequencingPracticeQuestions: Question[] = [
 const numberPracticeQuestions: Question[] = [
   q("lp-n-word-1", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [1, 6, 7, 9], 1, { kind: "number", value: 1 }),
   q("lp-n-word-8", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [3, 5, 8, 0], 8, { kind: "number", value: 8 }),
-  q("lp-n-count-3", "numbers", { en: "Count the bananas.", ms: "Kira pisang." }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍌", count: 3 }),
-q("lp-n-count-0", "numbers", { en: "The basket is empty. How many bananas?", ms: "Bakul kosong. Ada berapa pisang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
+  q("lp-n-count-3", "numbers", { en: "Count the bananas.", ms: "Kira pisang." }, [1, 2, 3, 4], 3, { kind: "count", emoji: "ðŸŒ", count: 3 }),
+q("lp-n-count-0", "numbers", { en: "The basket is empty. How many bananas?", ms: "Bakul kosong. Ada berapa pisang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "ðŸŒ", count: 0, container: "basket" }),
   q("lp-n-after-4", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [3, 4, 5, 6], 5, { kind: "sequence", nums: [2, 3, 4, "?"] }),
   q("lp-n-before-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 6, { kind: "sequence", nums: [5, "?", 7, 8] }),
   q("lp-n-missing-2", "numbers", { en: "What number is missing on the number line?", ms: "Nombor apa yang hilang pada garis nombor?" }, [1, 2, 3, 4], 2, { kind: "sequence", nums: [0, 1, "?", 3] }),
@@ -212,11 +216,11 @@ q("lp-n-count-0", "numbers", { en: "The basket is empty. How many bananas?", ms:
 ];
 
 const numberQuestions: Question[] = [
-  q("n-count-bananas-6", "numbers", { en: "Count the bananas.", ms: "Kira pisang." }, [4, 5, 6, 7], 6, { kind: "count", emoji: "🍌", count: 6 }),
-  q("n-count-stars-4", "numbers", { en: "Count the stars.", ms: "Kira bintang." }, [2, 3, 4, 5], 4, { kind: "count", emoji: "⭐", count: 4 }),
-  q("n-count-shells-9", "numbers", { en: "Count the shells.", ms: "Kira cangkerang." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🐚", count: 9 }),
-  q("n-count-apples-2", "numbers", { en: "Count the apples.", ms: "Kira epal." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🍎", count: 2 }),
-  q("n-count-empty", "numbers", { en: "There are no flowers. How many?", ms: "Tiada bunga. Berapa?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🌸", count: 0 }),
+  q("n-count-bananas-6", "numbers", { en: "Count the bananas.", ms: "Kira pisang." }, [4, 5, 6, 7], 6, { kind: "count", emoji: "ðŸŒ", count: 6 }),
+  q("n-count-stars-4", "numbers", { en: "Count the stars.", ms: "Kira bintang." }, [2, 3, 4, 5], 4, { kind: "count", emoji: "â­", count: 4 }),
+  q("n-count-shells-9", "numbers", { en: "Count the shells.", ms: "Kira cangkerang." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "ðŸš", count: 9 }),
+  q("n-count-apples-2", "numbers", { en: "Count the apples.", ms: "Kira epal." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "ðŸŽ", count: 2 }),
+  q("n-count-empty", "numbers", { en: "There are no flowers. How many?", ms: "Tiada bunga. Berapa?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "ðŸŒ¸", count: 0 }),
   q("n-word-0", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [0, 2, 4, 6], 0, { kind: "number", value: 0 }),
   q("n-word-3", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [3, 5, 7, 9], 3, { kind: "number", value: 3 }),
   q("n-word-5", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [2, 5, 6, 8], 5, { kind: "number", value: 5 }),
@@ -240,106 +244,106 @@ const numberQuestions: Question[] = [
 ];
 
 const operationQuestions: Question[] = [
-  q("o-add-1-2", "operations", { en: "Chrys has 1 banana and finds 2 more. How many now?", ms: "Chrys ada 1 pisang dan jumpa 2 lagi. Jadi berapa?" }, [2, 3, 4, 5], 3, { kind: "add", a: 1, b: 2, emoji: "🍌" }),
-  q("o-add-2-5", "operations", { en: "2 bananas join 5 more bananas. How many bananas?", ms: "2 pisang bergabung dengan 5 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 2, b: 5, emoji: "🍌" }),
-  q("o-add-3-4", "operations", { en: "3 flowers and 4 more flowers. How many flowers?", ms: "3 bunga dan 4 bunga lagi. Berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🌸" }),
-  q("o-add-6-1", "operations", { en: "Chrys has 6 bananas and gets 1 more. How many bananas?", ms: "Chrys ada 6 pisang dan dapat 1 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍌" }),
-  q("o-add-8-1", "operations", { en: "8 shells and 1 more shell. How many shells?", ms: "8 cangkerang dan 1 lagi. Berapa cangkerang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🐚" }),
-  q("o-add-9-0", "operations", { en: "9 stars and 0 more stars. How many stars?", ms: "9 bintang dan 0 bintang lagi. Berapa bintang?" }, [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "⭐" }),
-  q("o-add-4-2", "operations", { en: "4 bananas join 2 more bananas. How many bananas?", ms: "4 pisang bergabung dengan 2 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 4, b: 2, emoji: "🍌" }),
-  q("o-add-5-3", "operations", { en: "5 apples and 3 more apples. How many apples?", ms: "5 epal dan 3 epal lagi. Berapa epal?" }, [6, 7, 8, 9], 8, { kind: "add", a: 5, b: 3, emoji: "🍎" }),
-  q("o-add-7-0", "operations", { en: "7 bananas and 0 more bananas. How many bananas?", ms: "7 pisang dan 0 pisang lagi. Berapa pisang?" }, [0, 6, 7, 8], 7, { kind: "add", a: 7, b: 0, emoji: "🍌" }),
-  q("o-add-0-8", "operations", { en: "0 flowers and 8 more flowers. How many flowers?", ms: "0 bunga dan 8 bunga lagi. Berapa bunga?" }, [0, 7, 8, 9], 8, { kind: "add", a: 0, b: 8, emoji: "🌸" }),
-  q("o-add-2-6", "operations", { en: "2 stars and 6 more stars. How many stars?", ms: "2 bintang dan 6 bintang lagi. Berapa bintang?" }, [6, 7, 8, 9], 8, { kind: "add", a: 2, b: 6, emoji: "⭐" }),
-  q("o-add-4-4", "operations", { en: "4 shells and 4 more shells. How many shells?", ms: "4 cangkerang dan 4 cangkerang lagi. Berapa cangkerang?" }, [6, 7, 8, 9], 8, { kind: "add", a: 4, b: 4, emoji: "🐚" }),
-  q("o-sub-8-2", "operations", { en: "Chrys has 8 bananas. He gives away 2 bananas. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia beri 2 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "subtract", a: 8, b: 2, emoji: "🍌" }),
-  q("o-sub-9-5", "operations", { en: "There are 9 shells. You take away 5 shells. How many shells are left?", ms: "Ada 9 cangkerang. Kamu ambil 5 cangkerang. Tinggal berapa cangkerang?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 9, b: 5, emoji: "🐚" }),
-  q("o-sub-7-7", "operations", { en: "There are 7 stars. All 7 stars go away. How many stars are left?", ms: "Ada 7 bintang. Semua 7 bintang pergi. Tinggal berapa bintang?" }, [0, 1, 2, 3], 0, { kind: "subtract", a: 7, b: 7, emoji: "⭐" }),
-  q("o-sub-6-1", "operations", { en: "There are 6 bananas. You take away 1 banana. How many bananas are left?", ms: "Ada 6 pisang. Kamu ambil 1 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 5, { kind: "subtract", a: 6, b: 1, emoji: "🍌" }),
-  q("o-sub-5-3", "operations", { en: "There are 5 flowers. You take away 3 flowers. How many flowers are left?", ms: "Ada 5 bunga. Kamu ambil 3 bunga. Tinggal berapa bunga?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 5, b: 3, emoji: "🌸" }),
-  q("o-sub-4-0", "operations", { en: "There are 4 apples. You take away 0 apples. How many apples are left?", ms: "Ada 4 epal. Kamu ambil 0 epal. Tinggal berapa epal?" }, [0, 3, 4, 5], 4, { kind: "subtract", a: 4, b: 0, emoji: "🍎" }),
-  q("o-sub-9-8", "operations", { en: "There are 9 bananas. You take away 8 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 8 pisang. Tinggal berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 9, b: 8, emoji: "🍌" }),
-  q("o-sub-8-4", "operations", { en: "There are 8 shells. You take away 4 shells. How many shells are left?", ms: "Ada 8 cangkerang. Kamu ambil 4 cangkerang. Tinggal berapa cangkerang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 8, b: 4, emoji: "🐚" }),
-  q("o-sub-6-5", "operations", { en: "There are 6 stars. You take away 5 stars. How many stars are left?", ms: "Ada 6 bintang. Kamu ambil 5 bintang. Tinggal berapa bintang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 6, b: 5, emoji: "⭐" }),
-  q("o-sub-3-2", "operations", { en: "There are 3 bananas. You take away 2 bananas. How many bananas are left?", ms: "Ada 3 pisang. Kamu ambil 2 pisang. Tinggal berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 3, b: 2, emoji: "🍌" }),
-  q("o-sub-9-0", "operations", { en: "There are 9 flowers. You take away 0 flowers. How many flowers are left?", ms: "Ada 9 bunga. Kamu ambil 0 bunga. Tinggal berapa bunga?" }, [0, 7, 8, 9], 9, { kind: "subtract", a: 9, b: 0, emoji: "🌸" }),
-  q("o-sub-7-4", "operations", { en: "There are 7 apples. You take away 4 apples. How many apples are left?", ms: "Ada 7 epal. Kamu ambil 4 epal. Tinggal berapa epal?" }, [2, 3, 4, 5], 3, { kind: "subtract", a: 7, b: 4, emoji: "🍎" }),
-  q("o-sub-5-5", "operations", { en: "There are 5 bananas. You take away all 5 bananas. How many bananas are left?", ms: "Ada 5 pisang. Kamu ambil semua 5 pisang. Tinggal berapa pisang?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🍌" }),
+  q("o-add-1-2", "operations", { en: "Chrys has 1 banana and finds 2 more. How many now?", ms: "Chrys ada 1 pisang dan jumpa 2 lagi. Jadi berapa?" }, [2, 3, 4, 5], 3, { kind: "add", a: 1, b: 2, emoji: "ðŸŒ" }),
+  q("o-add-2-5", "operations", { en: "2 bananas join 5 more bananas. How many bananas?", ms: "2 pisang bergabung dengan 5 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 2, b: 5, emoji: "ðŸŒ" }),
+  q("o-add-3-4", "operations", { en: "3 flowers and 4 more flowers. How many flowers?", ms: "3 bunga dan 4 bunga lagi. Berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "ðŸŒ¸" }),
+  q("o-add-6-1", "operations", { en: "Chrys has 6 bananas and gets 1 more. How many bananas?", ms: "Chrys ada 6 pisang dan dapat 1 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "ðŸŒ" }),
+  q("o-add-8-1", "operations", { en: "8 shells and 1 more shell. How many shells?", ms: "8 cangkerang dan 1 lagi. Berapa cangkerang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "ðŸš" }),
+  q("o-add-9-0", "operations", { en: "9 stars and 0 more stars. How many stars?", ms: "9 bintang dan 0 bintang lagi. Berapa bintang?" }, [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "â­" }),
+  q("o-add-4-2", "operations", { en: "4 bananas join 2 more bananas. How many bananas?", ms: "4 pisang bergabung dengan 2 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 4, b: 2, emoji: "ðŸŒ" }),
+  q("o-add-5-3", "operations", { en: "5 apples and 3 more apples. How many apples?", ms: "5 epal dan 3 epal lagi. Berapa epal?" }, [6, 7, 8, 9], 8, { kind: "add", a: 5, b: 3, emoji: "ðŸŽ" }),
+  q("o-add-7-0", "operations", { en: "7 bananas and 0 more bananas. How many bananas?", ms: "7 pisang dan 0 pisang lagi. Berapa pisang?" }, [0, 6, 7, 8], 7, { kind: "add", a: 7, b: 0, emoji: "ðŸŒ" }),
+  q("o-add-0-8", "operations", { en: "0 flowers and 8 more flowers. How many flowers?", ms: "0 bunga dan 8 bunga lagi. Berapa bunga?" }, [0, 7, 8, 9], 8, { kind: "add", a: 0, b: 8, emoji: "ðŸŒ¸" }),
+  q("o-add-2-6", "operations", { en: "2 stars and 6 more stars. How many stars?", ms: "2 bintang dan 6 bintang lagi. Berapa bintang?" }, [6, 7, 8, 9], 8, { kind: "add", a: 2, b: 6, emoji: "â­" }),
+  q("o-add-4-4", "operations", { en: "4 shells and 4 more shells. How many shells?", ms: "4 cangkerang dan 4 cangkerang lagi. Berapa cangkerang?" }, [6, 7, 8, 9], 8, { kind: "add", a: 4, b: 4, emoji: "ðŸš" }),
+  q("o-sub-8-2", "operations", { en: "Chrys has 8 bananas. He gives away 2 bananas. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia beri 2 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "subtract", a: 8, b: 2, emoji: "ðŸŒ" }),
+  q("o-sub-9-5", "operations", { en: "There are 9 shells. You take away 5 shells. How many shells are left?", ms: "Ada 9 cangkerang. Kamu ambil 5 cangkerang. Tinggal berapa cangkerang?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 9, b: 5, emoji: "ðŸš" }),
+  q("o-sub-7-7", "operations", { en: "There are 7 stars. All 7 stars go away. How many stars are left?", ms: "Ada 7 bintang. Semua 7 bintang pergi. Tinggal berapa bintang?" }, [0, 1, 2, 3], 0, { kind: "subtract", a: 7, b: 7, emoji: "â­" }),
+  q("o-sub-6-1", "operations", { en: "There are 6 bananas. You take away 1 banana. How many bananas are left?", ms: "Ada 6 pisang. Kamu ambil 1 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 5, { kind: "subtract", a: 6, b: 1, emoji: "ðŸŒ" }),
+  q("o-sub-5-3", "operations", { en: "There are 5 flowers. You take away 3 flowers. How many flowers are left?", ms: "Ada 5 bunga. Kamu ambil 3 bunga. Tinggal berapa bunga?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 5, b: 3, emoji: "ðŸŒ¸" }),
+  q("o-sub-4-0", "operations", { en: "There are 4 apples. You take away 0 apples. How many apples are left?", ms: "Ada 4 epal. Kamu ambil 0 epal. Tinggal berapa epal?" }, [0, 3, 4, 5], 4, { kind: "subtract", a: 4, b: 0, emoji: "ðŸŽ" }),
+  q("o-sub-9-8", "operations", { en: "There are 9 bananas. You take away 8 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 8 pisang. Tinggal berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 9, b: 8, emoji: "ðŸŒ" }),
+  q("o-sub-8-4", "operations", { en: "There are 8 shells. You take away 4 shells. How many shells are left?", ms: "Ada 8 cangkerang. Kamu ambil 4 cangkerang. Tinggal berapa cangkerang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 8, b: 4, emoji: "ðŸš" }),
+  q("o-sub-6-5", "operations", { en: "There are 6 stars. You take away 5 stars. How many stars are left?", ms: "Ada 6 bintang. Kamu ambil 5 bintang. Tinggal berapa bintang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 6, b: 5, emoji: "â­" }),
+  q("o-sub-3-2", "operations", { en: "There are 3 bananas. You take away 2 bananas. How many bananas are left?", ms: "Ada 3 pisang. Kamu ambil 2 pisang. Tinggal berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 3, b: 2, emoji: "ðŸŒ" }),
+  q("o-sub-9-0", "operations", { en: "There are 9 flowers. You take away 0 flowers. How many flowers are left?", ms: "Ada 9 bunga. Kamu ambil 0 bunga. Tinggal berapa bunga?" }, [0, 7, 8, 9], 9, { kind: "subtract", a: 9, b: 0, emoji: "ðŸŒ¸" }),
+  q("o-sub-7-4", "operations", { en: "There are 7 apples. You take away 4 apples. How many apples are left?", ms: "Ada 7 epal. Kamu ambil 4 epal. Tinggal berapa epal?" }, [2, 3, 4, 5], 3, { kind: "subtract", a: 7, b: 4, emoji: "ðŸŽ" }),
+  q("o-sub-5-5", "operations", { en: "There are 5 bananas. You take away all 5 bananas. How many bananas are left?", ms: "Ada 5 pisang. Kamu ambil semua 5 pisang. Tinggal berapa pisang?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "ðŸŒ" }),
 ];
 
 const additionPracticeQuestions: Question[] = [
-  q("l-add-2-3", "operations", { en: "Chrys eats 2 bananas and 3 more bananas. How many bananas?", ms: "Chrys makan 2 pisang dan 3 pisang lagi. Berapa pisang?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }),
-  q("l-add-2-4", "operations", { en: "Chrys has 2 bananas and gets 4 more. How many bananas now?", ms: "Chrys ada 2 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 2, b: 4, emoji: "🍌" }),
-  q("l-add-4-5", "operations", { en: "Alyse brings 4 bananas. Chrys brings 5 more. How many bananas?", ms: "Alyse bawa 4 pisang. Chrys bawa 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
-  q("l-add-0-6", "operations", { en: "Chrys starts with 0 bananas and gets 6 bananas. How many bananas?", ms: "Chrys mula dengan 0 pisang dan dapat 6 pisang. Berapa pisang?" }, [0, 5, 6, 7], 6, { kind: "add", a: 0, b: 6, emoji: "🍌" }),
-  q("l-add-6-1", "operations", { en: "Chrys eats 6 bananas and 1 more banana. How many bananas?", ms: "Chrys makan 6 pisang dan 1 pisang lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍌" }),
-  q("l-add-8-1", "operations", { en: "Chrys has 8 bananas and gets 1 more. How many bananas now?", ms: "Chrys ada 8 pisang dan dapat 1 lagi. Berapa pisang sekarang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🍌" }),
+  q("l-add-2-3", "operations", { en: "Chrys eats 2 bananas and 3 more bananas. How many bananas?", ms: "Chrys makan 2 pisang dan 3 pisang lagi. Berapa pisang?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "ðŸŒ" }),
+  q("l-add-2-4", "operations", { en: "Chrys has 2 bananas and gets 4 more. How many bananas now?", ms: "Chrys ada 2 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 2, b: 4, emoji: "ðŸŒ" }),
+  q("l-add-4-5", "operations", { en: "Alyse brings 4 bananas. Chrys brings 5 more. How many bananas?", ms: "Alyse bawa 4 pisang. Chrys bawa 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "ðŸŒ" }),
+  q("l-add-0-6", "operations", { en: "Chrys starts with 0 bananas and gets 6 bananas. How many bananas?", ms: "Chrys mula dengan 0 pisang dan dapat 6 pisang. Berapa pisang?" }, [0, 5, 6, 7], 6, { kind: "add", a: 0, b: 6, emoji: "ðŸŒ" }),
+  q("l-add-6-1", "operations", { en: "Chrys eats 6 bananas and 1 more banana. How many bananas?", ms: "Chrys makan 6 pisang dan 1 pisang lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "ðŸŒ" }),
+  q("l-add-8-1", "operations", { en: "Chrys has 8 bananas and gets 1 more. How many bananas now?", ms: "Chrys ada 8 pisang dan dapat 1 lagi. Berapa pisang sekarang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "ðŸŒ" }),
 ];
 
 const subtractionPracticeQuestions: Question[] = [
-  q("l-sub-7-3", "operations", { en: "Chrys has 7 bananas. He gives away 3 bananas. How many bananas are left?", ms: "Chrys ada 7 pisang. Dia beri 3 pisang. Tinggal berapa pisang?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }),
-  q("l-sub-6-2", "operations", { en: "Chrys has 6 bananas. He eats 2 bananas. How many bananas are left?", ms: "Chrys ada 6 pisang. Dia makan 2 pisang. Tinggal berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 6, b: 2, emoji: "🍌" }),
-  q("l-sub-9-6", "operations", { en: "There are 9 bananas. You take away 6 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 6 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 9, b: 6, emoji: "🍌" }),
-  q("l-sub-5-0", "operations", { en: "Chrys has 5 bananas. He gives away 0 bananas. How many bananas are left?", ms: "Chrys ada 5 pisang. Dia beri 0 pisang. Tinggal berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "subtract", a: 5, b: 0, emoji: "🍌" }),
-  q("l-sub-8-1", "operations", { en: "Chrys has 8 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "subtract", a: 8, b: 1, emoji: "🍌" }),
-  q("l-sub-4-4", "operations", { en: "Chrys has 4 bananas. He gives away all 4 bananas. How many bananas are left?", ms: "Chrys ada 4 pisang. Dia beri semua 4 pisang. Tinggal berapa pisang?" }, [0, 1, 3, 4], 0, { kind: "subtract", a: 4, b: 4, emoji: "🍌" }),
+  q("l-sub-7-3", "operations", { en: "Chrys has 7 bananas. He gives away 3 bananas. How many bananas are left?", ms: "Chrys ada 7 pisang. Dia beri 3 pisang. Tinggal berapa pisang?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 7, b: 3, emoji: "ðŸŒ" }),
+  q("l-sub-6-2", "operations", { en: "Chrys has 6 bananas. He eats 2 bananas. How many bananas are left?", ms: "Chrys ada 6 pisang. Dia makan 2 pisang. Tinggal berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 6, b: 2, emoji: "ðŸŒ" }),
+  q("l-sub-9-6", "operations", { en: "There are 9 bananas. You take away 6 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 6 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 9, b: 6, emoji: "ðŸŒ" }),
+  q("l-sub-5-0", "operations", { en: "Chrys has 5 bananas. He gives away 0 bananas. How many bananas are left?", ms: "Chrys ada 5 pisang. Dia beri 0 pisang. Tinggal berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "subtract", a: 5, b: 0, emoji: "ðŸŒ" }),
+  q("l-sub-8-1", "operations", { en: "Chrys has 8 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "subtract", a: 8, b: 1, emoji: "ðŸŒ" }),
+  q("l-sub-4-4", "operations", { en: "Chrys has 4 bananas. He gives away all 4 bananas. How many bananas are left?", ms: "Chrys ada 4 pisang. Dia beri semua 4 pisang. Tinggal berapa pisang?" }, [0, 1, 3, 4], 0, { kind: "subtract", a: 4, b: 4, emoji: "ðŸŒ" }),
 ];
 
 const realQuestions: Question[] = [
-  q("r-count-apples", "real", { en: "At the table, count the apples.", ms: "Di atas meja, kira epal." }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🍎", count: 5 }),
-  q("r-count-pencils", "real", { en: "Count the pencils in the pencil case.", ms: "Kira pensel dalam bekas pensel." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "✏️", count: 7 }),
-q("r-count-cups", "real", { en: "The tray is empty. How many cups are on it?", ms: "Dulang kosong. Ada berapa cawan di atasnya?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🥤", count: 0, container: "tray" }),
-q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the basket. How many oranges?", ms: "Ada 3 oren. Letak 4 oren lagi dalam bakul. Berapa oren?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍊", container: "basket" }),
-  q("r-add-books", "real", { en: "Alyse has 1 book and gets 6 more books. How many books?", ms: "Alyse ada 1 buku dan dapat 6 buku lagi. Berapa buku?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "📘" }),
-  q("r-add-bananas", "real", { en: "Chrys has 2 bananas. His friend gives him 5 more. How many bananas?", ms: "Chrys ada 2 pisang. Kawannya beri 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 2, b: 5, emoji: "🍌" }),
-  q("r-add-flowers", "real", { en: "There are 4 flowers. Add 0 more flowers. How many flowers?", ms: "Ada 4 bunga. Tambah 0 bunga lagi. Berapa bunga?" }, [0, 3, 4, 5], 4, { kind: "add", a: 4, b: 0, emoji: "🌸" }),
-  q("r-add-eggs", "real", { en: "There are 5 eggs in a box and 4 eggs on the table. How many eggs?", ms: "Ada 5 telur dalam kotak dan 4 telur di atas meja. Berapa telur?" }, [6, 7, 8, 9], 9, { kind: "add", a: 5, b: 4, emoji: "🥚" }),
-  q("r-sub-cookies", "real", { en: "A plate has 8 cookies. Chrys eats 3 cookies. How many cookies are left?", ms: "Pinggan ada 8 biskut. Chrys makan 3 biskut. Tinggal berapa biskut?" }, [4, 5, 6, 7], 5, { kind: "subtract", a: 8, b: 3, emoji: "🍪" }),
-  q("r-sub-balloons", "real", { en: "There are 4 balloons. 0 balloons fly away. How many balloons are left?", ms: "Ada 4 belon. 0 belon terbang pergi. Tinggal berapa belon?" }, [0, 3, 4, 5], 4, { kind: "subtract", a: 4, b: 0, emoji: "🎈" }),
-  q("r-sub-pencils", "real", { en: "There are 9 pencils. You give away 2 pencils. How many pencils are left?", ms: "Ada 9 pensel. Kamu beri 2 pensel. Tinggal berapa pensel?" }, [5, 6, 7, 8], 7, { kind: "subtract", a: 9, b: 2, emoji: "✏️" }),
-  q("r-sub-apples", "real", { en: "There are 6 apples. You eat 4 apples. How many apples are left?", ms: "Ada 6 epal. Kamu makan 4 epal. Tinggal berapa epal?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 6, b: 4, emoji: "🍎" }),
-  q("r-sub-cups", "real", { en: "There are 5 cups. You put away all 5 cups. How many cups are left?", ms: "Ada 5 cawan. Kamu simpan semua 5 cawan. Tinggal berapa cawan?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🥤" }),
-  q("r-count-toys", "real", { en: "Count the toy cars on the mat.", ms: "Kira kereta mainan di atas tikar." }, [4, 5, 6, 7], 6, { kind: "count", emoji: "🚗", count: 6 }),
-  q("r-sub-bananas", "real", { en: "Chrys has 3 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 3 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "🍌" }),
+  q("r-count-apples", "real", { en: "Count the apples.", ms: "Kira epal." }, [3, 4, 5, 6], 5, { kind: "count", emoji: "ðŸŽ", count: 5 }),
+  q("r-count-pencils", "real", { en: "Count the pencils.", ms: "Kira pensel." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "âœï¸", count: 7 }),
+q("r-count-cups", "real", { en: "The tray is empty. How many cups are on it?", ms: "Dulang kosong. Ada berapa cawan di atasnya?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "ðŸ¥¤", count: 0, container: "tray" }),
+q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the basket. How many oranges?", ms: "Ada 3 oren. Letak 4 oren lagi dalam bakul. Berapa oren?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "ðŸŠ", container: "basket" }),
+  q("r-add-books", "real", { en: "Alyse has 1 book and gets 6 more books. How many books?", ms: "Alyse ada 1 buku dan dapat 6 buku lagi. Berapa buku?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "ðŸ“˜" }),
+  q("r-add-bananas", "real", { en: "Chrys has 2 bananas. His friend gives him 5 more. How many bananas?", ms: "Chrys ada 2 pisang. Kawannya beri 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 2, b: 5, emoji: "ðŸŒ" }),
+  q("r-add-flowers", "real", { en: "There are 4 flowers. Add 0 more flowers. How many flowers?", ms: "Ada 4 bunga. Tambah 0 bunga lagi. Berapa bunga?" }, [0, 3, 4, 5], 4, { kind: "add", a: 4, b: 0, emoji: "ðŸŒ¸" }),
+  q("r-add-eggs", "real", { en: "5 eggs and 4 more eggs. How many eggs?", ms: "5 telur dan 4 telur lagi. Berapa telur?" }, [6, 7, 8, 9], 9, { kind: "add", a: 5, b: 4, emoji: "ðŸ¥š" }),
+  q("r-sub-cookies", "real", { en: "There are 8 cookies. Take away 3. How many are left?", ms: "Ada 8 biskut. Ambil 3. Tinggal berapa?" }, [4, 5, 6, 7], 5, { kind: "subtract", a: 8, b: 3, emoji: "ðŸª" }),
+  q("r-sub-balloons", "real", { en: "There are 4 balloons. 0 balloons fly away. How many balloons are left?", ms: "Ada 4 belon. 0 belon terbang pergi. Tinggal berapa belon?" }, [0, 3, 4, 5], 4, { kind: "subtract", a: 4, b: 0, emoji: "ðŸŽˆ" }),
+  q("r-sub-pencils", "real", { en: "There are 9 pencils. You give away 2 pencils. How many pencils are left?", ms: "Ada 9 pensel. Kamu beri 2 pensel. Tinggal berapa pensel?" }, [5, 6, 7, 8], 7, { kind: "subtract", a: 9, b: 2, emoji: "âœï¸" }),
+  q("r-sub-apples", "real", { en: "There are 6 apples. You eat 4 apples. How many apples are left?", ms: "Ada 6 epal. Kamu makan 4 epal. Tinggal berapa epal?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 6, b: 4, emoji: "ðŸŽ" }),
+  q("r-sub-cups", "real", { en: "There are 5 cups. You put away all 5 cups. How many cups are left?", ms: "Ada 5 cawan. Kamu simpan semua 5 cawan. Tinggal berapa cawan?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "ðŸ¥¤" }),
+  q("r-count-toys", "real", { en: "Count the toy cars.", ms: "Kira kereta mainan." }, [4, 5, 6, 7], 6, { kind: "count", emoji: "ðŸš—", count: 6 }),
+  q("r-sub-bananas", "real", { en: "Chrys has 3 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 3 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "ðŸŒ" }),
 ];
 
 const realPracticeQuestions: Question[] = [
-  q("rp-count-2", "real", { en: "Chrys sees 2 bananas. How many bananas?", ms: "Chrys nampak 2 pisang. Berapa pisang?" }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🍌", count: 2 }),
-  q("rp-add-1-1", "real", { en: "Chrys has 1 banana and finds 1 more. How many bananas?", ms: "Chrys ada 1 pisang dan jumpa 1 lagi. Berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "add", a: 1, b: 1, emoji: "🍌" }),
-  q("rp-sub-3-1", "real", { en: "Chrys has 3 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 3 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "🍌" }),
-  q("rp-add-birds", "real", { en: "Chrys sees 2 birds. 3 more birds come. How many birds?", ms: "Chrys nampak 2 burung. 3 burung lagi datang. Berapa burung?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "🐦" }),
-  q("rp-sub-leaves", "real", { en: "Chrys has 5 leaves. He uses 1 leaf for a bed. How many leaves are left?", ms: "Chrys ada 5 daun. Dia guna 1 daun untuk katil. Tinggal berapa daun?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 5, b: 1, emoji: "🍃" }),
-  q("rp-add-basket", "real", { en: "There are 2 coconuts in one basket and 3 in another basket. How many coconuts?", ms: "Ada 2 kelapa dalam satu bakul dan 3 dalam bakul lain. Berapa kelapa?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "🥥", container: "basket" }),
-  q("rp-choose-add", "real", { en: "Chrys has 4 bananas. He finds 2 more. Is this adding or taking away?", ms: "Chrys ada 4 pisang. Dia jumpa 2 lagi. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Adding", { kind: "add", a: 4, b: 2, emoji: "🍌" }),
-  q("rp-choose-subtract", "real", { en: "Chrys has 6 mangoes. He gives away 2. Is this adding or taking away?", ms: "Chrys ada 6 mangga. Dia beri 2. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Taking away", { kind: "subtract", a: 6, b: 2, emoji: "🥭" }),
+  q("rp-count-2", "real", { en: "Chrys sees 2 bananas. How many bananas?", ms: "Chrys nampak 2 pisang. Berapa pisang?" }, [0, 1, 2, 3], 2, { kind: "count", emoji: "ðŸŒ", count: 2 }),
+  q("rp-add-1-1", "real", { en: "Chrys has 1 banana and finds 1 more. How many bananas?", ms: "Chrys ada 1 pisang dan jumpa 1 lagi. Berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "add", a: 1, b: 1, emoji: "ðŸŒ" }),
+  q("rp-sub-3-1", "real", { en: "Chrys has 3 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 3 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "ðŸŒ" }),
+  q("rp-add-birds", "real", { en: "Chrys sees 2 birds. 3 more birds come. How many birds?", ms: "Chrys nampak 2 burung. 3 burung lagi datang. Berapa burung?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "ðŸ¦" }),
+  q("rp-sub-leaves", "real", { en: "Chrys has 5 leaves. He uses 1 leaf for a bed. How many leaves are left?", ms: "Chrys ada 5 daun. Dia guna 1 daun untuk katil. Tinggal berapa daun?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 5, b: 1, emoji: "ðŸƒ" }),
+  q("rp-add-basket", "real", { en: "2 coconuts are in the basket. Add 3 more. How many coconuts?", ms: "Ada 2 kelapa dalam bakul. Tambah 3 lagi. Berapa kelapa?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "ðŸ¥¥", container: "basket" }),
+  q("rp-choose-add", "real", { en: "Chrys has 4 bananas. He finds 2 more. Is this adding or taking away?", ms: "Chrys ada 4 pisang. Dia jumpa 2 lagi. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Adding", { kind: "add", a: 4, b: 2, emoji: "ðŸŒ" }),
+  q("rp-choose-subtract", "real", { en: "Chrys has 6 mangoes. He gives away 2. Is this adding or taking away?", ms: "Chrys ada 6 mangga. Dia beri 2. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Taking away", { kind: "subtract", a: 6, b: 2, emoji: "ðŸ¥­" }),
 ];
 
 const realTestQuestions: Question[] = [
-q("rt-count-bananas-4", "real", { en: "Count the bananas in the picnic basket.", ms: "Kira pisang dalam bakul piknik." }, [2, 3, 4, 5], 4, { kind: "count", emoji: "🍌", count: 4, container: "basket" }),
-  q("rt-count-apples-8", "real", { en: "Count the apples on the plate.", ms: "Kira epal di atas pinggan." }, [6, 7, 8, 9], 8, { kind: "count", emoji: "🍎", count: 8 }),
-q("rt-count-oranges-3", "real", { en: "Count the oranges in the basket.", ms: "Kira oren dalam bakul." }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍊", count: 3, container: "basket" }),
-  q("rt-count-books-5", "real", { en: "Count the books on the desk.", ms: "Kira buku di atas meja." }, [3, 4, 5, 6], 5, { kind: "count", emoji: "📘", count: 5 }),
-q("rt-count-cups-1", "real", { en: "Count the cup on the tray.", ms: "Kira cawan di atas dulang." }, [0, 1, 2, 3], 1, { kind: "count", emoji: "🥤", count: 1, container: "tray" }),
-  q("rt-count-flowers-9", "real", { en: "Count the flowers in the garden.", ms: "Kira bunga di taman." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🌸", count: 9 }),
-  q("rt-count-eggs-2", "real", { en: "Count the eggs in the box.", ms: "Kira telur dalam kotak." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🥚", count: 2 }),
-  q("rt-count-toys-7", "real", { en: "Count the toy cars on the mat.", ms: "Kira kereta mainan di atas tikar." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "🚗", count: 7 }),
-  q("rt-add-bananas-1-6", "real", { en: "Chrys has 1 banana. Alyse gives him 6 more. How many bananas?", ms: "Chrys ada 1 pisang. Alyse beri 6 lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "🍌" }),
-  q("rt-add-apples-4-3", "real", { en: "There are 4 apples. Put 3 more apples on the plate. How many apples?", ms: "Ada 4 epal. Letak 3 epal lagi di pinggan. Berapa epal?" }, [5, 6, 7, 8], 7, { kind: "add", a: 4, b: 3, emoji: "🍎" }),
-  q("rt-add-oranges-6-1", "real", { en: "There are 6 oranges. Add 1 more orange. How many oranges?", ms: "Ada 6 oren. Tambah 1 oren lagi. Berapa oren?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍊" }),
-  q("rt-add-books-2-4", "real", { en: "Alyse has 2 books and finds 4 more books. How many books?", ms: "Alyse ada 2 buku dan jumpa 4 buku lagi. Berapa buku?" }, [4, 5, 6, 7], 6, { kind: "add", a: 2, b: 4, emoji: "📘" }),
-  q("rt-add-cups-8-1", "real", { en: "There are 8 cups. Add 1 more cup. How many cups?", ms: "Ada 8 cawan. Tambah 1 cawan lagi. Berapa cawan?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🥤" }),
-  q("rt-add-flowers-5-2", "real", { en: "There are 5 flowers. Add 2 more flowers. How many flowers?", ms: "Ada 5 bunga. Tambah 2 bunga lagi. Berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "add", a: 5, b: 2, emoji: "🌸" }),
-  q("rt-add-eggs-3-5", "real", { en: "There are 3 eggs in a box and 5 eggs on the table. How many eggs?", ms: "Ada 3 telur dalam kotak dan 5 telur di atas meja. Berapa telur?" }, [6, 7, 8, 9], 8, { kind: "add", a: 3, b: 5, emoji: "🥚" }),
-  q("rt-add-toys-9-0", "real", { en: "There are 9 toy cars. Add 0 more toy cars. How many toy cars?", ms: "Ada 9 kereta mainan. Tambah 0 lagi. Berapa kereta mainan?" }, [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "🚗" }),
-q("rt-add-bananas-0-5", "real", { en: "The basket has 0 bananas. Put in 5 bananas. How many bananas?", ms: "Bakul ada 0 pisang. Letak 5 pisang. Berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "add", a: 0, b: 5, emoji: "🍌", container: "basket" }),
-  q("rt-sub-bananas-9-3", "real", { en: "Chrys has 9 bananas. He eats 3 bananas. How many bananas are left?", ms: "Chrys ada 9 pisang. Dia makan 3 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "subtract", a: 9, b: 3, emoji: "🍌" }),
-  q("rt-sub-apples-8-6", "real", { en: "There are 8 apples. You eat 6 apples. How many apples are left?", ms: "Ada 8 epal. Kamu makan 6 epal. Tinggal berapa epal?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 8, b: 6, emoji: "🍎" }),
-  q("rt-sub-oranges-7-1", "real", { en: "There are 7 oranges. You take away 1 orange. How many oranges are left?", ms: "Ada 7 oren. Kamu ambil 1 oren. Tinggal berapa oren?" }, [5, 6, 7, 8], 6, { kind: "subtract", a: 7, b: 1, emoji: "🍊" }),
-  q("rt-sub-books-6-4", "real", { en: "There are 6 books. You put away 4 books. How many books are left?", ms: "Ada 6 buku. Kamu simpan 4 buku. Tinggal berapa buku?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 6, b: 4, emoji: "📘" }),
-  q("rt-sub-cups-5-5", "real", { en: "There are 5 cups. You put away all 5 cups. How many cups are left?", ms: "Ada 5 cawan. Kamu simpan semua 5 cawan. Tinggal berapa cawan?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🥤" }),
-  q("rt-sub-flowers-4-2", "real", { en: "There are 4 flowers. You pick 2 flowers. How many flowers are left?", ms: "Ada 4 bunga. Kamu petik 2 bunga. Tinggal berapa bunga?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 4, b: 2, emoji: "🌸" }),
-  q("rt-sub-eggs-3-0", "real", { en: "There are 3 eggs. You take away 0 eggs. How many eggs are left?", ms: "Ada 3 telur. Kamu ambil 0 telur. Tinggal berapa telur?" }, [0, 2, 3, 4], 3, { kind: "subtract", a: 3, b: 0, emoji: "🥚" }),
-  q("rt-sub-toys-2-1", "real", { en: "There are 2 toy cars. You move 1 toy car away. How many toy cars are left?", ms: "Ada 2 kereta mainan. Kamu alihkan 1 kereta mainan. Tinggal berapa kereta mainan?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 2, b: 1, emoji: "🚗" }),
+q("rt-count-bananas-4", "real", { en: "Count the bananas in the picnic basket.", ms: "Kira pisang dalam bakul piknik." }, [2, 3, 4, 5], 4, { kind: "count", emoji: "ðŸŒ", count: 4, container: "basket" }),
+  q("rt-count-apples-8", "real", { en: "Count the apples.", ms: "Kira epal." }, [6, 7, 8, 9], 8, { kind: "count", emoji: "ðŸŽ", count: 8 }),
+q("rt-count-oranges-3", "real", { en: "Count the oranges in the basket.", ms: "Kira oren dalam bakul." }, [1, 2, 3, 4], 3, { kind: "count", emoji: "ðŸŠ", count: 3, container: "basket" }),
+  q("rt-count-books-5", "real", { en: "Count the books.", ms: "Kira buku." }, [3, 4, 5, 6], 5, { kind: "count", emoji: "ðŸ“˜", count: 5 }),
+q("rt-count-cups-1", "real", { en: "Count the cup on the tray.", ms: "Kira cawan di atas dulang." }, [0, 1, 2, 3], 1, { kind: "count", emoji: "ðŸ¥¤", count: 1, container: "tray" }),
+  q("rt-count-flowers-9", "real", { en: "Count the flowers.", ms: "Kira bunga." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "ðŸŒ¸", count: 9 }),
+  q("rt-count-eggs-2", "real", { en: "Count the eggs.", ms: "Kira telur." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "ðŸ¥š", count: 2 }),
+  q("rt-count-toys-7", "real", { en: "Count the toy cars.", ms: "Kira kereta mainan." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "ðŸš—", count: 7 }),
+  q("rt-add-bananas-1-6", "real", { en: "Chrys has 1 banana. Alyse gives him 6 more. How many bananas?", ms: "Chrys ada 1 pisang. Alyse beri 6 lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "ðŸŒ" }),
+  q("rt-add-apples-4-3", "real", { en: "4 apples and 3 more apples. How many apples?", ms: "4 epal dan 3 epal lagi. Berapa epal?" }, [5, 6, 7, 8], 7, { kind: "add", a: 4, b: 3, emoji: "ðŸŽ" }),
+  q("rt-add-oranges-6-1", "real", { en: "There are 6 oranges. Add 1 more orange. How many oranges?", ms: "Ada 6 oren. Tambah 1 oren lagi. Berapa oren?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "ðŸŠ" }),
+  q("rt-add-books-2-4", "real", { en: "Alyse has 2 books and finds 4 more books. How many books?", ms: "Alyse ada 2 buku dan jumpa 4 buku lagi. Berapa buku?" }, [4, 5, 6, 7], 6, { kind: "add", a: 2, b: 4, emoji: "ðŸ“˜" }),
+  q("rt-add-cups-8-1", "real", { en: "There are 8 cups. Add 1 more cup. How many cups?", ms: "Ada 8 cawan. Tambah 1 cawan lagi. Berapa cawan?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "ðŸ¥¤" }),
+  q("rt-add-flowers-5-2", "real", { en: "There are 5 flowers. Add 2 more flowers. How many flowers?", ms: "Ada 5 bunga. Tambah 2 bunga lagi. Berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "add", a: 5, b: 2, emoji: "ðŸŒ¸" }),
+  q("rt-add-eggs-3-5", "real", { en: "3 eggs and 5 more eggs. How many eggs?", ms: "3 telur dan 5 telur lagi. Berapa telur?" }, [6, 7, 8, 9], 8, { kind: "add", a: 3, b: 5, emoji: "ðŸ¥š" }),
+  q("rt-add-toys-9-0", "real", { en: "There are 9 toy cars. Add 0 more toy cars. How many toy cars?", ms: "Ada 9 kereta mainan. Tambah 0 lagi. Berapa kereta mainan?" }, [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "ðŸš—" }),
+q("rt-add-bananas-0-5", "real", { en: "The basket has 0 bananas. Put in 5 bananas. How many bananas?", ms: "Bakul ada 0 pisang. Letak 5 pisang. Berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "add", a: 0, b: 5, emoji: "ðŸŒ", container: "basket" }),
+  q("rt-sub-bananas-9-3", "real", { en: "Chrys has 9 bananas. He eats 3 bananas. How many bananas are left?", ms: "Chrys ada 9 pisang. Dia makan 3 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "subtract", a: 9, b: 3, emoji: "ðŸŒ" }),
+  q("rt-sub-apples-8-6", "real", { en: "There are 8 apples. You eat 6 apples. How many apples are left?", ms: "Ada 8 epal. Kamu makan 6 epal. Tinggal berapa epal?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 8, b: 6, emoji: "ðŸŽ" }),
+  q("rt-sub-oranges-7-1", "real", { en: "There are 7 oranges. You take away 1 orange. How many oranges are left?", ms: "Ada 7 oren. Kamu ambil 1 oren. Tinggal berapa oren?" }, [5, 6, 7, 8], 6, { kind: "subtract", a: 7, b: 1, emoji: "ðŸŠ" }),
+  q("rt-sub-books-6-4", "real", { en: "There are 6 books. You put away 4 books. How many books are left?", ms: "Ada 6 buku. Kamu simpan 4 buku. Tinggal berapa buku?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 6, b: 4, emoji: "ðŸ“˜" }),
+  q("rt-sub-cups-5-5", "real", { en: "There are 5 cups. You put away all 5 cups. How many cups are left?", ms: "Ada 5 cawan. Kamu simpan semua 5 cawan. Tinggal berapa cawan?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "ðŸ¥¤" }),
+  q("rt-sub-flowers-4-2", "real", { en: "There are 4 flowers. You pick 2 flowers. How many flowers are left?", ms: "Ada 4 bunga. Kamu petik 2 bunga. Tinggal berapa bunga?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 4, b: 2, emoji: "ðŸŒ¸" }),
+  q("rt-sub-eggs-3-0", "real", { en: "There are 3 eggs. You take away 0 eggs. How many eggs are left?", ms: "Ada 3 telur. Kamu ambil 0 telur. Tinggal berapa telur?" }, [0, 2, 3, 4], 3, { kind: "subtract", a: 3, b: 0, emoji: "ðŸ¥š" }),
+  q("rt-sub-toys-2-1", "real", { en: "There are 2 toy cars. You move 1 toy car away. How many toy cars are left?", ms: "Ada 2 kereta mainan. Kamu alihkan 1 kereta mainan. Tinggal berapa kereta mainan?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 2, b: 1, emoji: "ðŸš—" }),
 ];
 
 function q(
@@ -364,32 +368,33 @@ function q(
 function buildMethod(visual: Visual, answer: number | string): Record<Lang, string[]> {
   if (visual.kind === "add") {
     const total = visual.a + visual.b;
-    const objectA = objectName(visual.emoji, visual.a, "en");
-    const objectB = objectName(visual.emoji, visual.b, "en");
-    const objectTotal = objectName(visual.emoji, total, "en");
-    const objectMs = objectName(visual.emoji, total, "ms");
+    const countOn = countForwardSteps(visual.a, visual.b);
     return {
-      en: [`Start with ${visual.a} ${objectA}.`, `Add ${visual.b} more ${objectB}.`, `${visual.a} ${objectA} and ${visual.b} more ${objectB} make ${total} ${objectTotal}.`],
-      ms: [`Mula dengan ${visual.a} ${objectMs}.`, `Tambah ${visual.b} ${objectMs} lagi.`, `${visual.a} ${objectMs} dan ${visual.b} ${objectMs} lagi menjadi ${total} ${objectMs}.`],
+      en: visual.b === 0
+        ? [`Start with ${visual.a}.`, "Add nothing.", `Answer: ${total}.`]
+        : [`Start with ${visual.a}.`, `Count on ${visual.b}: ${countOn}.`, `Answer: ${visual.a} + ${visual.b} = ${total}.`],
+      ms: visual.b === 0
+        ? [`Mula dengan ${visual.a}.`, "Tidak tambah apa-apa.", `Jawapan: ${total}.`]
+        : [`Mula dengan ${visual.a}.`, `Kira naik ${visual.b}: ${countOn}.`, `Jawapan: ${visual.a} + ${visual.b} = ${total}.`],
     };
   }
   if (visual.kind === "subtract") {
     const left = visual.a - visual.b;
-    const objectStart = objectName(visual.emoji, visual.a, "en");
-    const objectTaken = objectName(visual.emoji, visual.b, "en");
-    const objectLeft = objectName(visual.emoji, left, "en");
-    const objectMs = objectName(visual.emoji, visual.a, "ms");
+    const countBack = countBackwardSteps(visual.a, visual.b);
     return {
-      en: [`Start with ${visual.a} ${objectStart}.`, `Cross out ${visual.b} ${objectTaken} to show they are taken away.`, `Count only the ${objectName(visual.emoji, 2, "en")} that are not crossed out.`, `${left} ${objectLeft} ${left === 1 ? "is" : "are"} left.`],
-      ms: [`Mula dengan ${visual.a} ${objectMs}.`, `Palang ${visual.b} ${objectMs} untuk tunjuk ia diambil.`, `Kira hanya ${objectMs} yang tidak dipalang.`, `${left} ${objectMs} tinggal.`],
+      en: visual.b === 0
+        ? [`Start with ${visual.a}.`, "Take away nothing.", `Answer: ${left}.`]
+        : [`Start with ${visual.a}.`, `Count back ${visual.b}: ${countBack}.`, `Answer: ${visual.a} - ${visual.b} = ${left}.`],
+      ms: visual.b === 0
+        ? [`Mula dengan ${visual.a}.`, "Tidak ambil apa-apa.", `Jawapan: ${left}.`]
+        : [`Mula dengan ${visual.a}.`, `Kira undur ${visual.b}: ${countBack}.`, `Jawapan: ${visual.a} - ${visual.b} = ${left}.`],
     };
   }
   if (visual.kind === "compare") {
-    const relation = visual.a > visual.b ? `${visual.a} is greater` : `${visual.b} is greater`;
-    const relationMs = visual.a > visual.b ? `${visual.a} lebih besar` : `${visual.b} lebih besar`;
+    const greater = Math.max(visual.a, visual.b);
     return {
-      en: [`Look at the number line.`, `Numbers to the right are greater.`, relation + "."],
-      ms: [`Lihat garis nombor.`, `Nombor di kanan lebih besar.`, relationMs + "."],
+      en: [`Look at ${visual.a} and ${visual.b}.`, `${greater} is bigger.`, `Answer: ${greater}.`],
+      ms: [`Lihat ${visual.a} dan ${visual.b}.`, `${greater} lebih besar.`, `Jawapan: ${greater}.`],
     };
   }
   if (visual.kind === "sequence") {
@@ -399,72 +404,82 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const skipByTwo = gaps.some((gap) => Math.abs(gap) === 2);
     return {
       en: skipByTwo
-        ? ["Read the number pattern from left to right.", "Skip count by 2 each time.", `The missing answer is ${answer}.`]
-        : ["Read the number line from left to right.", "Move one step at a time.", `The missing answer is ${answer}.`],
+        ? ["Look at the pattern.", "It skips by 2 each time.", `Answer: ${answer}.`]
+        : ["Look at the numbers in order.", "The missing number fills the gap.", `Answer: ${answer}.`],
       ms: skipByTwo
-        ? ["Baca corak nombor dari kiri ke kanan.", "Kira langkau 2 setiap kali.", `Jawapan yang hilang ialah ${answer}.`]
-        : ["Baca garis nombor dari kiri ke kanan.", "Gerak satu langkah setiap kali.", `Jawapan yang hilang ialah ${answer}.`],
+        ? ["Lihat corak nombor.", "Ia langkau 2 setiap kali.", `Jawapan: ${answer}.`]
+        : ["Lihat nombor mengikut turutan.", "Nombor yang hilang mengisi ruang kosong.", `Jawapan: ${answer}.`],
     };
   }
   if (visual.kind === "number") {
     const word = WORDS.en[visual.value];
+    const wordMs = WORDS.ms[visual.value];
     return {
       en: typeof answer === "string"
-        ? [`You saw ${visual.value}.`, `The word for ${visual.value} is ${word}.`, `Correct answer: ${word}.`]
-        : [`This symbol is ${visual.value}.`, `We say ${word}.`, `The answer is ${answer}.`],
+        ? [`Number shown: ${visual.value}.`, `${visual.value} is written as ${word}.`, `Answer: ${word}.`]
+        : [`Symbol shown: ${visual.value}.`, `Say it as ${word}.`, `Answer: ${answer}.`],
       ms: typeof answer === "string"
-        ? [`Kamu lihat ${visual.value}.`, `Perkataan untuk ${visual.value} ialah ${word}.`, `Jawapan betul: ${word}.`]
-        : [`Simbol ini ialah ${visual.value}.`, `Kita sebut ${WORDS.ms[visual.value]}.`, `Jawapannya ${answer}.`],
+        ? [`Nombor ditunjuk: ${visual.value}.`, `${visual.value} ditulis sebagai ${wordMs}.`, `Jawapan: ${wordMs}.`]
+        : [`Simbol ditunjuk: ${visual.value}.`, `Sebut sebagai ${wordMs}.`, `Jawapan: ${answer}.`],
     };
   }
   if (visual.kind === "word") {
     const word = WORDS.en[visual.value];
+    const wordMs = WORDS.ms[visual.value];
     return {
-      en: [`You saw the word ${word}.`, `${word} matches the number ${visual.value}.`, `Correct answer: ${visual.value}.`],
-      ms: [`Kamu lihat perkataan ${word}.`, `${word} padan dengan nombor ${visual.value}.`, `Jawapan betul: ${visual.value}.`],
+      en: [`Word shown: ${word}.`, `${word} is ${visual.value}.`, `Answer: ${visual.value}.`],
+      ms: [`Perkataan ditunjuk: ${wordMs}.`, `${wordMs} bermaksud ${visual.value}.`, `Jawapan: ${visual.value}.`],
     };
   }
   if (visual.kind === "audioNumber") {
     const word = WORDS.en[visual.value];
+    const wordMs = WORDS.ms[visual.value];
     return {
       en: typeof answer === "string"
-        ? [`Audio was: ${word}.`, `You heard ${word}.`, `Correct answer: ${word}.`]
-        : [`Audio was: ${word}.`, `You heard ${word}.`, `The number for ${word} is ${visual.value}.`],
+        ? [`You heard: ${word}.`, `${word} is the correct word.`, `Answer: ${word}.`]
+        : [`You heard: ${word}.`, `${word} is ${visual.value}.`, `Answer: ${visual.value}.`],
       ms: typeof answer === "string"
-        ? [`Audio ialah: ${word}.`, `Kamu dengar ${word}.`, `Jawapan betul: ${word}.`]
-        : [`Audio ialah: ${word}.`, `Kamu dengar ${word}.`, `Nombor untuk ${word} ialah ${visual.value}.`],
+        ? [`Kamu dengar: ${wordMs}.`, `${wordMs} ialah perkataan yang betul.`, `Jawapan: ${wordMs}.`]
+        : [`Kamu dengar: ${wordMs}.`, `${wordMs} bermaksud ${visual.value}.`, `Jawapan: ${visual.value}.`],
     };
   }
   if (visual.kind === "groupChoices") {
     return {
-      en: [`Look at each group.`, `Count the objects slowly.`, `The group with ${answer} objects is correct.`],
-      ms: [`Lihat setiap kumpulan.`, `Kira objek perlahan-lahan.`, `Kumpulan dengan ${answer} objek ialah betul.`],
+      en: ["Count each group.", `Find the group with ${answer}.`, `Answer: ${answer}.`],
+      ms: ["Kira setiap kumpulan.", `Cari kumpulan dengan ${answer}.`, `Jawapan: ${answer}.`],
     };
   }
   if (visual.kind === "order") {
     return visual.direction === "asc"
       ? {
-        en: ["Ascending means smallest to biggest.", "Use the number line to go up.", `The correct order is ${answer}.`],
-        ms: ["Menaik bermaksud kecil ke besar.", "Guna garis nombor untuk naik.", `Turutan betul ialah ${answer}.`],
+        en: ["Ascending is small to big.", "Start with the smallest.", `Answer: ${answer}.`],
+        ms: ["Menaik bermaksud kecil ke besar.", "Letak nombor paling kecil dahulu.", `Jawapan: ${answer}.`],
       }
       : {
-        en: ["Descending means biggest to smallest.", "Use the number line to go down.", `The correct order is ${answer}.`],
-        ms: ["Menurun bermaksud besar ke kecil.", "Guna garis nombor untuk turun.", `Turutan betul ialah ${answer}.`],
+        en: ["Descending is big to small.", "Start with the biggest.", `Answer: ${answer}.`],
+        ms: ["Menurun bermaksud besar ke kecil.", "Letak nombor paling besar dahulu.", `Jawapan: ${answer}.`],
       };
   }
   if (visual.kind === "symbol") {
     const symbol = visual.a > visual.b ? ">" : "<";
+    const bigger = Math.max(visual.a, visual.b);
     return {
-      en: [`Find both numbers on the number line.`, `${Math.max(visual.a, visual.b)} is greater.`, `The correct sentence is ${visual.a} ${symbol} ${visual.b}.`],
-      ms: [`Cari kedua-dua nombor pada garis nombor.`, `${Math.max(visual.a, visual.b)} lebih besar.`, `Ayat betul ialah ${visual.a} ${symbol} ${visual.b}.`],
+      en: [`Compare ${visual.a} and ${visual.b}.`, `${bigger} is bigger.`, `Answer: ${visual.a} ${symbol} ${visual.b}.`],
+      ms: [`Bandingkan ${visual.a} dan ${visual.b}.`, `${bigger} lebih besar.`, `Jawapan: ${visual.a} ${symbol} ${visual.b}.`],
     };
   }
-  const object = objectName(visual.emoji, visual.count, "en");
-  const objectMs = objectName(visual.emoji, visual.count, "ms");
   return {
-    en: [`Count each ${objectName(visual.emoji, 1, "en")} slowly.`, `There ${visual.count === 1 ? "is" : "are"} ${visual.count} ${object}.`, `The answer is ${answer}.`],
-    ms: [`Kira setiap ${objectMs} perlahan-lahan.`, `Ada ${visual.count} ${objectMs}.`, `Jawapannya ${answer}.`],
+    en: ["Count the objects one by one.", `The last number you say is ${visual.count}.`, `Answer: ${answer}.`],
+    ms: ["Kira objek satu demi satu.", `Nombor terakhir yang disebut ialah ${visual.count}.`, `Jawapan: ${answer}.`],
   };
+}
+
+function countForwardSteps(start: number, amount: number) {
+  return Array.from({ length: amount }, (_, i) => start + i + 1).join(", ");
+}
+
+function countBackwardSteps(start: number, amount: number) {
+  return Array.from({ length: amount }, (_, i) => start - i - 1).join(", ");
 }
 
 function objectName(emoji: string | undefined, count: number, lang: Lang) {
@@ -475,16 +490,23 @@ function objectName(emoji: string | undefined, count: number, lang: Lang) {
     "🥭": { en: ["mango", "mangoes"], ms: "mangga" },
     "🥥": { en: ["coconut", "coconuts"], ms: "kelapa" },
     "🍃": { en: ["leaf", "leaves"], ms: "daun" },
-    "🪨": { en: ["rock", "rocks"], ms: "batu" },
-    "🐦": { en: ["bird", "birds"], ms: "burung" },
-    "🍪": { en: ["cookie", "cookies"], ms: "biskut" },
-    "📘": { en: ["book", "books"], ms: "buku" },
-    "🎈": { en: ["balloon", "balloons"], ms: "belon" },
-    "✏️": { en: ["pencil", "pencils"], ms: "pensel" },
-    "🥤": { en: ["cup", "cups"], ms: "cawan" },
     "🌸": { en: ["flower", "flowers"], ms: "bunga" },
-    "🥚": { en: ["egg", "eggs"], ms: "telur" },
-    "🚗": { en: ["toy car", "toy cars"], ms: "kereta mainan" },
+    "ðŸŒ": { en: ["banana", "bananas"], ms: "pisang" },
+    "ðŸŽ": { en: ["apple", "apples"], ms: "epal" },
+    "ðŸŠ": { en: ["orange", "oranges"], ms: "oren" },
+    "ðŸ¥­": { en: ["mango", "mangoes"], ms: "mangga" },
+    "ðŸ¥¥": { en: ["coconut", "coconuts"], ms: "kelapa" },
+    "ðŸƒ": { en: ["leaf", "leaves"], ms: "daun" },
+    "ðŸª¨": { en: ["rock", "rocks"], ms: "batu" },
+    "ðŸ¦": { en: ["bird", "birds"], ms: "burung" },
+    "ðŸª": { en: ["cookie", "cookies"], ms: "biskut" },
+    "ðŸ“˜": { en: ["book", "books"], ms: "buku" },
+    "ðŸŽˆ": { en: ["balloon", "balloons"], ms: "belon" },
+    "âœï¸": { en: ["pencil", "pencils"], ms: "pensel" },
+    "ðŸ¥¤": { en: ["cup", "cups"], ms: "cawan" },
+    "ðŸŒ¸": { en: ["flower", "flowers"], ms: "bunga" },
+    "ðŸ¥š": { en: ["egg", "eggs"], ms: "telur" },
+    "ðŸš—": { en: ["toy car", "toy cars"], ms: "kereta mainan" },
   };
   const fallback = { en: ["object", "objects"] as [string, string], ms: "objek" };
   const name = names[emoji ?? ""] ?? fallback;
@@ -577,7 +599,7 @@ function App() {
           <GroupingMode lang={lang} t={t} onDone={() => { awardStar("groupingMode"); go("menu"); }} />
         )}
         {screen === "learnAddition" && (
-          <AdditionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnAddition"); go("menu"); }} />
+          <AdditionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnAddition"); go("menu"); }} onSkipSubtraction={() => go("learnSubtraction")} />
         )}
         {screen === "learnSubtraction" && (
           <SubtractionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnSubtraction"); go("menu"); }} />
@@ -587,8 +609,8 @@ function App() {
             lang={lang}
             t={t}
             title={t.learnReal}
-            intro={lang === "en" ? "Real-world maths uses the same counting, adding, and taking away with things we can see." : "Matematik dunia sebenar guna kira, tambah, dan tolak dengan benda yang boleh dilihat."}
-            note={lang === "en" ? "Every story uses numbers 0-9 only." : "Setiap cerita hanya guna nombor 0-9."}
+            intro={lang === "en" ? "Use counting, adding, and taking away in simple stories." : "Guna kira, tambah, dan tolak dalam cerita mudah."}
+            note={lang === "en" ? "Look at the objects. Then answer." : "Lihat objek. Kemudian jawab."}
             questions={realPracticeQuestions}
             randomizePractice={false}
             onDone={() => { awardStar("learnReal"); go("menu"); }}
@@ -631,7 +653,7 @@ function Header({ lang, onToggleLang, title, stars, t, onBack }: {
       <div className="flex min-w-0 items-center gap-2">
         {onBack && (
           <button onClick={onBack} className="grid h-11 w-11 place-items-center rounded-2xl border-2 border-blue-100 bg-white text-2xl font-black text-blue-700 shadow-[0_5px_0_rgba(0,0,0,.16)] active:translate-y-1">
-            ←
+            â†
           </button>
         )}
         <h1 className="hidden truncate text-xl font-black leading-tight text-blue-950 sm:block md:text-2xl">{title}</h1>
@@ -641,7 +663,7 @@ function Header({ lang, onToggleLang, title, stars, t, onBack }: {
           {lang === "en" ? "BM" : "EN"}
         </button>
         <div className="rounded-2xl border-2 border-yellow-300 bg-white px-3 py-2 font-black text-yellow-700 shadow-[0_4px_0_rgba(0,0,0,.14)]">
-          ⭐ {stars}
+          â­ {stars}
         </div>
       </div>
     </header>
@@ -690,7 +712,7 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
           {player ? t.continue : t.start}
         </button>
         <p className="mt-4 text-sm font-bold text-slate-500">
-          {lang === "en" ? "Language switch uses curated English and Bahasa Melayu wording. DeepL can be connected later with an API key." : "Tukar bahasa guna teks English dan Bahasa Melayu yang disemak. DeepL boleh disambung kemudian dengan API key."}
+          {lang === "en" ? "Choose English or Bahasa Melayu." : "Pilih English atau Bahasa Melayu."}
         </p>
       </section>
     </main>
@@ -706,14 +728,14 @@ function MenuScreen({ t, player, go }: { t: UIStrings; player: Player; go: (scre
         <p className="text-lg font-bold text-blue-900/70">{t.menuTitle}</p>
       </section>
       <div className="grid gap-4 md:grid-cols-2">
-        <MenuCard title={t.recognizeNumbers} subtitle="See, spell, hear, trace" icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
-        <MenuCard title={t.numberValues} subtitle="Numbers mean quantity" icon="🍌" color="emerald" onClick={() => go("learnValues")} />
-        <MenuCard title={t.sequencing} subtitle="Number lines and order" icon="📈" color="sky" onClick={() => go("learnSequencing")} />
-        <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="🧺" color="amber" onClick={() => go("groupingMode")} />
-        <MenuCard title={t.addition} subtitle="Adding more" icon="➕" color="emerald" onClick={() => go("learnAddition")} />
-        <MenuCard title={t.subtraction} subtitle="Taking away" icon="➖" color="pink" onClick={() => go("learnSubtraction")} />
-        <MenuCard title={t.learnReal} subtitle="Counting objects in simple stories" icon="🍎" color="pink" onClick={() => go("learnReal")} />
-        <MenuCard title={t.testMode} subtitle={t.testHelp} icon="⭐" color="amber" onClick={() => go("testMenu")} />
+        <MenuCard title={t.recognizeNumbers} subtitle="See, spell, hear, trace" icon="ðŸ”¢" color="sky" onClick={() => go("learnRecognize")} />
+        <MenuCard title={t.numberValues} subtitle="Numbers mean quantity" icon="ðŸŒ" color="emerald" onClick={() => go("learnValues")} />
+        <MenuCard title={t.sequencing} subtitle="Number lines and order" icon="ðŸ“ˆ" color="sky" onClick={() => go("learnSequencing")} />
+        <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="ðŸ§º" color="amber" onClick={() => go("groupingMode")} />
+        <MenuCard title={t.addition} subtitle="Adding more" icon="âž•" color="emerald" onClick={() => go("learnAddition")} />
+        <MenuCard title={t.subtraction} subtitle="Taking away" icon="âž–" color="pink" onClick={() => go("learnSubtraction")} />
+        <MenuCard title={t.learnReal} subtitle="Counting objects in simple stories" icon="ðŸŽ" color="pink" onClick={() => go("learnReal")} />
+        <MenuCard title={t.testMode} subtitle={t.testHelp} icon="â­" color="amber" onClick={() => go("testMenu")} />
       </div>
     </main>
   );
@@ -811,7 +833,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
             <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
               <NumberTile value={number} lang={lang} large />
               <button onClick={() => speakNumber(number, lang)} className="mt-4 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
-                🔊 {t.speak}
+                ðŸ”Š {t.speak}
               </button>
             </div>
           </div>
@@ -819,7 +841,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
         {step === 1 && (
           <div className="space-y-4 text-center">
             <CharacterTalk lang={lang} text={number === 0 ? (lang === "en" ? "Zero means nothing. The basket is empty." : "Sifar bermaksud tiada apa-apa. Bakul kosong.") : (lang === "en" ? `Count ${number} bananas slowly.` : `Kira ${number} pisang perlahan-lahan.`)} />
-            <ObjectGroup count={number} emoji="🍌" numbered />
+            <ObjectGroup count={number} emoji="ðŸŒ" numbered />
           </div>
         )}
         {step === 2 && (
@@ -864,11 +886,11 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
 
 function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [number, setNumber] = useState(0);
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [practice, setPractice] = useState(false);
 
   const next = () => {
-    if (step < 3) setStep((s) => (s + 1) as 0 | 1 | 2 | 3);
+    if (step < 4) setStep((s) => (s + 1) as 0 | 1 | 2 | 3 | 4);
     else if (number < 9) {
       setNumber((n) => n + 1);
       setStep(0);
@@ -876,10 +898,15 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
   };
 
   const previous = () => {
-    if (step > 0) setStep((s) => (s - 1) as 0 | 1 | 2 | 3);
-    else if (number > 0) {
-      setNumber((n) => n - 1);
-      setStep(3);
+    if (step > 0) setStep((s) => (s - 1) as 0 | 1 | 2 | 3 | 4);
+  };
+
+  const skipNextNumber = () => {
+    if (number < 9) {
+      setNumber((n) => n + 1);
+      setStep(0);
+    } else {
+      setPractice(true);
     }
   };
 
@@ -889,9 +916,9 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.recognizeNumbers} helper={lang === "en" ? "See the number, spell it, hear it, then trace it." : "Lihat nombor, eja, dengar, kemudian surih."}>
-        <div className="mb-4 grid grid-cols-4 gap-2">
-          {[0, 1, 2, 3].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
+      <LessonShell title={t.recognizeNumbers} helper={lang === "en" ? "See the number, hear the word, trace it, then write it yourself." : "Lihat nombor, dengar perkataan, surih, kemudian tulis sendiri."}>
+        <div className="mb-4 grid grid-cols-5 gap-2">
+          {[0, 1, 2, 3, 4].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
         </div>
         {step === 0 && (
           <div className="grid gap-4 md:grid-cols-[auto_1fr]">
@@ -901,8 +928,13 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
         )}
         {step === 1 && (
           <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-            <CharacterTalk lang={lang} text={lang === "en" ? `We spell it: ${WORDS.en[number]}.` : `Kita eja: ${WORDS.ms[number]}.`} />
-            <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center text-6xl font-black text-blue-950">{WORDS[lang][number]}</div>
+            <CharacterTalk lang={lang} text={lang === "en" ? `This word is ${WORDS.en[number]}. Tap the speaker to hear it.` : `Perkataan ini ${WORDS.ms[number]}. Tekan pembesar suara untuk dengar.`} />
+            <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
+              <p className="text-6xl font-black text-blue-950">{WORDS[lang][number]}</p>
+              <button onClick={() => speakNumber(number, lang)} className="mt-4 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
+                ðŸ”Š {lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}
+              </button>
+            </div>
           </div>
         )}
         {step === 2 && (
@@ -912,11 +944,13 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
           </div>
         )}
         {step === 3 && <TracePad value={number} t={t} lang={lang} onTraced={next} />}
+        {step === 4 && <WriteNumberPad value={number} t={t} lang={lang} />}
         <div className="mt-5 flex flex-wrap justify-between gap-3">
-          <button disabled={number === 0 && step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
+          <button disabled={step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 3 ? t.practice : t.next}</button>
+            <SecondaryLessonButton label={number < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)} onClick={skipNextNumber} />
+            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 4 ? t.practice : t.next}</button>
           </div>
         </div>
       </LessonShell>
@@ -927,11 +961,13 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [practice, setPractice] = useState(false);
-  const examples = [
-    { n: 0, emoji: "🥥", text: lang === "en" ? "0 means there are no objects." : "0 bermaksud tiada objek." },
-    { n: 3, emoji: "🥭", text: lang === "en" ? "3 means there are 3 objects." : "3 bermaksud ada 3 objek." },
-    { n: 5, emoji: "🍃", text: lang === "en" ? "5 means there are 5 objects." : "5 bermaksud ada 5 objek." },
-  ];
+  const examples = NUMBERS.map((n) => ({
+    n,
+    emoji: "🍌",
+    text: n === 0
+      ? (lang === "en" ? "0 is nothing. The basket is empty." : "0 ialah kosong. Bakul tiada pisang.")
+      : (lang === "en" ? `This is ${n} bananas.` : `Ini ${n} pisang.`),
+  }));
   const current = examples[step];
 
   if (practice) {
@@ -945,7 +981,11 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
           <CharacterTalk lang={lang} text={current.text} />
           <div className="rounded-[2rem] border-4 border-white bg-white p-5 text-center shadow-[0_7px_0_rgba(0,0,0,.12)]">
             <NumberTile value={current.n} lang={lang} showWord={false} />
-            <div className="mt-4"><ObjectGroup count={current.n} emoji={current.emoji} numbered /></div>
+            <div className="mt-4">
+              {current.n === 0
+                ? <ContainerScene count={0} emoji={current.emoji} container="basket" numbered />
+                : <ObjectGroup count={current.n} emoji={current.emoji} numbered />}
+            </div>
           </div>
         </div>
         <div className="mt-5 flex flex-wrap justify-between gap-3">
@@ -965,24 +1005,39 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   const [practice, setPractice] = useState(false);
   const slides = [
     {
+      title: lang === "en" ? "Full number line" : "Garis nombor penuh",
+      text: lang === "en" ? "First, look at all the numbers from 0 to 9." : "Mula-mula, lihat semua nombor dari 0 hingga 9.",
+      visual: <NumberLine marked={-1} />,
+    },
+    {
       title: lang === "en" ? "Ascending" : "Menaik",
-      text: lang === "en" ? "Ascending means numbers go up." : "Menaik bermaksud nombor naik.",
-      visual: <MissingNumberLine nums={[0, 1, 2, 3, 4]} />,
+      text: lang === "en" ? "Ascending is small to big. Move right." : "Menaik ialah kecil ke besar. Gerak ke kanan.",
+      visual: <SequencingExample nums={[0, 1, 2, 3, 4]} arrow="right" />,
     },
     {
       title: lang === "en" ? "Descending" : "Menurun",
-      text: lang === "en" ? "Descending means numbers go down." : "Menurun bermaksud nombor turun.",
-      visual: <MissingNumberLine nums={[9, 8, 7, 6, 5]} />,
+      text: lang === "en" ? "Descending is big to small. Move left." : "Menurun ialah besar ke kecil. Gerak ke kiri.",
+      visual: <SequencingExample nums={[9, 8, 7, 6, 5]} arrow="left" />,
+    },
+    {
+      title: lang === "en" ? "Sequencing" : "Turutan",
+      text: lang === "en" ? "Put the numbers in order." : "Susun nombor ikut turutan.",
+      visual: <MissingNumberLine nums={[2, 3, 4, 5, 6]} />,
+    },
+    {
+      title: lang === "en" ? "Missing numbers" : "Nombor hilang",
+      text: lang === "en" ? "Look before and after the gap." : "Lihat sebelum dan selepas ruang kosong.",
+      visual: <MissingNumberLine nums={[3, 4, "?", 6, 7]} />,
     },
     {
       title: lang === "en" ? "Greater than" : "Lebih besar",
-      text: lang === "en" ? "This means greater than." : "Ini bermaksud lebih besar.",
-      visual: <div className="text-center text-6xl font-black text-blue-950">7 &gt; 4</div>,
+      text: lang === "en" ? "The bigger number is on the right." : "Nombor lebih besar di kanan.",
+      visual: <CompareTeachingVisual a={7} b={4} symbol=">" lang={lang} />,
     },
     {
       title: lang === "en" ? "Less than" : "Lebih kecil",
-      text: lang === "en" ? "This means less than." : "Ini bermaksud lebih kecil.",
-      visual: <div className="text-center text-6xl font-black text-blue-950">3 &lt; 6</div>,
+      text: lang === "en" ? "The smaller number is on the left." : "Nombor lebih kecil di kiri.",
+      visual: <CompareTeachingVisual a={3} b={6} symbol="<" lang={lang} />,
     },
   ];
   const current = slides[step];
@@ -1012,7 +1067,19 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
 }
 
 const GROUPING_ACTIVITIES = [
+  { a: 1, b: 2, emoji: "🍌" },
+  { a: 2, b: 2, emoji: "🍌" },
   { a: 2, b: 3, emoji: "🍌" },
+  { a: 3, b: 4, emoji: "🍌" },
+  { a: 4, b: 5, emoji: "🍌" },
+];
+
+const groupingPracticeQuestions: Question[] = [
+  q("group-1-2", "operations", { en: "1 banana and 2 bananas. How many bananas?", ms: "1 pisang dan 2 pisang. Berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "add", a: 1, b: 2, emoji: "🍌" }),
+  q("group-2-2", "operations", { en: "2 bananas and 2 bananas. How many bananas?", ms: "2 pisang dan 2 pisang. Berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "add", a: 2, b: 2, emoji: "🍌" }),
+  q("group-2-3", "operations", { en: "2 bananas and 3 bananas. How many bananas?", ms: "2 pisang dan 3 pisang. Berapa pisang?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }),
+  q("group-3-4", "operations", { en: "3 bananas and 4 bananas. How many bananas?", ms: "3 pisang dan 4 pisang. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌" }),
+  q("group-4-5", "operations", { en: "4 bananas and 5 bananas. How many bananas?", ms: "4 pisang dan 5 pisang. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
 ];
 
 type GroupingPhase = "makeA" | "checkA" | "makeB" | "checkB" | "explain" | "combine" | "answer";
@@ -1022,6 +1089,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
   const [phase, setPhase] = useState<GroupingPhase>("makeA");
   const [groupA, setGroupA] = useState(0);
   const [groupB, setGroupB] = useState(0);
+  const [practice, setPractice] = useState(false);
   const activity = GROUPING_ACTIVITIES[activityIndex];
   const activeGroup = phase === "makeB" || phase === "checkB" ? 2 : 1;
   const activeCount = activeGroup === 1 ? groupA : groupB;
@@ -1061,22 +1129,29 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
 
   const nextActivity = () => {
     if (activityIndex < GROUPING_ACTIVITIES.length - 1) resetActivity(activityIndex + 1);
-    else onDone();
+    else setPractice(true);
   };
+
+  if (practice) {
+    return <Quiz lang={lang} t={t} title={`${t.groupingMode}: ${t.practice}`} questions={groupingPracticeQuestions} randomize={false} onFinish={() => onDone()} onBackToLearning={() => setPractice(false)} />;
+  }
 
   return (
     <main className="mx-auto w-full max-w-4xl pb-8">
       <LessonShell
         title={lang === "en" ? "Grouping Mode: Banana Snack" : "Mod Kumpulan: Snek Pisang"}
-        helper={lang === "en" ? "Chrys is hungry in the jungle. Help him put banana groups together." : "Chrys lapar di hutan. Bantu dia gabungkan kumpulan pisang."}
+        helper={lang === "en" ? "Make two banana groups. Then count all." : "Bina dua kumpulan pisang. Kemudian kira semua."}
       >
         <div className="mb-4 grid gap-3 md:grid-cols-[auto_1fr] md:items-center">
           <img src={chrysHappy} alt="Chrys" className="mx-auto h-28 w-28 object-contain" />
           <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
             <p className="text-xl font-black text-blue-950">{instruction}</p>
             <p className="mt-1 text-sm font-bold text-blue-800/70">
-              {lang === "en" ? "Tap the banana to put it in the active group." : "Tekan pisang untuk letak dalam kumpulan aktif."}
+              {lang === "en" ? "Tap banana to add one." : "Tekan pisang untuk tambah satu."}
             </p>
+            <div className="mt-3">
+              <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
+            </div>
           </div>
         </div>
 
@@ -1084,10 +1159,10 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
           <div className="mb-4 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
             <p className="text-4xl font-black text-emerald-800">{activity.a} + {activity.b} = {total}</p>
             <p className="mt-2 text-xl font-black text-emerald-900">
-              {lang === "en" ? "2 bananas and 3 bananas make 5 bananas." : "2 pisang dan 3 pisang menjadi 5 pisang."}
+              {lang === "en" ? `${activity.a} bananas and ${activity.b} bananas make ${total} bananas.` : `${activity.a} pisang dan ${activity.b} pisang menjadi ${total} pisang.`}
             </p>
             <p className="mt-1 text-lg font-black text-emerald-800">
-              {lang === "en" ? "Chrys has 5 bananas altogether." : "Chrys ada 5 pisang semuanya."}
+              {lang === "en" ? `Chrys has ${total} bananas altogether.` : `Chrys ada ${total} pisang semuanya.`}
             </p>
           </div>
         )}
@@ -1140,10 +1215,10 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
 
         {phase === "explain" && (
           <div className="mt-4 rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
-            <p className="mb-2 text-4xl font-black text-blue-950">2 + 3 = ?</p>
+            <p className="mb-2 text-4xl font-black text-blue-950">{activity.a} + {activity.b} = ?</p>
             <p className="text-3xl font-black text-blue-900">+</p>
             <p className="text-xl font-black text-slate-800">
-              {lang === "en" ? "The + sign means we put the groups together." : "Tanda + bermaksud kita gabungkan kumpulan."}
+              {lang === "en" ? "The + sign joins the groups." : "Tanda + gabungkan kumpulan."}
             </p>
           </div>
         )}
@@ -1157,8 +1232,12 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
               <button onClick={addObject} className="grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 text-5xl shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1">
                 {activity.emoji}
               </button>
-              <button onClick={removeObject} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-600">
-                {lang === "en" ? "Take one out" : "Keluarkan satu"}
+              <button onClick={removeObject} className="flex items-center gap-2 rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-3 font-black text-red-700 shadow-[0_4px_0_rgba(185,28,28,.16)] active:translate-y-1">
+                <span className="relative inline-grid h-8 w-8 place-items-center rounded-xl bg-white text-xl">
+                  {activity.emoji}
+                  <span className="absolute text-3xl font-black leading-none text-red-600">×</span>
+                </span>
+                {lang === "en" ? "Remove one" : "Buang satu"}
               </button>
               <button onClick={checkGroup} className="rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1">
                 {lang === "en" ? "Check group" : "Semak kumpulan"}
@@ -1177,7 +1256,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
           <div className="flex flex-wrap justify-end gap-3">
             {phase === "explain" && (
               <button onClick={() => setPhase("combine")} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
-                {lang === "en" ? "Put groups together" : "Gabungkan kumpulan"}
+              {lang === "en" ? "Join groups" : "Gabung kumpulan"}
               </button>
             )}
             {phase === "combine" && (
@@ -1187,7 +1266,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
             )}
             {phase === "answer" && (
               <button onClick={nextActivity} className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
-                {t.done}
+                {activityIndex < GROUPING_ACTIVITIES.length - 1 ? t.next : t.done}
               </button>
             )}
           </div>
@@ -1208,7 +1287,7 @@ function getGroupingInstruction(lang: Lang, phase: GroupingPhase, a: number, b: 
   if (phase === "makeA" || phase === "checkA") return `Chrys found ${a} bananas. Make Group 1.`;
   if (phase === "makeB" || phase === "checkB") return `Chrys found ${b} more bananas. Make Group 2.`;
   if (phase === "explain") return `${a} is one group. ${b} is another group.`;
-  if (phase === "combine") return `Move the groups together to see the total.`;
+  if (phase === "combine") return `Put both groups together.`;
   return `${a} plus ${b} makes ${total}.`;
 }
 
@@ -1221,7 +1300,7 @@ function getGroupingFeedback(lang: Lang, count: number, target: number, group: n
   }
   return correct
     ? { correct, title: `Great job! This group has ${target}.`, detail: `Group ${group} is ready.` }
-    : { correct, title: "Good try. Let's count this group again.", detail: `We need ${target}, but this group has ${count}.` };
+    : { correct, title: "Good try. Count again.", detail: `Need ${target}. Now there are ${count}.` };
 }
 
 function GroupingBox({ title, target, count, emoji, active, lang }: { title: string; target: number; count: number; emoji: string; active: boolean; lang: Lang }) {
@@ -1299,16 +1378,16 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
         title={t.learnOperations}
         helper={phase.startsWith("add")
           ? (lang === "en"
-            ? "First learn addition with Chrys, then try a question."
+            ? "Learn addition. Then try questions."
             : "Mula-mula belajar tambah dengan Chrys, kemudian cuba soalan.")
           : (lang === "en"
-            ? "Now learn subtraction by taking away from one group."
+            ? "Learn subtraction. Take away from one group."
             : "Sekarang belajar tolak dengan mengambil daripada satu kumpulan.")}
       >
         {phase === "addIntro" && (
           <AdditionIntroStep
             title={lang === "en" ? "Addition" : "Tambah"}
-            text={lang === "en" ? "Addition means adding or combining two things together." : "Tambah bermaksud menambah atau menggabungkan dua benda bersama."}
+            text={lang === "en" ? "Addition puts groups together." : "Tambah gabungkan kumpulan."}
             onNext={() => setPhase("addSign")}
             t={t}
             actions={[
@@ -1343,7 +1422,7 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
         {phase === "subIntro" && (
           <AdditionIntroStep
             title={lang === "en" ? "Subtraction" : "Tolak"}
-            text={lang === "en" ? "Subtraction means taking away from a group." : "Tolak bermaksud mengambil daripada satu kumpulan."}
+            text={lang === "en" ? "Subtraction takes away from one group." : "Tolak ambil daripada satu kumpulan."}
             onNext={() => setPhase("subSign")}
             t={t}
             actions={[
@@ -1355,7 +1434,7 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
           <SymbolIntro
             title={lang === "en" ? "The minus sign" : "Tanda tolak"}
             symbol="-"
-            text={lang === "en" ? "The - sign means we take some away." : "Tanda - bermaksud kita ambil sebahagian."}
+            text={lang === "en" ? "The - sign means take away." : "Tanda - bermaksud ambil."}
             onNext={() => setPhase("subStory")}
             t={t}
             actions={[
@@ -1377,7 +1456,7 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   );
 }
 
-function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+function AdditionOnlyLesson({ lang, t, onDone, onSkipSubtraction }: { lang: Lang; t: UIStrings; onDone: () => void; onSkipSubtraction?: () => void }) {
   const [phase, setPhase] = useState<"intro" | "sign" | "story" | "practice">("intro");
 
   if (phase === "practice") {
@@ -1386,14 +1465,17 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.addition} helper={lang === "en" ? "Addition means add more and combine." : "Tambah bermaksud tambah lagi dan gabungkan."}>
+      <LessonShell title={t.addition} helper={lang === "en" ? "Add more. Count all." : "Tambah lagi. Kira semua."}>
         {phase === "intro" && (
           <AdditionIntroStep
             title={t.addition}
-            text={lang === "en" ? "Addition means adding or combining two things together." : "Tambah bermaksud menambah atau menggabungkan dua benda bersama."}
+            text={lang === "en" ? "Addition puts groups together." : "Tambah gabungkan kumpulan."}
             onNext={() => setPhase("sign")}
             t={t}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+            actions={[
+              { label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" },
+              ...(onSkipSubtraction ? [{ label: skipSubtractionLabel(lang), onClick: onSkipSubtraction }] : []),
+            ]}
           />
         )}
         {phase === "sign" && (
@@ -1403,7 +1485,10 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             text={lang === "en" ? "The + sign means add more." : "Tanda + bermaksud tambah lagi."}
             onNext={() => setPhase("story")}
             t={t}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+            actions={[
+              { label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" },
+              ...(onSkipSubtraction ? [{ label: skipSubtractionLabel(lang), onClick: onSkipSubtraction }] : []),
+            ]}
           />
         )}
         {phase === "story" && (
@@ -1413,6 +1498,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             onPrev={() => setPhase("sign")}
             onDone={() => setPhase("practice")}
             onSkipPractice={() => setPhase("practice")}
+            onSkipSubtraction={onSkipSubtraction}
           />
         )}
       </LessonShell>
@@ -1429,11 +1515,11 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.subtraction} helper={lang === "en" ? "Subtraction means take away from one group." : "Tolak bermaksud ambil daripada satu kumpulan."}>
+      <LessonShell title={t.subtraction} helper={lang === "en" ? "Take away. Count what is left." : "Ambil. Kira yang tinggal."}>
         {phase === "intro" && (
           <AdditionIntroStep
             title={t.subtraction}
-            text={lang === "en" ? "Subtraction means taking away from a group." : "Tolak bermaksud mengambil daripada satu kumpulan."}
+            text={lang === "en" ? "Subtraction takes away from one group." : "Tolak ambil daripada satu kumpulan."}
             onNext={() => setPhase("sign")}
             t={t}
             actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
@@ -1499,7 +1585,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
       "Then Chrys eats 3 more bananas.",
       "Then Chrys eats 3 more bananas.",
       "2 bananas and 3 more bananas make 5 bananas.",
-      "The + sign means Chrys is adding more bananas.",
+      "The + sign adds more bananas.",
       "So, 2 + 3 = 5.",
     ]
     : [
@@ -1519,7 +1605,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
   const helperText = step < 4
     ? storyText[step]
     : lang === "en"
-      ? "Now we can write the equation."
+      ? "Now write it."
       : "Sekarang kita boleh tulis ayat nombor.";
 
   return (
@@ -1536,14 +1622,14 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
             {showSecond && <StoryBananaGroup count={3} eating={eatSecond} label={lang === "en" ? "3 more bananas" : "3 pisang lagi"} />}
             {step >= 4 && (
               <div className="grid h-full min-h-32 place-items-center rounded-3xl bg-emerald-50 text-center">
-                <ObjectGroup count={5} emoji="🍌" numbered />
+                <ObjectGroup count={5} emoji="ðŸŒ" numbered />
               </div>
             )}
           </div>
 
           <div className="relative mx-auto grid w-40 place-items-center">
             <img src={chrysHappy} alt="Chrys eating bananas" className={`h-36 w-36 object-contain transition-transform duration-700 ${eatFirst || eatSecond ? "scale-110" : ""}`} />
-            {(eatFirst || eatSecond) && <span className="absolute right-2 top-1 text-3xl">🍌</span>}
+            {(eatFirst || eatSecond) && <span className="absolute right-2 top-1 text-3xl">ðŸŒ</span>}
           </div>
 
           {bellyTarget > 0 && (
@@ -1552,6 +1638,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
               counting={eatSecond}
               label={lang === "en" ? "belly counter" : "kira dalam perut"}
               unit={lang === "en" ? "bananas" : "pisang"}
+              lang={lang}
             />
           )}
         </div>
@@ -1599,9 +1686,9 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, onSkipPractice }: {
     ? [
       "Chrys has 7 bananas.",
       "Chrys gives away 3 bananas.",
-      "The taken-away bananas stay crossed out.",
+      "Cross out 3 bananas.",
       "Count only the bananas that are left.",
-      "7 bananas take away 3 bananas leaves 4 bananas.",
+      "7 take away 3 leaves 4.",
       "So, 7 - 3 = 4.",
     ]
     : [
@@ -1626,10 +1713,10 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, onSkipPractice }: {
         <div className="grid gap-4 md:grid-cols-[auto_1fr] md:items-center">
           <div className="relative mx-auto grid w-36 place-items-center">
             <img src={chrysThinking} alt="Chrys thinking" className={`h-32 w-32 object-contain transition-transform duration-700 ${showCross ? "scale-105" : ""}`} />
-            {showCross && <span className="absolute right-0 top-2 text-3xl">🍌</span>}
+            {showCross && <span className="absolute right-0 top-2 text-3xl">ðŸŒ</span>}
           </div>
           <div className="rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
-            <CountedObjectRow count={7} emoji="🍌" crossed={showCross ? 3 : 0} showCount={showCount} countRemainingOnly />
+            <CountedObjectRow count={7} emoji="ðŸŒ" crossed={showCross ? 3 : 0} showCount={showCount} countRemainingOnly />
           </div>
         </div>
 
@@ -1644,7 +1731,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, onSkipPractice }: {
       <div className="rounded-3xl border-2 border-red-100 bg-red-50 p-4 text-center">
         <p className="text-base font-black text-red-900">
           {lang === "en"
-            ? "Subtraction uses one group. Cross out what is taken away, then count what is left."
+            ? "Cross out what you take away. Count what is left."
             : "Tolak guna satu kumpulan. Palang yang diambil, kemudian kira yang tinggal."}
         </p>
       </div>
@@ -1680,7 +1767,7 @@ function StoryBananaGroup({ count, eating, label }: { count: number; eating: boo
             className={`grid h-16 w-16 place-items-center rounded-2xl bg-white text-4xl shadow-inner transition-all duration-1000 ${eating ? "translate-x-24 -translate-y-4 scale-50 opacity-0" : "translate-x-0 opacity-100"}`}
             style={{ transitionDelay: `${i * 220}ms` }}
           >
-            🍌
+            ðŸŒ
           </span>
         ))}
       </div>
@@ -1689,7 +1776,7 @@ function StoryBananaGroup({ count, eating, label }: { count: number; eating: boo
   );
 }
 
-function BellyCounter({ target, counting, label, unit }: { target: number; counting: boolean; label: string; unit: string }) {
+function BellyCounter({ target, counting, label, unit, lang }: { target: number; counting: boolean; label: string; unit: string; lang: Lang }) {
   const [visible, setVisible] = useState(target);
 
   useEffect(() => {
@@ -1702,6 +1789,7 @@ function BellyCounter({ target, counting, label, unit }: { target: number; count
       return;
     }
     setVisible(0);
+    speakCountingSequence(target, lang);
     const timers = Array.from({ length: target }, (_, i) => window.setTimeout(() => setVisible(i + 1), 450 * (i + 1)));
     return () => timers.forEach(window.clearTimeout);
   }, [counting, target]);
@@ -1714,7 +1802,7 @@ function BellyCounter({ target, counting, label, unit }: { target: number; count
       </div>
       <p className="text-lg font-black text-pink-900">{visible} {unit}</p>
       <div className="mt-2 flex max-w-40 flex-wrap justify-center gap-1">
-        {Array.from({ length: visible }, (_, i) => <span key={i} className="text-lg">🍌</span>)}
+        {Array.from({ length: visible }, (_, i) => <span key={i} className="text-lg">ðŸŒ</span>)}
       </div>
     </div>
   );
@@ -1814,11 +1902,11 @@ function SlowOperationExample({ kind, lang, t, doneLabel, onPrev, onDone }: {
 function getSlowExampleText(kind: "add" | "subtract", step: number, lang: Lang) {
   const add = lang === "en"
     ? [
-      "First, we have 2 bananas.",
-      "Then, we add 3 more bananas.",
-      "Now we join both groups together.",
-      "Now we count them all together.",
-      "There are 5 bananas altogether.",
+      "Start with 2 bananas.",
+      "Add 3 more bananas.",
+      "Join the groups.",
+      "Count all bananas.",
+      "There are 5 bananas.",
     ]
     : [
       "Mula-mula, kita ada 2 pisang.",
@@ -1829,15 +1917,15 @@ function getSlowExampleText(kind: "add" | "subtract", step: number, lang: Lang) 
     ];
   const sub = lang === "en"
     ? [
-      "First, we have 7 bananas.",
+      "Start with 7 bananas.",
       "Chrys gives away 3 bananas.",
-      "The taken-away bananas stay crossed out.",
-      "Count only the bananas that are left.",
+      "Cross out 3 bananas.",
+      "Count what is left.",
       "4 bananas are left.",
     ]
     : [
       "Mula-mula, kita ada 7 pisang.",
-      "Ambil keluar 3 pisang.",
+      "Ambil 3 pisang.",
       "Pisang yang diambil kekal dipalang.",
       "Kira hanya pisang yang tinggal.",
       "4 pisang tinggal.",
@@ -1852,12 +1940,12 @@ function AdditionExampleVisual({ step }: { step: number }) {
     <div className="space-y-5">
       {!showJoined ? (
         <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <LabeledGroup count={2} label="2" emoji="🍌" />
+          <LabeledGroup count={2} label="2" emoji="ðŸŒ" />
           <div className="text-center text-5xl font-black text-blue-800">+</div>
-          {step >= 1 ? <LabeledGroup count={3} label="3" emoji="🍌" /> : <div className="rounded-3xl border-4 border-dashed border-slate-200 p-8 text-center font-black text-slate-300">?</div>}
+          {step >= 1 ? <LabeledGroup count={3} label="3" emoji="ðŸŒ" /> : <div className="rounded-3xl border-4 border-dashed border-slate-200 p-8 text-center font-black text-slate-300">?</div>}
         </div>
       ) : (
-        <CountedObjectRow count={5} emoji="🍌" showCount={showCount} />
+        <CountedObjectRow count={5} emoji="ðŸŒ" showCount={showCount} />
       )}
       {step >= 4 && (
         <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center text-4xl font-black text-emerald-800">
@@ -1873,7 +1961,7 @@ function SubtractionExampleVisual({ step }: { step: number }) {
   const showCount = step >= 3;
   return (
     <div className="space-y-5">
-      <CountedObjectRow count={7} emoji="🍌" crossed={showCross ? 3 : 0} showCount={showCount} countRemainingOnly />
+      <CountedObjectRow count={7} emoji="ðŸŒ" crossed={showCross ? 3 : 0} showCount={showCount} countRemainingOnly />
       {step >= 4 && (
         <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center text-4xl font-black text-emerald-800">
           7 - 3 = 4
@@ -1934,12 +2022,12 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         const label = shouldCount ? ++leftIndex : 0;
         const labelVisible = shouldCount && label <= visible;
         return (
-          <div key={i} className={`relative flex flex-col items-center justify-start rounded-2xl bg-amber-50 shadow-inner ${compact ? "h-16 w-12 pt-1 text-3xl" : "h-20 w-16 pt-2 text-4xl"}`}>
-            <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>{emoji}</span>
-            {gone && <span className={`absolute font-black text-red-500 transition-opacity duration-300 ${compact ? "top-0 text-4xl" : "top-1 text-5xl"}`}>x</span>}
-            <span className={`mt-1 font-black text-blue-700 transition-opacity ${compact ? "text-base" : "text-xl"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
+          <div key={i} className={`relative flex flex-col items-center justify-center rounded-2xl bg-amber-50 shadow-inner ${compact ? "h-20 w-12 pt-4 text-3xl" : "h-24 w-16 pt-5 text-4xl"}`}>
+            <span className={`absolute top-1 rounded-full bg-blue-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
               {labelVisible ? label : "."}
             </span>
+            <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>{emoji}</span>
+            {gone && <span className={`absolute font-black text-red-500 transition-opacity duration-300 ${compact ? "top-0 text-4xl" : "top-1 text-5xl"}`}>x</span>}
           </div>
         );
       })}
@@ -1983,7 +2071,7 @@ function ConceptLesson({ lang, t, title, intro, note, questions, onDone, randomi
           <img src={alyseTeaching} alt="Alyse teaching" className="mx-auto h-32 w-32 object-contain" />
           <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
             <p className="text-lg font-black text-blue-950">{note}</p>
-            <p className="mt-2 text-sm font-bold text-blue-800/70">{lang === "en" ? "We show the objects first, then the picture, then the number sentence." : "Kita tunjuk objek dahulu, kemudian gambar, kemudian ayat nombor."}</p>
+            <p className="mt-2 text-sm font-bold text-blue-800/70">{lang === "en" ? "Look. Count. Answer." : "Lihat. Kira. Jawab."}</p>
           </div>
         </div>
         <div className="mt-5 rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_7px_0_rgba(0,0,0,.14)]">
@@ -2026,9 +2114,9 @@ function TestMenu({ t, go }: { t: UIStrings; go: (screen: Screen) => void }) {
         <p className="mt-2 font-bold text-slate-500">{t.testHelp}</p>
       </section>
       <div className="grid gap-4">
-        <MenuCard title={t.learnNumbers} subtitle="25 questions, all 0-9" icon="🔢" color="sky" onClick={() => go("testNumbers")} />
-        <MenuCard title={t.learnOperations} subtitle="25 questions, 0-9 only" icon="➕" color="emerald" onClick={() => go("testOperations")} />
-        <MenuCard title={t.learnReal} subtitle="25 stories with visible objects" icon="🍎" color="pink" onClick={() => go("testReal")} />
+        <MenuCard title={t.learnNumbers} subtitle="25 questions, all 0-9" icon="ðŸ”¢" color="sky" onClick={() => go("testNumbers")} />
+        <MenuCard title={t.learnOperations} subtitle="25 questions, 0-9 only" icon="âž•" color="emerald" onClick={() => go("testOperations")} />
+        <MenuCard title={t.learnReal} subtitle="25 stories with visible objects" icon="ðŸŽ" color="pink" onClick={() => go("testReal")} />
       </div>
     </main>
   );
@@ -2091,7 +2179,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
           )}
           <h2 className="text-center text-2xl font-black text-slate-900">{qn.text[lang]}</h2>
           <div className="my-4 rounded-3xl border-2 border-sky-100 bg-sky-50 p-3">
-            <VisualDisplay visual={qn.visual} lang={lang} />
+            <VisualDisplay visual={qn.visual} lang={lang} revealNumbers={answered && !isCorrect} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {qn.options.map((option) => {
@@ -2125,10 +2213,13 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                   <p className={`text-xl font-black ${isCorrect ? "text-emerald-700" : "text-orange-700"}`}>{isCorrect ? t.greatJob : t.lookAgain}</p>
                   <p className="font-black text-slate-700">{t.yourAnswer}: {selected}</p>
                   <p className="font-black text-slate-700">{t.correctAnswer}: {qn.answer}</p>
-                  <p className="font-bold text-slate-600">{t.seeMethod}</p>
+                  {!isCorrect && qn.visual.kind === "count" && (
+                    <p className="font-black text-blue-800">{lang === "en" ? `This is ${qn.visual.count}.` : `Ini ${qn.visual.count}.`}</p>
+                  )}
+                  {!isCorrect && <p className="font-bold text-slate-600">{t.seeMethod}</p>}
                 </div>
               </div>
-              <WorkedMethod q={qn} lang={lang} />
+              {!isCorrect && <WorkedMethod q={qn} lang={lang} />}
               <div className="mt-4 flex gap-3">
                 <button onClick={next} className="flex-[2] rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
                   {index === randomizedQuestions.length - 1 ? t.finish : t.nextQuestion}
@@ -2171,7 +2262,7 @@ function AudioHearButton({ label, onClick }: { label: string; onClick: () => voi
         aria-label={label}
         className="grid h-16 w-16 place-items-center rounded-3xl border-4 border-sky-200 bg-sky-50 text-3xl shadow-[0_5px_0_rgba(30,64,175,.18)] active:translate-y-1"
       >
-        🔊
+        ðŸ”Š
       </button>
       <div className="relative">
         <button
@@ -2181,7 +2272,7 @@ function AudioHearButton({ label, onClick }: { label: string; onClick: () => voi
           {label}
         </button>
         <span className="pointer-events-none absolute -right-3 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 text-2xl shadow-md">
-          👆
+          ðŸ‘†
         </span>
       </div>
     </div>
@@ -2201,7 +2292,7 @@ function NumberTile({ value, lang, large = false, showWord = true }: { value: nu
 
 function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: number; emoji: string; numbered?: boolean; crossed?: number }) {
   if (count === 0) {
-    return <div className="mx-auto rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">0</div>;
+    return <div className="mx-auto rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">{numbered ? "0" : "empty"}</div>;
   }
   return (
     <div className="flex flex-wrap justify-center gap-3 rounded-3xl border-2 border-slate-100 bg-white p-4">
@@ -2210,8 +2301,8 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: n
         return (
           <div key={i} className="relative grid h-16 w-16 place-items-center rounded-2xl bg-amber-50 text-4xl shadow-inner">
             <span className={gone ? "opacity-25" : ""}>{emoji}</span>
-            {numbered && <span className="absolute -bottom-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
-            {gone && <span className="absolute text-5xl font-black text-red-500">×</span>}
+            {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
+            {gone && <span className="absolute text-5xl font-black text-red-500">Ã—</span>}
           </div>
         );
       })}
@@ -2250,7 +2341,7 @@ function ContainerScene({
         <img src={image} alt={alt} className="absolute inset-0 h-full w-full object-contain" />
         {count === 0 && (
           <div className="absolute inset-x-8 bottom-5 rounded-2xl border-2 border-dashed border-slate-200 bg-white/85 px-4 py-3 text-center text-2xl font-black text-slate-400">
-            0
+            {numbered ? "0" : "empty"}
           </div>
         )}
         {Array.from({ length: count }, (_, i) => {
@@ -2261,7 +2352,7 @@ function ContainerScene({
               className={`absolute ${x} ${y} grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl bg-white/80 text-4xl shadow-md`}
             >
               <span>{emoji}</span>
-              {numbered && <span className="absolute -bottom-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
+              {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             </div>
           );
         })}
@@ -2308,6 +2399,38 @@ function MissingNumberLine({ nums }: { nums: Array<number | "?"> }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function SequencingExample({ nums, arrow }: { nums: number[]; arrow: "left" | "right" }) {
+  return (
+    <div className="space-y-4">
+      <NumberLine marked={-1} />
+      <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
+        {nums.map((n, i) => (
+          <React.Fragment key={n}>
+            {i > 0 && <span className="text-2xl font-black text-emerald-700">{arrow === "right" ? "→" : "←"}</span>}
+            <span className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-2xl font-black text-blue-950">{n}</span>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CompareTeachingVisual({ a, b, symbol, lang }: { a: number; b: number; symbol: ">" | "<"; lang: Lang }) {
+  return (
+    <div className="space-y-4">
+      <NumberLine marked={Math.max(a, b)} />
+      <div className="rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
+        <p className="text-6xl font-black text-blue-950">{a} {symbol} {b}</p>
+        <p className="mt-2 text-lg font-black text-slate-700">
+          {lang === "en"
+            ? `${Math.max(a, b)} is greater than ${Math.min(a, b)}.`
+            : `${Math.max(a, b)} lebih besar daripada ${Math.min(a, b)}.`}
+        </p>
       </div>
     </div>
   );
@@ -2416,18 +2539,27 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
   };
   const confirmTrace = () => {
     setConfirmed(true);
-    window.setTimeout(onTraced, 1800);
+    window.setTimeout(onTraced, 4200);
   };
 
   return (
     <div className="mx-auto w-full max-w-[27rem] rounded-3xl border-2 border-blue-100 bg-white p-4">
-      <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Draw ${value}` : `Lukis ${value}`}</h3>
+      <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Trace ${value}` : `Surih ${value}`}</h3>
+      <p className="mb-3 text-center text-sm font-bold text-slate-500">
+        {lang === "en" ? "Follow the big number guide on the screen." : "Ikut panduan nombor besar pada skrin."}
+      </p>
       {confirmed && (
         <p className="mb-2 rounded-2xl bg-emerald-50 px-3 py-2 text-center text-sm font-black text-emerald-800">
-          {lang === "en" ? "Nice try! Here is the correct shape." : "Cubaan bagus! Ini bentuk yang betul."}
+          {lang === "en" ? "Watch the correct number shape slowly." : "Lihat bentuk nombor yang betul perlahan-lahan."}
         </p>
       )}
       <div className="relative h-72 rounded-3xl border-2 border-sky-100 bg-sky-50">
+        <div
+          className="pointer-events-none absolute inset-0 grid place-items-center text-[12rem] font-black leading-none text-blue-200/45"
+          style={{ fontFamily: "var(--app-font-number)" }}
+        >
+          {value}
+        </div>
         {confirmed && (
           <div
             className="trace-model-zoom pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none text-blue-300/70"
@@ -2455,22 +2587,92 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
   );
 }
 
+function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawing = useRef(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const scale = window.devicePixelRatio || 1;
+    canvas.width = rect.width * scale;
+    canvas.height = rect.height * scale;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.scale(scale, scale);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#2563eb";
+    ctx.lineWidth = 12;
+  }, [value]);
+
+  const point = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  };
+  const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    drawing.current = true;
+    const ctx = canvasRef.current?.getContext("2d");
+    const p = point(event);
+    ctx?.beginPath();
+    ctx?.moveTo(p.x, p.y);
+  };
+  const move = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawing.current) return;
+    const ctx = canvasRef.current?.getContext("2d");
+    const p = point(event);
+    ctx?.lineTo(p.x, p.y);
+    ctx?.stroke();
+  };
+  const stop = () => { drawing.current = false; };
+  const clear = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  return (
+    <div className="mx-auto w-full max-w-[27rem] rounded-3xl border-2 border-amber-100 bg-white p-4">
+      <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Write ${value} yourself` : `Tulis ${value} sendiri`}</h3>
+      <p className="mb-3 text-center text-sm font-bold text-slate-500">
+        {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan surih."}
+      </p>
+      <div className="relative h-72 rounded-3xl border-2 border-amber-100 bg-amber-50">
+        <canvas
+          ref={canvasRef}
+          onPointerDown={start}
+          onPointerMove={move}
+          onPointerUp={stop}
+          onPointerLeave={stop}
+          className="relative h-full w-full touch-none rounded-3xl"
+        />
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">{t.clear}</button>
+        <button onClick={() => speakNumber(value, lang)} className="flex-1 rounded-2xl border-2 border-blue-700 bg-blue-600 py-2 font-black text-white">ðŸ”Š {t.speak}</button>
+      </div>
+    </div>
+  );
+}
+
 function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
   return (
     <div className="rounded-3xl border-2 border-amber-100 bg-white p-4 text-center">
       <h3 className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Draw the quantity" : "Lukis kuantiti"}</h3>
       <p className="mb-3 text-sm font-bold text-slate-500">{count === 0 ? (lang === "en" ? "For zero, draw nothing in the box." : "Untuk sifar, jangan lukis apa-apa dalam kotak.") : (lang === "en" ? `Draw ${count} dots or bananas on paper.` : `Lukis ${count} titik atau pisang di kertas.`)}</p>
-      <ObjectGroup count={count} emoji="●" numbered />
+      <ObjectGroup count={count} emoji="â—" numbered />
     </div>
   );
 }
 
-function VisualDisplay({ visual, lang = "en" }: { visual: Visual; lang?: Lang }) {
+function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: Visual; lang?: Lang; revealNumbers?: boolean }) {
   if (visual.kind === "count") {
     if (visual.container) {
-      return <ContainerScene count={visual.count} emoji={visual.emoji} container={visual.container} numbered />;
+      return <ContainerScene count={visual.count} emoji={visual.emoji} container={visual.container} numbered={revealNumbers} />;
     }
-    return <ObjectGroup count={visual.count} emoji={visual.emoji} numbered />;
+    return <ObjectGroup count={visual.count} emoji={visual.emoji} numbered={revealNumbers} />;
   }
   if (visual.kind === "number") return <NumberTile value={visual.value} lang={lang} showWord={false} />;
   if (visual.kind === "word") {
@@ -2532,21 +2734,21 @@ function VisualDisplay({ visual, lang = "en" }: { visual: Visual; lang?: Lang })
       <div className="space-y-3">
         <NumberLine marked={visual.a} />
         <div className="grid grid-cols-2 gap-3">
-          <ObjectGroup count={visual.a} emoji="🍌" />
-          <ObjectGroup count={visual.b} emoji="🍌" />
+          <ObjectGroup count={visual.a} emoji="ðŸŒ" />
+          <ObjectGroup count={visual.b} emoji="ðŸŒ" />
         </div>
       </div>
     );
   }
   if (visual.kind === "add") {
-    const emoji = visual.emoji ?? "🍌";
+    const emoji = visual.emoji ?? "ðŸŒ";
     if (visual.container) {
       return (
         <div className="space-y-3">
           <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <ContainerScene count={visual.a} emoji={emoji} container={visual.container} numbered />
+            <ContainerScene count={visual.a} emoji={emoji} container={visual.container} numbered={revealNumbers} />
             <span className="text-center text-4xl font-black text-blue-700">+</span>
-            <ObjectGroup count={visual.b} emoji={emoji} numbered />
+            <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} />
           </div>
           <p className="text-center text-3xl font-black text-slate-400">= ?</p>
         </div>
@@ -2555,19 +2757,19 @@ function VisualDisplay({ visual, lang = "en" }: { visual: Visual; lang?: Lang })
     return (
       <div className="space-y-3">
         <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <ObjectGroup count={visual.a} emoji={emoji} numbered />
+          <ObjectGroup count={visual.a} emoji={emoji} numbered={revealNumbers} />
           <span className="text-center text-4xl font-black text-blue-700">+</span>
-          <ObjectGroup count={visual.b} emoji={emoji} numbered />
+          <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} />
         </div>
         <p className="text-center text-3xl font-black text-slate-400">= ?</p>
       </div>
     );
   }
-  const emoji = visual.emoji ?? "🍌";
+  const emoji = visual.emoji ?? "ðŸŒ";
   return (
     <div className="space-y-3">
       <ObjectGroup count={visual.a} emoji={emoji} crossed={visual.b} />
-      <p className="text-center text-2xl font-black text-slate-500">{visual.a} - {visual.b} = ?</p>
+      {revealNumbers && <p className="text-center text-2xl font-black text-slate-500">{visual.a} - {visual.b} = ?</p>}
     </div>
   );
 }
@@ -2575,7 +2777,7 @@ function VisualDisplay({ visual, lang = "en" }: { visual: Visual; lang?: Lang })
 function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
   return (
     <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
-      <h4 className="mb-3 text-lg font-black text-emerald-900">{lang === "en" ? "Correct method" : "Cara yang betul"}</h4>
+      <h4 className="mb-3 text-lg font-black text-emerald-900">{lang === "en" ? "How to solve it" : "Cara selesaikan"}</h4>
       <div className="mb-3">
         <SolutionVisual visual={q.visual} lang={lang} />
       </div>
@@ -2593,7 +2795,7 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
 
 function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
   if (visual.kind === "add") {
-    const emoji = visual.emoji ?? "🍌";
+    const emoji = visual.emoji ?? "ðŸŒ";
     if (visual.container) {
       return (
         <div className="space-y-4">
@@ -2602,7 +2804,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
             <span className="text-center text-4xl font-black text-blue-700">+</span>
             <LabeledGroup count={visual.b} label={String(visual.b)} emoji={emoji} />
           </div>
-          <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Put the new group together with the first group, then count all." : "Letakkan kumpulan baharu bersama kumpulan pertama, kemudian kira semua."}</p>
+          <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Put both groups together. Count all." : "Gabungkan dua kumpulan. Kira semua."}</p>
           <ContainerScene count={visual.a + visual.b} emoji={emoji} container={visual.container} numbered />
           <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
             {visual.a} + {visual.b} = {visual.a + visual.b}
@@ -2617,7 +2819,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
           <span className="text-center text-4xl font-black text-blue-700">+</span>
           <LabeledGroup count={visual.b} label={String(visual.b)} emoji={emoji} />
         </div>
-        <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Join both groups, then count all." : "Gabungkan dua kumpulan, kemudian kira semua."}</p>
+        <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Join the groups. Count all." : "Gabungkan kumpulan. Kira semua."}</p>
         <CountedObjectRow count={visual.a + visual.b} emoji={emoji} showCount />
         <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
           {visual.a} + {visual.b} = {visual.a + visual.b}
@@ -2626,18 +2828,18 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
     );
   }
   if (visual.kind === "subtract") {
-    const emoji = visual.emoji ?? "🍌";
+    const emoji = visual.emoji ?? "ðŸŒ";
     return (
       <div className="space-y-4">
         <div className="rounded-3xl border-2 border-emerald-100 bg-white p-3 text-center">
           <p className="mb-2 text-base font-black text-emerald-900">
             {lang === "en"
-              ? `Start with all ${visual.a}. Cross out ${visual.b}. Count what is left.`
-              : `Mula dengan semua ${visual.a}. Palang ${visual.b}. Kira yang tinggal.`}
+              ? `Start with ${visual.a}. Cross out ${visual.b}.`
+              : `Mula dengan ${visual.a}. Palang ${visual.b}.`}
           </p>
           <CountedObjectRow count={visual.a} emoji={emoji} crossed={visual.b} showCount countRemainingOnly animateCrossOut compact />
         </div>
-        <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Only count the objects that are not crossed out." : "Kira hanya objek yang tidak dipalang."}</p>
+        <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Count what is left." : "Kira yang tinggal."}</p>
         <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
           {visual.a} - {visual.b} = {visual.a - visual.b}
         </div>
@@ -2659,6 +2861,16 @@ function speakNumber(value: number, lang: Lang) {
   window.speechSynthesis.speak(utterance);
 }
 
+function speakCountingSequence(count: number, lang: Lang = "en") {
+  if (!("speechSynthesis" in window) || count <= 0) return;
+  window.speechSynthesis.cancel();
+  const words = Array.from({ length: count }, (_, i) => WORDS[lang][i + 1]).join(", ");
+  const utterance = new SpeechSynthesisUtterance(words);
+  utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
+  utterance.rate = 0.72;
+  window.speechSynthesis.speak(utterance);
+}
+
 function Decor() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -2667,7 +2879,7 @@ function Decor() {
       <div className="absolute bottom-0 h-10 w-full bg-green-600/70" />
       <div className="absolute bottom-9 h-3 w-full bg-amber-900/20" />
       {["10%", "28%", "58%", "82%"].map((left, i) => (
-        <span key={left} className="absolute top-16 text-xl text-yellow-200" style={{ left }}>★</span>
+        <span key={left} className="absolute top-16 text-xl text-yellow-200" style={{ left }}>â˜…</span>
       ))}
     </div>
   );

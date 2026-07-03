@@ -82,10 +82,10 @@ function ComparisonSolution({ a, b, answer }: ComparisonInfo) {
 
       <div className="bg-white rounded-xl px-3 py-2 border border-green-200 text-center space-y-0.5">
         <p className="text-base font-black text-green-800">
-          {answer} has more 🍌 than {answer === a ? b : a}.
+          Count both groups.
         </p>
         <p className="text-lg font-black text-gray-800">
-          So <span className="text-yellow-600">{answer}</span> is greater! ✅
+          <span className="text-yellow-600">{answer}</span> has more, so {answer} is greater.
         </p>
       </div>
     </motion.div>
@@ -135,16 +135,16 @@ function SubtractionSolution({ total, takeAway, emoji }: SubtractionInfo) {
         })}
       </div>
 
-      {/* Step-by-step explanation */}
+      {/* Short explanation */}
       <div className="bg-white rounded-xl px-3 py-2 border border-orange-200 space-y-1 text-center">
         <p className="text-sm font-black text-gray-600">
-          Start with <span className="text-orange-700 text-base">{total}</span> {emoji}
+          Start with <span className="text-orange-700 text-base">{total}</span>.
         </p>
         <p className="text-sm font-black text-red-600">
-          Take away <span className="text-base">{takeAway}</span> {emoji} ✕
+          Cross out <span className="text-base">{takeAway}</span>.
         </p>
         <p className="text-base font-black text-green-700">
-          <span className="text-xl">{remaining}</span> {emoji} are left! ✅
+          Count what is left: <span className="text-xl">{remaining}</span>.
         </p>
       </div>
     </motion.div>
@@ -634,7 +634,7 @@ export function PracticeSession({ questions, onFinish, accentColor = 'yellow', t
 
                   {/* Message */}
                   <p className="text-center text-base font-black text-gray-600">
-                    {ans.correct ? '⭐ Great job!' : '💪 Good try. Let\'s look at the correct answer.'}
+                    {ans.correct ? 'Correct. Here is the method.' : 'Look at the method, then try the next one.'}
                   </p>
 
                   {/* Visual solution: comparison or subtraction */}
