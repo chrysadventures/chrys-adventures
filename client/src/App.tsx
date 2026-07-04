@@ -70,6 +70,50 @@ const WORDS: Record<Lang, string[]> = {
   ms: ["sifar", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "lapan", "sembilan"],
 };
 
+const CP1252_BYTES: Record<number, number> = {
+  0x0152: 0x8c,
+  0x017d: 0x8e,
+  0x2018: 0x91,
+  0x2019: 0x92,
+  0x201c: 0x93,
+  0x201d: 0x94,
+  0x2022: 0x95,
+  0x2013: 0x96,
+  0x2014: 0x97,
+  0x0161: 0x9a,
+  0x0153: 0x9c,
+  0x017e: 0x9e,
+  0x0178: 0x9f,
+};
+
+function cleanDisplayText(value: string) {
+  const shouldClean = Array.from(value).some((char) => {
+    const cp = char.codePointAt(0) ?? 0;
+    return cp === 0xc3 || cp === 0xc2 || cp === 0xf0 || cp === 0xe2 || cp === 0x0178;
+  });
+  if (!shouldClean) return value;
+
+  let current = value;
+  for (let pass = 0; pass < 3; pass += 1) {
+    const bytes: number[] = [];
+    let convertible = true;
+    for (const char of current) {
+      const cp = char.codePointAt(0) ?? 0;
+      if (cp <= 0xff) bytes.push(cp);
+      else if (CP1252_BYTES[cp]) bytes.push(CP1252_BYTES[cp]);
+      else {
+        convertible = false;
+        break;
+      }
+    }
+    if (!convertible) break;
+    const decoded = new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+    if (decoded === current || decoded.includes("\uFFFD")) break;
+    current = decoded;
+  }
+  return current;
+}
+
 const UI = {
   en: {
     title: "Chrys's Adventures",
@@ -199,7 +243,7 @@ const sequencingPracticeQuestions: Question[] = [
   q("seq-skip-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 9], 7, { kind: "sequence", nums: [1, 3, 5, "?", 9] }),
   q("seq-asc-1", "numbers", { en: "Choose smallest to biggest.", ms: "Pilih kecil ke besar." }, ["1, 2, 4", "4, 2, 1", "2, 1, 4"], "1, 2, 4", { kind: "order", nums: [2, 4, 1], direction: "asc" }),
   q("seq-desc-1", "numbers", { en: "Choose biggest to smallest.", ms: "Pilih besar ke kecil." }, ["8, 5, 3", "3, 5, 8", "5, 8, 3"], "8, 5, 3", { kind: "order", nums: [3, 8, 5], direction: "desc" }),
-  q("seq-symbol-5-8", "numbers", { en: "Choose the correct symbol.", ms: "Pilih simbol yang betul." }, ["5 > 8", "5 < 8"], "5 < 8", { kind: "symbol", a: 5, b: 8 }),
+  q("seq-symbol-5-8", "numbers", { en: "5 __ 8. Choose the symbol.", ms: "5 __ 8. Pilih simbol." }, [">", "<"], "<", { kind: "symbol", a: 5, b: 8 }),
 ];
 
 const numberPracticeQuestions: Question[] = [
@@ -749,7 +793,7 @@ function MenuCard({ title, subtitle, icon, color, onClick }: { title: string; su
   };
   return (
     <button onClick={onClick} className={`menu-card min-h-48 rounded-[2rem] border-4 p-6 text-left transition active:translate-y-1 md:p-7 ${colors[color]}`}>
-      <span className="icon-badge relative z-10 mb-5 grid h-20 w-20 place-items-center rounded-[1.6rem] text-4xl font-black text-blue-950">{icon}</span>
+      <span className="icon-badge relative z-10 mb-5 grid h-20 w-20 place-items-center rounded-[1.6rem] text-4xl font-black text-blue-950">{cleanDisplayText(icon)}</span>
       <h3 className="relative z-10 text-2xl font-black leading-tight text-blue-950 md:text-3xl">{title}</h3>
       <p className="relative z-10 mt-3 text-base font-black leading-snug text-slate-500">{subtitle}</p>
     </button>
@@ -984,7 +1028,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             <div className="mt-4">
               {current.n === 0
                 ? <ContainerScene count={0} emoji={current.emoji} container="basket" numbered />
-                : <ObjectGroup count={current.n} emoji={current.emoji} numbered />}
+                : <CountedObjectRow count={current.n} emoji={current.emoji} showCount speakCount lang={lang} />}
             </div>
           </div>
         </div>
@@ -1067,6 +1111,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
 }
 
 const GROUPING_ACTIVITIES = [
+  { a: 1, b: 1, emoji: "🍌" },
   { a: 1, b: 2, emoji: "🍌" },
   { a: 2, b: 2, emoji: "🍌" },
   { a: 2, b: 3, emoji: "🍌" },
@@ -1075,9 +1120,11 @@ const GROUPING_ACTIVITIES = [
 ];
 
 const groupingPracticeQuestions: Question[] = [
+  q("group-1-1", "operations", { en: "1 banana and 1 banana. How many bananas?", ms: "1 pisang dan 1 pisang. Berapa pisang?" }, [0, 1, 2, 3], 2, { kind: "add", a: 1, b: 1, emoji: "🍌" }),
   q("group-1-2", "operations", { en: "1 banana and 2 bananas. How many bananas?", ms: "1 pisang dan 2 pisang. Berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "add", a: 1, b: 2, emoji: "🍌" }),
   q("group-2-2", "operations", { en: "2 bananas and 2 bananas. How many bananas?", ms: "2 pisang dan 2 pisang. Berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "add", a: 2, b: 2, emoji: "🍌" }),
   q("group-2-3", "operations", { en: "2 bananas and 3 bananas. How many bananas?", ms: "2 pisang dan 3 pisang. Berapa pisang?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }),
+  q("group-3-3", "operations", { en: "3 bananas and 3 bananas. How many bananas?", ms: "3 pisang dan 3 pisang. Berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "add", a: 3, b: 3, emoji: "🍌" }),
   q("group-3-4", "operations", { en: "3 bananas and 4 bananas. How many bananas?", ms: "3 pisang dan 4 pisang. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌" }),
   q("group-4-5", "operations", { en: "4 bananas and 5 bananas. How many bananas?", ms: "4 pisang dan 5 pisang. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
 ];
@@ -1680,74 +1727,37 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, onSkipPractice }: {
   onDone: () => void;
   onSkipPractice: () => void;
 }) {
-  const [step, setStep] = useState(0);
-  const totalSteps = 6;
-  const storyText = lang === "en"
-    ? [
-      "Chrys has 7 bananas.",
-      "Chrys gives away 3 bananas.",
-      "Cross out 3 bananas.",
-      "Count only the bananas that are left.",
-      "7 take away 3 leaves 4.",
-      "So, 7 - 3 = 4.",
-    ]
-    : [
-      "Chrys ada 7 pisang.",
-      "Ambil 3 pisang.",
-      "Pisang yang diambil kekal dipalang.",
-      "Kira hanya pisang yang tinggal.",
-      "7 pisang tolak 3 pisang tinggal 4 pisang.",
-      "Jadi, 7 - 3 = 4.",
-    ];
-  const showCross = step >= 1;
-  const showCount = step >= 3;
+  const [complete, setComplete] = useState(false);
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
         <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys takes away bananas" : "Chrys mengambil pisang"}</h3>
-        <p className="mt-2 text-lg font-black text-slate-700">{storyText[step]}</p>
+        <p className="mt-2 text-lg font-black text-slate-700">{lang === "en" ? "Use one banana group. Tap each step." : "Guna satu kumpulan pisang. Tekan setiap langkah."}</p>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
         <div className="grid gap-4 md:grid-cols-[auto_1fr] md:items-center">
           <div className="relative mx-auto grid w-36 place-items-center">
-            <img src={chrysThinking} alt="Chrys thinking" className={`h-32 w-32 object-contain transition-transform duration-700 ${showCross ? "scale-105" : ""}`} />
-            {showCross && <span className="absolute right-0 top-2 text-3xl">ðŸŒ</span>}
+            <img src={chrysThinking} alt="Chrys thinking" className="h-32 w-32 object-contain" />
           </div>
-          <div className="rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
-            <CountedObjectRow count={7} emoji="ðŸŒ" crossed={showCross ? 3 : 0} showCount={showCount} countRemainingOnly />
-          </div>
+          <InteractiveSubtractionFlow start={7} takeAway={3} emoji="🍌" lang={lang} onComplete={() => setComplete(true)} />
         </div>
-
-        {step >= 4 && (
-          <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-            <p className="text-4xl font-black text-emerald-800">7 - 3 = 4</p>
-            <p className="mt-2 text-lg font-black text-emerald-900">{storyText[step]}</p>
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-3xl border-2 border-red-100 bg-red-50 p-4 text-center">
-        <p className="text-base font-black text-red-900">
-          {lang === "en"
-            ? "Cross out what you take away. Count what is left."
-            : "Tolak guna satu kumpulan. Palang yang diambil, kemudian kira yang tinggal."}
-        </p>
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <button
-          onClick={() => step > 0 ? setStep((s) => s - 1) : onPrev()}
+          onClick={onPrev}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
           {t.previous}
         </button>
         <button
-          onClick={() => step < totalSteps - 1 ? setStep((s) => s + 1) : onDone()}
-          className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+          disabled={!complete}
+          onClick={onDone}
+          className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:opacity-40"
         >
-          {step < totalSteps - 1 ? t.next : t.practice}
+          {t.practice}
         </button>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
@@ -1961,7 +1971,7 @@ function SubtractionExampleVisual({ step }: { step: number }) {
   const showCount = step >= 3;
   return (
     <div className="space-y-5">
-      <CountedObjectRow count={7} emoji="ðŸŒ" crossed={showCross ? 3 : 0} showCount={showCount} countRemainingOnly />
+      <CountedObjectRow count={7} emoji="ðŸŒ" crossed={showCross ? 3 : 0} showCount={showCount} countRemainingOnly showCrossCount={showCross} />
       {step >= 4 && (
         <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center text-4xl font-black text-emerald-800">
           7 - 3 = 4
@@ -1969,6 +1979,91 @@ function SubtractionExampleVisual({ step }: { step: number }) {
       )}
     </div>
   );
+}
+
+type SubtractionPhase = "start" | "crossing" | "crossed" | "counting" | "done";
+
+function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }: {
+  start: number;
+  takeAway: number;
+  emoji: string;
+  lang: Lang;
+  onComplete?: () => void;
+}) {
+  const [phase, setPhase] = useState<SubtractionPhase>("start");
+  const left = start - takeAway;
+  const intervalMs = 720;
+  const crossed = phase === "start" ? 0 : takeAway;
+  const showRemainingCount = phase === "counting" || phase === "done";
+  const showCrossCount = phase !== "start";
+
+  useEffect(() => {
+    if (phase !== "crossing") return;
+    const timer = window.setTimeout(() => setPhase("crossed"), Math.max(700, takeAway * intervalMs + 350));
+    return () => window.clearTimeout(timer);
+  }, [intervalMs, phase, takeAway]);
+
+  useEffect(() => {
+    if (phase !== "counting") return;
+    const timer = window.setTimeout(() => {
+      setPhase("done");
+      onComplete?.();
+    }, Math.max(700, left * intervalMs + 350));
+    return () => window.clearTimeout(timer);
+  }, [intervalMs, left, onComplete, phase]);
+
+  const instruction = getSubtractionFlowInstruction(lang, phase, start, takeAway, left);
+  const actionLabel = phase === "start"
+    ? (lang === "en" ? "Tap to take away" : "Tekan untuk ambil")
+    : (lang === "en" ? "Tap to count what is left" : "Tekan untuk kira yang tinggal");
+
+  return (
+    <div className="space-y-4 rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
+      <div className="rounded-3xl bg-white p-3">
+        <CountedObjectRow
+          count={start}
+          emoji={emoji}
+          crossed={crossed}
+          showCount={showRemainingCount}
+          countRemainingOnly
+          animateCrossOut={phase === "crossing"}
+          showCrossCount={showCrossCount}
+          intervalMs={intervalMs}
+          speakCount={phase === "counting"}
+          lang={lang}
+        />
+      </div>
+
+      {(phase === "start" || phase === "crossed") && (
+        <div className="flex justify-center">
+          <button
+            onClick={() => setPhase(phase === "start" ? "crossing" : "counting")}
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 text-xl font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+          >
+            {actionLabel}
+          </button>
+        </div>
+      )}
+
+      <div className={`${phase === "crossing" || phase === "crossed" ? "border-red-200 bg-red-50 text-red-900" : phase === "counting" ? "border-blue-200 bg-blue-50 text-blue-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"} rounded-3xl border-2 p-4 text-center`}>
+        <p className="text-xl font-black">{instruction[0]}</p>
+        {instruction[1] && <p className="mt-2 text-3xl font-black">{instruction[1]}</p>}
+      </div>
+    </div>
+  );
+}
+
+function getSubtractionFlowInstruction(lang: Lang, phase: SubtractionPhase, start: number, takeAway: number, left: number) {
+  if (lang === "ms") {
+    if (phase === "start") return [`Mula dengan ${start} pisang.`];
+    if (phase === "crossing" || phase === "crossed") return [`Ambil ${takeAway} pisang.`];
+    if (phase === "counting") return ["Kira pisang yang tinggal."];
+    return [`${left} pisang tinggal.`, `Jadi, ${start} - ${takeAway} = ${left}.`];
+  }
+  if (phase === "start") return [`Start with ${start} bananas.`];
+  if (phase === "crossing" || phase === "crossed") return [`Take away ${takeAway} bananas.`];
+  if (phase === "counting") return ["Count what is left."];
+  return [`${left} bananas are left.`, `So, ${start} - ${takeAway} = ${left}.`];
 }
 
 function LabeledGroup({ count, label, emoji }: { count: number; label: string; emoji: string }) {
@@ -1980,7 +2075,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = 450, speakCount = false, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -1988,10 +2083,15 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   countRemainingOnly?: boolean;
   animateCrossOut?: boolean;
   compact?: boolean;
+  showCrossCount?: boolean;
+  intervalMs?: number;
+  speakCount?: boolean;
+  lang?: Lang;
 }) {
   const remaining = count - crossed;
   const [visible, setVisible] = useState(0);
   const [visibleCrossed, setVisibleCrossed] = useState(animateCrossOut ? 0 : crossed);
+  const symbol = cleanDisplayText(emoji);
 
   useEffect(() => {
     if (!animateCrossOut) {
@@ -1999,18 +2099,22 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       return;
     }
     setVisibleCrossed(0);
-    const timers = Array.from({ length: crossed }, (_, i) => window.setTimeout(() => setVisibleCrossed(i + 1), 360 * (i + 1)));
+    const timers = Array.from({ length: crossed }, (_, i) => window.setTimeout(() => setVisibleCrossed(i + 1), intervalMs * (i + 1)));
     return () => timers.forEach(window.clearTimeout);
-  }, [animateCrossOut, crossed]);
+  }, [animateCrossOut, crossed, intervalMs]);
 
   useEffect(() => {
     setVisible(0);
     if (!showCount) return;
     const max = countRemainingOnly ? remaining : count;
-    const countDelay = animateCrossOut ? (crossed * 360) + 360 : 0;
-    const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => setVisible(i + 1), countDelay + (360 * (i + 1))));
-    return () => timers.forEach(window.clearTimeout);
-  }, [animateCrossOut, count, countRemainingOnly, crossed, remaining, showCount]);
+    const countDelay = animateCrossOut ? (crossed * intervalMs) + intervalMs : 0;
+    const speechTimer = speakCount && max > 0 ? window.setTimeout(() => speakCountingSequence(max, lang), countDelay) : null;
+    const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => setVisible(i + 1), countDelay + (intervalMs * (i + 1))));
+    return () => {
+      timers.forEach(window.clearTimeout);
+      if (speechTimer) window.clearTimeout(speechTimer);
+    };
+  }, [animateCrossOut, count, countRemainingOnly, crossed, intervalMs, lang, remaining, showCount, speakCount]);
 
   let leftIndex = 0;
   return (
@@ -2021,12 +2125,19 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
         const label = shouldCount ? ++leftIndex : 0;
         const labelVisible = shouldCount && label <= visible;
+        const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
         return (
           <div key={i} className={`relative flex flex-col items-center justify-center rounded-2xl bg-amber-50 shadow-inner ${compact ? "h-20 w-12 pt-4 text-3xl" : "h-24 w-16 pt-5 text-4xl"}`}>
-            <span className={`absolute top-1 rounded-full bg-blue-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
-              {labelVisible ? label : "."}
-            </span>
-            <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>{emoji}</span>
+            {crossLabelVisible ? (
+              <span className={`absolute top-1 rounded-full bg-red-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
+                {i + 1}
+              </span>
+            ) : (
+              <span className={`absolute top-1 rounded-full bg-blue-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
+                {labelVisible ? label : "."}
+              </span>
+            )}
+            <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>{symbol}</span>
             {gone && <span className={`absolute font-black text-red-500 transition-opacity duration-300 ${compact ? "top-0 text-4xl" : "top-1 text-5xl"}`}>x</span>}
           </div>
         );
@@ -2139,6 +2250,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const selected = answers[index] ?? null;
   const answered = selected !== null;
   const isCorrect = selected === qn.answer;
+  const isCountQuestion = qn.visual.kind === "count";
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
 
@@ -2210,7 +2322,11 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               <div className="mb-3 flex items-center gap-3">
                 <img src={isCorrect ? chrysExcited : chrysThinking} alt="Chrys feedback" className="h-20 w-20 object-contain" />
                 <div>
-                  <p className={`text-xl font-black ${isCorrect ? "text-emerald-700" : "text-orange-700"}`}>{isCorrect ? t.greatJob : t.lookAgain}</p>
+                  <p className={`text-xl font-black ${isCorrect ? "text-emerald-700" : "text-orange-700"}`}>
+                    {isCorrect
+                      ? (isCountQuestion ? (lang === "en" ? `Great job! It is ${qn.answer}.` : `Bagus! Ini ${qn.answer}.`) : t.greatJob)
+                      : (isCountQuestion ? (lang === "en" ? "Good try. Let's count." : "Cubaan baik. Mari kira.") : t.lookAgain)}
+                  </p>
                   <p className="font-black text-slate-700">{t.yourAnswer}: {selected}</p>
                   <p className="font-black text-slate-700">{t.correctAnswer}: {qn.answer}</p>
                   {!isCorrect && qn.visual.kind === "count" && (
@@ -2291,6 +2407,7 @@ function NumberTile({ value, lang, large = false, showWord = true }: { value: nu
 }
 
 function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: number; emoji: string; numbered?: boolean; crossed?: number }) {
+  const symbol = cleanDisplayText(emoji);
   if (count === 0) {
     return <div className="mx-auto rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">{numbered ? "0" : "empty"}</div>;
   }
@@ -2300,7 +2417,7 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: n
         const gone = i < crossed;
         return (
           <div key={i} className="relative grid h-16 w-16 place-items-center rounded-2xl bg-amber-50 text-4xl shadow-inner">
-            <span className={gone ? "opacity-25" : ""}>{emoji}</span>
+            <span className={gone ? "opacity-25" : ""}>{symbol}</span>
             {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             {gone && <span className="absolute text-5xl font-black text-red-500">Ã—</span>}
           </div>
@@ -2321,6 +2438,7 @@ function ContainerScene({
   container: ContainerKind;
   numbered?: boolean;
 }) {
+  const symbol = cleanDisplayText(emoji);
   const image = container === "basket" ? basketPhoto : trayPhoto;
   const alt = container === "basket" ? "basket" : "tray";
   const positions = [
@@ -2351,7 +2469,7 @@ function ContainerScene({
               key={i}
               className={`absolute ${x} ${y} grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl bg-white/80 text-4xl shadow-md`}
             >
-              <span>{emoji}</span>
+              <span>{symbol}</span>
               {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             </div>
           );
@@ -2421,15 +2539,24 @@ function SequencingExample({ nums, arrow }: { nums: number[]; arrow: "left" | "r
 }
 
 function CompareTeachingVisual({ a, b, symbol, lang }: { a: number; b: number; symbol: ">" | "<"; lang: Lang }) {
+  const bigger = Math.max(a, b);
+  const smaller = Math.min(a, b);
   return (
     <div className="space-y-4">
       <NumberLine marked={Math.max(a, b)} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <LabeledGroup count={a} label={String(a)} emoji="ðŸŒ" />
+        <LabeledGroup count={b} label={String(b)} emoji="ðŸŒ" />
+      </div>
       <div className="rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
         <p className="text-6xl font-black text-blue-950">{a} {symbol} {b}</p>
         <p className="mt-2 text-lg font-black text-slate-700">
           {lang === "en"
-            ? `${Math.max(a, b)} is greater than ${Math.min(a, b)}.`
-            : `${Math.max(a, b)} lebih besar daripada ${Math.min(a, b)}.`}
+            ? `${bigger} is more. ${smaller} is less.`
+            : `${bigger} lebih banyak. ${smaller} lebih sedikit.`}
+        </p>
+        <p className="mt-1 text-sm font-black text-slate-500">
+          {lang === "en" ? `${symbol} means ${symbol === ">" ? "greater than" : "less than"}.` : `${symbol} ialah ${symbol === ">" ? "lebih besar" : "lebih kecil"}.`}
         </p>
       </div>
     </div>
@@ -2714,6 +2841,10 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
     return (
       <div className="space-y-4">
         <NumberLine marked={Math.max(visual.a, visual.b)} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <LabeledGroup count={visual.a} label={String(visual.a)} emoji="ðŸŒ" />
+          <LabeledGroup count={visual.b} label={String(visual.b)} emoji="ðŸŒ" />
+        </div>
         <div className="flex items-center justify-center gap-4 text-5xl font-black text-blue-950">
           <span>{visual.a}</span>
           <span className="text-slate-300">?</span>
@@ -2768,7 +2899,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
   const emoji = visual.emoji ?? "ðŸŒ";
   return (
     <div className="space-y-3">
-      <ObjectGroup count={visual.a} emoji={emoji} crossed={visual.b} />
+      <ObjectGroup count={visual.a} emoji={emoji} />
       {revealNumbers && <p className="text-center text-2xl font-black text-slate-500">{visual.a} - {visual.b} = ?</p>}
     </div>
   );
@@ -2781,19 +2912,37 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
       <div className="mb-3">
         <SolutionVisual visual={q.visual} lang={lang} />
       </div>
-      <ol className="space-y-2">
-        {q.method[lang].map((step, i) => (
-          <li key={step} className="flex gap-2 rounded-2xl bg-white px-3 py-2 text-sm font-black text-slate-700">
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs text-white">{i + 1}</span>
-            {step}
-          </li>
-        ))}
-      </ol>
+      {q.visual.kind !== "subtract" && (
+        <ol className="space-y-2">
+          {q.method[lang].map((step, i) => (
+            <li key={step} className="flex gap-2 rounded-2xl bg-white px-3 py-2 text-sm font-black text-slate-700">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs text-white">{i + 1}</span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
 
 function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
+  if (visual.kind === "count") {
+    const emoji = visual.emoji ?? "ðŸŒ";
+    if (visual.count === 0) {
+      return visual.container
+        ? <ContainerScene count={0} emoji={emoji} container={visual.container} numbered />
+        : <ObjectGroup count={0} emoji={emoji} numbered />;
+    }
+    return (
+      <div className="space-y-3">
+        <CountedObjectRow count={visual.count} emoji={emoji} showCount speakCount lang={lang} />
+        <p className="text-center text-lg font-black text-emerald-800">
+          {lang === "en" ? `This is ${visual.count}.` : `Ini ${visual.count}.`}
+        </p>
+      </div>
+    );
+  }
   if (visual.kind === "add") {
     const emoji = visual.emoji ?? "ðŸŒ";
     if (visual.container) {
@@ -2820,7 +2969,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
           <LabeledGroup count={visual.b} label={String(visual.b)} emoji={emoji} />
         </div>
         <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Join the groups. Count all." : "Gabungkan kumpulan. Kira semua."}</p>
-        <CountedObjectRow count={visual.a + visual.b} emoji={emoji} showCount />
+        <CountedObjectRow count={visual.a + visual.b} emoji={emoji} showCount speakCount lang={lang} />
         <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
           {visual.a} + {visual.b} = {visual.a + visual.b}
         </div>
@@ -2829,22 +2978,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
   }
   if (visual.kind === "subtract") {
     const emoji = visual.emoji ?? "ðŸŒ";
-    return (
-      <div className="space-y-4">
-        <div className="rounded-3xl border-2 border-emerald-100 bg-white p-3 text-center">
-          <p className="mb-2 text-base font-black text-emerald-900">
-            {lang === "en"
-              ? `Start with ${visual.a}. Cross out ${visual.b}.`
-              : `Mula dengan ${visual.a}. Palang ${visual.b}.`}
-          </p>
-          <CountedObjectRow count={visual.a} emoji={emoji} crossed={visual.b} showCount countRemainingOnly animateCrossOut compact />
-        </div>
-        <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Count what is left." : "Kira yang tinggal."}</p>
-        <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
-          {visual.a} - {visual.b} = {visual.a - visual.b}
-        </div>
-      </div>
-    );
+    return <InteractiveSubtractionFlow start={visual.a} takeAway={visual.b} emoji={emoji} lang={lang} />;
   }
   if (visual.kind === "compare") {
     return <NumberLine marked={Math.max(visual.a, visual.b)} />;
