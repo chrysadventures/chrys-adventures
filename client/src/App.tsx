@@ -35,7 +35,7 @@ type Visual =
   | { kind: "audioNumber"; value: number }
   | { kind: "groupChoices"; emoji: string; groups: number[] }
   | { kind: "order"; nums: number[]; direction: "asc" | "desc" }
-  | { kind: "symbol"; a: number; b: number }
+  | { kind: "symbol"; a: number; b: number; showObjects?: boolean }
   | { kind: "sequence"; nums: Array<number | "?"> }
   | { kind: "compare"; a: number; b: number }
   | { kind: "add"; a: number; b: number; emoji?: string; container?: ContainerKind }
@@ -237,13 +237,19 @@ const valuePracticeQuestions: Question[] = [
 const sequencingPracticeQuestions: Question[] = [
   q("seq-full-3", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [2, 3, 4, 5], 3, { kind: "sequence", nums: [0, 1, 2, "?", 4, 5, 6, 7, 8, 9] }),
   q("seq-full-6", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [4, 5, 6, 7], 6, { kind: "sequence", nums: [0, 1, 2, 3, 4, 5, "?", 7, 8, 9] }),
+  q("seq-full-1", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [0, 1, 2, 3], 1, { kind: "sequence", nums: [0, "?", 2, 3, 4, 5, 6, 7, 8, 9] }),
+  q("seq-full-8", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [6, 7, 8, 9], 8, { kind: "sequence", nums: [0, 1, 2, 3, 4, 5, 6, 7, "?", 9] }),
   q("seq-short-5", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [4, 5, 6, 7], 5, { kind: "sequence", nums: [2, 3, 4, "?", 6, 7, 8] }),
+  q("seq-short-2", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [1, 2, 3, 4], 2, { kind: "sequence", nums: [0, 1, "?", 3, 4, 5, 6] }),
   q("seq-five-6", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 6, { kind: "sequence", nums: [4, 5, "?", 7, 8] }),
+  q("seq-five-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 7, { kind: "sequence", nums: [5, 6, "?", 8, 9] }),
   q("seq-four-6", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 6, { kind: "sequence", nums: [5, "?", 7, 8] }),
   q("seq-skip-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 9], 7, { kind: "sequence", nums: [1, 3, 5, "?", 9] }),
   q("seq-asc-1", "numbers", { en: "Choose smallest to biggest.", ms: "Pilih kecil ke besar." }, ["1, 2, 4", "4, 2, 1", "2, 1, 4"], "1, 2, 4", { kind: "order", nums: [2, 4, 1], direction: "asc" }),
   q("seq-desc-1", "numbers", { en: "Choose biggest to smallest.", ms: "Pilih besar ke kecil." }, ["8, 5, 3", "3, 5, 8", "5, 8, 3"], "8, 5, 3", { kind: "order", nums: [3, 8, 5], direction: "desc" }),
-  q("seq-symbol-5-8", "numbers", { en: "5 __ 8. Choose the symbol.", ms: "5 __ 8. Pilih simbol." }, [">", "<"], "<", { kind: "symbol", a: 5, b: 8 }),
+  q("seq-more-3-6", "numbers", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, [3, 4, 5, 6], 6, { kind: "compare", a: 3, b: 6 }),
+  q("seq-symbol-3-6", "numbers", { en: "3 __ 6. Choose the symbol.", ms: "3 __ 6. Pilih simbol." }, [">", "<"], "<", { kind: "symbol", a: 3, b: 6 }),
+  q("seq-symbol-7-4", "numbers", { en: "7 __ 4. Choose the symbol.", ms: "7 __ 4. Pilih simbol." }, [">", "<"], ">", { kind: "symbol", a: 7, b: 4, showObjects: false }),
 ];
 
 const numberPracticeQuestions: Question[] = [
@@ -436,23 +442,32 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   }
   if (visual.kind === "compare") {
     const greater = Math.max(visual.a, visual.b);
+    const smaller = Math.min(visual.a, visual.b);
     return {
-      en: [`Look at ${visual.a} and ${visual.b}.`, `${greater} is bigger.`, `Answer: ${greater}.`],
-      ms: [`Lihat ${visual.a} dan ${visual.b}.`, `${greater} lebih besar.`, `Jawapan: ${greater}.`],
+      en: [`${greater} is more.`, `${smaller} is less.`, `Answer: ${greater}.`],
+      ms: [`${greater} lebih banyak.`, `${smaller} lebih sedikit.`, `Jawapan: ${greater}.`],
     };
   }
   if (visual.kind === "sequence") {
-    const nums = visual.nums.map((n) => n === "?" ? Number(answer) : n);
+    const missingIndex = visual.nums.findIndex((n) => n === "?");
+    const before = visual.nums[missingIndex - 1];
+    const after = visual.nums[missingIndex + 1];
+    const filledAnswer = Number(answer);
+    const nums = visual.nums.map((n) => n === "?" ? filledAnswer : n);
     const numeric = nums.filter((n): n is number => typeof n === "number");
     const gaps = numeric.slice(1).map((n, i) => n - numeric[i]);
     const skipByTwo = gaps.some((gap) => Math.abs(gap) === 2);
+    const beforeEn = typeof before === "number" ? `${answer} comes after ${before}.` : "Look at the blank.";
+    const afterEn = typeof after === "number" ? `${answer} comes before ${after}.` : "Look at the blank.";
+    const beforeMs = typeof before === "number" ? `${answer} selepas ${before}.` : "Lihat ruang kosong.";
+    const afterMs = typeof after === "number" ? `${answer} sebelum ${after}.` : "Lihat ruang kosong.";
     return {
       en: skipByTwo
-        ? ["Look at the pattern.", "It skips by 2 each time.", `Answer: ${answer}.`]
-        : ["Look at the numbers in order.", "The missing number fills the gap.", `Answer: ${answer}.`],
+        ? ["Look at the jumps.", "It jumps by 2.", `So, ? is ${answer}.`]
+        : ["Look at the blank.", beforeEn, afterEn, `So, ? is ${answer}.`],
       ms: skipByTwo
-        ? ["Lihat corak nombor.", "Ia langkau 2 setiap kali.", `Jawapan: ${answer}.`]
-        : ["Lihat nombor mengikut turutan.", "Nombor yang hilang mengisi ruang kosong.", `Jawapan: ${answer}.`],
+        ? ["Lihat lompatan nombor.", "Ia lompat 2.", `Jadi, ? ialah ${answer}.`]
+        : ["Lihat ruang kosong.", beforeMs, afterMs, `Jadi, ? ialah ${answer}.`],
     };
   }
   if (visual.kind === "number") {
@@ -506,10 +521,10 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   }
   if (visual.kind === "symbol") {
     const symbol = visual.a > visual.b ? ">" : "<";
-    const bigger = Math.max(visual.a, visual.b);
+    const greater = visual.a > visual.b;
     return {
-      en: [`Compare ${visual.a} and ${visual.b}.`, `${bigger} is bigger.`, `Answer: ${visual.a} ${symbol} ${visual.b}.`],
-      ms: [`Bandingkan ${visual.a} dan ${visual.b}.`, `${bigger} lebih besar.`, `Jawapan: ${visual.a} ${symbol} ${visual.b}.`],
+      en: [greater ? `${visual.a} is more than ${visual.b}.` : `${visual.a} is less than ${visual.b}.`, `So, ${visual.a} ${symbol} ${visual.b}.`],
+      ms: [greater ? `${visual.a} lebih banyak daripada ${visual.b}.` : `${visual.a} lebih sedikit daripada ${visual.b}.`, `Jadi, ${visual.a} ${symbol} ${visual.b}.`],
     };
   }
   return {
@@ -1049,39 +1064,54 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   const [practice, setPractice] = useState(false);
   const slides = [
     {
+      title: lang === "en" ? "Number values" : "Nilai nombor",
+      text: lang === "en" ? "Numbers show amounts." : "Nombor menunjukkan jumlah.",
+      visual: <NumberValueCompare a={2} b={5} lang={lang} />,
+    },
+    {
       title: lang === "en" ? "Full number line" : "Garis nombor penuh",
-      text: lang === "en" ? "First, look at all the numbers from 0 to 9." : "Mula-mula, lihat semua nombor dari 0 hingga 9.",
-      visual: <NumberLine marked={-1} />,
+      text: lang === "en" ? "Numbers go from 0 to 9." : "Nombor dari 0 hingga 9.",
+      visual: <NumberLineSequence nums={NUMBERS} marked={-1} arrow="right" />,
     },
     {
       title: lang === "en" ? "Ascending" : "Menaik",
-      text: lang === "en" ? "Ascending is small to big. Move right." : "Menaik ialah kecil ke besar. Gerak ke kanan.",
-      visual: <SequencingExample nums={[0, 1, 2, 3, 4]} arrow="right" />,
+      text: lang === "en" ? "Ascending means numbers go up." : "Menaik bermaksud nombor naik.",
+      visual: <SequencingExample nums={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} arrow="right" />,
+    },
+    {
+      title: lang === "en" ? "Numbers get bigger" : "Nombor makin besar",
+      text: lang === "en" ? "Tap to see more." : "Tekan untuk lihat lebih banyak.",
+      visual: <TapRevealOrder nums={[1, 2, 3, 4]} lang={lang} mode="up" />,
     },
     {
       title: lang === "en" ? "Descending" : "Menurun",
       text: lang === "en" ? "Descending means numbers go down." : "Menurun bermaksud nombor turun.",
-      visual: <SequencingExample nums={[9, 8, 7, 6, 5]} arrow="right" />,
+      visual: <NumberLineSequence nums={[9, 8, 7, 6, 5, 4, 3, 2, 1, 0]} marked={-1} arrow="right" />,
+    },
+    {
+      title: lang === "en" ? "Numbers get smaller" : "Nombor makin kecil",
+      text: lang === "en" ? "Tap to see less." : "Tekan untuk lihat lebih sedikit.",
+      visual: <TapRevealOrder nums={[4, 3, 2, 1]} lang={lang} mode="down" />,
     },
     {
       title: lang === "en" ? "Sequencing" : "Turutan",
-      text: lang === "en" ? "Put the numbers in order." : "Susun nombor ikut turutan.",
-      visual: <MissingNumberLine nums={[2, 3, 4, 5, 6]} />,
+      text: lang === "en" ? "Numbers follow an order." : "Nombor ada turutan.",
+      visual: <TapRevealSequence lang={lang} />,
     },
     {
       title: lang === "en" ? "Missing numbers" : "Nombor hilang",
-      text: lang === "en" ? "Look before and after the gap." : "Lihat sebelum dan selepas ruang kosong.",
-      visual: <MissingNumberLine nums={[3, 4, "?", 6, 7]} />,
+      text: lang === "en" ? "What number is missing?" : "Nombor apa yang hilang?",
+      visual: <MissingNumberTeaching lang={lang} nums={[0, 1, 2, "?", 4, 5, 6, 7, 8, 9]} answer={3} />,
     },
     {
       title: lang === "en" ? "Greater than" : "Lebih besar",
-      text: lang === "en" ? "The bigger number is on the right." : "Nombor lebih besar di kanan.",
-      visual: <CompareTeachingVisual a={7} b={4} symbol=">" lang={lang} />,
+      text: lang === "en" ? "5 is more than 2." : "5 lebih banyak daripada 2.",
+      visual: <CompareTeachingVisual a={5} b={2} symbol=">" lang={lang} />,
     },
     {
       title: lang === "en" ? "Less than" : "Lebih kecil",
-      text: lang === "en" ? "The smaller number is on the left." : "Nombor lebih kecil di kiri.",
-      visual: <CompareTeachingVisual a={3} b={6} symbol="<" lang={lang} />,
+      text: lang === "en" ? "2 is less than 5." : "2 lebih sedikit daripada 5.",
+      visual: <CompareTeachingVisual a={2} b={5} symbol="<" lang={lang} />,
     },
   ];
   const current = slides[step];
@@ -1092,7 +1122,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.sequencing} helper={lang === "en" ? "Use number lines, arrows, and symbols." : "Guna garis nombor, anak panah, dan simbol."}>
+      <LessonShell title={t.sequencing} helper={lang === "en" ? "Learn one step at a time." : "Belajar satu langkah demi satu langkah."}>
         <div className="rounded-[2rem] border-4 border-white bg-white p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
           <h3 className="mb-2 text-center text-3xl font-black text-blue-950">{current.title}</h3>
           <CharacterTalk lang={lang} text={current.text} />
@@ -2495,6 +2525,134 @@ function NumberLine({ marked }: { marked: number }) {
   );
 }
 
+function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: number[]; marked: number; arrow?: "left" | "right" }) {
+  return (
+    <div className="overflow-x-auto rounded-3xl border-2 border-blue-100 bg-white p-4">
+      <div className="mx-auto flex min-w-[560px] items-center justify-center gap-2">
+        {nums.map((n, i) => (
+          <React.Fragment key={`${n}-${i}`}>
+            {i > 0 && <span className="text-2xl font-black text-emerald-700">{arrow === "right" ? "\u2192" : "\u2190"}</span>}
+            <div className="flex flex-1 flex-col items-center">
+              <div className={`mb-2 grid h-10 w-10 place-items-center rounded-full border-2 font-black ${n === marked ? "border-yellow-600 bg-yellow-400 text-yellow-950" : "border-slate-200 bg-slate-50 text-slate-500"}`}>{n}</div>
+              <div className={`h-5 w-1 ${n === marked ? "bg-yellow-500" : "bg-slate-300"}`} />
+              <div className={`h-2 w-full ${n === marked ? "bg-yellow-400" : "bg-slate-300"}`} />
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NumberValueCompare({ a, b, lang }: { a: number; b: number; lang: Lang }) {
+  const banana = "Ã°Å¸ÂÅ’";
+  const bigger = Math.max(a, b);
+  const smaller = Math.min(a, b);
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <LabeledGroup count={a} label={String(a)} emoji={banana} />
+        <LabeledGroup count={b} label={String(b)} emoji={banana} />
+      </div>
+      <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4 text-center text-xl font-black text-emerald-900">
+        <p>{lang === "en" ? `${bigger} has more.` : `${bigger} ada lebih banyak.`}</p>
+        <p>{lang === "en" ? `${smaller} has less.` : `${smaller} ada lebih sedikit.`}</p>
+      </div>
+    </div>
+  );
+}
+
+function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode: "up" | "down" }) {
+  const [visible, setVisible] = useState(1);
+  const banana = "Ã°Å¸ÂÅ’";
+  const done = visible >= nums.length;
+  const shown = nums.slice(0, visible);
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {shown.map((n) => (
+          <div key={n} className="rounded-3xl border-2 border-emerald-100 bg-white p-3 text-center shadow-inner">
+            <p className="mb-2 text-4xl font-black text-blue-950">{n}</p>
+            <ObjectGroup count={n} emoji={banana} />
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <button
+          onClick={() => setVisible((v) => Math.min(nums.length, v + 1))}
+          disabled={done}
+          className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] disabled:opacity-50"
+        >
+          {done ? (lang === "en" ? "Done" : "Selesai") : (lang === "en" ? "Tap me" : "Tekan saya")}
+        </button>
+        <p className="text-lg font-black text-slate-700">
+          {mode === "up"
+            ? (lang === "en" ? "The numbers get bigger." : "Nombor makin besar.")
+            : (lang === "en" ? "The numbers get smaller." : "Nombor makin kecil.")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TapRevealSequence({ lang }: { lang: Lang }) {
+  const [index, setIndex] = useState(0);
+  const marked = NUMBERS[index] ?? 9;
+  const done = index >= NUMBERS.length - 1;
+  return (
+    <div className="space-y-4">
+      <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />
+      <div className="flex flex-wrap items-center justify-center gap-3 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
+        <button
+          onClick={() => setIndex((value) => Math.min(NUMBERS.length - 1, value + 1))}
+          disabled={done}
+          className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] disabled:opacity-50"
+        >
+          {done ? (lang === "en" ? "Done" : "Selesai") : (lang === "en" ? "Tap to continue" : "Tekan untuk terus")}
+        </button>
+        <p className="text-lg font-black text-emerald-900">{lang === "en" ? `Now look at ${marked}.` : `Sekarang lihat ${marked}.`}</p>
+      </div>
+    </div>
+  );
+}
+
+function MissingNumberTeaching({ nums, answer, lang }: { nums: Array<number | "?">; answer: number; lang: Lang }) {
+  const [step, setStep] = useState(0);
+  const missingIndex = nums.findIndex((n) => n === "?");
+  const before = nums[missingIndex - 1];
+  const after = nums[missingIndex + 1];
+  const visibleNums = step >= 3 ? nums.map((n) => n === "?" ? answer : n) : nums;
+  const messages = lang === "en"
+    ? [
+      "Look at the blank.",
+      typeof before === "number" ? `${answer} comes after ${before}.` : `The answer is ${answer}.`,
+      typeof after === "number" ? `${answer} comes before ${after}.` : `The answer is ${answer}.`,
+      `So, ? is ${answer}.`,
+    ]
+    : [
+      "Lihat ruang kosong.",
+      typeof before === "number" ? `${answer} selepas ${before}.` : `Jawapan ialah ${answer}.`,
+      typeof after === "number" ? `${answer} sebelum ${after}.` : `Jawapan ialah ${answer}.`,
+      `Jadi, ? ialah ${answer}.`,
+    ];
+  const done = step >= messages.length - 1;
+  return (
+    <div className="space-y-4">
+      <MissingNumberLine nums={visibleNums} />
+      <div className="rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
+        <p className="text-2xl font-black text-yellow-950">{messages[step]}</p>
+        <button
+          onClick={() => setStep((value) => Math.min(messages.length - 1, value + 1))}
+          disabled={done}
+          className="mt-3 rounded-2xl border-2 border-yellow-600 bg-yellow-400 px-6 py-3 font-black text-yellow-950 shadow-[0_5px_0_#a86000] disabled:opacity-50"
+        >
+          {done ? (lang === "en" ? "Done" : "Selesai") : (lang === "en" ? "Tap to find it" : "Tekan untuk cari")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function MissingNumberLine({ nums }: { nums: Array<number | "?"> }) {
   return (
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-4">
@@ -2841,10 +2999,12 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
     return (
       <div className="space-y-4">
         <NumberLine marked={Math.max(visual.a, visual.b)} />
-        <div className="grid gap-3 sm:grid-cols-2">
-          <LabeledGroup count={visual.a} label={String(visual.a)} emoji="ðŸŒ" />
-          <LabeledGroup count={visual.b} label={String(visual.b)} emoji="ðŸŒ" />
-        </div>
+        {visual.showObjects !== false && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <LabeledGroup count={visual.a} label={String(visual.a)} emoji="ðŸŒ" />
+            <LabeledGroup count={visual.b} label={String(visual.b)} emoji="ðŸŒ" />
+          </div>
+        )}
         <div className="flex items-center justify-center gap-4 text-5xl font-black text-blue-950">
           <span>{visual.a}</span>
           <span className="text-slate-300">?</span>
@@ -2863,7 +3023,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
   if (visual.kind === "compare") {
     return (
       <div className="space-y-3">
-        <NumberLine marked={visual.a} />
+        <NumberLine marked={Math.max(visual.a, visual.b)} />
         <div className="grid grid-cols-2 gap-3">
           <ObjectGroup count={visual.a} emoji="ðŸŒ" />
           <ObjectGroup count={visual.b} emoji="ðŸŒ" />
