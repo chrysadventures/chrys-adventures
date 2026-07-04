@@ -774,7 +774,7 @@ function MenuScreen({ t, player, go }: { t: UIStrings; player: Player; go: (scre
       <div className="grid gap-4 md:grid-cols-2">
         <MenuCard title={t.recognizeNumbers} subtitle="See, spell, hear, trace" icon="ðŸ”¢" color="sky" onClick={() => go("learnRecognize")} />
         <MenuCard title={t.numberValues} subtitle="Numbers mean quantity" icon="ðŸŒ" color="emerald" onClick={() => go("learnValues")} />
-        <MenuCard title={t.sequencing} subtitle="Number lines and order" icon="ðŸ“ˆ" color="sky" onClick={() => go("learnSequencing")} />
+        <MenuCard title={t.sequencing} subtitle="Number lines and order" icon="<>" color="sky" onClick={() => go("learnSequencing")} />
         <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="ðŸ§º" color="amber" onClick={() => go("groupingMode")} />
         <MenuCard title={t.addition} subtitle="Adding more" icon="âž•" color="emerald" onClick={() => go("learnAddition")} />
         <MenuCard title={t.subtraction} subtitle="Taking away" icon="âž–" color="pink" onClick={() => go("learnSubtraction")} />
@@ -1060,8 +1060,8 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
     },
     {
       title: lang === "en" ? "Descending" : "Menurun",
-      text: lang === "en" ? "Descending is big to small. Move left." : "Menurun ialah besar ke kecil. Gerak ke kiri.",
-      visual: <SequencingExample nums={[9, 8, 7, 6, 5]} arrow="left" />,
+      text: lang === "en" ? "Descending means numbers go down." : "Menurun bermaksud nombor turun.",
+      visual: <SequencingExample nums={[9, 8, 7, 6, 5]} arrow="right" />,
     },
     {
       title: lang === "en" ? "Sequencing" : "Turutan",
@@ -2529,7 +2529,7 @@ function SequencingExample({ nums, arrow }: { nums: number[]; arrow: "left" | "r
       <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
         {nums.map((n, i) => (
           <React.Fragment key={n}>
-            {i > 0 && <span className="text-2xl font-black text-emerald-700">{arrow === "right" ? "→" : "←"}</span>}
+            {i > 0 && <span className="text-2xl font-black text-emerald-700">{arrow === "right" ? "\u2192" : "\u2190"}</span>}
             <span className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-2xl font-black text-blue-950">{n}</span>
           </React.Fragment>
         ))}
