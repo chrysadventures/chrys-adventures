@@ -34,6 +34,15 @@ type Visual =
   | { kind: "word"; value: number }
   | { kind: "audioNumber"; value: number }
   | { kind: "groupChoices"; emoji: string; groups: number[] }
+  | { kind: "groupObserve"; emoji: string; count: number }
+  | { kind: "groupMake"; emoji: string; count: number }
+  | { kind: "groupTwo"; emoji: string; a: number; b: number }
+  | { kind: "groupCompare"; emoji: string; a: number; b: number; ask: "same" | "more" | "fewer" }
+  | { kind: "groupCombine"; emoji: string; a: number; b: number }
+  | { kind: "numberWithGroup"; value: number; emoji: string }
+  | { kind: "sameValue"; count: number; emojis: string[] }
+  | { kind: "layoutValue"; count: number; emoji: string }
+  | { kind: "compareGroups"; a: number; b: number; emojiA: string; emojiB: string; ask: "more" | "fewer" }
   | { kind: "order"; nums: number[]; direction: "asc" | "desc" }
   | { kind: "symbol"; a: number; b: number; showObjects?: boolean }
   | { kind: "sequence"; nums: Array<number | "?"> }
@@ -212,27 +221,42 @@ type UIStrings = Record<keyof typeof UI["en"], string>;
 const recognitionPracticeQuestions: Question[] = [
   q("rec-audio-symbol-0", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [0, 1, 2, 3], 0, { kind: "audioNumber", value: 0 }),
   q("rec-audio-symbol-2", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [1, 2, 3, 4], 2, { kind: "audioNumber", value: 2 }),
+  q("rec-audio-symbol-5", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [3, 4, 5, 6], 5, { kind: "audioNumber", value: 5 }),
+  q("rec-audio-symbol-8", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [6, 7, 8, 9], 8, { kind: "audioNumber", value: 8 }),
+  q("rec-symbol-word-1", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["zero", "one", "two", "three"], "one", { kind: "number", value: 1 }),
   q("rec-symbol-word-3", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["one", "two", "three", "four"], "three", { kind: "number", value: 3 }),
-  q("rec-symbol-word-5", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["four", "five", "six", "seven"], "five", { kind: "number", value: 5 }),
-  q("rec-word-symbol-6", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [5, 6, 7, 8], 6, { kind: "word", value: 6 }),
+  q("rec-symbol-word-6", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["four", "five", "six", "seven"], "six", { kind: "number", value: 6 }),
+  q("rec-symbol-word-9", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["six", "seven", "eight", "nine"], "nine", { kind: "number", value: 9 }),
+  q("rec-word-symbol-0", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [0, 1, 2, 3], 0, { kind: "word", value: 0 }),
+  q("rec-word-symbol-4", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [2, 3, 4, 5], 4, { kind: "word", value: 4 }),
+  q("rec-word-symbol-7", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [5, 6, 7, 8], 7, { kind: "word", value: 7 }),
   q("rec-word-symbol-9", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [6, 7, 8, 9], 9, { kind: "word", value: 9 }),
-  q("rec-audio-word-4", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["two", "three", "four", "five"], "four", { kind: "audioNumber", value: 4 }),
+  q("rec-audio-word-2", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["zero", "one", "two", "three"], "two", { kind: "audioNumber", value: 2 }),
+  q("rec-audio-word-5", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["three", "four", "five", "six"], "five", { kind: "audioNumber", value: 5 }),
   q("rec-audio-word-8", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "eight", { kind: "audioNumber", value: 8 }),
+  q("rec-audio-word-9", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "nine", { kind: "audioNumber", value: 9 }),
 ];
 
 const valuePracticeQuestions: Question[] = [
+  q("val-support-3", "numbers", { en: "3 means 3 objects.", ms: "3 bermaksud 3 objek." }, [2, 3, 4], 3, { kind: "numberWithGroup", value: 3, emoji: "🍌" }),
+  q("val-support-6", "numbers", { en: "6 means 6 objects.", ms: "6 bermaksud 6 objek." }, [5, 6, 7], 6, { kind: "numberWithGroup", value: 6, emoji: "🍃" }),
   q("val-count-0", "numbers", { en: "The basket is empty. How many bananas?", ms: "Bakul kosong. Ada berapa pisang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
   q("val-count-1", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "count", emoji: "🍌", count: 1 }),
   q("val-count-2", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "count", emoji: "🍌", count: 2 }),
   q("val-count-3", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍌", count: 3 }),
-  q("val-count-4", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "count", emoji: "🍌", count: 4 }),
-  q("val-count-5", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🍌", count: 5 }),
-  q("val-count-6", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "count", emoji: "🍌", count: 6 }),
-  q("val-count-7", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "count", emoji: "🍌", count: 7 }),
-  q("val-count-8", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [6, 7, 8, 9], 8, { kind: "count", emoji: "🍌", count: 8 }),
-  q("val-count-9", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🍌", count: 9 }),
+  q("val-count-4", "numbers", { en: "How many leaves are there?", ms: "Ada berapa daun?" }, [2, 3, 4, 5], 4, { kind: "count", emoji: "🍃", count: 4 }),
+  q("val-count-5", "numbers", { en: "How many mangoes are there?", ms: "Ada berapa mangga?" }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🥭", count: 5 }),
+  q("val-count-6", "numbers", { en: "How many rocks are there?", ms: "Ada berapa batu?" }, [4, 5, 6, 7], 6, { kind: "count", emoji: "🪨", count: 6 }),
+  q("val-count-7", "numbers", { en: "How many flowers are there?", ms: "Ada berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "count", emoji: "🌸", count: 7 }),
+  q("val-count-8", "numbers", { en: "How many coconuts are there?", ms: "Ada berapa kelapa?" }, [6, 7, 8, 9], 8, { kind: "count", emoji: "🥥", count: 8 }),
+  q("val-count-9", "numbers", { en: "How many mushrooms are there?", ms: "Ada berapa cendawan?" }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🍄", count: 9 }),
   q("val-group-4", "numbers", { en: "Which banana group shows 4?", ms: "Kumpulan pisang mana tunjuk 4?" }, [2, 4, 6], 4, { kind: "groupChoices", emoji: "🍌", groups: [2, 4, 6] }),
   q("val-group-7", "numbers", { en: "Which banana group shows 7?", ms: "Kumpulan pisang mana tunjuk 7?" }, [5, 7, 9], 7, { kind: "groupChoices", emoji: "🍌", groups: [5, 7, 9] }),
+  q("val-group-number-5", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🥭", count: 5 }),
+  q("val-same-3", "numbers", { en: "Are these the same number?", ms: "Adakah ini nombor yang sama?" }, ["Yes", "No"], "Yes", { kind: "sameValue", count: 3, emojis: ["🍌", "🍃"] }),
+  q("val-layout-6", "numbers", { en: "Do they all show 6?", ms: "Semua tunjuk 6?" }, ["Yes", "No"], "Yes", { kind: "layoutValue", count: 6, emoji: "🍌" }),
+  q("val-more-4-6", "numbers", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "compareGroups", a: 4, b: 6, emojiA: "🍃", emojiB: "🍌", ask: "more" }),
+  q("val-fewer-2-5", "numbers", { en: "Which group has fewer?", ms: "Kumpulan mana lebih sedikit?" }, ["Group A", "Group B"], "Group A", { kind: "compareGroups", a: 2, b: 5, emojiA: "🪨", emojiB: "🥭", ask: "fewer" }),
 ];
 const sequencingPracticeQuestions: Question[] = [
   q("seq-full-3", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [2, 3, 4, 5], 3, { kind: "sequence", nums: [0, 1, 2, "?", 4, 5, 6, 7, 8, 9] }),
@@ -475,19 +499,19 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const wordMs = WORDS.ms[visual.value];
     return {
       en: typeof answer === "string"
-        ? [`Number shown: ${visual.value}.`, `${visual.value} is written as ${word}.`, `Answer: ${word}.`]
-        : [`Symbol shown: ${visual.value}.`, `Say it as ${word}.`, `Answer: ${answer}.`],
+        ? [`This is ${visual.value}.`, `The word is ${word}.`]
+        : [`This is ${visual.value}.`, `Say ${word}.`],
       ms: typeof answer === "string"
-        ? [`Nombor ditunjuk: ${visual.value}.`, `${visual.value} ditulis sebagai ${wordMs}.`, `Jawapan: ${wordMs}.`]
-        : [`Simbol ditunjuk: ${visual.value}.`, `Sebut sebagai ${wordMs}.`, `Jawapan: ${answer}.`],
+        ? [`Ini ${visual.value}.`, `Perkataannya ${wordMs}.`]
+        : [`Ini ${visual.value}.`, `Sebut ${wordMs}.`],
     };
   }
   if (visual.kind === "word") {
     const word = WORDS.en[visual.value];
     const wordMs = WORDS.ms[visual.value];
     return {
-      en: [`Word shown: ${word}.`, `${word} is ${visual.value}.`, `Answer: ${visual.value}.`],
-      ms: [`Perkataan ditunjuk: ${wordMs}.`, `${wordMs} bermaksud ${visual.value}.`, `Jawapan: ${visual.value}.`],
+      en: [`The word is ${word}.`, `The number is ${visual.value}.`],
+      ms: [`Perkataan ini ${wordMs}.`, `Nombornya ${visual.value}.`],
     };
   }
   if (visual.kind === "audioNumber") {
@@ -495,17 +519,88 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const wordMs = WORDS.ms[visual.value];
     return {
       en: typeof answer === "string"
-        ? [`You heard: ${word}.`, `${word} is the correct word.`, `Answer: ${word}.`]
-        : [`You heard: ${word}.`, `${word} is ${visual.value}.`, `Answer: ${visual.value}.`],
+        ? [`You heard ${word}.`, `The word is ${word}.`]
+        : [`You heard ${word}.`, `The number is ${visual.value}.`],
       ms: typeof answer === "string"
-        ? [`Kamu dengar: ${wordMs}.`, `${wordMs} ialah perkataan yang betul.`, `Jawapan: ${wordMs}.`]
-        : [`Kamu dengar: ${wordMs}.`, `${wordMs} bermaksud ${visual.value}.`, `Jawapan: ${visual.value}.`],
+        ? [`Kamu dengar ${wordMs}.`, `Perkataannya ${wordMs}.`]
+        : [`Kamu dengar ${wordMs}.`, `Nombornya ${visual.value}.`],
     };
+  }
+  if (visual.kind === "numberWithGroup") {
+    return {
+      en: [`This is ${visual.value}.`, `Count ${visual.value} objects.`, `So, there are ${visual.value}.`],
+      ms: [`Ini ${visual.value}.`, `Kira ${visual.value} objek.`, `Jadi, ada ${visual.value}.`],
+    };
+  }
+  if (visual.kind === "sameValue") {
+    return {
+      en: [`Both groups have ${visual.count}.`, "Different objects.", "Same number."],
+      ms: [`Kedua-dua kumpulan ada ${visual.count}.`, "Objek berbeza.", "Nombor sama."],
+    };
+  }
+  if (visual.kind === "layoutValue") {
+    return {
+      en: [`Each group has ${visual.count}.`, "They look different.", `They are all ${visual.count}.`],
+      ms: [`Setiap kumpulan ada ${visual.count}.`, "Rupa berbeza.", `Semua ialah ${visual.count}.`],
+    };
+  }
+  if (visual.kind === "compareGroups") {
+    const more = Math.max(visual.a, visual.b);
+    const fewer = Math.min(visual.a, visual.b);
+    return visual.ask === "more"
+      ? {
+        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${more} is more than ${fewer}.`],
+        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${more} lebih banyak daripada ${fewer}.`],
+      }
+      : {
+        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${fewer} is fewer than ${more}.`],
+        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${fewer} lebih sedikit daripada ${more}.`],
+      };
   }
   if (visual.kind === "groupChoices") {
     return {
-      en: ["Count each group.", `Find the group with ${answer}.`, `Answer: ${answer}.`],
-      ms: ["Kira setiap kumpulan.", `Cari kumpulan dengan ${answer}.`, `Jawapan: ${answer}.`],
+      en: ["Count each group.", `Find the group with ${answer}.`],
+      ms: ["Kira setiap kumpulan.", `Cari kumpulan dengan ${answer}.`],
+    };
+  }
+  if (visual.kind === "groupObserve" || visual.kind === "groupMake") {
+    const count = visual.count;
+    return {
+      en: ["Count the objects.", `This group has ${count}.`],
+      ms: ["Kira objek.", `Kumpulan ini ada ${count}.`],
+    };
+  }
+  if (visual.kind === "groupTwo") {
+    return {
+      en: [`Group 1 has ${visual.a}.`, `Group 2 has ${visual.b}.`, "Keep the groups apart."],
+      ms: [`Kumpulan 1 ada ${visual.a}.`, `Kumpulan 2 ada ${visual.b}.`, "Asingkan kumpulan."],
+    };
+  }
+  if (visual.kind === "groupCompare") {
+    if (visual.ask === "same") {
+      const same = visual.a === visual.b;
+      return {
+        en: same ? [`Both groups have ${visual.a}.`, "They are the same."] : [`One group has ${visual.a}.`, `One group has ${visual.b}.`, "They are different."],
+        ms: same ? [`Kedua-dua kumpulan ada ${visual.a}.`, "Mereka sama."] : [`Satu kumpulan ada ${visual.a}.`, `Satu kumpulan ada ${visual.b}.`, "Mereka berbeza."],
+      };
+    }
+    const more = visual.a > visual.b ? "Group A" : "Group B";
+    const fewer = visual.a < visual.b ? "Group A" : "Group B";
+    return visual.ask === "more"
+      ? {
+        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${more} has more.`],
+        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${more} lebih banyak.`],
+      }
+      : {
+        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${fewer} has fewer.`],
+        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${fewer} lebih sedikit.`],
+      };
+  }
+  if (visual.kind === "groupCombine") {
+    const total = visual.a + visual.b;
+    return {
+      en: [`Group 1 has ${visual.a}.`, `Group 2 has ${visual.b}.`, "Put them together.", `${visual.a} + ${visual.b} = ${total}.`],
+      ms: [`Kumpulan 1 ada ${visual.a}.`, `Kumpulan 2 ada ${visual.b}.`, "Gabungkan.", `${visual.a} + ${visual.b} = ${total}.`],
     };
   }
   if (visual.kind === "order") {
@@ -711,7 +806,8 @@ function Header({ lang, onToggleLang, title, stars, t, onBack }: {
     <header className="soft-panel mb-4 flex items-center justify-between gap-3 rounded-[1.75rem] px-3 py-2">
       <div className="flex min-w-0 items-center gap-2">
         {onBack && (
-          <button onClick={onBack} className="grid h-11 w-11 place-items-center rounded-2xl border-2 border-blue-100 bg-white text-2xl font-black text-blue-700 shadow-[0_5px_0_rgba(0,0,0,.16)] active:translate-y-1">
+          <button onClick={onBack} aria-label={t.back} className="grid h-11 w-11 place-items-center rounded-2xl border-2 border-sky-100 bg-white text-[0px] text-blue-800 shadow-[0_5px_0_rgba(14,116,144,.18)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 active:translate-y-1">
+            <BackArrowIcon />
             â†
           </button>
         )}
@@ -721,11 +817,36 @@ function Header({ lang, onToggleLang, title, stars, t, onBack }: {
         <button onClick={onToggleLang} className="rounded-2xl border-2 border-white/80 bg-white/90 px-3 py-2 text-sm font-black text-blue-800 shadow-[0_4px_0_rgba(0,0,0,.12)]">
           {lang === "en" ? "BM" : "EN"}
         </button>
-        <div className="rounded-2xl border-2 border-yellow-300 bg-white px-3 py-2 font-black text-yellow-700 shadow-[0_4px_0_rgba(0,0,0,.14)]">
+        <div className="flex items-center gap-2 rounded-2xl border-2 border-yellow-300 bg-white px-3 py-2 font-black text-[0px] text-yellow-700 shadow-[0_4px_0_rgba(0,0,0,.14)]">
+          <StarBadgeIcon />
+          <span className="text-base">{stars}</span>
           â­ {stars}
         </div>
       </div>
     </header>
+  );
+}
+
+function BackArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6 text-blue-800" aria-hidden="true">
+      <path d="M14.5 6.5 9 12l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 12h9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function StarBadgeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5 text-yellow-500 drop-shadow-sm" aria-hidden="true">
+      <path
+        d="m12 2.8 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8L12 2.8Z"
+        fill="currentColor"
+        stroke="#A86000"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -789,7 +910,7 @@ function MenuScreen({ t, player, go }: { t: UIStrings; player: Player; go: (scre
       <div className="grid gap-4 md:grid-cols-2">
         <MenuCard title={t.recognizeNumbers} subtitle="See, spell, hear, trace" icon="ðŸ”¢" color="sky" onClick={() => go("learnRecognize")} />
         <MenuCard title={t.numberValues} subtitle="Numbers mean quantity" icon="ðŸŒ" color="emerald" onClick={() => go("learnValues")} />
-        <MenuCard title={t.sequencing} subtitle="Number lines and order" icon="<>" color="sky" onClick={() => go("learnSequencing")} />
+        <MenuCard title={t.sequencing} subtitle="Number lines and order" icon="< >" color="sky" onClick={() => go("learnSequencing")} />
         <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="ðŸ§º" color="amber" onClick={() => go("groupingMode")} />
         <MenuCard title={t.addition} subtitle="Adding more" icon="âž•" color="emerald" onClick={() => go("learnAddition")} />
         <MenuCard title={t.subtraction} subtitle="Taking away" icon="âž–" color="pink" onClick={() => go("learnSubtraction")} />
@@ -891,7 +1012,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
             <CharacterTalk lang={lang} text={lang === "en" ? `This is ${number}. We say ${word}.` : `Ini ${number}. Kita sebut ${word}.`} />
             <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
               <NumberTile value={number} lang={lang} large />
-              <button onClick={() => speakNumber(number, lang)} className="mt-4 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
+              <button onClick={() => speakNumber(number, lang)} className="hidden">
                 ðŸ”Š {t.speak}
               </button>
             </div>
@@ -945,11 +1066,11 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
 
 function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [number, setNumber] = useState(0);
-  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [step, setStep] = useState(0);
   const [practice, setPractice] = useState(false);
 
   const next = () => {
-    if (step < 4) setStep((s) => (s + 1) as 0 | 1 | 2 | 3 | 4);
+    if (step < 5) setStep((s) => s + 1);
     else if (number < 9) {
       setNumber((n) => n + 1);
       setStep(0);
@@ -957,7 +1078,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
   };
 
   const previous = () => {
-    if (step > 0) setStep((s) => (s - 1) as 0 | 1 | 2 | 3 | 4);
+    if (step > 0) setStep((s) => s - 1);
   };
 
   const skipNextNumber = () => {
@@ -975,19 +1096,19 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.recognizeNumbers} helper={lang === "en" ? "See the number, hear the word, trace it, then write it yourself." : "Lihat nombor, dengar perkataan, surih, kemudian tulis sendiri."}>
-        <div className="mb-4 grid grid-cols-5 gap-2">
-          {[0, 1, 2, 3, 4].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
+      <LessonShell title={t.recognizeNumbers} helper={lang === "en" ? "See it. Hear it. Spell it. Trace it. Write it." : "Lihat. Dengar. Eja. Surih. Tulis."}>
+        <div className="mb-4 grid grid-cols-6 gap-2">
+          {[0, 1, 2, 3, 4, 5].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
         </div>
         {step === 0 && (
           <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-            <CharacterTalk lang={lang} text={lang === "en" ? `This is number ${number}.` : `Ini nombor ${number}.`} />
+            <CharacterTalk lang={lang} text={lang === "en" ? `This is ${number}.` : `Ini ${number}.`} />
             <NumberTile value={number} lang={lang} large showWord={false} />
           </div>
         )}
         {step === 1 && (
           <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-            <CharacterTalk lang={lang} text={lang === "en" ? `This word is ${WORDS.en[number]}. Tap the speaker to hear it.` : `Perkataan ini ${WORDS.ms[number]}. Tekan pembesar suara untuk dengar.`} />
+            <CharacterTalk lang={lang} text={lang === "en" ? `This word says ${WORDS.en[number]}.` : `Perkataan ini ${WORDS.ms[number]}.`} />
             <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
               <p className="text-6xl font-black text-blue-950">{WORDS[lang][number]}</p>
               <button onClick={() => speakNumber(number, lang)} className="mt-4 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
@@ -998,18 +1119,24 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
         )}
         {step === 2 && (
           <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-            <CharacterTalk lang={lang} text={lang === "en" ? "Tap 'Hear it' to hear the number." : "Tekan 'Dengar' untuk dengar nombor."} />
-            <AudioHearButton label={t.speak} onClick={() => speakNumber(number, lang)} />
+            <CharacterTalk lang={lang} text={lang === "en" ? "Tap to hear." : "Tekan untuk dengar."} />
+            <AudioHearButton label={lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`} onClick={() => speakNumber(number, lang)} />
           </div>
         )}
-        {step === 3 && <TracePad value={number} t={t} lang={lang} onTraced={next} />}
-        {step === 4 && <WriteNumberPad value={number} t={t} lang={lang} />}
+        {step === 3 && (
+          <div className="grid gap-4 md:grid-cols-[auto_1fr]">
+            <CharacterTalk lang={lang} text={lang === "en" ? `This word says ${WORDS.en[number]}.` : `Perkataan ini ${WORDS.ms[number]}.`} />
+            <SpellWordCard value={number} lang={lang} />
+          </div>
+        )}
+        {step === 4 && <TracePad value={number} t={t} lang={lang} onTraced={next} />}
+        {step === 5 && <WriteNumberPad value={number} t={t} lang={lang} />}
         <div className="mt-5 flex flex-wrap justify-between gap-3">
           <button disabled={step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
             <SecondaryLessonButton label={number < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)} onClick={skipNextNumber} />
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 4 ? t.practice : t.next}</button>
+            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 5 ? t.practice : t.next}</button>
           </div>
         </div>
       </LessonShell>
@@ -1019,6 +1146,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 
 function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [step, setStep] = useState(0);
+  const [phase, setPhase] = useState(0);
   const [practice, setPractice] = useState(false);
   const examples = NUMBERS.map((n) => ({
     n,
@@ -1028,6 +1156,51 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
       : (lang === "en" ? `This is ${n} bananas.` : `Ini ${n} pisang.`),
   }));
   const current = examples[step];
+  const valueEmojis = ["🍌", "🍃", "🥭", "🪨", "🌸", "🥥", "🍄", "🍌", "🍃", "🥭"];
+  const conceptSlides = [
+    {
+      text: lang === "en" ? "Different objects. Same number." : "Objek berbeza. Nombor sama.",
+      visual: <SameValueVisual count={3} emojis={["🍌", "🍃", "🪨"]} lang={lang} />,
+    },
+    {
+      text: lang === "en" ? "They look different. They are all 6." : "Rupa berbeza. Semua ialah 6.",
+      visual: <LayoutValueVisual count={6} emoji="🍌" lang={lang} />,
+    },
+    {
+      text: lang === "en" ? "6 is more than 4. 4 is fewer than 6." : "6 lebih banyak daripada 4. 4 lebih sedikit daripada 6.",
+      visual: <CompareGroupsVisual a={4} b={6} emojiA="🍃" emojiB="🍌" lang={lang} />,
+    },
+  ];
+  const inConcept = step >= examples.length;
+  const currentNumber = Math.min(current?.n ?? 9, 9);
+  const currentEmoji = valueEmojis[currentNumber] ?? "🍌";
+  const concept = conceptSlides[step - examples.length];
+  const lessonText = inConcept ? concept.text : getNumberValueLessonText(currentNumber, phase, lang);
+
+  const next = () => {
+    if (!inConcept && phase < 3) {
+      setPhase((p) => p + 1);
+      return;
+    }
+    if (step < examples.length + conceptSlides.length - 1) {
+      setStep((s) => s + 1);
+      setPhase(0);
+    } else {
+      setPractice(true);
+    }
+  };
+
+  const previous = () => {
+    if (!inConcept && phase > 0) {
+      setPhase((p) => p - 1);
+      return;
+    }
+    if (step > 0) {
+      const nextStep = step - 1;
+      setStep(nextStep);
+      setPhase(nextStep < examples.length ? 3 : 0);
+    }
+  };
 
   if (practice) {
     return <Quiz lang={lang} t={t} title={`${t.numberValues}: ${t.practice}`} questions={valuePracticeQuestions} randomize={false} onFinish={() => onDone()} onBackToLearning={() => setPractice(false)} />;
@@ -1037,25 +1210,97 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
     <main className="mx-auto w-full max-w-3xl pb-8">
       <LessonShell title={t.numberValues} helper={lang === "en" ? "A number tells us how many." : "Nombor memberitahu berapa banyak."}>
         <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-          <CharacterTalk lang={lang} text={current.text} />
+          <CharacterTalk lang={lang} text={lessonText} />
           <div className="rounded-[2rem] border-4 border-white bg-white p-5 text-center shadow-[0_7px_0_rgba(0,0,0,.12)]">
-            <NumberTile value={current.n} lang={lang} showWord={false} />
-            <div className="mt-4">
-              {current.n === 0
-                ? <ContainerScene count={0} emoji={current.emoji} container="basket" numbered />
-                : <CountedObjectRow count={current.n} emoji={current.emoji} showCount speakCount lang={lang} />}
-            </div>
+            {inConcept ? concept.visual : <NumberValueStepVisual n={currentNumber} emoji={currentEmoji} phase={phase} lang={lang} />}
           </div>
         </div>
         <div className="mt-5 flex flex-wrap justify-between gap-3">
-          <button disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
+          <button disabled={step === 0 && phase === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            <button onClick={() => step < examples.length - 1 ? setStep((s) => s + 1) : setPractice(true)} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length - 1 ? t.next : t.practice}</button>
+            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < 3) ? t.next : t.practice}</button>
           </div>
         </div>
       </LessonShell>
     </main>
+  );
+}
+
+function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
+  if (lang === "ms") {
+    if (n === 0) {
+      if (phase === 0) return "Ini 0.";
+      if (phase === 1) return "0 bermaksud tiada.";
+      if (phase === 2) return "Tiada objek untuk dikira.";
+      return "Jadi, ada 0.";
+    }
+    if (phase === 0) return `Ini ${n}.`;
+    if (phase === 1) return `${n} bermaksud ${n} objek.`;
+    if (phase === 2) return "Kira setiap objek sekali.";
+    return `Nombor terakhir ialah ${n}. Jadi, ada ${n}.`;
+  }
+  if (n === 0) {
+    if (phase === 0) return "This is 0.";
+    if (phase === 1) return "0 means none.";
+    if (phase === 2) return "There are no objects to count.";
+    return "So, there are 0.";
+  }
+  if (phase === 0) return `This is ${n}.`;
+  if (phase === 1) return `${n} means ${n} things.`;
+  if (phase === 2) return "Count each object once.";
+  return `The last number is ${n}. So, there are ${n}.`;
+}
+
+function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: string; phase: number; lang: Lang }) {
+  const [counting, setCounting] = useState(false);
+
+  useEffect(() => {
+    setCounting(false);
+  }, [n, emoji, phase]);
+
+  if (phase === 0) {
+    return <NumberTile value={n} lang={lang} large showWord={false} />;
+  }
+  if (n === 0) {
+    return (
+      <div className="space-y-4">
+        <NumberTile value={0} lang={lang} showWord={false} />
+        <ContainerScene count={0} emoji="🍌" container="basket" numbered={phase >= 2} />
+      </div>
+    );
+  }
+  if (phase === 1) {
+    return (
+      <div className="space-y-4">
+        <NumberTile value={n} lang={lang} showWord={false} />
+        <ObjectGroup count={n} emoji={emoji} />
+      </div>
+    );
+  }
+  if (phase === 2) {
+    return (
+      <div className="space-y-3">
+        <button
+          onClick={() => setCounting(true)}
+          className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
+        >
+          {lang === "en" ? "Tap to count" : "Tekan untuk kira"}
+        </button>
+        {counting
+          ? <CountedObjectRow key={`${n}-${emoji}-count-on`} count={n} emoji={emoji} showCount speakCount lang={lang} intervalMs={650} />
+          : <ObjectGroup count={n} emoji={emoji} />}
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      <NumberTile value={n} lang={lang} showWord={false} />
+      <CountedObjectRow key={`${n}-${emoji}-total`} count={n} emoji={emoji} showCount lang={lang} intervalMs={500} />
+      <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
+        {lang === "en" ? `There are ${n}.` : `Ada ${n}.`}
+      </p>
+    </div>
   );
 }
 
@@ -1159,9 +1404,27 @@ const groupingPracticeQuestions: Question[] = [
   q("group-4-5", "operations", { en: "4 bananas and 5 bananas. How many bananas?", ms: "4 pisang dan 5 pisang. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
 ];
 
+const fullGroupingPracticeQuestions: Question[] = [
+  q("group-observe-2", "operations", { en: "This group has how many bananas?", ms: "Kumpulan ini ada berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "groupObserve", emoji: "🍌", count: 2 }),
+  q("group-make-3", "operations", { en: "Make a group of 3.", ms: "Bina kumpulan 3." }, [1, 2, 3, 4], 3, { kind: "groupMake", emoji: "🍌", count: 3 }),
+  q("group-choose-4", "operations", { en: "Which group has 4?", ms: "Kumpulan mana ada 4?" }, [2, 4, 5], 4, { kind: "groupChoices", emoji: "🍌", groups: [2, 4, 5] }),
+  q("group-two-2-3", "operations", { en: "Group 1 has 2. Group 2 has 3. What is in Group 2?", ms: "Kumpulan 1 ada 2. Kumpulan 2 ada 3. Apa ada dalam Kumpulan 2?" }, [1, 2, 3, 4], 3, { kind: "groupTwo", emoji: "🍌", a: 2, b: 3 }),
+  q("group-same-3-3", "operations", { en: "Are the groups the same?", ms: "Adakah kumpulan sama?" }, ["Yes", "No"], "Yes", { kind: "groupCompare", emoji: "🍌", a: 3, b: 3, ask: "same" }),
+  q("group-same-2-5", "operations", { en: "Are the groups the same?", ms: "Adakah kumpulan sama?" }, ["Yes", "No"], "No", { kind: "groupCompare", emoji: "🍌", a: 2, b: 5, ask: "same" }),
+  q("group-more-3-5", "operations", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
+  q("group-more-4-2", "operations", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group A", "Group B"], "Group A", { kind: "groupCompare", emoji: "🍌", a: 4, b: 2, ask: "more" }),
+  q("group-combine-1-1", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [1, 2, 3, 4], 2, { kind: "groupCombine", emoji: "🍌", a: 1, b: 1 }),
+  q("group-combine-1-2", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [2, 3, 4, 5], 3, { kind: "groupCombine", emoji: "🍌", a: 1, b: 2 }),
+  q("group-combine-2-2", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [3, 4, 5, 6], 4, { kind: "groupCombine", emoji: "🍌", a: 2, b: 2 }),
+  q("group-combine-2-3", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [4, 5, 6, 7], 5, { kind: "groupCombine", emoji: "🍌", a: 2, b: 3 }),
+  q("group-combine-3-3", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [5, 6, 7, 8], 6, { kind: "groupCombine", emoji: "🍌", a: 3, b: 3 }),
+  q("group-combine-3-4", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [6, 7, 8, 9], 7, { kind: "groupCombine", emoji: "🍌", a: 3, b: 4 }),
+  q("group-combine-4-5", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [7, 8, 9], 9, { kind: "groupCombine", emoji: "🍌", a: 4, b: 5 }),
+];
+
 type GroupingPhase = "makeA" | "checkA" | "makeB" | "checkB" | "explain" | "combine" | "answer";
 
-function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+function LegacyGroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [activityIndex, setActivityIndex] = useState(0);
   const [phase, setPhase] = useState<GroupingPhase>("makeA");
   const [groupA, setGroupA] = useState(0);
@@ -1413,6 +1676,304 @@ function CombinedGroupBox({ a, b, targetA, targetB, emoji, lang }: { a: number; 
         </div>
       </div>
       <CountedObjectRow count={a + b} emoji={emoji} showCount compact />
+    </div>
+  );
+}
+
+type NewGroupingActivity =
+  | { kind: "observe"; count: number; emoji: string }
+  | { kind: "makeOne"; target: number; emoji: string }
+  | { kind: "makeTwo"; a: number; b: number; emoji: string }
+  | { kind: "same"; a: number; b: number; emoji: string }
+  | { kind: "more"; a: number; b: number; emoji: string }
+  | { kind: "combine"; a: number; b: number; emoji: string };
+
+const GROUPING_LESSON_STEPS: NewGroupingActivity[] = [
+  { kind: "observe", count: 3, emoji: "🍌" },
+  { kind: "makeOne", target: 2, emoji: "🍌" },
+  { kind: "makeOne", target: 3, emoji: "🍌" },
+  { kind: "makeTwo", a: 2, b: 3, emoji: "🍌" },
+  { kind: "same", a: 3, b: 3, emoji: "🍌" },
+  { kind: "more", a: 3, b: 5, emoji: "🍌" },
+  { kind: "combine", a: 1, b: 1, emoji: "🍌" },
+  { kind: "combine", a: 1, b: 2, emoji: "🍌" },
+  { kind: "combine", a: 2, b: 2, emoji: "🍌" },
+  { kind: "combine", a: 2, b: 3, emoji: "🍌" },
+  { kind: "combine", a: 3, b: 3, emoji: "🍌" },
+  { kind: "combine", a: 3, b: 4, emoji: "🍌" },
+  { kind: "combine", a: 4, b: 5, emoji: "🍌" },
+];
+
+function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+  const [activityIndex, setActivityIndex] = useState(0);
+  const [step, setStep] = useState(0);
+  const [groupA, setGroupA] = useState(0);
+  const [groupB, setGroupB] = useState(0);
+  const [checked, setChecked] = useState(false);
+  const [practice, setPractice] = useState(false);
+  const activity = GROUPING_LESSON_STEPS[activityIndex];
+  const maxStep = getNewGroupingMaxStep(activity);
+  const activeTarget = getActiveGroupingTarget(activity, step);
+  const activeCount = getActiveGroupingCount(activity, step, groupA, groupB);
+  const canEdit = activeTarget !== null;
+  const correct = activeTarget !== null && activeCount === activeTarget;
+  const instruction = getNewGroupingInstruction(activity, step, lang);
+
+  const resetTo = (nextIndex: number) => {
+    setActivityIndex(nextIndex);
+    setStep(0);
+    setGroupA(0);
+    setGroupB(0);
+    setChecked(false);
+  };
+
+  const addObject = () => {
+    if (!canEdit) return;
+    setChecked(false);
+    if (activity.kind === "makeTwo" && step === 2) setGroupB((count) => Math.min(9, count + 1));
+    else setGroupA((count) => Math.min(9, count + 1));
+  };
+
+  const removeObject = () => {
+    if (!canEdit) return;
+    setChecked(false);
+    if (activity.kind === "makeTwo" && step === 2) setGroupB((count) => Math.max(0, count - 1));
+    else setGroupA((count) => Math.max(0, count - 1));
+  };
+
+  const checkGroup = () => {
+    setChecked(true);
+    if (correct) setStep((current) => Math.min(maxStep, current + 1));
+  };
+
+  const next = () => {
+    setChecked(false);
+    if (step < maxStep) {
+      setStep((current) => current + 1);
+      return;
+    }
+    if (activityIndex < GROUPING_LESSON_STEPS.length - 1) resetTo(activityIndex + 1);
+    else setPractice(true);
+  };
+
+  const previous = () => {
+    setChecked(false);
+    if (step > 0) {
+      setStep((current) => current - 1);
+      return;
+    }
+    if (activityIndex > 0) resetTo(activityIndex - 1);
+  };
+
+  if (practice) {
+    return <Quiz lang={lang} t={t} title={`${t.groupingMode}: ${t.practice}`} questions={fullGroupingPracticeQuestions} randomize={false} onFinish={() => onDone()} onBackToLearning={() => setPractice(false)} />;
+  }
+
+  return (
+    <main className="mx-auto w-full max-w-4xl pb-8">
+      <LessonShell
+        title={lang === "en" ? "Grouping: Jungle Groups" : "Kumpulan: Kumpulan Rimba"}
+        helper={lang === "en" ? "Make groups. Count groups. Then put groups together." : "Bina kumpulan. Kira kumpulan. Kemudian gabungkan."}
+      >
+        <div className="mb-4 grid gap-3 md:grid-cols-[auto_1fr] md:items-center">
+          <img src={chrysHappy} alt="Chrys" className="mx-auto h-28 w-28 object-contain" />
+          <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 shadow-[0_5px_0_rgba(6,95,70,.12)]">
+            <p className="text-xl font-black text-emerald-950">{instruction}</p>
+            <p className="mt-1 text-sm font-bold text-emerald-900/70">
+              {lang === "en" ? `Step ${activityIndex + 1} of ${GROUPING_LESSON_STEPS.length}` : `Langkah ${activityIndex + 1} daripada ${GROUPING_LESSON_STEPS.length}`}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border-4 border-white bg-[linear-gradient(180deg,#e8fff2_0%,#f7ffe8_58%,#d6f2a2_100%)] p-4 shadow-inner">
+          <NewGroupingLessonVisual activity={activity} step={step} groupA={groupA} groupB={groupB} lang={lang} />
+        </div>
+
+        {canEdit && (
+          <div className="mt-5 rounded-3xl border-2 border-amber-100 bg-white p-4">
+            <p className="mb-3 text-center text-lg font-black text-slate-700">
+              {lang === "en" ? `Tap bananas to make ${activeTarget}.` : `Tekan pisang untuk bina ${activeTarget}.`}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button onClick={addObject} className="grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 text-5xl shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1">
+                {activity.emoji}
+              </button>
+              <button onClick={removeObject} className="rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-3 font-black text-red-700 shadow-[0_4px_0_rgba(185,28,28,.16)] active:translate-y-1">
+                {lang === "en" ? "Remove one" : "Buang satu"}
+              </button>
+              <button onClick={checkGroup} className="rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1">
+                {lang === "en" ? "Check group" : "Semak kumpulan"}
+              </button>
+            </div>
+            {checked && (
+              <div className={`mt-4 rounded-3xl border-2 p-4 text-center ${correct ? "border-emerald-200 bg-emerald-50" : "border-yellow-200 bg-yellow-50"}`}>
+                <p className={`text-xl font-black ${correct ? "text-emerald-800" : "text-orange-700"}`}>
+                  {correct ? (lang === "en" ? "Great job." : "Bagus.") : (lang === "en" ? "Good try. Let's count again." : "Cubaan baik. Mari kira lagi.")}
+                </p>
+                <CountedObjectRow count={activeCount} emoji={activity.emoji} showCount compact speakCount lang={lang} />
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="mt-5 flex flex-wrap justify-between gap-3">
+          <button
+            disabled={activityIndex === 0 && step === 0}
+            onClick={previous}
+            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40"
+          >
+            {t.previous}
+          </button>
+          <div className="flex flex-wrap justify-end gap-3">
+            <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
+            {!canEdit && (
+              <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
+                {step < maxStep || activityIndex < GROUPING_LESSON_STEPS.length - 1 ? t.next : t.practice}
+              </button>
+            )}
+          </div>
+        </div>
+      </LessonShell>
+    </main>
+  );
+}
+
+function getNewGroupingMaxStep(activity: NewGroupingActivity) {
+  if (activity.kind === "observe") return 2;
+  if (activity.kind === "makeOne") return 1;
+  if (activity.kind === "makeTwo") return 4;
+  if (activity.kind === "combine") return 5;
+  return 2;
+}
+
+function getActiveGroupingTarget(activity: NewGroupingActivity, step: number) {
+  if (activity.kind === "makeOne" && step === 0) return activity.target;
+  if (activity.kind === "makeTwo" && step === 0) return activity.a;
+  if (activity.kind === "makeTwo" && step === 2) return activity.b;
+  return null;
+}
+
+function getActiveGroupingCount(activity: NewGroupingActivity, step: number, groupA: number, groupB: number) {
+  if (activity.kind === "makeTwo" && step === 2) return groupB;
+  return groupA;
+}
+
+function getNewGroupingInstruction(activity: NewGroupingActivity, step: number, lang: Lang) {
+  if (activity.kind === "observe") {
+    if (step === 0) return lang === "en" ? "This is a group." : "Ini satu kumpulan.";
+    if (step === 1) return lang === "en" ? "Count this group." : "Kira kumpulan ini.";
+    return lang === "en" ? `${activity.count} bananas are in this group.` : `${activity.count} pisang dalam kumpulan ini.`;
+  }
+  if (activity.kind === "makeOne") {
+    if (step === 0) return lang === "en" ? `Make a group of ${activity.target}.` : `Bina kumpulan ${activity.target}.`;
+    return lang === "en" ? `This group has ${activity.target}.` : `Kumpulan ini ada ${activity.target}.`;
+  }
+  if (activity.kind === "makeTwo") {
+    if (step === 0) return lang === "en" ? `Make Group 1 with ${activity.a}.` : `Bina Kumpulan 1 dengan ${activity.a}.`;
+    if (step === 1) return lang === "en" ? "Count Group 1." : "Kira Kumpulan 1.";
+    if (step === 2) return lang === "en" ? `Now make Group 2 with ${activity.b}.` : `Sekarang bina Kumpulan 2 dengan ${activity.b}.`;
+    if (step === 3) return lang === "en" ? "Count Group 2." : "Kira Kumpulan 2.";
+    return lang === "en" ? `Group 1 has ${activity.a}. Group 2 has ${activity.b}.` : `Kumpulan 1 ada ${activity.a}. Kumpulan 2 ada ${activity.b}.`;
+  }
+  if (activity.kind === "same") {
+    if (step === 0) return lang === "en" ? "Look at both groups." : "Lihat dua kumpulan.";
+    if (step === 1) return lang === "en" ? "Count each group." : "Kira setiap kumpulan.";
+    return activity.a === activity.b
+      ? (lang === "en" ? "The groups are the same." : "Kumpulan ini sama.")
+      : (lang === "en" ? "The groups are different." : "Kumpulan ini berbeza.");
+  }
+  if (activity.kind === "more") {
+    if (step === 0) return lang === "en" ? "Look at both groups." : "Lihat dua kumpulan.";
+    if (step === 1) return lang === "en" ? "Count each group." : "Kira setiap kumpulan.";
+    return activity.a > activity.b
+      ? (lang === "en" ? "Group A has more." : "Kumpulan A lebih banyak.")
+      : (lang === "en" ? "Group B has more." : "Kumpulan B lebih banyak.");
+  }
+  if (step === 0) return lang === "en" ? `Group 1 has ${activity.a}.` : `Kumpulan 1 ada ${activity.a}.`;
+  if (step === 1) return lang === "en" ? "Count Group 1." : "Kira Kumpulan 1.";
+  if (step === 2) return lang === "en" ? `Group 2 has ${activity.b}.` : `Kumpulan 2 ada ${activity.b}.`;
+  if (step === 3) return lang === "en" ? "Put the groups together." : "Gabungkan kumpulan.";
+  if (step === 4) return lang === "en" ? "Count them all." : "Kira semuanya.";
+  return lang === "en" ? `${activity.a} and ${activity.b} make ${activity.a + activity.b}.` : `${activity.a} dan ${activity.b} menjadi ${activity.a + activity.b}.`;
+}
+
+function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { activity: NewGroupingActivity; step: number; groupA: number; groupB: number; lang: Lang }) {
+  if (activity.kind === "observe") {
+    return (
+      <div className="space-y-4">
+        <GroupingTray label={lang === "en" ? "Basket group" : "Kumpulan bakul"} count={activity.count} emoji={activity.emoji} counted={step >= 1} lang={lang} />
+        {step === 2 && <GroupingAnswerLine text={lang === "en" ? `${activity.count} bananas are in this group.` : `${activity.count} pisang dalam kumpulan ini.`} />}
+      </div>
+    );
+  }
+  if (activity.kind === "makeOne") {
+    return (
+      <div className="space-y-4">
+        <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={step >= 1 ? activity.target : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
+        {step >= 1 && <GroupingAnswerLine text={lang === "en" ? `This group has ${activity.target}.` : `Kumpulan ini ada ${activity.target}.`} />}
+      </div>
+    );
+  }
+  if (activity.kind === "makeTwo") {
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={step >= 1 ? activity.a : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
+          <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={step >= 3 ? activity.b : groupB} emoji={activity.emoji} counted={step >= 3} active={step === 2} lang={lang} />
+        </div>
+        {step >= 4 && <GroupingAnswerLine text={lang === "en" ? `Each group has its own number.` : `Setiap kumpulan ada nombornya sendiri.`} />}
+      </div>
+    );
+  }
+  if (activity.kind === "same" || activity.kind === "more") {
+    const result = activity.kind === "same"
+      ? (activity.a === activity.b ? (lang === "en" ? "Yes. Both groups have 3." : "Ya. Kedua-dua kumpulan ada 3.") : (lang === "en" ? `${activity.a} and ${activity.b} are different.` : `${activity.a} dan ${activity.b} berbeza.`))
+      : (activity.a > activity.b ? (lang === "en" ? "Group A has more." : "Kumpulan A lebih banyak.") : (lang === "en" ? "Group B has more." : "Kumpulan B lebih banyak."));
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <GroupingTray label="Group A" count={activity.a} emoji={activity.emoji} counted={step >= 1} lang={lang} />
+          <GroupingTray label="Group B" count={activity.b} emoji={activity.emoji} counted={step >= 1} lang={lang} />
+        </div>
+        {step >= 2 && <GroupingAnswerLine text={result} />}
+      </div>
+    );
+  }
+  const total = activity.a + activity.b;
+  return (
+    <div className="space-y-4">
+      {step < 3 ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={activity.a} emoji={activity.emoji} counted={step >= 1} lang={lang} />
+          <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={activity.b} emoji={activity.emoji} counted={step >= 2} lang={lang} />
+        </div>
+      ) : (
+        <GroupingTray label={lang === "en" ? "One big group" : "Satu kumpulan besar"} count={total} emoji={activity.emoji} counted={step >= 4} lang={lang} />
+      )}
+      {step === 3 && <GroupingAnswerLine text={lang === "en" ? "The groups move into one big group." : "Kumpulan bergerak menjadi satu kumpulan besar."} />}
+      {step === 5 && (
+        <div className="rounded-3xl border-2 border-emerald-200 bg-white p-4 text-center">
+          <p className="text-2xl font-black text-emerald-900">{lang === "en" ? `${activity.a} and ${activity.b} make ${total}.` : `${activity.a} dan ${activity.b} menjadi ${total}.`}</p>
+          <p className="mt-2 text-4xl font-black text-blue-950">{activity.a} + {activity.b} = {total}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GroupingTray({ label, count, emoji, counted, active = false, lang }: { label: string; count: number; emoji: string; counted: boolean; active?: boolean; lang: Lang }) {
+  return (
+    <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
+      <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>
+      {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} />}
+    </div>
+  );
+}
+
+function GroupingAnswerLine({ text }: { text: string }) {
+  return (
+    <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center text-2xl font-black text-emerald-900">
+      {text}
     </div>
   );
 }
@@ -2406,8 +2967,9 @@ function AudioHearButton({ label, onClick }: { label: string; onClick: () => voi
       <button
         onClick={onClick}
         aria-label={label}
-        className="grid h-16 w-16 place-items-center rounded-3xl border-4 border-sky-200 bg-sky-50 text-3xl shadow-[0_5px_0_rgba(30,64,175,.18)] active:translate-y-1"
+        className="grid h-16 w-16 place-items-center rounded-3xl border-4 border-sky-200 bg-sky-50 text-[0px] text-blue-700 shadow-[0_5px_0_rgba(30,64,175,.18)] active:translate-y-1"
       >
+        <SpeakerIcon />
         ðŸ”Š
       </button>
       <div className="relative">
@@ -2417,11 +2979,29 @@ function AudioHearButton({ label, onClick }: { label: string; onClick: () => voi
         >
           {label}
         </button>
-        <span className="pointer-events-none absolute -right-3 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 text-2xl shadow-md">
+        <span className="pointer-events-none absolute -right-3 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 text-[0px] shadow-md">
+          <PointerIcon />
           ðŸ‘†
         </span>
       </div>
     </div>
+  );
+}
+
+function SpeakerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
+      <path d="M4 9.5v5h4l5 4.2V5.3l-5 4.2H4Z" fill="currentColor" />
+      <path d="M16.2 8.2a5 5 0 0 1 0 7.6M18.7 5.7a8.5 8.5 0 0 1 0 12.6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PointerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6 text-yellow-700" aria-hidden="true">
+      <path d="M8 3.8v8.1L6.6 10.5a2 2 0 0 0-2.8 2.8l5.1 5.1c1.1 1.1 2.5 1.8 4.1 1.8h2.2a4.8 4.8 0 0 0 4.8-4.8v-4.2a1.8 1.8 0 0 0-3.1-1.2 1.8 1.8 0 0 0-3.1-.9 1.8 1.8 0 0 0-2.2-.4V3.8a1.8 1.8 0 0 0-3.6 0Z" fill="currentColor" stroke="#A86000" strokeWidth="1" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -2432,6 +3012,23 @@ function NumberTile({ value, lang, large = false, showWord = true }: { value: nu
         <div className={`${large ? "text-8xl" : "text-5xl"} font-black leading-none`} style={{ fontFamily: "var(--app-font-number)" }}>{value}</div>
         {showWord && <div className="mt-1 text-sm font-black uppercase tracking-wide">{WORDS[lang][value]}</div>}
       </div>
+    </div>
+  );
+}
+
+function SpellWordCard({ value, lang }: { value: number; lang: Lang }) {
+  const word = WORDS[lang][value];
+  return (
+    <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
+      <p className="text-6xl font-black text-blue-950">{word}</p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        {word.split("").map((letter, index) => (
+          <span key={`${letter}-${index}`} className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-blue-100 bg-white text-3xl font-black text-blue-900 shadow-inner">
+            {letter}
+          </span>
+        ))}
+      </div>
+      <p className="mt-4 text-lg font-black text-slate-600">{word.split("").join(" - ")}</p>
     </div>
   );
 }
@@ -2558,6 +3155,81 @@ function NumberValueCompare({ a, b, lang }: { a: number; b: number; lang: Lang }
         <p>{lang === "en" ? `${bigger} has more.` : `${bigger} ada lebih banyak.`}</p>
         <p>{lang === "en" ? `${smaller} has less.` : `${smaller} ada lebih sedikit.`}</p>
       </div>
+    </div>
+  );
+}
+
+function SameValueVisual({ count, emojis, lang }: { count: number; emojis: string[]; lang: Lang }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-3">
+        {emojis.map((emoji, index) => (
+          <div key={`${emoji}-${index}`} className="rounded-3xl border-2 border-emerald-100 bg-white p-3 text-center shadow-inner">
+            <ObjectGroup count={count} emoji={emoji} />
+            <p className="mt-2 text-lg font-black text-emerald-900">{lang === "en" ? `Group ${index + 1}` : `Kumpulan ${index + 1}`}</p>
+          </div>
+        ))}
+      </div>
+      <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-center text-xl font-black text-emerald-900">
+        {lang === "en" ? `All groups have ${count}.` : `Semua kumpulan ada ${count}.`}
+      </p>
+    </div>
+  );
+}
+
+function LayoutValueVisual({ count, emoji, lang }: { count: number; emoji: string; lang: Lang }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-3">
+        <LayoutGroup count={count} emoji={emoji} layout="row" label={lang === "en" ? "Row" : "Baris"} />
+        <LayoutGroup count={count} emoji={emoji} layout="twoGroups" label={lang === "en" ? "Two groups" : "Dua kumpulan"} />
+        <LayoutGroup count={count} emoji={emoji} layout="spread" label={lang === "en" ? "Spread out" : "Berselerak"} />
+      </div>
+      <p className="rounded-2xl bg-yellow-50 px-4 py-3 text-center text-xl font-black text-yellow-900">
+        {lang === "en" ? `They are all ${count}.` : `Semua ialah ${count}.`}
+      </p>
+    </div>
+  );
+}
+
+function LayoutGroup({ count, emoji, layout, label }: { count: number; emoji: string; layout: "row" | "twoGroups" | "spread"; label: string }) {
+  const symbol = cleanDisplayText(emoji);
+  const positions = layout === "spread"
+    ? ["self-start", "self-center", "self-end", "self-center", "self-start", "self-end", "self-start", "self-center", "self-end"]
+    : [];
+  return (
+    <div className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center shadow-inner">
+      <div className={`mx-auto flex min-h-36 max-w-44 flex-wrap justify-center gap-2 rounded-3xl bg-blue-50 p-3 ${layout === "row" ? "items-center" : "items-start"}`}>
+        {Array.from({ length: count }, (_, i) => (
+          <span
+            key={i}
+            className={`grid h-10 w-10 place-items-center rounded-2xl bg-white text-2xl shadow-inner ${layout === "spread" ? positions[i] : ""} ${layout === "twoGroups" && i === Math.ceil(count / 2) ? "ml-5" : ""}`}
+          >
+            {symbol}
+          </span>
+        ))}
+      </div>
+      <p className="mt-2 text-sm font-black text-blue-900">{label}</p>
+    </div>
+  );
+}
+
+function CompareGroupsVisual({ a, b, emojiA, emojiB, lang }: { a: number; b: number; emojiA: string; emojiB: string; lang: Lang }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center shadow-inner">
+          <ObjectGroup count={a} emoji={emojiA} />
+          <p className="mt-2 text-xl font-black text-blue-900">{lang === "en" ? "Group A" : "Kumpulan A"}</p>
+        </div>
+        <div className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center shadow-inner">
+          <ObjectGroup count={b} emoji={emojiB} />
+          <p className="mt-2 text-xl font-black text-blue-900">{lang === "en" ? "Group B" : "Kumpulan B"}</p>
+        </div>
+      </div>
+      <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-center text-lg font-black text-emerald-900">
+        {lang === "en" ? `${Math.max(a, b)} is more. ${Math.min(a, b)} is fewer.` : `${Math.max(a, b)} lebih banyak. ${Math.min(a, b)} lebih sedikit.`}
+      </p>
     </div>
   );
 }
@@ -2936,7 +3608,10 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
       </div>
       <div className="mt-3 flex gap-2">
         <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">{t.clear}</button>
-        <button onClick={() => speakNumber(value, lang)} className="flex-1 rounded-2xl border-2 border-blue-700 bg-blue-600 py-2 font-black text-white">ðŸ”Š {t.speak}</button>
+        <button onClick={() => speakNumber(value, lang)} className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-blue-700 bg-blue-600 py-2 font-black text-white">
+          <SpeakerIcon />
+          <span>{t.speak}</span>
+        </button>
       </div>
     </div>
   );
@@ -2972,16 +3647,64 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
       <AudioHearButton label={lang === "en" ? "Hear it" : "Dengar"} onClick={() => speakNumber(visual.value, lang)} />
     );
   }
+  if (visual.kind === "groupObserve" || visual.kind === "groupMake") {
+    return <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={visual.count} emoji={visual.emoji} counted={revealNumbers} lang={lang} />;
+  }
   if (visual.kind === "groupChoices") {
     return (
       <div className="grid gap-3 md:grid-cols-3">
         {visual.groups.map((count) => (
           <div key={count} className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center">
-            <ObjectGroup count={count} emoji={visual.emoji} />
+            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealNumbers} />
           </div>
         ))}
       </div>
     );
+  }
+  if (visual.kind === "groupTwo") {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={visual.a} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+        <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={visual.b} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+      </div>
+    );
+  }
+  if (visual.kind === "groupCompare") {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        <GroupingTray label="Group A" count={visual.a} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+        <GroupingTray label="Group B" count={visual.b} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+      </div>
+    );
+  }
+  if (visual.kind === "groupCombine") {
+    return (
+      <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+          <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={visual.a} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+          <span className="text-center text-lg font-black text-emerald-700">{revealNumbers ? "+" : (lang === "en" ? "and" : "dan")}</span>
+          <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={visual.b} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+        </div>
+        {revealNumbers && <GroupingAnswerLine text={`${visual.a} + ${visual.b} = ${visual.a + visual.b}`} />}
+      </div>
+    );
+  }
+  if (visual.kind === "numberWithGroup") {
+    return (
+      <div className="space-y-4">
+        <NumberTile value={visual.value} lang={lang} showWord={false} />
+        <ObjectGroup count={visual.value} emoji={visual.emoji} numbered={revealNumbers} />
+      </div>
+    );
+  }
+  if (visual.kind === "sameValue") {
+    return <SameValueVisual count={visual.count} emojis={visual.emojis} lang={lang} />;
+  }
+  if (visual.kind === "layoutValue") {
+    return <LayoutValueVisual count={visual.count} emoji={visual.emoji} lang={lang} />;
+  }
+  if (visual.kind === "compareGroups") {
+    return <CompareGroupsVisual a={visual.a} b={visual.b} emojiA={visual.emojiA} emojiB={visual.emojiB} lang={lang} />;
   }
   if (visual.kind === "order") {
     return (
@@ -3133,6 +3856,37 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
         <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
           {visual.a} + {visual.b} = {visual.a + visual.b}
         </div>
+      </div>
+    );
+  }
+  if (visual.kind === "groupObserve" || visual.kind === "groupMake") {
+    return <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={visual.count} emoji={visual.emoji} counted lang={lang} />;
+  }
+  if (visual.kind === "groupTwo") {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={visual.a} emoji={visual.emoji} counted lang={lang} />
+        <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={visual.b} emoji={visual.emoji} counted lang={lang} />
+      </div>
+    );
+  }
+  if (visual.kind === "groupCompare") {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        <GroupingTray label="Group A" count={visual.a} emoji={visual.emoji} counted lang={lang} />
+        <GroupingTray label="Group B" count={visual.b} emoji={visual.emoji} counted lang={lang} />
+      </div>
+    );
+  }
+  if (visual.kind === "groupCombine") {
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={visual.a} emoji={visual.emoji} counted lang={lang} />
+          <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={visual.b} emoji={visual.emoji} counted lang={lang} />
+        </div>
+        <GroupingTray label={lang === "en" ? "One big group" : "Satu kumpulan besar"} count={visual.a + visual.b} emoji={visual.emoji} counted lang={lang} />
+        <GroupingAnswerLine text={`${visual.a} + ${visual.b} = ${visual.a + visual.b}`} />
       </div>
     );
   }
