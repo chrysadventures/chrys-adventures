@@ -1176,9 +1176,10 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   const currentEmoji = valueEmojis[currentNumber] ?? "🍌";
   const concept = conceptSlides[step - examples.length];
   const lessonText = inConcept ? concept.text : getNumberValueLessonText(currentNumber, phase, lang);
+  const maxPhase = inConcept ? 0 : getNumberValueMaxPhase(currentNumber);
 
   const next = () => {
-    if (!inConcept && phase < 5) {
+    if (!inConcept && phase < maxPhase) {
       setPhase((p) => p + 1);
       return;
     }
@@ -1198,7 +1199,8 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
     if (step > 0) {
       const nextStep = step - 1;
       setStep(nextStep);
-      setPhase(nextStep < examples.length ? 5 : 0);
+      const previousNumber = Math.min(examples[nextStep]?.n ?? 9, 9);
+      setPhase(nextStep < examples.length ? getNumberValueMaxPhase(previousNumber) : 0);
     }
   };
 
@@ -1219,7 +1221,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
           <button disabled={step === 0 && phase === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < 5) ? t.next : t.practice}</button>
+            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < maxPhase) ? t.next : t.practice}</button>
           </div>
         </div>
       </LessonShell>
@@ -1230,34 +1232,28 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
   if (lang === "ms") {
     if (n === 0) {
-      if (phase === 0) return "Ini 0.";
-      if (phase === 1) return "0 bermaksud tiada.";
-      if (phase === 2) return "Tiada objek untuk dikira.";
-      if (phase === 3) return "Jadi, ada 0.";
-      if (phase === 4) return "Bakul kosong. Dulang kosong. Masih 0.";
-      return "Ruang berbeza. Tiada objek. Masih 0.";
+      return "0 bermaksud tiada. Tiada objek.";
     }
     if (phase === 0) return `Ini ${n}.`;
     if (phase === 1) return `${n} bermaksud ${n} objek.`;
-    if (phase === 2) return "Kira setiap objek sekali.";
-    if (phase === 3) return `Nombor terakhir ialah ${n}. Jadi, ada ${n}.`;
-    if (phase === 4) return `Objek berbeza. Masih ${n}.`;
+    if (phase === 2) return `Kira setiap objek. Nombor terakhir ialah ${n}.`;
+    if (phase === 3) return `Objek berbeza. Masih ${n}.`;
     return `Susunan berbeza. Masih ${n}.`;
   }
   if (n === 0) {
-    if (phase === 0) return "This is 0.";
-    if (phase === 1) return "0 means none.";
-    if (phase === 2) return "There are no objects to count.";
-    if (phase === 3) return "So, there are 0.";
-    if (phase === 4) return "Empty basket. Empty tray. Still 0.";
-    return "Different spaces. No objects. Still 0.";
+    return "0 means none. There are no objects.";
   }
   if (phase === 0) return `This is ${n}.`;
   if (phase === 1) return `${n} means ${n} things.`;
-  if (phase === 2) return "Count each object once.";
-  if (phase === 3) return `The last number is ${n}. So, there are ${n}.`;
-  if (phase === 4) return `Different objects. Still ${n}.`;
+  if (phase === 2) return `Count each object. The last number is ${n}.`;
+  if (phase === 3) return `Different objects. Still ${n}.`;
   return `Different arrangement. Still ${n}.`;
+}
+
+function getNumberValueMaxPhase(n: number) {
+  if (n === 0) return 0;
+  if (n === 1) return 3;
+  return 4;
 }
 
 function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: string; phase: number; lang: Lang }) {
@@ -1268,37 +1264,20 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     setCounting(false);
   }, [n, emoji, phase]);
 
-  if (phase === 0) {
-    return <NumberTile value={n} lang={lang} large showWord={false} />;
-  }
-  if (n === 0 && phase === 4) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2">
-        <ZeroContainerCard label={lang === "en" ? "Empty basket" : "Bakul kosong"} container="basket" lang={lang} />
-        <ZeroContainerCard label={lang === "en" ? "Empty tray" : "Dulang kosong"} container="tray" lang={lang} />
-      </div>
-    );
-  }
-  if (n === 0 && phase === 5) {
-    return (
-      <div className="space-y-4">
-        <NumberTile value={0} lang={lang} showWord={false} />
-        <div className="grid gap-4 md:grid-cols-2">
-          <ZeroContainerCard label={lang === "en" ? "No bananas" : "Tiada pisang"} container="basket" lang={lang} />
-          <div className="rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">
-            {lang === "en" ? "empty space" : "ruang kosong"}
-          </div>
-        </div>
-      </div>
-    );
-  }
   if (n === 0) {
     return (
       <div className="space-y-4">
         <NumberTile value={0} lang={lang} showWord={false} />
-        <ContainerScene count={0} emoji="🍌" container="basket" numbered={phase >= 2} />
+        <ContainerScene count={0} emoji="🍌" container="basket" numbered />
+        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
+          {lang === "en" ? "0 means none. There are no objects." : "0 bermaksud tiada. Tiada objek."}
+        </p>
       </div>
     );
+  }
+
+  if (phase === 0) {
+    return <NumberTile value={n} lang={lang} large showWord={false} />;
   }
   if (phase === 1) {
     return (
@@ -1320,10 +1299,13 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
         {counting
           ? <CountedObjectRow key={`${n}-${emoji}-count-on`} count={n} emoji={emoji} showCount speakCount lang={lang} intervalMs={650} />
           : <ObjectGroup count={n} emoji={emoji} />}
+        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
+          {lang === "en" ? `So, there are ${n}.` : `Jadi, ada ${n}.`}
+        </p>
       </div>
     );
   }
-  if (phase === 4) {
+  if (phase === 3) {
     return (
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
@@ -1336,7 +1318,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
       </div>
     );
   }
-  if (phase === 5) {
+  if (phase === 4) {
     return (
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-3">
@@ -3193,11 +3175,6 @@ function ContainerScene({
     <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 h-full w-full object-contain" />
-        {count === 0 && (
-          <div className="absolute inset-x-8 bottom-5 rounded-2xl border-2 border-dashed border-slate-200 bg-white/85 px-4 py-3 text-center text-2xl font-black text-slate-400">
-            {numbered ? "0" : "empty"}
-          </div>
-        )}
         {Array.from({ length: count }, (_, i) => {
           const [x, y] = positions[i % positions.length];
           return (
@@ -3211,6 +3188,11 @@ function ContainerScene({
           );
         })}
       </div>
+      {count === 0 && (
+        <div className="mx-auto mt-3 max-w-xs rounded-2xl border-2 border-dashed border-slate-200 bg-white/85 px-4 py-3 text-center text-2xl font-black text-slate-400">
+          {numbered ? "0" : "empty"}
+        </div>
+      )}
     </div>
   );
 }
