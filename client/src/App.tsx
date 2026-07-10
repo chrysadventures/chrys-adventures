@@ -1178,7 +1178,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   const lessonText = inConcept ? concept.text : getNumberValueLessonText(currentNumber, phase, lang);
 
   const next = () => {
-    if (!inConcept && phase < 3) {
+    if (!inConcept && phase < 5) {
       setPhase((p) => p + 1);
       return;
     }
@@ -1198,7 +1198,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
     if (step > 0) {
       const nextStep = step - 1;
       setStep(nextStep);
-      setPhase(nextStep < examples.length ? 3 : 0);
+      setPhase(nextStep < examples.length ? 5 : 0);
     }
   };
 
@@ -1219,7 +1219,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
           <button disabled={step === 0 && phase === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < 3) ? t.next : t.practice}</button>
+            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < 5) ? t.next : t.practice}</button>
           </div>
         </div>
       </LessonShell>
@@ -1233,27 +1233,36 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
       if (phase === 0) return "Ini 0.";
       if (phase === 1) return "0 bermaksud tiada.";
       if (phase === 2) return "Tiada objek untuk dikira.";
-      return "Jadi, ada 0.";
+      if (phase === 3) return "Jadi, ada 0.";
+      if (phase === 4) return "Bakul kosong. Dulang kosong. Masih 0.";
+      return "Ruang berbeza. Tiada objek. Masih 0.";
     }
     if (phase === 0) return `Ini ${n}.`;
     if (phase === 1) return `${n} bermaksud ${n} objek.`;
     if (phase === 2) return "Kira setiap objek sekali.";
-    return `Nombor terakhir ialah ${n}. Jadi, ada ${n}.`;
+    if (phase === 3) return `Nombor terakhir ialah ${n}. Jadi, ada ${n}.`;
+    if (phase === 4) return `Objek berbeza. Masih ${n}.`;
+    return `Susunan berbeza. Masih ${n}.`;
   }
   if (n === 0) {
     if (phase === 0) return "This is 0.";
     if (phase === 1) return "0 means none.";
     if (phase === 2) return "There are no objects to count.";
-    return "So, there are 0.";
+    if (phase === 3) return "So, there are 0.";
+    if (phase === 4) return "Empty basket. Empty tray. Still 0.";
+    return "Different spaces. No objects. Still 0.";
   }
   if (phase === 0) return `This is ${n}.`;
   if (phase === 1) return `${n} means ${n} things.`;
   if (phase === 2) return "Count each object once.";
-  return `The last number is ${n}. So, there are ${n}.`;
+  if (phase === 3) return `The last number is ${n}. So, there are ${n}.`;
+  if (phase === 4) return `Different objects. Still ${n}.`;
+  return `Different arrangement. Still ${n}.`;
 }
 
 function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: string; phase: number; lang: Lang }) {
   const [counting, setCounting] = useState(false);
+  const alternateEmoji = getAlternateValueEmoji(emoji);
 
   useEffect(() => {
     setCounting(false);
@@ -1261,6 +1270,27 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
 
   if (phase === 0) {
     return <NumberTile value={n} lang={lang} large showWord={false} />;
+  }
+  if (n === 0 && phase === 4) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        <ZeroContainerCard label={lang === "en" ? "Empty basket" : "Bakul kosong"} container="basket" lang={lang} />
+        <ZeroContainerCard label={lang === "en" ? "Empty tray" : "Dulang kosong"} container="tray" lang={lang} />
+      </div>
+    );
+  }
+  if (n === 0 && phase === 5) {
+    return (
+      <div className="space-y-4">
+        <NumberTile value={0} lang={lang} showWord={false} />
+        <div className="grid gap-4 md:grid-cols-2">
+          <ZeroContainerCard label={lang === "en" ? "No bananas" : "Tiada pisang"} container="basket" lang={lang} />
+          <div className="rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">
+            {lang === "en" ? "empty space" : "ruang kosong"}
+          </div>
+        </div>
+      </div>
+    );
   }
   if (n === 0) {
     return (
@@ -1293,6 +1323,33 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
       </div>
     );
   }
+  if (phase === 4) {
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <LabeledValueGroup label={lang === "en" ? `${n} bananas` : `${n} pisang`} count={n} emoji={emoji} counted />
+          <LabeledValueGroup label={lang === "en" ? `${n} leaves` : `${n} daun`} count={n} emoji={alternateEmoji} counted />
+        </div>
+        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
+          {lang === "en" ? "Different things. Same number." : "Objek berbeza. Nombor sama."}
+        </p>
+      </div>
+    );
+  }
+  if (phase === 5) {
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-3">
+          <ValueLayoutCard label={lang === "en" ? "Row" : "Baris"} count={n} emoji={emoji} layout="row" />
+          <ValueLayoutCard label={lang === "en" ? "Groups" : "Kumpulan"} count={n} emoji={emoji} layout="groups" />
+          <ValueLayoutCard label={lang === "en" ? "Spread out" : "Bersepah"} count={n} emoji={emoji} layout="spread" />
+        </div>
+        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
+          {lang === "en" ? `They look different. They are all ${n}.` : `Rupa berbeza. Semua ialah ${n}.`}
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-4">
       <NumberTile value={n} lang={lang} showWord={false} />
@@ -1300,6 +1357,57 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
       <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
         {lang === "en" ? `There are ${n}.` : `Ada ${n}.`}
       </p>
+    </div>
+  );
+}
+
+function getAlternateValueEmoji(emoji: string) {
+  const symbol = cleanDisplayText(emoji);
+  if (symbol === "🍃") return "🍌";
+  return "🍃";
+}
+
+function ZeroContainerCard({ label, container, lang }: { label: string; container: ContainerKind; lang: Lang }) {
+  return (
+    <div className="rounded-3xl border-2 border-sky-100 bg-sky-50 p-4 text-center">
+      <p className="mb-3 text-xl font-black text-blue-950">{label}</p>
+      <ContainerScene count={0} emoji="🍌" container={container} numbered />
+      <p className="mt-3 rounded-2xl bg-white px-3 py-2 font-black text-slate-600">
+        {lang === "en" ? "0 means none." : "0 bermaksud tiada."}
+      </p>
+    </div>
+  );
+}
+
+function LabeledValueGroup({ label, count, emoji, counted }: { label: string; count: number; emoji: string; counted: boolean }) {
+  return (
+    <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4 text-center">
+      <p className="mb-3 text-xl font-black text-emerald-950">{label}</p>
+      {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact intervalMs={500} /> : <ObjectGroup count={count} emoji={emoji} />}
+    </div>
+  );
+}
+
+function ValueLayoutCard({ label, count, emoji, layout }: { label: string; count: number; emoji: string; layout: "row" | "groups" | "spread" }) {
+  const symbol = cleanDisplayText(emoji);
+  const items = Array.from({ length: count }, (_, i) => i);
+  const layoutClass = layout === "row"
+    ? "flex flex-wrap justify-center gap-2"
+    : layout === "groups"
+      ? "grid grid-cols-3 gap-2"
+      : "grid grid-cols-4 gap-x-1 gap-y-4";
+
+  return (
+    <div className="rounded-3xl border-2 border-yellow-100 bg-yellow-50 p-4 text-center">
+      <p className="mb-3 text-lg font-black text-yellow-900">{label}</p>
+      <div className={`${layoutClass} rounded-3xl bg-white p-3`}>
+        {items.map((i) => (
+          <span key={i} className={`relative grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-3xl shadow-inner ${layout === "spread" && i % 2 === 1 ? "translate-y-2" : ""}`}>
+            {symbol}
+          </span>
+        ))}
+      </div>
+      <p className="mt-3 text-2xl font-black text-blue-950">{count}</p>
     </div>
   );
 }
@@ -2842,6 +2950,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const answered = selected !== null;
   const isCorrect = selected === qn.answer;
   const isCountQuestion = qn.visual.kind === "count";
+  const isValueQuestion = qn.id.startsWith("val-");
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
 
@@ -2915,7 +3024,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                 <div>
                   <p className={`text-xl font-black ${isCorrect ? "text-emerald-700" : "text-orange-700"}`}>
                     {isCorrect
-                      ? (isCountQuestion ? (lang === "en" ? `Great job! It is ${qn.answer}.` : `Bagus! Ini ${qn.answer}.`) : t.greatJob)
+                      ? (isValueQuestion ? (lang === "en" ? "Great job! Count with Chrys." : "Bagus! Kira dengan Chrys.") : (isCountQuestion ? (lang === "en" ? `Great job! It is ${qn.answer}.` : `Bagus! Ini ${qn.answer}.`) : t.greatJob))
                       : (isCountQuestion ? (lang === "en" ? "Good try. Let's count." : "Cubaan baik. Mari kira.") : t.lookAgain)}
                   </p>
                   <p className="font-black text-slate-700">{t.yourAnswer}: {selected}</p>
@@ -2926,7 +3035,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                   {!isCorrect && <p className="font-bold text-slate-600">{t.seeMethod}</p>}
                 </div>
               </div>
-              {!isCorrect && <WorkedMethod q={qn} lang={lang} />}
+              {(!isCorrect || (isCorrect && isValueQuestion)) && <WorkedMethod q={qn} lang={lang} />}
               <div className="mt-4 flex gap-3">
                 <button onClick={next} className="flex-[2] rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
                   {index === randomizedQuestions.length - 1 ? t.finish : t.nextQuestion}
