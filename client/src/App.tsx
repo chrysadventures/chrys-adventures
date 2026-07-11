@@ -1111,7 +1111,9 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
             <CharacterTalk lang={lang} text={lang === "en" ? `This word says ${WORDS.en[number]}.` : `Perkataan ini ${WORDS.ms[number]}.`} />
             <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
               <p className="text-6xl font-black text-blue-950">{WORDS[lang][number]}</p>
-              <button onClick={() => speakNumber(number, lang)} className="mt-4 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
+              <button onClick={() => speakNumber(number, lang)} className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-[0px] font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
+                <SpeakerIcon />
+                <span className="text-base sm:text-lg">{lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}</span>
                 ðŸ”Š {lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}
               </button>
             </div>
