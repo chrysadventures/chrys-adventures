@@ -1232,7 +1232,9 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
   if (lang === "ms") {
     if (n === 0) {
-      return "0 bermaksud tiada. Tiada objek.";
+      return phase === 0
+        ? "Lihat bakul.\nTiada pisang."
+        : "0 bermaksud tiada.\nJadi, ada 0 pisang.";
     }
     if (phase === 0) return `Ini ${n}.`;
     if (phase === 1) return `${n} bermaksud ${n} objek.`;
@@ -1241,7 +1243,9 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
     return `Susunan berbeza. Masih ${n}.`;
   }
   if (n === 0) {
-    return "0 means none. There are no objects.";
+    return phase === 0
+      ? "Look at the basket.\nThere are no bananas."
+      : "0 means none.\nSo, there are 0 bananas.";
   }
   if (phase === 0) return `This is ${n}.`;
   if (phase === 1) return `${n} means ${n} things.`;
@@ -1251,7 +1255,7 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
 }
 
 function getNumberValueMaxPhase(n: number) {
-  if (n === 0) return 0;
+  if (n === 0) return 1;
   if (n === 1) return 3;
   return 4;
 }
@@ -1267,10 +1271,19 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
   if (n === 0) {
     return (
       <div className="space-y-4">
+        {phase === 1 && <NumberTile value={0} lang={lang} large showWord={false} />}
+        <ContainerScene count={0} emoji="🍌" container="basket" hideEmptyLabel />
+      </div>
+    );
+  }
+
+  if (n === 0) {
+    return (
+      <div className="space-y-4">
         <NumberTile value={0} lang={lang} showWord={false} />
         <ContainerScene count={0} emoji="🍌" container="basket" numbered />
         <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
-          {lang === "en" ? "0 means none. There are no objects." : "0 bermaksud tiada. Tiada objek."}
+          {lang === "en" ? "" : ""}
         </p>
       </div>
     );
@@ -3047,7 +3060,7 @@ function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
   return (
     <div className="talk-bubble flex items-center gap-3 rounded-3xl p-4">
       <img src={alyseTeaching} alt="Alyse" className="h-20 w-20 object-contain" />
-      <p className="text-lg font-black leading-snug text-slate-800">{text}</p>
+      <p className="whitespace-pre-line text-lg font-black leading-snug text-slate-800">{text}</p>
     </div>
   );
 }
@@ -3150,11 +3163,13 @@ function ContainerScene({
   emoji,
   container,
   numbered = false,
+  hideEmptyLabel = false,
 }: {
   count: number;
   emoji: string;
   container: ContainerKind;
   numbered?: boolean;
+  hideEmptyLabel?: boolean;
 }) {
   const symbol = cleanDisplayText(emoji);
   const image = container === "basket" ? basketPhoto : trayPhoto;
@@ -3188,7 +3203,7 @@ function ContainerScene({
           );
         })}
       </div>
-      {count === 0 && (
+      {count === 0 && !hideEmptyLabel && (
         <div className="mx-auto mt-3 max-w-xs rounded-2xl border-2 border-dashed border-slate-200 bg-white/85 px-4 py-3 text-center text-2xl font-black text-slate-400">
           {numbered ? "0" : "empty"}
         </div>
