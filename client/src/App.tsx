@@ -1070,7 +1070,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
   const [practice, setPractice] = useState(false);
 
   const next = () => {
-    if (step < 5) setStep((s) => s + 1);
+    if (step < 4) setStep((s) => s + 1);
     else if (number < 9) {
       setNumber((n) => n + 1);
       setStep(0);
@@ -1097,8 +1097,8 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
       <LessonShell title={t.recognizeNumbers} helper={lang === "en" ? "See it. Hear it. Spell it. Trace it. Write it." : "Lihat. Dengar. Eja. Surih. Tulis."}>
-        <div className="mb-4 grid grid-cols-6 gap-2">
-          {[0, 1, 2, 3, 4, 5].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
+        <div className="mb-4 grid grid-cols-5 gap-2">
+          {[0, 1, 2, 3, 4].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
         </div>
         {step === 0 && (
           <div className="grid gap-4 md:grid-cols-[auto_1fr]">
@@ -1114,31 +1114,24 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
               <button onClick={() => speakNumber(number, lang)} className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-[0px] font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
                 <SpeakerIcon />
                 <span className="text-base sm:text-lg">{lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}</span>
-                ðŸ”Š {lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}
               </button>
             </div>
           </div>
         )}
         {step === 2 && (
           <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-            <CharacterTalk lang={lang} text={lang === "en" ? "Tap to hear." : "Tekan untuk dengar."} />
-            <AudioHearButton label={lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`} onClick={() => speakNumber(number, lang)} />
-          </div>
-        )}
-        {step === 3 && (
-          <div className="grid gap-4 md:grid-cols-[auto_1fr]">
             <CharacterTalk lang={lang} text={lang === "en" ? `This word says ${WORDS.en[number]}.` : `Perkataan ini ${WORDS.ms[number]}.`} />
             <SpellWordCard value={number} lang={lang} />
           </div>
         )}
-        {step === 4 && <TracePad value={number} t={t} lang={lang} onTraced={next} />}
-        {step === 5 && <WriteNumberPad value={number} t={t} lang={lang} />}
+        {step === 3 && <TracePad value={number} t={t} lang={lang} onTraced={next} />}
+        {step === 4 && <WriteNumberPad value={number} t={t} lang={lang} />}
         <div className="mt-5 flex flex-wrap justify-between gap-3">
           <button disabled={step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
             <SecondaryLessonButton label={number < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)} onClick={skipNextNumber} />
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 5 ? t.practice : t.next}</button>
+            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 4 ? t.practice : t.next}</button>
           </div>
         </div>
       </LessonShell>
@@ -3076,7 +3069,6 @@ function AudioHearButton({ label, onClick }: { label: string; onClick: () => voi
         className="grid h-16 w-16 place-items-center rounded-3xl border-4 border-sky-200 bg-sky-50 text-[0px] text-blue-700 shadow-[0_5px_0_rgba(30,64,175,.18)] active:translate-y-1"
       >
         <SpeakerIcon />
-        ðŸ”Š
       </button>
       <div className="relative">
         <button
@@ -3087,7 +3079,6 @@ function AudioHearButton({ label, onClick }: { label: string; onClick: () => voi
         </button>
         <span className="pointer-events-none absolute -right-3 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 text-[0px] shadow-md">
           <PointerIcon />
-          ðŸ‘†
         </span>
       </div>
     </div>
