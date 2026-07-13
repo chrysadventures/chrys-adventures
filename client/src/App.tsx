@@ -83,6 +83,7 @@ const WORDS: Record<Lang, string[]> = {
 };
 
 const NUMBER_AUDIO_FILES: Record<number, string> = {
+  0: "floraphonic-adult-man-raspy-voice-says-0-184064.mp3",
   1: "floraphonic-casual-voice-man-says-1-186552.mp3",
   2: "floraphonic-casual-voice-man-says-2-186553.mp3",
   3: "floraphonic-casual-voice-man-says-3-186554.mp3",
