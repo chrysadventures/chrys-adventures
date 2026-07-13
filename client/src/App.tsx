@@ -4041,7 +4041,6 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
           ) : (
             <>
               <div className="flex items-center gap-3">
-                <SpeakerIcon />
                 <p className="text-lg font-black text-emerald-900">
                   {lang === "en" ? "Compare your number with the model." : "Bandingkan nombor awak dengan contoh."}
                 </p>
