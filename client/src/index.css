@@ -103,7 +103,7 @@
 
   --app-font-sans: 'Fredoka', sans-serif;
   --app-font-display: 'Baloo 2', cursive;
-  --app-font-number: 'Lilita One', cursive;
+  --app-font-number: Arial, Helvetica, sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 1.5rem;
@@ -160,6 +160,11 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
     letter-spacing: 0;
+  }
+  :where(button, input, textarea, select, a, [tabindex]):focus-visible {
+    outline: 4px solid #facc15;
+    outline-offset: 4px;
+    box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.24);
   }
 }
 
@@ -364,5 +369,44 @@
   .btn-chunky:active {
     box-shadow: 0 2px 0 rgba(0,0,0,0.18);
     transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .floating,
+  .floating-delayed,
+  .floating-slow,
+  .twinkle,
+  .twinkle-fast,
+  .wiggle,
+  .pop-in,
+  .pulse-soft,
+  .block-bounce,
+  .coin-flip,
+  .star-burst,
+  .slide-in-up,
+  .trace-model-zoom,
+  .combo-anim,
+  .level-clear,
+  .shake-x,
+  .score-flash {
+    animation: none !important;
+  }
+
+  .menu-card:hover,
+  .game-btn:hover:not(:disabled),
+  .answer-btn:hover:not(:disabled),
+  .active\:translate-y-1:active,
+  .hover\:-translate-y-0\.5:hover {
+    transform: none !important;
   }
 }
