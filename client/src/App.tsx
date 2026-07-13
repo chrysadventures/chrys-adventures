@@ -74,6 +74,7 @@ const STORE_KEY = "chrys_adventures_rebuild_state";
 const NUMBERS = Array.from({ length: 10 }, (_, n) => n);
 const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontFamily: "var(--app-font-number)",
+  fontWeight: 700,
   fontVariantNumeric: "tabular-nums",
 };
 const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
@@ -3885,7 +3886,8 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
         </div>
         {confirmed && (
           <div
-            className="trace-model-zoom pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none text-blue-300/70"
+            className="trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none text-blue-950"
+            aria-hidden="true"
             style={NUMBER_TEXT_STYLE}
           >
             {value}
@@ -3913,8 +3915,14 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
 function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+  const [showModel, setShowModel] = useState(false);
+  const [matched, setMatched] = useState(false);
 
   useEffect(() => {
+    setHasDrawn(false);
+    setShowModel(false);
+    setMatched(false);
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -3937,6 +3945,8 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
   };
   const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
     drawing.current = true;
+    setHasDrawn(true);
+    setMatched(false);
     const ctx = canvasRef.current?.getContext("2d");
     const p = point(event);
     ctx?.beginPath();
@@ -3944,6 +3954,7 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
   };
   const move = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!drawing.current) return;
+    setHasDrawn(true);
     const ctx = canvasRef.current?.getContext("2d");
     const p = point(event);
     ctx?.lineTo(p.x, p.y);
@@ -3954,26 +3965,62 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (canvas && ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+    setShowModel(false);
+    setMatched(false);
+  };
+  const checkAnswer = () => {
+    if (!hasDrawn) return;
+    setShowModel(true);
+    setMatched(false);
+    speakNumber(value, lang);
+  };
+  const confirmMatched = () => {
+    setMatched(true);
+    speakNumber(value, lang);
   };
 
   return (
-    <div className="mx-auto w-full max-w-[27rem] rounded-3xl border-2 border-amber-100 bg-white p-4">
+    <div className="mx-auto w-full max-w-2xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Write ${value} yourself` : `Tulis ${value} sendiri`}</h3>
       <p className="mb-3 text-center text-sm font-bold text-slate-500">
         {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan surih."}
       </p>
-      <div className="relative h-72 rounded-3xl border-2 border-amber-100 bg-amber-50">
-        <canvas
-          ref={canvasRef}
-          onPointerDown={start}
-          onPointerMove={move}
-          onPointerUp={stop}
-          onPointerLeave={stop}
-          className="relative h-full w-full touch-none rounded-3xl"
-        />
+      <div className={`grid gap-4 ${showModel ? "md:grid-cols-[1fr_auto]" : ""}`}>
+        <div>
+          <p className="mb-2 text-center text-sm font-black text-amber-900">{lang === "en" ? "Your number" : "Nombor awak"}</p>
+          <div className="relative h-72 rounded-3xl border-2 border-amber-100 bg-amber-50">
+            <canvas
+              ref={canvasRef}
+              onPointerDown={start}
+              onPointerMove={move}
+              onPointerUp={stop}
+              onPointerLeave={stop}
+              className="relative h-full w-full touch-none rounded-3xl"
+            />
+          </div>
+        </div>
+        {showModel && (
+          <div className="rounded-3xl border-4 border-blue-100 bg-blue-50 p-4 text-center md:w-56">
+            <p className="mb-2 text-sm font-black text-blue-900">{lang === "en" ? "Look at this model" : "Lihat contoh ini"}</p>
+            <div className="mx-auto grid h-40 w-40 place-items-center rounded-[2rem] border-4 border-blue-200 bg-white text-8xl font-black leading-none text-blue-950 shadow-inner" style={NUMBER_TEXT_STYLE}>
+              {value}
+            </div>
+            <p className="mt-3 text-base font-black leading-snug text-blue-950">
+              {lang === "en" ? `This is ${value}. Does yours look like this?` : `Ini ${value}. Sama tak dengan awak?`}
+            </p>
+          </div>
+        )}
       </div>
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">{t.clear}</button>
+        <button
+          onClick={checkAnswer}
+          disabled={!hasDrawn}
+          className="flex-[1.4] rounded-2xl border-2 border-blue-700 bg-blue-600 px-4 py-2 font-black text-white shadow-[0_4px_0_#1e3a8a] active:translate-y-1 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+        >
+          {lang === "en" ? "Check my answer" : "Semak jawapan saya"}
+        </button>
         <button
           onClick={() => speakNumber(value, lang)}
           aria-label={lang === "en" ? `Hear ${WORDS.en[value]}` : `Dengar ${WORDS.ms[value]}`}
@@ -3982,6 +4029,35 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
           <SpeakerIcon />
         </button>
       </div>
+      {showModel && (
+        <div className="mt-4 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
+          {matched ? (
+            <div className="flex items-center gap-3">
+              <img src={chrysExcited} alt="Chrys excited" className="h-20 w-20 object-contain" />
+              <p className="text-lg font-black text-emerald-800">
+                {lang === "en" ? "Nice checking. You matched it!" : "Bagus semak. Awak padankan!"}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <SpeakerIcon />
+                <p className="text-lg font-black text-emerald-900">
+                  {lang === "en" ? "Compare your number with the model." : "Bandingkan nombor awak dengan contoh."}
+                </p>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button onClick={confirmMatched} className="flex-1 rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-4 py-3 font-black text-white shadow-[0_4px_0_#047857] active:translate-y-1">
+                  {lang === "en" ? "Yes, I got it!" : "Ya, saya dapat!"}
+                </button>
+                <button onClick={clear} className="flex-1 rounded-2xl border-2 border-amber-300 bg-white px-4 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1">
+                  {lang === "en" ? "Let me try again" : "Saya cuba lagi"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

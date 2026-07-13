@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&family=Lilita+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Baloo+2:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&family=Lilita+One&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -103,7 +103,7 @@
 
   --app-font-sans: 'Fredoka', sans-serif;
   --app-font-display: 'Baloo 2', cursive;
-  --app-font-number: Arial, Helvetica, sans-serif;
+  --app-font-number: 'Atkinson Hyperlegible', Arial, Helvetica, sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 1.5rem;
@@ -281,8 +281,8 @@
   }
   @keyframes traceModelZoom {
     0%   { transform: scale(0.72); opacity: 0; }
-    28%  { transform: scale(0.9);  opacity: 0.55; }
-    100% { transform: scale(1.08); opacity: 0.8; }
+    28%  { transform: scale(0.9);  opacity: 0.7; }
+    100% { transform: scale(1.08); opacity: 1; }
   }
   @keyframes comboSlide {
     0%   { transform: translateY(-30px) scale(0.65); opacity: 0; }
@@ -328,6 +328,12 @@
   .star-burst         { animation: starBurst 0.48s cubic-bezier(0.34,1.56,0.64,1); }
   .slide-in-up        { animation: slideInUp 0.42s cubic-bezier(0.34,1.56,0.64,1) both; }
   .trace-model-zoom   { animation: traceModelZoom 3.8s ease-in-out both; }
+  .trace-confirmed-number {
+    text-shadow:
+      0 4px 0 #bfdbfe,
+      0 0 18px rgba(255, 255, 255, 0.95),
+      0 0 4px rgba(15, 23, 42, 0.35);
+  }
   .combo-anim         { animation: comboSlide 2.7s ease forwards; }
   .level-clear        { animation: levelClear 0.8s cubic-bezier(0.34,1.56,0.64,1); }
   .shake-x            { animation: shakeX 0.46s ease-in-out; }
