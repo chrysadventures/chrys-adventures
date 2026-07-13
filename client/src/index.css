@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Baloo+2:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&family=Lilita+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&family=Lilita+One&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -103,7 +103,7 @@
 
   --app-font-sans: 'Fredoka', sans-serif;
   --app-font-display: 'Baloo 2', cursive;
-  --app-font-number: 'Atkinson Hyperlegible', Arial, Helvetica, sans-serif;
+  --app-font-number: 'Andika', Arial, Helvetica, sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 1.5rem;
