@@ -55,7 +55,7 @@ type Question = {
   answer: number | string;
   visual: Visual;
   method: Record<Lang, string[]>;
-  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal";
+  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects";
 };
 
 type Player = {
@@ -200,6 +200,8 @@ const UI = {
 type UIStrings = Record<keyof typeof UI["en"], string>;
 
 const recognitionPracticeQuestions: Question[] = [
+  q("rec-tap-5", "numbers", { en: "Tap 5 bananas.", ms: "Tekan 5 pisang." }, [], 5, { kind: "number", value: 5 }, "tapObjects"),
+  q("rec-audio-make-6", "numbers", { en: "Listen. Make the number.", ms: "Dengar. Bina nombor itu." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
   q("rec-audio-symbol-0", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [0, 1, 2, 3], 0, { kind: "audioNumber", value: 0 }),
   q("rec-audio-symbol-2", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [1, 2, 3, 4], 2, { kind: "audioNumber", value: 2 }),
   q("rec-audio-symbol-5", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [3, 4, 5, 6], 5, { kind: "audioNumber", value: 5 }),
@@ -219,6 +221,16 @@ const recognitionPracticeQuestions: Question[] = [
 ];
 
 const valuePracticeQuestions: Question[] = [
+  q("val-tap-0", "numbers", { en: "Make 0.", ms: "Bina 0." }, [], 0, { kind: "number", value: 0 }, "tapObjects"),
+  q("val-tap-1", "numbers", { en: "Make 1.", ms: "Bina 1." }, [], 1, { kind: "number", value: 1 }, "tapObjects"),
+  q("val-tap-2", "numbers", { en: "Make 2.", ms: "Bina 2." }, [], 2, { kind: "number", value: 2 }, "tapObjects"),
+  q("val-tap-3", "numbers", { en: "Make 3.", ms: "Bina 3." }, [], 3, { kind: "number", value: 3 }, "tapObjects"),
+  q("val-tap-4", "numbers", { en: "Make 4.", ms: "Bina 4." }, [], 4, { kind: "number", value: 4 }, "tapObjects"),
+  q("val-tap-5", "numbers", { en: "Make 5.", ms: "Bina 5." }, [], 5, { kind: "number", value: 5 }, "tapObjects"),
+  q("val-tap-6", "numbers", { en: "Make 6.", ms: "Bina 6." }, [], 6, { kind: "number", value: 6 }, "tapObjects"),
+  q("val-tap-7", "numbers", { en: "Make 7.", ms: "Bina 7." }, [], 7, { kind: "number", value: 7 }, "tapObjects"),
+  q("val-tap-8", "numbers", { en: "Make 8.", ms: "Bina 8." }, [], 8, { kind: "number", value: 8 }, "tapObjects"),
+  q("val-tap-9", "numbers", { en: "Make 9.", ms: "Bina 9." }, [], 9, { kind: "number", value: 9 }, "tapObjects"),
   q("val-make-group-3", "numbers", { en: "Make a group of 3.", ms: "Bina kumpulan 3." }, [], 3, { kind: "groupMake", emoji: "🍌", count: 3 }, "makeGroup"),
   q("val-support-3", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [2, 3, 4], 3, { kind: "numberWithGroup", value: 3, emoji: "🍌" }),
   q("val-support-6", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [5, 6, 7], 6, { kind: "numberWithGroup", value: 6, emoji: "🍄" }),
@@ -1136,6 +1148,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState(0);
   const [practice, setPractice] = useState(false);
+  const [showSkipOptions, setShowSkipOptions] = useState(false);
   const examples = NUMBERS.map((n) => ({
     n,
     emoji: "🍌",
@@ -1214,14 +1227,32 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             {inConcept ? concept.visual : <NumberValueStepVisual n={currentNumber} emoji={currentEmoji} phase={phase} lang={lang} />}
           </div>
         </div>
-        <div className="mt-5 flex flex-wrap justify-between gap-3">
-          <button disabled={step === 0 && phase === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
-          <div className="flex flex-wrap justify-end gap-3">
-            <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            <SecondaryLessonButton label={!inConcept && currentNumber < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)} onClick={skipNextNumber} />
+        <div className="mt-5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <button disabled={step === 0 && phase === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
             <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < maxPhase) ? t.next : t.practice}</button>
           </div>
-        </div>
+          <div className="text-center">
+            <button
+              onClick={() => setShowSkipOptions((shown) => !shown)}
+              className="rounded-xl border border-slate-200 bg-white/70 px-3 py-1.5 text-xs font-black text-slate-500 shadow-sm"
+            >
+              {showSkipOptions
+                ? (lang === "en" ? "Hide options" : "Sembunyi pilihan")
+                : (lang === "en" ? "More options" : "Pilihan lain")}
+            </button>
+          </div>
+          {showSkipOptions && (
+            <div className="flex flex-wrap justify-center gap-2 rounded-2xl border border-slate-100 bg-slate-50/80 p-2">
+              <button onClick={() => setPractice(true)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-500">
+                {skipPracticeLabel(lang)}
+              </button>
+              <button onClick={skipNextNumber} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-500">
+                {!inConcept && currentNumber < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)}
+              </button>
+            </div>
+          )}
+          </div>
       </LessonShell>
     </main>
   );
@@ -1271,18 +1302,6 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
       <div className="space-y-4">
         {phase === 1 && <NumberTile value={0} lang={lang} large showWord={false} />}
         <ContainerScene count={0} emoji="🍌" container="basket" hideEmptyLabel />
-      </div>
-    );
-  }
-
-  if (n === 0) {
-    return (
-      <div className="space-y-4">
-        <NumberTile value={0} lang={lang} showWord={false} />
-        <ContainerScene count={0} emoji="🍌" container="basket" numbered />
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
-          {lang === "en" ? "" : ""}
-        </p>
       </div>
     );
   }
@@ -1495,6 +1514,11 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
       visual: <MissingNumberTeaching lang={lang} nums={[0, 1, 2, "?", 4, 5, 6, 7, 8, 9]} answer={3} />,
     },
     {
+      title: lang === "en" ? "Place the missing number" : "Letak nombor hilang",
+      text: lang === "en" ? "Choose a tile for the empty space." : "Pilih jubin untuk ruang kosong.",
+      visual: <MissingNumberPlacementActivity lang={lang} />,
+    },
+    {
       title: lang === "en" ? "Greater than" : "Lebih besar",
       text: lang === "en" ? "5 is more. 2 is less." : "5 lebih banyak. 2 lebih sedikit.",
       visual: <CompareTeachingVisual a={5} b={2} symbol=">" lang={lang} />,
@@ -1528,301 +1552,6 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
         </div>
       </LessonShell>
     </main>
-  );
-}
-
-const GROUPING_ACTIVITIES = [
-  { a: 1, b: 1, emoji: "🍌" },
-  { a: 1, b: 2, emoji: "🍌" },
-  { a: 2, b: 2, emoji: "🍌" },
-  { a: 2, b: 3, emoji: "🍌" },
-  { a: 3, b: 4, emoji: "🍌" },
-  { a: 4, b: 5, emoji: "🍌" },
-];
-
-const groupingPracticeQuestions: Question[] = [
-  q("group-1-1", "operations", { en: "1 banana and 1 banana. How many bananas?", ms: "1 pisang dan 1 pisang. Berapa pisang?" }, [0, 1, 2, 3], 2, { kind: "add", a: 1, b: 1, emoji: "🍌" }),
-  q("group-1-2", "operations", { en: "1 banana and 2 bananas. How many bananas?", ms: "1 pisang dan 2 pisang. Berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "add", a: 1, b: 2, emoji: "🍌" }),
-  q("group-2-2", "operations", { en: "2 bananas and 2 bananas. How many bananas?", ms: "2 pisang dan 2 pisang. Berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "add", a: 2, b: 2, emoji: "🍌" }),
-  q("group-2-3", "operations", { en: "2 bananas and 3 bananas. How many bananas?", ms: "2 pisang dan 3 pisang. Berapa pisang?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }),
-  q("group-3-3", "operations", { en: "3 bananas and 3 bananas. How many bananas?", ms: "3 pisang dan 3 pisang. Berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "add", a: 3, b: 3, emoji: "🍌" }),
-  q("group-3-4", "operations", { en: "3 bananas and 4 bananas. How many bananas?", ms: "3 pisang dan 4 pisang. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌" }),
-  q("group-4-5", "operations", { en: "4 bananas and 5 bananas. How many bananas?", ms: "4 pisang dan 5 pisang. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
-];
-
-const fullGroupingPracticeQuestions: Question[] = [
-  q("group-observe-2", "operations", { en: "This group has how many bananas?", ms: "Kumpulan ini ada berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "groupObserve", emoji: "🍌", count: 2 }),
-  q("group-make-3", "operations", { en: "Make a group of 3.", ms: "Bina kumpulan 3." }, [1, 2, 3, 4], 3, { kind: "groupMake", emoji: "🍌", count: 3 }),
-  q("group-choose-4", "operations", { en: "Which group has 4?", ms: "Kumpulan mana ada 4?" }, [2, 4, 5], 4, { kind: "groupChoices", emoji: "🍌", groups: [2, 4, 5] }),
-  q("group-two-2-3", "operations", { en: "Group 1 has 2. Group 2 has 3. What is in Group 2?", ms: "Kumpulan 1 ada 2. Kumpulan 2 ada 3. Apa ada dalam Kumpulan 2?" }, [1, 2, 3, 4], 3, { kind: "groupTwo", emoji: "🍌", a: 2, b: 3 }),
-  q("group-same-3-3", "operations", { en: "Are the groups the same?", ms: "Adakah kumpulan sama?" }, ["Yes", "No"], "Yes", { kind: "groupCompare", emoji: "🍌", a: 3, b: 3, ask: "same" }),
-  q("group-same-2-5", "operations", { en: "Are the groups the same?", ms: "Adakah kumpulan sama?" }, ["Yes", "No"], "No", { kind: "groupCompare", emoji: "🍌", a: 2, b: 5, ask: "same" }),
-  q("group-more-3-5", "operations", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
-  q("group-more-4-2", "operations", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group A", "Group B"], "Group A", { kind: "groupCompare", emoji: "🍌", a: 4, b: 2, ask: "more" }),
-  q("group-combine-1-1", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [1, 2, 3, 4], 2, { kind: "groupCombine", emoji: "🍌", a: 1, b: 1 }),
-  q("group-combine-1-2", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [2, 3, 4, 5], 3, { kind: "groupCombine", emoji: "🍌", a: 1, b: 2 }),
-  q("group-combine-2-2", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [3, 4, 5, 6], 4, { kind: "groupCombine", emoji: "🍌", a: 2, b: 2 }),
-  q("group-combine-2-3", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [4, 5, 6, 7], 5, { kind: "groupCombine", emoji: "🍌", a: 2, b: 3 }),
-  q("group-combine-3-3", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [5, 6, 7, 8], 6, { kind: "groupCombine", emoji: "🍌", a: 3, b: 3 }),
-  q("group-combine-3-4", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [6, 7, 8, 9], 7, { kind: "groupCombine", emoji: "🍌", a: 3, b: 4 }),
-  q("group-combine-4-5", "operations", { en: "How many altogether?", ms: "Berapa semuanya?" }, [7, 8, 9], 9, { kind: "groupCombine", emoji: "🍌", a: 4, b: 5 }),
-];
-
-type GroupingPhase = "makeA" | "checkA" | "makeB" | "checkB" | "explain" | "combine" | "answer";
-
-function LegacyGroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [activityIndex, setActivityIndex] = useState(0);
-  const [phase, setPhase] = useState<GroupingPhase>("makeA");
-  const [groupA, setGroupA] = useState(0);
-  const [groupB, setGroupB] = useState(0);
-  const [practice, setPractice] = useState(false);
-  const activity = GROUPING_ACTIVITIES[activityIndex];
-  const activeGroup = phase === "makeB" || phase === "checkB" ? 2 : 1;
-  const activeCount = activeGroup === 1 ? groupA : groupB;
-  const activeTarget = activeGroup === 1 ? activity.a : activity.b;
-  const total = activity.a + activity.b;
-  const canEdit = phase === "makeA" || phase === "makeB" || ((phase === "checkA" || phase === "checkB") && activeCount !== activeTarget);
-  const combined = phase === "combine" || phase === "answer";
-  const feedback = getGroupingFeedback(lang, activeCount, activeTarget, activeGroup);
-  const instruction = getGroupingInstruction(lang, phase, activity.a, activity.b, total);
-
-  const resetActivity = (nextIndex: number) => {
-    setActivityIndex(nextIndex);
-    setGroupA(0);
-    setGroupB(0);
-    setPhase("makeA");
-  };
-
-  const addObject = () => {
-    if (!canEdit) return;
-    if (activeGroup === 1) setGroupA((count) => Math.min(9, count + 1));
-    else setGroupB((count) => Math.min(9, count + 1));
-  };
-
-  const removeObject = () => {
-    if (!canEdit) return;
-    if (activeGroup === 1) setGroupA((count) => Math.max(0, count - 1));
-    else setGroupB((count) => Math.max(0, count - 1));
-  };
-
-  const checkGroup = () => {
-    if (activeGroup === 1) {
-      setPhase("checkA");
-      return;
-    }
-    setPhase("checkB");
-  };
-
-  const nextActivity = () => {
-    if (activityIndex < GROUPING_ACTIVITIES.length - 1) resetActivity(activityIndex + 1);
-    else setPractice(true);
-  };
-
-  if (practice) {
-    return <Quiz lang={lang} t={t} title={`${t.groupingMode}: ${t.practice}`} questions={groupingPracticeQuestions} randomize={false} onFinish={() => onDone()} onBackToLearning={() => setPractice(false)} />;
-  }
-
-  return (
-    <main className="mx-auto w-full max-w-4xl pb-8">
-      <LessonShell
-        title={lang === "en" ? "Grouping Mode: Banana Snack" : "Mod Kumpulan: Snek Pisang"}
-        helper={lang === "en" ? "Make two banana groups. Then count all." : "Bina dua kumpulan pisang. Kemudian kira semua."}
-      >
-        <div className="mb-4 grid gap-3 md:grid-cols-[auto_1fr] md:items-center">
-          <img src={chrysHappy} alt="Chrys" className="mx-auto h-28 w-28 object-contain" />
-          <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
-            <p className="text-xl font-black text-blue-950">{instruction}</p>
-            <p className="mt-1 text-sm font-bold text-blue-800/70">
-              {lang === "en" ? "Tap banana to add one." : "Tekan pisang untuk tambah satu."}
-            </p>
-            <div className="mt-3">
-              <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            </div>
-          </div>
-        </div>
-
-        {phase === "answer" && (
-          <div className="mb-4 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-            <p className="text-4xl font-black text-emerald-800">{activity.a} + {activity.b} = {total}</p>
-            <p className="mt-2 text-xl font-black text-emerald-900">
-              {lang === "en" ? `${activity.a} bananas and ${activity.b} bananas make ${total} bananas.` : `${activity.a} pisang dan ${activity.b} pisang menjadi ${total} pisang.`}
-            </p>
-            <p className="mt-1 text-lg font-black text-emerald-800">
-              {lang === "en" ? `Chrys has ${total} bananas altogether.` : `Chrys ada ${total} pisang semuanya.`}
-            </p>
-          </div>
-        )}
-
-        <div className="rounded-[2rem] border-4 border-white bg-[linear-gradient(180deg,#e0f7ff_0%,#efffdc_58%,#d5f28b_100%)] p-4 shadow-inner">
-        <div className={`grid gap-4 transition-all duration-700 ${combined ? "md:grid-cols-1" : "md:grid-cols-2"}`}>
-          {combined ? (
-            <CombinedGroupBox a={groupA} b={groupB} targetA={activity.a} targetB={activity.b} emoji={activity.emoji} lang={lang} />
-          ) : (
-            <>
-              <GroupingBox
-                title={lang === "en" ? "Group 1" : "Kumpulan 1"}
-                target={activity.a}
-                count={groupA}
-                emoji={activity.emoji}
-                active={activeGroup === 1}
-                lang={lang}
-              />
-              <GroupingBox
-                title={lang === "en" ? "Group 2" : "Kumpulan 2"}
-                target={activity.b}
-                count={groupB}
-                emoji={activity.emoji}
-                active={activeGroup === 2}
-                lang={lang}
-              />
-            </>
-          )}
-        </div>
-        <div className="mt-4 flex justify-center">
-          <img src={chrysHappy} alt="Chrys the monkey" className="h-28 w-28 object-contain drop-shadow-xl" />
-        </div>
-        </div>
-
-        {(phase === "checkA" || phase === "checkB") && (
-          <div className="mt-4 rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
-            <p className={`text-xl font-black ${feedback.correct ? "text-emerald-700" : "text-orange-700"}`}>{feedback.title}</p>
-            <p className="mt-1 font-bold text-slate-700">{feedback.detail}</p>
-            <CountedObjectRow count={activeCount} emoji={activity.emoji} showCount compact />
-            {feedback.correct && (
-              <button
-                onClick={() => setPhase(phase === "checkA" ? "makeB" : "explain")}
-                className="mt-3 rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1"
-              >
-                {t.next}
-              </button>
-            )}
-          </div>
-        )}
-
-        {phase === "explain" && (
-          <div className="mt-4 rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
-            <p className="mb-2 text-4xl font-black text-blue-950">{activity.a} + {activity.b} = ?</p>
-            <p className="text-3xl font-black text-blue-900">+</p>
-            <p className="text-xl font-black text-slate-800">
-              {lang === "en" ? "The + sign joins the groups." : "Tanda + gabungkan kumpulan."}
-            </p>
-          </div>
-        )}
-
-        {canEdit && (
-          <div className="mt-5 rounded-3xl border-2 border-amber-100 bg-white p-4">
-            <p className="mb-3 text-center text-lg font-black text-slate-700">
-              {lang === "en" ? `Can you make a group of ${activeTarget}?` : `Boleh bina kumpulan ${activeTarget}?`}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <button onClick={addObject} className="grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 text-5xl shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1">
-                {activity.emoji}
-              </button>
-              <button onClick={removeObject} className="flex items-center gap-2 rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-3 font-black text-red-700 shadow-[0_4px_0_rgba(185,28,28,.16)] active:translate-y-1">
-                <span className="relative inline-grid h-8 w-8 place-items-center rounded-xl bg-white text-xl">
-                  {activity.emoji}
-                  <span className="absolute text-3xl font-black leading-none text-red-600">×</span>
-                </span>
-                {lang === "en" ? "Remove one" : "Buang satu"}
-              </button>
-              <button onClick={checkGroup} className="rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1">
-                {lang === "en" ? "Check group" : "Semak kumpulan"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-5 flex flex-wrap justify-between gap-3">
-          <button
-            onClick={() => resetActivity(0)}
-            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
-          >
-            {lang === "en" ? "Start again" : "Mula semula"}
-          </button>
-          <div className="flex flex-wrap justify-end gap-3">
-            {phase === "explain" && (
-              <button onClick={() => setPhase("combine")} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
-              {lang === "en" ? "Join groups" : "Gabung kumpulan"}
-              </button>
-            )}
-            {phase === "combine" && (
-              <button onClick={() => setPhase("answer")} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
-                {lang === "en" ? "Show answer" : "Tunjuk jawapan"}
-              </button>
-            )}
-            {phase === "answer" && (
-              <button onClick={nextActivity} className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
-                {activityIndex < GROUPING_ACTIVITIES.length - 1 ? t.next : t.done}
-              </button>
-            )}
-          </div>
-        </div>
-      </LessonShell>
-    </main>
-  );
-}
-
-function getGroupingInstruction(lang: Lang, phase: GroupingPhase, a: number, b: number, total: number) {
-  if (lang === "ms") {
-    if (phase === "makeA" || phase === "checkA") return `Chrys jumpa ${a} pisang. Bina Kumpulan 1.`;
-    if (phase === "makeB" || phase === "checkB") return `Chrys jumpa ${b} pisang lagi. Bina Kumpulan 2.`;
-    if (phase === "explain") return `${a} ialah satu kumpulan. ${b} ialah satu kumpulan lagi.`;
-    if (phase === "combine") return `Gerakkan kumpulan bersama untuk lihat jumlahnya.`;
-    return `${a} tambah ${b} menjadi ${total}.`;
-  }
-  if (phase === "makeA" || phase === "checkA") return `Chrys found ${a} bananas. Make Group 1.`;
-  if (phase === "makeB" || phase === "checkB") return `Chrys found ${b} more bananas. Make Group 2.`;
-  if (phase === "explain") return `${a} is one group. ${b} is another group.`;
-  if (phase === "combine") return `Put both groups together.`;
-  return `${a} plus ${b} makes ${total}.`;
-}
-
-function getGroupingFeedback(lang: Lang, count: number, target: number, group: number) {
-  const correct = count === target;
-  if (lang === "ms") {
-    return correct
-      ? { correct, title: `Bagus! Kumpulan ini ada ${target}.`, detail: `Kumpulan ${group} sudah betul.` }
-      : { correct, title: "Cubaan baik. Mari kira kumpulan ini semula.", detail: `Kita perlukan ${target}, tetapi sekarang ada ${count}.` };
-  }
-  return correct
-    ? { correct, title: `Great job! This group has ${target}.`, detail: `Group ${group} is ready.` }
-    : { correct, title: "Good try. Count again.", detail: `Need ${target}. Now there are ${count}.` };
-}
-
-function GroupingBox({ title, target, count, emoji, active, lang }: { title: string; target: number; count: number; emoji: string; active: boolean; lang: Lang }) {
-  return (
-    <div className={`rounded-[2rem] border-4 p-4 transition-all duration-500 ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-blue-100 bg-white"}`}>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <div>
-          <h3 className="text-2xl font-black text-blue-950">{title}</h3>
-          <p className="text-sm font-black text-slate-500">{lang === "en" ? `Make ${target}` : `Bina ${target}`}</p>
-        </div>
-        {active && <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-black text-yellow-950">{lang === "en" ? "active" : "aktif"}</span>}
-      </div>
-      <ObjectGroup count={count} emoji={emoji} numbered />
-    </div>
-  );
-}
-
-function CombinedGroupBox({ a, b, targetA, targetB, emoji, lang }: { a: number; b: number; targetA: number; targetB: number; emoji: string; lang: Lang }) {
-  return (
-    <div className="rounded-[2rem] border-4 border-emerald-300 bg-emerald-50 p-4 text-center shadow-[0_7px_0_rgba(6,95,70,.22)]">
-      <h3 className="mb-3 text-2xl font-black text-emerald-900">
-        {lang === "en" ? "One big group" : "Satu kumpulan besar"}
-      </h3>
-      <div className="mb-3 grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-        <div className="rounded-3xl border-2 border-blue-100 bg-white p-3">
-          <p className="mb-2 font-black text-blue-900">{lang === "en" ? `Group 1: ${targetA}` : `Kumpulan 1: ${targetA}`}</p>
-          <ObjectGroup count={a} emoji={emoji} />
-        </div>
-        <span className="text-4xl font-black text-emerald-700">+</span>
-        <div className="rounded-3xl border-2 border-blue-100 bg-white p-3">
-          <p className="mb-2 font-black text-blue-900">{lang === "en" ? `Group 2: ${targetB}` : `Kumpulan 2: ${targetB}`}</p>
-          <ObjectGroup count={b} emoji={emoji} />
-        </div>
-      </div>
-      <CountedObjectRow count={a + b} emoji={emoji} showCount compact />
-    </div>
   );
 }
 
@@ -1944,7 +1673,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
               <button onClick={addObject} className="grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 text-5xl shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1">
                 {activity.emoji}
               </button>
-              <button onClick={removeObject} className="rounded-2xl border-2 border-red-200 bg-red-50 px-5 py-3 font-black text-red-700 shadow-[0_4px_0_rgba(185,28,28,.16)] active:translate-y-1">
+              <button onClick={removeObject} className="rounded-2xl border-2 border-blue-200 bg-blue-50 px-5 py-3 font-black text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1">
                 {lang === "en" ? "Remove one" : "Buang satu"}
               </button>
               <button onClick={checkGroup} className="rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1">
@@ -2595,11 +2324,11 @@ function LessonActionRow({ primaryLabel, onPrimary, actions = [] }: { primaryLab
 
 function SecondaryLessonButton({ label, onClick, variant = "plain" }: LessonAction) {
   const styles = variant === "green"
-    ? "border-emerald-600 bg-emerald-500 text-white shadow-[0_5px_0_#065f46]"
-    : "border-blue-200 bg-white text-blue-700 shadow-[0_5px_0_rgba(30,64,175,.18)]";
+    ? "border-emerald-200 bg-white/80 text-emerald-700 shadow-[0_3px_0_rgba(4,120,87,.12)]"
+    : "border-blue-200 bg-white/80 text-blue-700 shadow-[0_3px_0_rgba(30,64,175,.14)]";
 
   return (
-    <button onClick={onClick} className={`rounded-2xl border-2 px-5 py-3 font-black active:translate-y-1 ${styles}`}>
+    <button onClick={onClick} className={`rounded-xl border-2 px-4 py-2 text-sm font-black active:translate-y-1 ${styles}`}>
       {label}
     </button>
   );
@@ -2838,15 +2567,23 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       setVisibleCrossed(crossed);
       return;
     }
+    if (prefersReducedMotion) {
+      setVisibleCrossed(crossed);
+      return;
+    }
     setVisibleCrossed(0);
     const timers = Array.from({ length: crossed }, (_, i) => window.setTimeout(() => setVisibleCrossed(i + 1), stepIntervalMs * (i + 1)));
     return () => timers.forEach(window.clearTimeout);
-  }, [animateCrossOut, crossed, stepIntervalMs]);
+  }, [animateCrossOut, crossed, prefersReducedMotion, stepIntervalMs]);
 
   useEffect(() => {
     setVisible(0);
     if (!showCount) return;
     const max = countRemainingOnly ? remaining : count;
+    if (prefersReducedMotion) {
+      setVisible(max);
+      return;
+    }
     const countDelay = animateCrossOut ? (crossed * stepIntervalMs) + stepIntervalMs : 0;
     const speechTimer = speakCount && max > 0 ? window.setTimeout(() => speakCountingSequence(max, lang, stepIntervalMs), countDelay + stepIntervalMs) : null;
     const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => setVisible(i + 1), countDelay + (stepIntervalMs * (i + 1))));
@@ -2855,7 +2592,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       if (speechTimer) window.clearTimeout(speechTimer);
       if (speakCount) stopNumberAudio();
     };
-  }, [animateCrossOut, count, countRemainingOnly, crossed, lang, remaining, showCount, speakCount, stepIntervalMs]);
+  }, [animateCrossOut, count, countRemainingOnly, crossed, lang, prefersReducedMotion, remaining, showCount, speakCount, stepIntervalMs]);
 
   let leftIndex = 0;
   return (
@@ -3080,6 +2817,11 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               answered={answered}
               selected={selected}
               onAnswer={(answer) => setAnswers((current) => ({ ...current, [index]: answer }))}
+              onRetry={() => setAnswers((current) => {
+                const nextAnswers = { ...current };
+                delete nextAnswers[index];
+                return nextAnswers;
+              })}
             />
           ) : (
             <div className="grid grid-cols-2 gap-3">
@@ -3090,10 +2832,10 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                 const resultText = !answered
                   ? ""
                   : right
-                    ? (lang === "en" ? " correct answer" : " jawapan betul")
+                    ? (lang === "en" ? ", correct answer" : ", jawapan betul")
                     : picked
-                      ? (lang === "en" ? " selected wrong answer" : " jawapan salah dipilih")
-                      : (lang === "en" ? " not selected" : " tidak dipilih");
+                      ? (lang === "en" ? ", your answer, incorrect" : ", jawapan awak, salah")
+                      : (lang === "en" ? ", not selected" : ", tidak dipilih");
                 const optionSize = typeof option === "string" ? "text-2xl sm:text-3xl" : "text-4xl";
                 const stateClass = !answered
                   ? "border-slate-200 bg-white text-slate-900"
@@ -3109,7 +2851,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                       optionRefs.current[optionIndex] = element;
                     }}
                     disabled={answered}
-                    aria-label={`${option}${resultText}`}
+                    aria-label={`${lang === "en" ? "Answer" : "Jawapan"} ${option}${resultText}`}
                     onClick={() => setAnswers((current) => ({ ...current, [index]: option }))}
                     onKeyDown={(event) => handleOptionKeyDown(event, optionIndex, option)}
                     className={`relative min-h-20 rounded-3xl border-2 px-2 font-black shadow-[0_5px_0_rgba(0,0,0,.14)] ${optionSize} ${stateClass}`}
@@ -3191,16 +2933,16 @@ function GroupChoiceAnswerPanel({
         const status = !answered
           ? ""
           : right
-            ? (lang === "en" ? " correct group" : " kumpulan betul")
+            ? (lang === "en" ? ", correct answer" : ", jawapan betul")
             : picked
-              ? (lang === "en" ? " selected wrong group" : " kumpulan salah dipilih")
-              : (lang === "en" ? " not selected" : " tidak dipilih");
+              ? (lang === "en" ? ", your answer, incorrect" : ", jawapan awak, salah")
+              : (lang === "en" ? ", not selected" : ", tidak dipilih");
         return (
           <button
             key={count}
             disabled={answered}
             onClick={() => onAnswer(count)}
-            aria-label={`${lang === "en" ? "Group with" : "Kumpulan dengan"} ${count}${status}`}
+            aria-label={`${lang === "en" ? "Group answer with" : "Jawapan kumpulan dengan"} ${count}${status}`}
             className={`rounded-3xl border-4 p-3 text-center shadow-[0_6px_0_rgba(0,0,0,.12)] transition active:translate-y-1 ${stateClass}`}
           >
             <ObjectGroup count={count} emoji={visual.emoji} numbered={answered} />
@@ -3222,17 +2964,21 @@ function ActiveAnswerPanel({
   answered,
   selected,
   onAnswer,
+  onRetry,
 }: {
   question: Question;
   lang: Lang;
   answered: boolean;
   selected: number | string | null;
   onAnswer: (answer: number) => void;
+  onRetry: () => void;
 }) {
   const [builtCount, setBuiltCount] = useState(0);
+  const [selectedObjects, setSelectedObjects] = useState<number[]>([]);
   const answer = Number(question.answer);
   const emoji =
     question.visual.kind === "groupMake" ? question.visual.emoji :
+    question.visual.kind === "count" ? question.visual.emoji :
     question.visual.kind === "add" ? (question.visual.emoji ?? "🍌") :
     "🍌";
   const selectedNumber = typeof selected === "number" ? selected : Number(selected);
@@ -3259,6 +3005,96 @@ function ActiveAnswerPanel({
           ))}
         </div>
         {answered && <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />}
+      </div>
+    );
+  }
+
+  if (question.inputMode === "tapObjects") {
+    const chosenCount = answered && Number.isFinite(selectedNumber) ? selectedNumber : selectedObjects.length;
+    const toggleObject = (objectIndex: number) => {
+      if (answered) return;
+      setSelectedObjects((current) => {
+        if (current.includes(objectIndex)) return current.filter((item) => item !== objectIndex);
+        if (current.length >= 9) return current;
+        return [...current, objectIndex];
+      });
+    };
+    const selectionOrder = (objectIndex: number) => selectedObjects.indexOf(objectIndex) + 1;
+    const checkSelection = () => onAnswer(selectedObjects.length);
+
+    return (
+      <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
+        <p className="mb-3 text-lg font-black text-slate-700">
+          {answer === 0
+            ? (lang === "en" ? "Select none. Then press Check." : "Pilih tiada. Kemudian tekan Semak.")
+            : (lang === "en" ? `Tap ${answer} objects.` : `Tekan ${answer} objek.`)}
+        </p>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+          {Array.from({ length: 9 }, (_, objectIndex) => {
+            const selectedHere = selectedObjects.includes(objectIndex);
+            const order = selectionOrder(objectIndex);
+            return (
+              <button
+                key={objectIndex}
+                type="button"
+                disabled={answered}
+                onClick={() => toggleObject(objectIndex)}
+                aria-pressed={selectedHere}
+                aria-label={`${lang === "en" ? "Object" : "Objek"} ${objectIndex + 1}${selectedHere ? (lang === "en" ? ", selected" : ", dipilih") : ""}`}
+                className={`relative grid h-20 place-items-center rounded-3xl border-2 text-4xl shadow-inner active:translate-y-1 disabled:opacity-80 ${
+                  selectedHere ? "border-blue-600 bg-blue-50" : "border-slate-100 bg-amber-50"
+                }`}
+              >
+                {selectedHere && (
+                  <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">
+                    {order}
+                  </span>
+                )}
+                <span>{emoji}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <button
+            disabled={answered}
+            onClick={() => setSelectedObjects([])}
+            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Clear" : "Padam"}
+          </button>
+          <button
+            disabled={answered}
+            onClick={checkSelection}
+            className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Check" : "Semak"}
+          </button>
+        </div>
+        {answered && (
+          <div className="mt-4 space-y-3">
+            <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
+            {chosenCount > 0 && <CountedObjectRow count={chosenCount} emoji={emoji} showCount compact speakCount lang={lang} />}
+            {!isCorrect && (
+              <div className="space-y-3 rounded-3xl border-2 border-blue-100 bg-blue-50 p-3">
+                <p className="font-black text-blue-900">
+                  {lang === "en" ? `The model has ${answer}.` : `Contoh ada ${answer}.`}
+                </p>
+                {answer > 0 ? <CountedObjectRow count={answer} emoji={emoji} showCount compact lang={lang} /> : <ObjectGroup count={0} emoji={emoji} numbered />}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedObjects([]);
+                    onRetry();
+                  }}
+                  className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
+                >
+                  {lang === "en" ? "Try again" : "Cuba lagi"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -3294,17 +3130,38 @@ function ActiveAnswerPanel({
           {lang === "en" ? "Check" : "Semak"}
         </button>
       </div>
-      {answered && <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />}
+      {answered && (
+        <div className="space-y-3">
+          <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
+          {!isCorrect && (
+            <button
+              type="button"
+              onClick={() => {
+                setBuiltCount(0);
+                onRetry();
+              }}
+              className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
+            >
+              {lang === "en" ? "Try again" : "Cuba lagi"}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function ActiveResultMessage({ correct, lang, answer }: { correct: boolean; lang: Lang; answer: number }) {
   return (
-    <p className={`mt-4 rounded-2xl px-4 py-3 text-lg font-black ${correct ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700"}`}>
-      {correct
-        ? (lang === "en" ? `Great job. This is ${answer}.` : `Bagus. Ini ${answer}.`)
-        : (lang === "en" ? "Good try. Let's count again." : "Cubaan baik. Mari kira lagi.")}
+    <p className={`mt-4 flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-lg font-black ${correct ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700"}`}>
+      <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-full bg-white shadow-sm">
+        {correct ? "\u2713" : "\u00d7"}
+      </span>
+      <span>
+        {correct
+          ? (lang === "en" ? `Great job. This is ${answer}.` : `Bagus. Ini ${answer}.`)
+          : (lang === "en" ? "Good try. Let's count again." : "Cubaan baik. Mari kira lagi.")}
+      </span>
     </p>
   );
 }
@@ -3326,6 +3183,14 @@ function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
     <div className="talk-bubble flex items-center gap-3 rounded-3xl p-4">
       <img src={chrysThinking} alt="Chrys" className="h-20 w-20 object-contain" />
       <p className="whitespace-pre-line text-lg font-black leading-snug text-slate-800">{text}</p>
+      <button
+        type="button"
+        onClick={() => speakText(text, lang)}
+        aria-label={lang === "en" ? "Hear this teaching text" : "Dengar teks pengajaran ini"}
+        className="ml-auto grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-white text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1"
+      >
+        <SpeakerIcon />
+      </button>
     </div>
   );
 }
@@ -3688,6 +3553,92 @@ function MissingNumberTeaching({ nums, answer, lang }: { nums: Array<number | "?
           {done ? (lang === "en" ? "Done" : "Selesai") : (lang === "en" ? "Tap to find it" : "Tekan untuk cari")}
         </button>
       </div>
+    </div>
+  );
+}
+
+function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
+  const answer = 3;
+  const choices = [2, 3, 5];
+  const [selected, setSelected] = useState<number | null>(null);
+  const [checked, setChecked] = useState(false);
+  const correct = checked && selected === answer;
+
+  const choose = (value: number) => {
+    setSelected(value);
+    setChecked(false);
+  };
+
+  return (
+    <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
+      <NumberLineSequence nums={NUMBERS} marked={selected ?? -1} arrow="right" />
+      <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-white bg-white p-3">
+        {[0, 1, 2, "?", 4, 5].map((item, index) => (
+          <React.Fragment key={`${item}-${index}`}>
+            {index > 0 && <span className="text-2xl font-black text-blue-300">{"\u2192"}</span>}
+            <span
+              className={`grid h-14 min-w-14 place-items-center rounded-2xl border-2 px-4 text-2xl font-black ${
+                item === "?"
+                  ? "border-dashed border-yellow-400 bg-yellow-50 text-yellow-900"
+                  : "border-blue-100 bg-blue-50 text-blue-950"
+              }`}
+              style={typeof item === "number" ? NUMBER_TEXT_STYLE : undefined}
+            >
+              {item === "?" ? (selected ?? "?") : item}
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="flex flex-wrap justify-center gap-3">
+        {choices.map((choice) => (
+          <button
+            key={choice}
+            type="button"
+            onClick={() => choose(choice)}
+            aria-pressed={selected === choice}
+            className={`grid h-16 w-16 place-items-center rounded-2xl border-2 text-3xl font-black shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 ${
+              selected === choice ? "border-blue-700 bg-blue-600 text-white" : "border-blue-100 bg-white text-blue-950"
+            }`}
+            style={NUMBER_TEXT_STYLE}
+          >
+            {choice}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-wrap justify-center gap-3">
+        <button
+          type="button"
+          disabled={selected === null}
+          onClick={() => setChecked(true)}
+          className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] active:translate-y-1 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+        >
+          {lang === "en" ? "Check" : "Semak"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSelected(null);
+            setChecked(false);
+          }}
+          className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.1)] active:translate-y-1"
+        >
+          {lang === "en" ? "Try again" : "Cuba lagi"}
+        </button>
+      </div>
+      {checked && selected !== null && (
+        <div className={`rounded-3xl border-2 p-4 text-center ${correct ? "border-emerald-200 bg-emerald-50" : "border-yellow-200 bg-yellow-50"}`}>
+          <p className={`text-xl font-black ${correct ? "text-emerald-800" : "text-orange-700"}`}>
+            {correct
+              ? (lang === "en" ? "Great job. 3 is missing." : "Bagus. 3 yang hilang.")
+              : (lang === "en" ? "Good try. Let's look again." : "Cubaan baik. Mari lihat lagi.")}
+          </p>
+          <div className="mt-3 grid gap-2 text-base font-black text-slate-700">
+            <p>{lang === "en" ? "3 comes after 2." : "3 selepas 2."}</p>
+            <p>{lang === "en" ? "3 comes before 4." : "3 sebelum 4."}</p>
+            <p>{lang === "en" ? "So, ? is 3." : "Jadi, ? ialah 3."}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4233,9 +4184,20 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
 }
 
 function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
+  const spokenSteps = q.method[lang].join(". ");
   return (
     <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
-      <h4 className="mb-3 text-lg font-black text-emerald-900">{lang === "en" ? "How to solve it" : "Cara selesaikan"}</h4>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h4 className="text-lg font-black text-emerald-900">{lang === "en" ? "How to solve it" : "Cara selesaikan"}</h4>
+        <button
+          type="button"
+          onClick={() => speakText(spokenSteps, lang)}
+          aria-label={lang === "en" ? "Hear the solution steps" : "Dengar langkah penyelesaian"}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-emerald-700 shadow-[0_4px_0_rgba(4,120,87,.14)] active:translate-y-1"
+        >
+          <SpeakerIcon />
+        </button>
+      </div>
       <div className="mb-3">
         <SolutionVisual visual={q.visual} lang={lang} />
       </div>
@@ -4408,6 +4370,17 @@ function speakNumberWithTts(value: number, lang: Lang) {
   const utterance = new SpeechSynthesisUtterance(WORDS[lang][value] ?? String(value));
   utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
   utterance.rate = 0.8;
+  window.speechSynthesis.speak(utterance);
+}
+
+function speakText(text: string, lang: Lang) {
+  if (!("speechSynthesis" in window)) return;
+  stopNumberAudio();
+  const cleanText = text.replace(/\s+/g, " ").trim();
+  if (!cleanText) return;
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
+  utterance.rate = 0.82;
   window.speechSynthesis.speak(utterance);
 }
 
