@@ -171,16 +171,29 @@
 @layer utilities {
   /* ── Mario sky-world gradient background ── */
   .page-bg {
-    background:
-      radial-gradient(circle at 14% 10%, rgba(255, 244, 177, 0.75) 0 5rem, transparent 5.25rem),
-      linear-gradient(180deg, #55c7ef 0%, #8bdcf7 31%, #daf6ed 67%, #a7dd67 100%);
+    background-color: #9ee8f5;
+    background-image: var(--app-bg-desktop);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
   }
 
   .jungle-leaves {
-    background-image:
-      radial-gradient(ellipse at 8% 88%, rgba(43, 126, 68, 0.28) 0 9rem, transparent 9.5rem),
-      radial-gradient(ellipse at 94% 86%, rgba(22, 101, 52, 0.24) 0 10rem, transparent 10.5rem),
-      radial-gradient(ellipse at 50% 110%, rgba(77, 124, 15, 0.34) 0 16rem, transparent 16.5rem);
+    background: transparent;
+  }
+
+  @media (max-width: 1024px) {
+    .page-bg {
+      background-image: var(--app-bg-tablet);
+      background-position: center top;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .page-bg {
+      background-image: var(--app-bg-mobile);
+      background-position: center top;
+    }
   }
 
   .soft-panel {

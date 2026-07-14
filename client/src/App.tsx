@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import chrysHappy from "@assets/chrys_happy_new_nobg.png";
-import chrysExcited from "@assets/chrys_excited_new_nobg.png";
-import chrysThinking from "@assets/chrys_thinking_new_nobg.png";
-import chrysRunning from "@assets/chrys_running_new_nobg.png";
+import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
+import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
+import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
+import chrysRunning from "@assets/chrys_running_new_user_nobg.png";
+import chrysRestingWithAlyse from "@assets/chrys_resting_with_alyse_new_user_nobg.png";
+import alyseGuide from "@assets/alyse_guide_new_user_nobg.png";
 import trayPhoto from "@assets/tray_photo.png";
 
 type Lang = "en" | "ms";
@@ -97,6 +99,12 @@ const NUMBER_AUDIO_FILES: Record<number, string> = {
 };
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
+const BACKGROUND_BASE = `${import.meta.env.BASE_URL}assets/images/`;
+const APP_BACKGROUND_STYLE = {
+  "--app-bg-desktop": `url("${BACKGROUND_BASE}jungle-bg-desktop.png")`,
+  "--app-bg-tablet": `url("${BACKGROUND_BASE}jungle-bg-tablet.png")`,
+  "--app-bg-mobile": `url("${BACKGROUND_BASE}jungle-bg-mobile.png")`,
+} as React.CSSProperties;
 const BASKET_SPRITE = `${SPRITE_BASE}basket.png`;
 const OBJECT_SPRITES: Record<string, string> = {
   "🍌": `${SPRITE_BASE}banana.png`,
@@ -758,7 +766,7 @@ function App() {
   };
 
   return (
-    <div className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden">
+    <div className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden" style={APP_BACKGROUND_STYLE}>
       <Decor />
       <div className="jungle-leaves relative z-10 min-h-[100dvh] mx-auto flex w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <Header
@@ -901,6 +909,10 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
             <h2 className="text-4xl font-black leading-none text-blue-900 md:text-5xl">{t.title}</h2>
             <p className="mt-2 text-base font-bold text-slate-500">{t.subtitle}</p>
           </div>
+        </div>
+        <div className="mx-auto mt-3 flex max-w-sm items-center justify-center gap-4 rounded-3xl border-2 border-emerald-100 bg-emerald-50/70 px-4 py-2">
+          <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
+          <img src={chrysRestingWithAlyse} alt="Chrys resting with Alyse" className="h-16 w-36 object-contain" />
         </div>
         <label className="mx-auto mt-6 block max-w-sm text-left">
           <span className="mb-2 block text-base font-black text-blue-900">{t.namePrompt}</span>
@@ -4726,17 +4738,7 @@ function wait(ms: number) {
 }
 
 function Decor() {
-  return (
-    <div className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="absolute left-[-4rem] top-12 h-20 w-64 rounded-full bg-white/80 blur-sm" />
-      <div className="absolute right-[-3rem] top-36 h-24 w-72 rounded-full bg-white/75 blur-sm" />
-      <div className="absolute bottom-0 h-10 w-full bg-green-600/70" />
-      <div className="absolute bottom-9 h-3 w-full bg-amber-900/20" />
-      {["10%", "28%", "58%", "82%"].map((left) => (
-        <span key={left} className="absolute top-16 text-xl text-yellow-200" style={{ left }} aria-hidden="true">★</span>
-      ))}
-    </div>
-  );
+  return null;
 }
 
 export default App;
