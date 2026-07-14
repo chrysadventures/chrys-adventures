@@ -78,6 +78,7 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontWeight: 700,
   fontVariantNumeric: "tabular-nums",
 };
+const COUNTING_STEP_MS = 1100;
 const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
 const WORDS: Record<Lang, string[]> = {
   en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
@@ -1699,8 +1700,12 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
               {lang === "en" ? `Tap bananas to make ${activeTarget}.` : `Tekan pisang untuk bina ${activeTarget}.`}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <button onClick={addObject} className="grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 text-5xl shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1">
-                {activity.emoji}
+              <button
+                onClick={addObject}
+                aria-label={lang === "en" ? "Add one banana" : "Tambah satu pisang"}
+                className="grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1"
+              >
+                <SpriteIcon value={activity.emoji} className="h-14 w-14" />
               </button>
               <button onClick={removeObject} className="rounded-2xl border-2 border-blue-200 bg-blue-50 px-5 py-3 font-black text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1">
                 {lang === "en" ? "Remove one" : "Buang satu"}
@@ -2413,7 +2418,11 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
 
               <div className="relative mx-auto grid w-40 place-items-center">
                 <img src={chrysHappy} alt="Chrys eating bananas" className={`h-36 w-36 object-contain transition-transform duration-700 ${eatFirst || eatSecond ? "scale-110" : ""}`} />
-                {(eatFirst || eatSecond) && <span className="absolute right-2 top-1 text-3xl">🍌</span>}
+                {(eatFirst || eatSecond) && (
+                  <span className="absolute right-2 top-1 grid h-10 w-10 place-items-center rounded-full bg-white/90 shadow-md">
+                    <SpriteIcon value="🍌" className="h-8 w-8" />
+                  </span>
+                )}
               </div>
 
               {bellyTarget > 0 && (
@@ -2548,7 +2557,7 @@ function StoryBananaGroup({ count, eating, label }: { count: number; eating: boo
             className={`grid h-16 w-16 place-items-center rounded-2xl bg-white text-4xl shadow-inner transition-all duration-1000 ${eating ? "translate-x-24 -translate-y-4 scale-50 opacity-0" : "translate-x-0 opacity-100"}`}
             style={{ transitionDelay: `${i * 220}ms` }}
           >
-            🍌
+            <SpriteIcon value={String.fromCodePoint(0x1f34c)} className="h-12 w-12" />
           </span>
         ))}
       </div>
@@ -2571,7 +2580,7 @@ function BellyCounter({ target, counting, label, unit, lang }: { target: number;
     }
     setVisible(0);
     speakCountingSequence(target, lang);
-    const timers = Array.from({ length: target }, (_, i) => window.setTimeout(() => setVisible(i + 1), 450 * (i + 1)));
+    const timers = Array.from({ length: target }, (_, i) => window.setTimeout(() => setVisible(i + 1), COUNTING_STEP_MS * (i + 1)));
     return () => timers.forEach(window.clearTimeout);
   }, [counting, target]);
 
@@ -2583,7 +2592,11 @@ function BellyCounter({ target, counting, label, unit, lang }: { target: number;
       </div>
       <p className="text-lg font-black text-pink-900">{visible} {unit}</p>
       <div className="mt-2 flex max-w-40 flex-wrap justify-center gap-1">
-        {Array.from({ length: visible }, (_, i) => <span key={i} className="text-lg">🍌</span>)}
+        {Array.from({ length: visible }, (_, i) => (
+          <span key={i} className="grid h-7 w-7 place-items-center">
+            <SpriteIcon value="🍌" className="h-6 w-6" />
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -2847,7 +2860,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = 450, speakCount = false, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCount = false, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -2861,7 +2874,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   lang?: Lang;
 }) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const stepIntervalMs = prefersReducedMotion ? Math.min(intervalMs, 140) : intervalMs;
+  const stepIntervalMs = prefersReducedMotion ? Math.min(intervalMs, 140) : Math.max(intervalMs, COUNTING_STEP_MS);
   const remaining = count - crossed;
   const [visible, setVisible] = useState(0);
   const [visibleCrossed, setVisibleCrossed] = useState(animateCrossOut ? 0 : crossed);
@@ -4666,10 +4679,11 @@ function speakNumber(value: number, lang: Lang) {
   });
 }
 
-function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = 650) {
+function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = COUNTING_STEP_MS) {
   if (count <= 0) return;
   stopNumberAudio();
   const runId = audioRunId;
+  const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
   Array.from({ length: Math.min(count, 10) }, (_, index) => {
     window.setTimeout(() => {
       if (runId !== audioRunId) return;
@@ -4677,7 +4691,7 @@ function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = 65
       playNumberFile(value, runId).then((played) => {
         if (!played && runId === audioRunId) speakNumberWithTts(value, lang);
       });
-    }, index * intervalMs);
+    }, index * stepMs);
   });
 }
 

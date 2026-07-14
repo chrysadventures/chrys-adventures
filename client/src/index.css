@@ -171,11 +171,21 @@
 @layer utilities {
   /* ── Mario sky-world gradient background ── */
   .page-bg {
+    position: relative;
+    isolation: isolate;
     background-color: #9ee8f5;
+  }
+
+  .page-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
     background-image: var(--app-bg-desktop);
     background-position: center center;
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: contain;
   }
 
   .jungle-leaves {
@@ -183,14 +193,14 @@
   }
 
   @media (max-width: 1024px) {
-    .page-bg {
+    .page-bg::before {
       background-image: var(--app-bg-tablet);
       background-position: center top;
     }
   }
 
   @media (max-width: 640px) {
-    .page-bg {
+    .page-bg::before {
       background-image: var(--app-bg-mobile);
       background-position: center top;
     }
