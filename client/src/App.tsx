@@ -3,7 +3,6 @@ import chrysHappy from "@assets/chrys_happy_new_nobg.png";
 import chrysExcited from "@assets/chrys_excited_new_nobg.png";
 import chrysThinking from "@assets/chrys_thinking_new_nobg.png";
 import chrysRunning from "@assets/chrys_running_new_nobg.png";
-import basketPhoto from "@assets/basket_photo.png";
 import trayPhoto from "@assets/tray_photo.png";
 
 type Lang = "en" | "ms";
@@ -97,11 +96,43 @@ const NUMBER_AUDIO_FILES: Record<number, string> = {
   10: "floraphonic-casual-voice-man-says-10-209712.mp3",
 };
 
+const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
+const BASKET_SPRITE = `${SPRITE_BASE}basket.png`;
+const OBJECT_SPRITES: Record<string, string> = {
+  "🍌": `${SPRITE_BASE}banana.png`,
+  "🍃": `${SPRITE_BASE}leaf.png`,
+  "🥭": `${SPRITE_BASE}mango.png`,
+  "🪨": `${SPRITE_BASE}stone.png`,
+  "🥥": `${SPRITE_BASE}coconut.png`,
+  "🍄": `${SPRITE_BASE}mushroom.png`,
+  "🌸": `${SPRITE_BASE}flower.png`,
+  "🧺": BASKET_SPRITE,
+  "🪵": `${SPRITE_BASE}log.png`,
+  "🦋": `${SPRITE_BASE}butterfly.png`,
+  "🌳": `${SPRITE_BASE}tree.png`,
+  "💧": `${SPRITE_BASE}water-drop.png`,
+  "🪶": `${SPRITE_BASE}feather.png`,
+  "🌰": `${SPRITE_BASE}acorn.png`,
+  "❄️": `${SPRITE_BASE}snowflake.png`,
+};
+
 let activeNumberAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
 
 function cleanDisplayText(value: string) {
   return value;
+}
+
+function spriteSrc(value: string) {
+  return OBJECT_SPRITES[value] ?? null;
+}
+
+function SpriteIcon({ value, className = "h-10 w-10", fallbackClassName = "" }: { value: string; className?: string; fallbackClassName?: string }) {
+  const src = spriteSrc(value);
+  if (src) {
+    return <img src={src} alt="" aria-hidden="true" className={`${className} object-contain`} />;
+  }
+  return <span className={fallbackClassName}>{cleanDisplayText(value)}</span>;
 }
 
 const UI = {
@@ -923,7 +954,9 @@ function MenuCard({ title, subtitle, icon, color, onClick }: { title: string; su
   };
   return (
     <button onClick={onClick} className={`menu-card min-h-48 rounded-[2rem] border-4 p-6 text-left transition active:translate-y-1 md:p-7 ${colors[color]}`}>
-      <span className="icon-badge relative z-10 mb-5 grid h-20 w-20 place-items-center rounded-[1.6rem] text-4xl font-black text-blue-950">{cleanDisplayText(icon)}</span>
+      <span className="icon-badge relative z-10 mb-5 grid h-20 w-20 place-items-center rounded-[1.6rem] text-4xl font-black text-blue-950">
+        <SpriteIcon value={icon} className="h-14 w-14" />
+      </span>
       <h3 className="relative z-10 text-2xl font-black leading-tight text-blue-950 md:text-3xl">{title}</h3>
       <p className="relative z-10 mt-3 text-base font-black leading-snug text-slate-500">{subtitle}</p>
     </button>
@@ -1374,7 +1407,6 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
 }
 
 function getAlternateValueEmoji(emoji: string) {
-  const symbol = cleanDisplayText(emoji);
   if (symbol === "🍃") return "🍌";
   if (symbol === "🥥") return "📘";
   if (symbol === "🍄") return "🍌";
@@ -1409,7 +1441,6 @@ function LabeledValueGroup({ label, count, emoji, counted }: { label: string; co
 }
 
 function ValueLayoutCard({ label, count, emoji, layout }: { label: string; count: number; emoji: string; layout: "row" | "groups" | "spread" }) {
-  const symbol = cleanDisplayText(emoji);
   const items = Array.from({ length: count }, (_, i) => i);
   const groupA = Math.ceil(count / 2);
   const groupB = count - groupA;
@@ -1420,9 +1451,9 @@ function ValueLayoutCard({ label, count, emoji, layout }: { label: string; count
       <div className="rounded-3xl bg-white p-3">
         {layout === "groups" ? (
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <MiniObjectSet count={groupA} symbol={symbol} />
+            <MiniObjectSet count={groupA} emoji={emoji} />
             <div className="h-24 w-1 rounded-full bg-yellow-200" aria-hidden="true" />
-            <MiniObjectSet count={groupB} symbol={symbol} />
+            <MiniObjectSet count={groupB} emoji={emoji} />
           </div>
         ) : (
           <div className={layout === "row" ? "flex min-h-28 flex-nowrap items-center justify-center gap-2 overflow-x-auto" : "relative mx-auto h-32 max-w-64"}>
@@ -1432,7 +1463,7 @@ function ValueLayoutCard({ label, count, emoji, layout }: { label: string; count
                 className={`grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-3xl shadow-inner ${layout === "spread" ? "absolute" : "shrink-0"}`}
                 style={layout === "spread" ? spreadObjectStyle(i, count) : undefined}
               >
-                {symbol}
+                <SpriteIcon value={emoji} className="h-9 w-9" />
               </span>
             ))}
           </div>
@@ -1443,12 +1474,12 @@ function ValueLayoutCard({ label, count, emoji, layout }: { label: string; count
   );
 }
 
-function MiniObjectSet({ count, symbol }: { count: number; symbol: string }) {
+function MiniObjectSet({ count, emoji }: { count: number; emoji: string }) {
   return (
     <div className="flex min-h-24 flex-wrap content-center justify-center gap-2 rounded-2xl border-2 border-dashed border-yellow-200 bg-yellow-50 p-2">
       {Array.from({ length: count }, (_, i) => (
         <span key={i} className="grid h-10 w-10 place-items-center rounded-xl bg-white text-2xl shadow-inner">
-          {symbol}
+          <SpriteIcon value={emoji} className="h-8 w-8" />
         </span>
       ))}
     </div>
@@ -2822,7 +2853,6 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   const remaining = count - crossed;
   const [visible, setVisible] = useState(0);
   const [visibleCrossed, setVisibleCrossed] = useState(animateCrossOut ? 0 : crossed);
-  const symbol = cleanDisplayText(emoji);
 
   useEffect(() => {
     if (!animateCrossOut) {
@@ -2877,7 +2907,9 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
                 {labelVisible ? label : "."}
               </span>
             )}
-            <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>{symbol}</span>
+            <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>
+              <SpriteIcon value={emoji} className={compact ? "h-10 w-10" : "h-12 w-12"} />
+            </span>
             {gone && <span className={`absolute font-black text-red-500 transition-opacity duration-300 ${compact ? "top-0 text-4xl" : "top-1 text-5xl"}`}>x</span>}
           </div>
         );
@@ -3314,7 +3346,7 @@ function ActiveAnswerPanel({
                     {order}
                   </span>
                 )}
-                <span>{emoji}</span>
+                <SpriteIcon value={emoji} className="h-12 w-12" />
               </button>
             );
           })}
@@ -3589,7 +3621,6 @@ function SpellWordCard({ value, lang }: { value: number; lang: Lang }) {
 }
 
 function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: number; emoji: string; numbered?: boolean; crossed?: number }) {
-  const symbol = cleanDisplayText(emoji);
   if (count === 0) {
     return <div className="mx-auto rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">{numbered ? "0" : "empty"}</div>;
   }
@@ -3599,7 +3630,9 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: n
         const gone = i < crossed;
         return (
           <div key={i} className="relative grid h-16 w-16 place-items-center rounded-2xl bg-amber-50 text-4xl shadow-inner">
-            <span className={gone ? "opacity-25" : ""}>{symbol}</span>
+            <span className={gone ? "opacity-25" : ""}>
+              <SpriteIcon value={emoji} className="h-12 w-12" />
+            </span>
             {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             {gone && <span className="absolute text-5xl font-black text-red-500">×</span>}
           </div>
@@ -3622,8 +3655,7 @@ function ContainerScene({
   numbered?: boolean;
   hideEmptyLabel?: boolean;
 }) {
-  const symbol = cleanDisplayText(emoji);
-  const image = container === "basket" ? basketPhoto : trayPhoto;
+  const image = container === "basket" ? BASKET_SPRITE : trayPhoto;
   const alt = container === "basket" ? "basket" : "tray";
   const positions = [
     ["left-[23%]", "top-[38%]"],
@@ -3648,7 +3680,7 @@ function ContainerScene({
               key={i}
               className={`absolute ${x} ${y} grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl bg-white/80 text-4xl shadow-md`}
             >
-              <span>{symbol}</span>
+              <SpriteIcon value={emoji} className="h-11 w-11" />
               {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             </div>
           );
@@ -3754,7 +3786,6 @@ function LayoutValueVisual({ count, emoji, lang, showSummary = true }: { count: 
 }
 
 function LayoutGroup({ count, emoji, layout, label }: { count: number; emoji: string; layout: "row" | "twoGroups" | "spread"; label: string }) {
-  const symbol = cleanDisplayText(emoji);
   const positions = layout === "spread"
     ? ["self-start", "self-center", "self-end", "self-center", "self-start", "self-end", "self-start", "self-center", "self-end"]
     : [];
@@ -3766,7 +3797,7 @@ function LayoutGroup({ count, emoji, layout, label }: { count: number; emoji: st
             key={i}
             className={`grid h-10 w-10 place-items-center rounded-2xl bg-white text-2xl shadow-inner ${layout === "spread" ? positions[i] : ""} ${layout === "twoGroups" && i === Math.ceil(count / 2) ? "ml-5" : ""}`}
           >
-            {symbol}
+            <SpriteIcon value={emoji} className="h-8 w-8" />
           </span>
         ))}
       </div>
