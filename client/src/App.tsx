@@ -55,7 +55,7 @@ type Question = {
   answer: number | string;
   visual: Visual;
   method: Record<Lang, string[]>;
-  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects";
+  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects" | "takeAway";
 };
 
 type Player = {
@@ -351,6 +351,7 @@ const additionPracticeQuestions: Question[] = [
 ];
 
 const subtractionPracticeQuestions: Question[] = [
+  q("l-sub-takeaway-7-3", "operations", { en: "Show 7 - 3. Start with 7, take away 3.", ms: "Tunjuk 7 - 3. Mula dengan 7, buang 3." }, [], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }, "takeAway"),
   q("l-sub-7-3", "operations", { en: "Chrys has 7 bananas. He gives away 3 bananas. How many bananas are left?", ms: "Chrys ada 7 pisang. Dia beri 3 pisang. Tinggal berapa pisang?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }),
   q("l-sub-6-2", "operations", { en: "Chrys has 6 bananas. He eats 2 bananas. How many bananas are left?", ms: "Chrys ada 6 pisang. Dia makan 2 pisang. Tinggal berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 6, b: 2, emoji: "🍌" }),
   q("l-sub-9-6", "operations", { en: "There are 9 bananas. You take away 6 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 6 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 9, b: 6, emoji: "🍌" }),
@@ -757,7 +758,7 @@ function App() {
           <GroupingMode lang={lang} t={t} onDone={() => { awardStar("groupingMode"); go("menu"); }} />
         )}
         {screen === "learnAddition" && (
-          <AdditionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnAddition"); go("menu"); }} onSkipSubtraction={() => go("learnSubtraction")} />
+          <AdditionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnAddition"); go("menu"); }} />
         )}
         {screen === "learnSubtraction" && (
           <SubtractionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnSubtraction"); go("menu"); }} />
@@ -948,6 +949,10 @@ function skipNextNumberLabel(lang: Lang) {
 
 function skipSubtractionLabel(lang: Lang) {
   return lang === "en" ? "Skip to subtraction" : "Langkau ke tolak";
+}
+
+function alreadyKnowPracticeLabel(lang: Lang) {
+  return lang === "en" ? "Already know this? Go to exercises." : "Dah tahu? Terus ke latihan.";
 }
 
 function backToLearningLabel(lang: Lang) {
@@ -1918,8 +1923,10 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             t={t}
             onPrev={() => setPhase("addSign")}
             onDone={() => setPhase("addPractice")}
-            onSkipPractice={skipToCurrentPractice}
-            onSkipSubtraction={skipToSubtraction}
+            actions={[
+              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
+              { label: skipSubtractionLabel(lang), onClick: skipToSubtraction },
+            ]}
           />
         )}
         {phase === "subIntro" && (
@@ -1951,7 +1958,9 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             t={t}
             onPrev={() => setPhase("subSign")}
             onDone={() => setPhase("subPractice")}
-            onSkipPractice={skipToCurrentPractice}
+            actions={[
+              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
+            ]}
           />
         )}
       </LessonShell>
@@ -1959,7 +1968,7 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   );
 }
 
-function AdditionOnlyLesson({ lang, t, onDone, onSkipSubtraction }: { lang: Lang; t: UIStrings; onDone: () => void; onSkipSubtraction?: () => void }) {
+function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState<"intro" | "sign" | "story" | "practice">("intro");
 
   if (phase === "practice") {
@@ -1975,10 +1984,7 @@ function AdditionOnlyLesson({ lang, t, onDone, onSkipSubtraction }: { lang: Lang
             text={lang === "en" ? "Addition puts groups together." : "Tambah gabungkan kumpulan."}
             onNext={() => setPhase("sign")}
             t={t}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" },
-              ...(onSkipSubtraction ? [{ label: skipSubtractionLabel(lang), onClick: onSkipSubtraction }] : []),
-            ]}
+            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: () => setPhase("practice") }}
           />
         )}
         {phase === "sign" && (
@@ -1988,10 +1994,6 @@ function AdditionOnlyLesson({ lang, t, onDone, onSkipSubtraction }: { lang: Lang
             text={lang === "en" ? "The + sign means add more." : "Tanda + bermaksud tambah lagi."}
             onNext={() => setPhase("story")}
             t={t}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" },
-              ...(onSkipSubtraction ? [{ label: skipSubtractionLabel(lang), onClick: onSkipSubtraction }] : []),
-            ]}
           />
         )}
         {phase === "story" && (
@@ -2000,8 +2002,6 @@ function AdditionOnlyLesson({ lang, t, onDone, onSkipSubtraction }: { lang: Lang
             t={t}
             onPrev={() => setPhase("sign")}
             onDone={() => setPhase("practice")}
-            onSkipPractice={() => setPhase("practice")}
-            onSkipSubtraction={onSkipSubtraction}
           />
         )}
       </LessonShell>
@@ -2025,7 +2025,7 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             text={lang === "en" ? "Subtraction takes away from one group." : "Tolak ambil daripada satu kumpulan."}
             onNext={() => setPhase("sign")}
             t={t}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: () => setPhase("practice") }}
           />
         )}
         {phase === "sign" && (
@@ -2035,7 +2035,6 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             text={lang === "en" ? "The - sign means take away." : "Tanda - bermaksud ambil."}
             onNext={() => setPhase("story")}
             t={t}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
         )}
         {phase === "story" && (
@@ -2044,7 +2043,6 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             t={t}
             onPrev={() => setPhase("sign")}
             onDone={() => setPhase("practice")}
-            onSkipPractice={() => setPhase("practice")}
           />
         )}
       </LessonShell>
@@ -2052,17 +2050,28 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
   );
 }
 
-function AdditionIntroStep({ title, text, onNext, t, actions }: {
+function AdditionIntroStep({ title, text, onNext, t, actions, cornerAction }: {
   title: string;
   text: string;
   onNext: () => void;
   t: UIStrings;
   actions?: LessonAction[];
+  cornerAction?: LessonAction;
 }) {
   return (
     <div className="space-y-5 text-center">
       <img src={chrysHappy} alt="Chrys happy" className="mx-auto h-36 w-36 object-contain" />
-      <div className="rounded-3xl border-2 border-emerald-100 bg-white p-5 text-left">
+      <div className="relative rounded-3xl border-2 border-emerald-100 bg-white p-5 pt-16 text-left sm:pt-5">
+        {cornerAction && (
+          <button
+            type="button"
+            onClick={cornerAction.onClick}
+            aria-label={cornerAction.label}
+            className="absolute right-4 top-4 rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-black text-slate-600 shadow-[0_3px_0_rgba(15,23,42,.12)] active:translate-y-1"
+          >
+            {cornerAction.label}
+          </button>
+        )}
         <h3 className="text-3xl font-black text-blue-950">{title}</h3>
         <p className="mt-3 text-xl font-black leading-snug text-slate-700">{text}</p>
       </div>
@@ -2071,16 +2080,15 @@ function AdditionIntroStep({ title, text, onNext, t, actions }: {
   );
 }
 
-function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSubtraction }: {
+function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   lang: Lang;
   t: UIStrings;
   onPrev: () => void;
   onDone: () => void;
-  onSkipPractice: () => void;
-  onSkipSubtraction?: () => void;
+  actions?: LessonAction[];
 }) {
   const [step, setStep] = useState(0);
-  const totalSteps = 7;
+  const totalSteps = 8;
   const storyText = lang === "en"
     ? [
       "Chrys eats 2 bananas.",
@@ -2090,6 +2098,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
       "2 bananas and 3 more bananas make 5 bananas.",
       "The + sign adds more bananas.",
       "So, 2 + 3 = 5.",
+      "4 bananas. Add 0 more. Still 4.",
     ]
     : [
       "Chrys makan 2 pisang.",
@@ -2099,7 +2108,9 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
       "2 pisang dan 3 pisang lagi menjadi 5 pisang.",
       "Tanda + bermaksud Chrys menambah pisang lagi.",
       "Jadi, 2 + 3 = 5.",
+      "4 pisang. Tambah 0 lagi. Masih 4.",
     ];
+  const zeroBeat = step === 7;
   const showFirst = step <= 1;
   const eatFirst = step === 1;
   const showSecond = step >= 2 && step <= 3;
@@ -2107,7 +2118,9 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
   const bellyTarget = step >= 3 ? 5 : step >= 1 ? 2 : 0;
   const helperText = step < 4
     ? storyText[step]
-    : lang === "en"
+    : zeroBeat
+      ? storyText[step]
+      : lang === "en"
       ? "Now write it."
       : "Sekarang kita boleh tulis ayat nombor.";
 
@@ -2119,38 +2132,44 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
-        <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <div className="min-h-40 rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
-            {showFirst && <StoryBananaGroup count={2} eating={eatFirst} label={lang === "en" ? "2 bananas" : "2 pisang"} />}
-            {showSecond && <StoryBananaGroup count={3} eating={eatSecond} label={lang === "en" ? "3 more bananas" : "3 pisang lagi"} />}
+        {zeroBeat ? (
+          <ZeroAdditionBeat lang={lang} />
+        ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+              <div className="min-h-40 rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
+                {showFirst && <StoryBananaGroup count={2} eating={eatFirst} label={lang === "en" ? "2 bananas" : "2 pisang"} />}
+                {showSecond && <StoryBananaGroup count={3} eating={eatSecond} label={lang === "en" ? "3 more bananas" : "3 pisang lagi"} />}
+                {step >= 4 && (
+                  <div className="grid h-full min-h-32 place-items-center rounded-3xl bg-emerald-50 text-center">
+                    <ObjectGroup count={5} emoji="🍌" numbered />
+                  </div>
+                )}
+              </div>
+
+              <div className="relative mx-auto grid w-40 place-items-center">
+                <img src={chrysHappy} alt="Chrys eating bananas" className={`h-36 w-36 object-contain transition-transform duration-700 ${eatFirst || eatSecond ? "scale-110" : ""}`} />
+                {(eatFirst || eatSecond) && <span className="absolute right-2 top-1 text-3xl">🍌</span>}
+              </div>
+
+              {bellyTarget > 0 && (
+                <BellyCounter
+                  target={bellyTarget}
+                  counting={eatSecond}
+                  label={lang === "en" ? "belly counter" : "kira dalam perut"}
+                  unit={lang === "en" ? "bananas" : "pisang"}
+                  lang={lang}
+                />
+              )}
+            </div>
+
             {step >= 4 && (
-              <div className="grid h-full min-h-32 place-items-center rounded-3xl bg-emerald-50 text-center">
-                <ObjectGroup count={5} emoji="🍌" numbered />
+              <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+                <p className="text-4xl font-black text-emerald-800">2 + 3 = 5</p>
+                <p className="mt-2 text-lg font-black text-emerald-900">{storyText[step]}</p>
               </div>
             )}
-          </div>
-
-          <div className="relative mx-auto grid w-40 place-items-center">
-            <img src={chrysHappy} alt="Chrys eating bananas" className={`h-36 w-36 object-contain transition-transform duration-700 ${eatFirst || eatSecond ? "scale-110" : ""}`} />
-            {(eatFirst || eatSecond) && <span className="absolute right-2 top-1 text-3xl">🍌</span>}
-          </div>
-
-          {bellyTarget > 0 && (
-            <BellyCounter
-              target={bellyTarget}
-              counting={eatSecond}
-              label={lang === "en" ? "belly counter" : "kira dalam perut"}
-              unit={lang === "en" ? "bananas" : "pisang"}
-              lang={lang}
-            />
-          )}
-        </div>
-
-        {step >= 4 && (
-          <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-            <p className="text-4xl font-black text-emerald-800">2 + 3 = 5</p>
-            <p className="mt-2 text-lg font-black text-emerald-900">{storyText[step]}</p>
-          </div>
+          </>
         )}
       </div>
 
@@ -2168,20 +2187,23 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, onSkipPractice, onSkipSub
           {step < totalSteps - 1 ? t.next : t.practice}
         </button>
       </div>
-      <div className="flex flex-wrap justify-center gap-3">
-        <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkipPractice} variant="green" />
-        {onSkipSubtraction && <SecondaryLessonButton label={skipSubtractionLabel(lang)} onClick={onSkipSubtraction} />}
-      </div>
+      {actions.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {actions.map((action) => (
+            <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function ChrysSubtractionStory({ lang, t, onPrev, onDone, onSkipPractice }: {
+function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   lang: Lang;
   t: UIStrings;
   onPrev: () => void;
   onDone: () => void;
-  onSkipPractice: () => void;
+  actions?: LessonAction[];
 }) {
   const [complete, setComplete] = useState(false);
 
@@ -2216,8 +2238,37 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, onSkipPractice }: {
           {t.practice}
         </button>
       </div>
-      <div className="flex flex-wrap justify-center gap-3">
-        <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkipPractice} variant="green" />
+      {actions.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {actions.map((action) => (
+            <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ZeroAdditionBeat({ lang }: { lang: Lang }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <div className="rounded-3xl border-2 border-amber-100 bg-amber-50 p-4 text-center">
+          <ObjectGroup count={4} emoji="🍌" numbered />
+          <p className="mt-3 text-xl font-black text-amber-900">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
+        </div>
+        <div className="text-center text-5xl font-black text-blue-800">+</div>
+        <div className="rounded-3xl border-2 border-slate-100 bg-slate-50 p-4 text-center">
+          <ObjectGroup count={0} emoji="🍌" numbered />
+          <p className="mt-3 text-xl font-black text-slate-600">{lang === "en" ? "0 more" : "0 lagi"}</p>
+        </div>
+      </div>
+      <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+        <ObjectGroup count={4} emoji="🍌" numbered />
+        <p className="mt-3 text-3xl font-black text-emerald-800">4 + 0 = 4</p>
+        <p className="mt-2 text-lg font-black text-emerald-900">
+          {lang === "en" ? "4 bananas. Add 0 more. Still 4." : "4 pisang. Tambah 0 lagi. Masih 4."}
+        </p>
       </div>
     </div>
   );
@@ -2965,11 +3016,13 @@ function ActiveAnswerPanel({
 }) {
   const [builtCount, setBuiltCount] = useState(0);
   const [selectedObjects, setSelectedObjects] = useState<number[]>([]);
+  const [removedCount, setRemovedCount] = useState(0);
   const answer = Number(question.answer);
   const emoji =
     question.visual.kind === "groupMake" ? question.visual.emoji :
     question.visual.kind === "count" ? question.visual.emoji :
     question.visual.kind === "add" ? (question.visual.emoji ?? "🍌") :
+    question.visual.kind === "subtract" ? (question.visual.emoji ?? "🍌") :
     "🍌";
   const selectedNumber = typeof selected === "number" ? selected : Number(selected);
   const shownCount = answered && Number.isFinite(selectedNumber) ? selectedNumber : builtCount;
@@ -3075,6 +3128,73 @@ function ActiveAnswerPanel({
                   type="button"
                   onClick={() => {
                     setSelectedObjects([]);
+                    onRetry();
+                  }}
+                  className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
+                >
+                  {lang === "en" ? "Try again" : "Cuba lagi"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (question.inputMode === "takeAway" && question.visual.kind === "subtract") {
+    const startCount = question.visual.a;
+    const takeAwayTarget = question.visual.b;
+    const shownRemoved = answered ? startCount - selectedNumber : removedCount;
+    const leftCount = startCount - shownRemoved;
+
+    return (
+      <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
+        <p className="mb-3 text-lg font-black text-slate-700">
+          {lang === "en"
+            ? `Start with ${startCount}. Take away ${takeAwayTarget}.`
+            : `Mula dengan ${startCount}. Buang ${takeAwayTarget}.`}
+        </p>
+        <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} compact lang={lang} />
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <button
+            disabled={answered || removedCount <= 0}
+            onClick={() => setRemovedCount((count) => Math.max(0, count - 1))}
+            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-2xl font-black text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
+            aria-label={lang === "en" ? "Put one back" : "Letak satu semula"}
+          >
+            +
+          </button>
+          <button
+            disabled={answered || removedCount >= startCount}
+            onClick={() => setRemovedCount((count) => Math.min(startCount, count + 1))}
+            className="rounded-2xl border-2 border-blue-200 bg-blue-50 px-6 py-3 font-black text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Remove one" : "Buang satu"}
+          </button>
+          <button
+            disabled={answered}
+            onClick={() => onAnswer(leftCount)}
+            className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Check" : "Semak"}
+          </button>
+        </div>
+        {answered && (
+          <div className="space-y-3">
+            <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
+            {!isCorrect && (
+              <div className="space-y-3 rounded-3xl border-2 border-blue-100 bg-blue-50 p-3">
+                <p className="font-black text-blue-900">
+                  {lang === "en"
+                    ? `Take away ${takeAwayTarget}. ${answer} are left.`
+                    : `Buang ${takeAwayTarget}. Tinggal ${answer}.`}
+                </p>
+                <CountedObjectRow count={startCount} emoji={emoji} crossed={takeAwayTarget} showCount countRemainingOnly showCrossCount compact lang={lang} />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRemovedCount(0);
                     onRetry();
                   }}
                   className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
