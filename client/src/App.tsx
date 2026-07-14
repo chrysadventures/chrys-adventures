@@ -764,16 +764,7 @@ function App() {
           <SubtractionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnSubtraction"); go("menu"); }} />
         )}
         {screen === "learnReal" && (
-          <ConceptLesson
-            lang={lang}
-            t={t}
-            title={t.learnReal}
-            intro={lang === "en" ? "Use counting, adding, and taking away in simple stories." : "Guna kira, tambah, dan tolak dalam cerita mudah."}
-            note={lang === "en" ? "Look at the objects. Then answer." : "Lihat objek. Kemudian jawab."}
-            questions={realPracticeQuestions}
-            randomizePractice={false}
-            onDone={() => { awardStar("learnReal"); go("menu"); }}
-          />
+          <RealWorldLesson lang={lang} t={t} onDone={() => { awardStar("learnReal"); go("menu"); }} />
         )}
         {screen === "testMenu" && (
           <TestMenu t={t} go={go} />
@@ -2028,6 +2019,255 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
         )}
       </LessonShell>
     </main>
+  );
+}
+
+type RealWorldTeachingIndex = 0 | 1 | 2 | 3;
+
+function RealWorldLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+  const [phase, setPhase] = useState<RealWorldTeachingIndex | "practice">(0);
+
+  if (phase === "practice") {
+    return (
+      <Quiz
+        lang={lang}
+        t={t}
+        title={lang === "en" ? `${t.learnReal}: ${t.practice}` : `${t.learnReal}: ${t.practice}`}
+        questions={realPracticeQuestions}
+        randomize={false}
+        onFinish={() => onDone()}
+        onBackToLearning={() => setPhase(0)}
+      />
+    );
+  }
+
+  const goNext = () => setPhase((current) => {
+    if (current === "practice") return current;
+    return current === 3 ? "practice" : ((current + 1) as RealWorldTeachingIndex);
+  });
+  const goPrevious = () => setPhase((current) => {
+    if (current === "practice" || current === 0) return 0;
+    return ((current - 1) as RealWorldTeachingIndex);
+  });
+
+  return (
+    <main className="mx-auto w-full max-w-3xl pb-8">
+      <LessonShell
+        title={t.learnReal}
+        helper={lang === "en"
+          ? "Read the story. Find the numbers. Find the clue."
+          : "Baca cerita. Cari nombor. Cari petunjuk."}
+      >
+        <RealWorldTeachingPhase
+          phase={phase}
+          lang={lang}
+          t={t}
+          onPrevious={phase === 0 ? undefined : goPrevious}
+          onNext={goNext}
+          cornerAction={phase === 0 ? { label: alreadyKnowPracticeLabel(lang), onClick: () => setPhase("practice") } : undefined}
+        />
+      </LessonShell>
+    </main>
+  );
+}
+
+function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, cornerAction }: {
+  phase: RealWorldTeachingIndex;
+  lang: Lang;
+  t: UIStrings;
+  onPrevious?: () => void;
+  onNext: () => void;
+  cornerAction?: LessonAction;
+}) {
+  const banana = String.fromCodePoint(0x1f34c);
+  const title = [
+    lang === "en" ? "Find the numbers" : "Cari nombor",
+    lang === "en" ? "Find the action" : "Cari perbuatan",
+    lang === "en" ? "Choose: add" : "Pilih: tambah",
+    lang === "en" ? "Choose: take away" : "Pilih: tolak",
+  ][phase];
+  const talk = [
+    lang === "en"
+      ? "Look for how many. The numbers are 3 and 2."
+      : "Cari berapa banyak. Nombornya 3 dan 2.",
+    lang === "en"
+      ? "Clue words help us choose. They are hints."
+      : "Kata petunjuk bantu kita pilih. Ia cuma petunjuk.",
+    lang === "en"
+      ? "More bananas come together. We add."
+      : "Pisang lagi bergabung. Kita tambah.",
+    lang === "en"
+      ? "Some bananas go away. We take away."
+      : "Ada pisang pergi. Kita tolak.",
+  ][phase];
+  const nextLabel = phase === 3 ? t.practice : t.next;
+
+  return (
+    <div className="space-y-5">
+      <div className="relative rounded-[2rem] border-2 border-emerald-100 bg-white p-5 pt-20 shadow-[0_6px_0_rgba(0,0,0,.10)] sm:pt-5">
+        {cornerAction && (
+          <button
+            type="button"
+            onClick={cornerAction.onClick}
+            aria-label={cornerAction.label}
+            className="absolute right-4 top-4 max-w-[13rem] rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-black leading-tight text-slate-600 shadow-[0_3px_0_rgba(15,23,42,.12)] active:translate-y-1"
+          >
+            {cornerAction.label}
+          </button>
+        )}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <img src={chrysThinking} alt="Chrys" className="mx-auto h-28 w-28 shrink-0 object-contain sm:mx-0" />
+          <div>
+            <h3 className="text-3xl font-black text-blue-950">{title}</h3>
+            <p className="mt-2 text-lg font-black leading-snug text-slate-700">{talk}</p>
+          </div>
+        </div>
+      </div>
+
+      {phase === 0 && <FindNumbersExample lang={lang} banana={banana} />}
+      {phase === 1 && <FindActionExample lang={lang} banana={banana} />}
+      {phase === 2 && <ChooseAddExample lang={lang} banana={banana} />}
+      {phase === 3 && <ChooseTakeAwayExample lang={lang} banana={banana} />}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {onPrevious ? (
+          <button
+            type="button"
+            onClick={onPrevious}
+            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.10)] active:translate-y-1"
+          >
+            {t.previous}
+          </button>
+        ) : <span />}
+        <button
+          type="button"
+          onClick={onNext}
+          className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+        >
+          {nextLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FindNumbersExample({ lang, banana }: { lang: Lang; banana: string }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+      <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 3 bananas and 2 more bananas." : "Chrys ada 3 pisang dan 2 pisang lagi."} />
+      <div className="rounded-[2rem] border-2 border-yellow-100 bg-yellow-50 p-4">
+        <p className="mb-3 text-center text-xl font-black text-yellow-900">
+          {lang === "en" ? "The numbers are 3 and 2." : "Nombornya 3 dan 2."}
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <RealWorldNumberGroup count={3} label="3" emoji={banana} />
+          <RealWorldNumberGroup count={2} label="2" emoji={banana} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FindActionExample({ lang, banana }: { lang: Lang; banana: string }) {
+  return (
+    <div className="space-y-4">
+      <CharacterTalk lang={lang} text={lang === "en" ? "A clue word tells what happens." : "Kata petunjuk beritahu apa berlaku."} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <RealWorldStoryCard
+          lang={lang}
+          story={lang === "en" ? "Chrys gets more bananas." : "Chrys dapat lagi pisang."}
+          clue={lang === "en" ? "gets more" : "dapat lagi"}
+          note={lang === "en" ? "This is an add clue." : "Ini petunjuk tambah."}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <ObjectGroup count={2} emoji={banana} />
+            <span className="text-4xl font-black text-blue-800">+</span>
+            <ObjectGroup count={1} emoji={banana} />
+          </div>
+        </RealWorldStoryCard>
+        <RealWorldStoryCard
+          lang={lang}
+          story={lang === "en" ? "Chrys gives away bananas." : "Chrys beri pisang."}
+          clue={lang === "en" ? "gives away" : "beri"}
+          note={lang === "en" ? "This is a take-away clue." : "Ini petunjuk tolak."}
+        >
+          <CountedObjectRow count={4} emoji={banana} crossed={1} showCount={false} compact />
+        </RealWorldStoryCard>
+      </div>
+    </div>
+  );
+}
+
+function ChooseAddExample({ lang, banana }: { lang: Lang; banana: string }) {
+  return (
+    <div className="space-y-4 rounded-[2rem] border-2 border-blue-100 bg-blue-50 p-4">
+      <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 3 bananas. He gets 2 more." : "Chrys ada 3 pisang. Dia dapat 2 lagi."} />
+      <RealWorldStepGrid
+        steps={[
+          { label: lang === "en" ? "Numbers" : "Nombor", value: "3, 2" },
+          { label: lang === "en" ? "Clue" : "Petunjuk", value: lang === "en" ? "more" : "lagi" },
+          { label: lang === "en" ? "Choose" : "Pilih", value: "+" },
+          { label: lang === "en" ? "Answer" : "Jawapan", value: "5" },
+        ]}
+      />
+      <CountedObjectRow count={5} emoji={banana} showCount compact />
+      <p className="text-center text-2xl font-black text-blue-950">3 + 2 = 5</p>
+    </div>
+  );
+}
+
+function ChooseTakeAwayExample({ lang, banana }: { lang: Lang; banana: string }) {
+  return (
+    <div className="space-y-4 rounded-[2rem] border-2 border-red-100 bg-red-50 p-4">
+      <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 5 bananas. He gives away 2." : "Chrys ada 5 pisang. Dia beri 2."} />
+      <RealWorldStepGrid
+        steps={[
+          { label: lang === "en" ? "Numbers" : "Nombor", value: "5, 2" },
+          { label: lang === "en" ? "Clue" : "Petunjuk", value: lang === "en" ? "gives away" : "beri" },
+          { label: lang === "en" ? "Choose" : "Pilih", value: "-" },
+          { label: lang === "en" ? "Answer" : "Jawapan", value: "3" },
+        ]}
+      />
+      <CountedObjectRow count={5} emoji={banana} crossed={2} showCount countRemainingOnly showCrossCount compact />
+      <p className="text-center text-2xl font-black text-red-950">5 - 2 = 3</p>
+    </div>
+  );
+}
+
+function RealWorldNumberGroup({ count, label, emoji }: { count: number; label: string; emoji: string }) {
+  return (
+    <div className="rounded-3xl border-2 border-white bg-white p-3 text-center shadow-[0_4px_0_rgba(0,0,0,.08)]">
+      <ObjectGroup count={count} emoji={emoji} />
+      <p className="mt-2 text-4xl font-black text-blue-950" style={NUMBER_TEXT_STYLE}>{label}</p>
+    </div>
+  );
+}
+
+function RealWorldStoryCard({ story, clue, note, children }: { lang: Lang; story: string; clue: string; note: string; children: React.ReactNode }) {
+  const parts = story.split(clue);
+  return (
+    <div className="space-y-3 rounded-[2rem] border-2 border-white bg-white p-4 shadow-[0_5px_0_rgba(0,0,0,.10)]">
+      <p className="text-xl font-black leading-snug text-blue-950">
+        {parts[0]}
+        <span className="rounded-xl bg-yellow-200 px-2 py-1 text-yellow-950">{clue}</span>
+        {parts[1]}
+      </p>
+      {children}
+      <p className="rounded-2xl bg-emerald-50 p-3 text-center text-lg font-black text-emerald-800">{note}</p>
+    </div>
+  );
+}
+
+function RealWorldStepGrid({ steps }: { steps: Array<{ label: string; value: string }> }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-4">
+      {steps.map((step) => (
+        <div key={`${step.label}-${step.value}`} className="rounded-2xl border-2 border-white bg-white p-3 text-center shadow-[0_3px_0_rgba(0,0,0,.08)]">
+          <p className="text-sm font-black uppercase text-slate-500">{step.label}</p>
+          <p className="mt-1 text-2xl font-black text-blue-950">{step.value}</p>
+        </div>
+      ))}
+    </div>
   );
 }
 
