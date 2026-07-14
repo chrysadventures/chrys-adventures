@@ -1898,10 +1898,7 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             text={lang === "en" ? "Addition puts groups together." : "Tambah gabungkan kumpulan."}
             onNext={() => setPhase("addSign")}
             t={t}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
-              { label: skipSubtractionLabel(lang), onClick: skipToSubtraction },
-            ]}
+            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: skipToCurrentPractice }}
           />
         )}
         {phase === "addSign" && (
@@ -1911,10 +1908,6 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             text={lang === "en" ? "The + sign means we add more." : "Tanda + bermaksud kita tambah lagi."}
             onNext={() => setPhase("addStory")}
             t={t}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
-              { label: skipSubtractionLabel(lang), onClick: skipToSubtraction },
-            ]}
           />
         )}
         {phase === "addStory" && (
@@ -1923,10 +1916,6 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             t={t}
             onPrev={() => setPhase("addSign")}
             onDone={() => setPhase("addPractice")}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
-              { label: skipSubtractionLabel(lang), onClick: skipToSubtraction },
-            ]}
           />
         )}
         {phase === "subIntro" && (
@@ -1935,9 +1924,7 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             text={lang === "en" ? "Subtraction takes away from one group." : "Tolak ambil daripada satu kumpulan."}
             onNext={() => setPhase("subSign")}
             t={t}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
-            ]}
+            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: skipToCurrentPractice }}
           />
         )}
         {phase === "subSign" && (
@@ -1947,9 +1934,6 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             text={lang === "en" ? "The - sign means take away." : "Tanda - bermaksud ambil."}
             onNext={() => setPhase("subStory")}
             t={t}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
-            ]}
           />
         )}
         {phase === "subStory" && (
@@ -1958,9 +1942,6 @@ function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
             t={t}
             onPrev={() => setPhase("subSign")}
             onDone={() => setPhase("subPractice")}
-            actions={[
-              { label: skipPracticeLabel(lang), onClick: skipToCurrentPractice, variant: "green" },
-            ]}
           />
         )}
       </LessonShell>
