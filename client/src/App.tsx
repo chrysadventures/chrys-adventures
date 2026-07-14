@@ -1518,16 +1518,6 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
       text: lang === "en" ? "Choose a tile for the empty space." : "Pilih jubin untuk ruang kosong.",
       visual: <MissingNumberPlacementActivity lang={lang} />,
     },
-    {
-      title: lang === "en" ? "Greater than" : "Lebih besar",
-      text: lang === "en" ? "5 is more. 2 is less." : "5 lebih banyak. 2 lebih sedikit.",
-      visual: <CompareTeachingVisual a={5} b={2} symbol=">" lang={lang} />,
-    },
-    {
-      title: lang === "en" ? "Less than" : "Lebih kecil",
-      text: lang === "en" ? "2 is less. 5 is more." : "2 lebih sedikit. 5 lebih banyak.",
-      visual: <CompareTeachingVisual a={2} b={5} symbol="<" lang={lang} />,
-    },
   ];
   const current = slides[step];
 
@@ -3681,31 +3671,6 @@ function SequencingExample({ nums, arrow }: { nums: number[]; arrow: "left" | "r
             <span className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-2xl font-black text-blue-950">{n}</span>
           </React.Fragment>
         ))}
-      </div>
-    </div>
-  );
-}
-
-function CompareTeachingVisual({ a, b, symbol, lang }: { a: number; b: number; symbol: ">" | "<"; lang: Lang }) {
-  const bigger = Math.max(a, b);
-  const smaller = Math.min(a, b);
-  return (
-    <div className="space-y-4">
-      <NumberLine marked={Math.max(a, b)} />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <LabeledGroup count={a} label={String(a)} emoji="🍌" />
-        <LabeledGroup count={b} label={String(b)} emoji="🍌" />
-      </div>
-      <div className="rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
-        <p className="text-6xl font-black text-blue-950">{a} {symbol} {b}</p>
-        <p className="mt-2 text-lg font-black text-slate-700">
-          {lang === "en"
-            ? `${bigger} is more. ${smaller} is less.`
-            : `${bigger} lebih banyak. ${smaller} lebih sedikit.`}
-        </p>
-        <p className="mt-1 text-sm font-black text-slate-500">
-          {lang === "en" ? `${symbol} means ${symbol === ">" ? "greater than" : "less than"}.` : `${symbol} ialah ${symbol === ">" ? "lebih besar" : "lebih kecil"}.`}
-        </p>
       </div>
     </div>
   );
