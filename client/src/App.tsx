@@ -1901,6 +1901,17 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
     <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
       <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>
       {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} />}
+      {counted && (
+        <div
+          className="mx-auto mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-blue-200 bg-blue-50 px-4 py-2 text-blue-950 shadow-[0_4px_0_rgba(30,64,175,.14)]"
+          aria-label={lang === "en" ? `Total ${count}` : `Jumlah ${count}`}
+        >
+          <span className="text-sm font-black uppercase tracking-wide text-blue-700">{lang === "en" ? "Total" : "Jumlah"}</span>
+          <span className="grid h-10 min-w-10 place-items-center rounded-full bg-white px-3 text-2xl font-black text-blue-950">
+            {count}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
