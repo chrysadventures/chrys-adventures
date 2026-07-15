@@ -1657,6 +1657,12 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
     else setGroupA((count) => Math.max(0, count - 1));
   };
 
+  const retryGroup = () => {
+    setChecked(false);
+    if (activity.kind === "makeTwo" && step === 2) setGroupB(0);
+    else setGroupA(0);
+  };
+
   const checkGroup = () => {
     setChecked(true);
     if (correct) setStep((current) => Math.min(maxStep, current + 1));
@@ -1731,6 +1737,15 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
                   {correct ? (lang === "en" ? "Great job." : "Bagus.") : (lang === "en" ? "Good try. Let's count again." : "Cubaan baik. Mari kira lagi.")}
                 </p>
                 <CountedObjectRow count={activeCount} emoji={activity.emoji} showCount compact speakCount lang={lang} />
+                {!correct && (
+                  <button
+                    type="button"
+                    onClick={retryGroup}
+                    className="mt-4 rounded-2xl border-2 border-orange-300 bg-white px-6 py-3 font-black text-orange-700 shadow-[0_5px_0_rgba(194,65,12,.18)] active:translate-y-1"
+                  >
+                    {lang === "en" ? "Try again" : "Cuba lagi"}
+                  </button>
+                )}
               </div>
             )}
           </div>
