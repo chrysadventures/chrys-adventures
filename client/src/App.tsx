@@ -127,6 +127,7 @@ const OBJECT_SPRITES: Record<string, string> = {
 
 let activeNumberAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
+const numberAudioCache = new Map<number, HTMLAudioElement>();
 
 function cleanDisplayText(value: string) {
   return value;
@@ -749,6 +750,7 @@ function App() {
   const [lastScore, setLastScore] = useState<{ correct: number; total: number } | null>(null);
 
   useEffect(() => saveState(player, lang), [player, lang]);
+  useEffect(() => preloadNumberAudioFiles(), []);
 
   const t = UI[lang];
   const go = (next: Screen) => {
@@ -3051,6 +3053,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
   const isGroupChoiceQuestion = qn.visual.kind === "groupChoices";
+  const activePanelHasOwnCorrection = qn.inputMode === "tapObjects" || qn.inputMode === "takeAway";
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
 
@@ -3190,7 +3193,13 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               })}
             </div>
           )}
-          {answered && (
+          {answered && activePanelHasOwnCorrection ? (
+            <div className="mt-5 flex gap-3">
+              <button onClick={next} className="flex-[2] rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
+                {index === randomizedQuestions.length - 1 ? t.finish : t.nextQuestion}
+              </button>
+            </div>
+          ) : answered && (
             <div className="mt-5 rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4">
               <div className="mb-3 flex items-center gap-3">
                 <img src={isCorrect ? chrysExcited : chrysThinking} alt="Chrys feedback" className="h-20 w-20 object-contain" />
@@ -3342,14 +3351,15 @@ function ActiveAnswerPanel({
     };
     const selectionOrder = (objectIndex: number) => selectedObjects.indexOf(objectIndex) + 1;
     const checkSelection = () => onAnswer(selectedObjects.length);
+    const instruction = question.visual.kind === "audioNumber"
+      ? (lang === "en" ? "Tap the objects you hear. Then press Check." : "Tekan objek yang kamu dengar. Kemudian tekan Semak.")
+      : answer === 0
+        ? (lang === "en" ? "Select none. Then press Check." : "Pilih tiada. Kemudian tekan Semak.")
+        : (lang === "en" ? `Tap ${answer} objects.` : `Tekan ${answer} objek.`);
 
     return (
       <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
-        <p className="mb-3 text-lg font-black text-slate-700">
-          {answer === 0
-            ? (lang === "en" ? "Select none. Then press Check." : "Pilih tiada. Kemudian tekan Semak.")
-            : (lang === "en" ? `Tap ${answer} objects.` : `Tekan ${answer} objek.`)}
-        </p>
+        <p className="mb-3 text-lg font-black text-slate-700">{instruction}</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
           {Array.from({ length: 9 }, (_, objectIndex) => {
             const selectedHere = selectedObjects.includes(objectIndex);
@@ -4679,20 +4689,23 @@ function speakNumber(value: number, lang: Lang) {
   });
 }
 
-function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = COUNTING_STEP_MS) {
+async function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = COUNTING_STEP_MS) {
   if (count <= 0) return;
   stopNumberAudio();
   const runId = audioRunId;
   const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
-  Array.from({ length: Math.min(count, 10) }, (_, index) => {
-    window.setTimeout(() => {
-      if (runId !== audioRunId) return;
-      const value = index + 1;
-      playNumberFile(value, runId).then((played) => {
-        if (!played && runId === audioRunId) speakNumberWithTts(value, lang);
-      });
-    }, index * stepMs);
-  });
+  for (let value = 1; value <= Math.min(count, 10); value += 1) {
+    if (runId !== audioRunId) return;
+    const startedAt = performance.now();
+    const played = await playNumberFile(value, runId);
+    if (!played && runId === audioRunId) {
+      speakNumberWithTts(value, lang);
+      await wait(Math.min(stepMs, 900));
+    }
+    if (runId !== audioRunId) return;
+    const elapsed = performance.now() - startedAt;
+    await wait(Math.max(180, stepMs - elapsed));
+  }
 }
 
 function stopNumberAudio() {
@@ -4707,23 +4720,43 @@ function playNumberFile(value: number, runId: number) {
   if (!file) return Promise.resolve(false);
   return new Promise<boolean>((resolve) => {
     activeNumberAudio?.pause();
-    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
+    const audio = getNumberAudio(value);
     let settled = false;
+    let timeoutId: number | null = null;
     const finish = (played: boolean) => {
       if (settled) return;
       settled = true;
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
       if (activeNumberAudio === audio) activeNumberAudio = null;
       resolve(played);
     };
     activeNumberAudio = audio;
+    audio.pause();
+    audio.currentTime = 0;
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
-    window.setTimeout(() => finish(true), 1600);
+    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 2600);
     audio.play().catch(() => finish(false));
     if (runId !== audioRunId) {
       audio.pause();
       finish(false);
     }
+  });
+}
+
+function getNumberAudio(value: number) {
+  const cached = numberAudioCache.get(value);
+  if (cached) return cached;
+  const file = NUMBER_AUDIO_FILES[value];
+  const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
+  audio.preload = "auto";
+  numberAudioCache.set(value, audio);
+  return audio;
+}
+
+function preloadNumberAudioFiles() {
+  Object.keys(NUMBER_AUDIO_FILES).forEach((value) => {
+    getNumberAudio(Number(value)).load();
   });
 }
 
