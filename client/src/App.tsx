@@ -1422,6 +1422,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
 }
 
 function getAlternateValueEmoji(emoji: string) {
+  const symbol = cleanDisplayText(emoji);
   if (symbol === "🍃") return "🍌";
   if (symbol === "🥥") return "📘";
   if (symbol === "🍄") return "🍌";
@@ -1609,6 +1610,14 @@ const GROUPING_LESSON_STEPS: NewGroupingActivity[] = [
   { kind: "combine", a: 3, b: 3, emoji: "🍌" },
   { kind: "combine", a: 3, b: 4, emoji: "🍌" },
   { kind: "combine", a: 4, b: 5, emoji: "🍌" },
+];
+
+const fullGroupingPracticeQuestions: Question[] = [
+  q("group-practice-make-2", "numbers", { en: "Make a group of 2.", ms: "Bina kumpulan 2." }, [], 2, { kind: "groupMake", emoji: "🍌", count: 2 }, "makeGroup"),
+  q("group-practice-make-4", "numbers", { en: "Make a group of 4.", ms: "Bina kumpulan 4." }, [], 4, { kind: "groupMake", emoji: "🍌", count: 4 }, "makeGroup"),
+  q("group-practice-2-3", "numbers", { en: "Which total is 2 and 3 together?", ms: "Berapakah jumlah 2 dan 3 bersama?" }, [4, 5, 6], 5, { kind: "groupCombine", emoji: "🍌", a: 2, b: 3 }),
+  q("group-practice-3-4", "numbers", { en: "Which total is 3 and 4 together?", ms: "Berapakah jumlah 3 dan 4 bersama?" }, [6, 7, 8], 7, { kind: "groupCombine", emoji: "🍌", a: 3, b: 4 }),
+  q("group-practice-more", "numbers", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group 1", "Group 2"], "Group 2", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
 ];
 
 function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
@@ -3052,7 +3061,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCorrect = selected === qn.answer;
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
-  const isGroupChoiceQuestion = qn.visual.kind === "groupChoices";
+  const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
   const activePanelHasOwnCorrection = qn.inputMode === "tapObjects" || qn.inputMode === "takeAway";
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
@@ -3117,14 +3126,14 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
             </div>
           )}
           <h2 className="text-center text-2xl font-black text-slate-900">{qn.text[lang]}</h2>
-          {!isGroupChoiceQuestion && (
+          {!groupChoiceVisual && (
             <div className="my-4 rounded-3xl border-2 border-sky-100 bg-sky-50 p-3">
               <VisualDisplay visual={qn.visual} lang={lang} revealNumbers={answered && !isCorrect} />
             </div>
           )}
-          {isGroupChoiceQuestion ? (
+          {groupChoiceVisual ? (
             <GroupChoiceAnswerPanel
-              visual={qn.visual}
+              visual={groupChoiceVisual}
               lang={lang}
               selected={selected}
               answered={answered}
