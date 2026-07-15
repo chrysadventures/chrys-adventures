@@ -1901,17 +1901,21 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
     <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
       <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>
       {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} />}
-      {counted && (
-        <div
-          className="mx-auto mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-blue-200 bg-blue-50 px-4 py-2 text-blue-950 shadow-[0_4px_0_rgba(30,64,175,.14)]"
-          aria-label={lang === "en" ? `Total ${count}` : `Jumlah ${count}`}
-        >
-          <span className="text-sm font-black uppercase tracking-wide text-blue-700">{lang === "en" ? "Total" : "Jumlah"}</span>
-          <span className="grid h-10 min-w-10 place-items-center rounded-full bg-white px-3 text-2xl font-black text-blue-950">
-            {count}
-          </span>
-        </div>
-      )}
+      {counted && <CountTotalBadge count={count} lang={lang} />}
+    </div>
+  );
+}
+
+function CountTotalBadge({ count, lang }: { count: number; lang: Lang }) {
+  return (
+    <div
+      className="mx-auto mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-blue-200 bg-blue-50 px-4 py-2 text-blue-950 shadow-[0_4px_0_rgba(30,64,175,.14)]"
+      aria-label={lang === "en" ? `Total ${count}` : `Jumlah ${count}`}
+    >
+      <span className="text-sm font-black uppercase tracking-wide text-blue-700">{lang === "en" ? "Total" : "Jumlah"}</span>
+      <span className="grid h-10 min-w-10 place-items-center rounded-full bg-white px-3 text-2xl font-black text-blue-950">
+        {count}
+      </span>
     </div>
   );
 }
@@ -3440,13 +3444,19 @@ function ActiveAnswerPanel({
         {answered && (
           <div className="mt-4 space-y-3">
             <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
-            {chosenCount > 0 && <CountedObjectRow count={chosenCount} emoji={emoji} showCount compact speakCount lang={lang} />}
+            <div>
+              {chosenCount > 0 && <CountedObjectRow count={chosenCount} emoji={emoji} showCount compact speakCount lang={lang} />}
+              <CountTotalBadge count={chosenCount} lang={lang} />
+            </div>
             {!isCorrect && (
               <div className="space-y-3 rounded-3xl border-2 border-blue-100 bg-blue-50 p-3">
                 <p className="font-black text-blue-900">
                   {lang === "en" ? `The model has ${answer}.` : `Contoh ada ${answer}.`}
                 </p>
-                {answer > 0 ? <CountedObjectRow count={answer} emoji={emoji} showCount compact lang={lang} /> : <ObjectGroup count={0} emoji={emoji} numbered />}
+                <div>
+                  {answer > 0 ? <CountedObjectRow count={answer} emoji={emoji} showCount compact lang={lang} /> : <ObjectGroup count={0} emoji={emoji} numbered />}
+                  <CountTotalBadge count={answer} lang={lang} />
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -3479,6 +3489,7 @@ function ActiveAnswerPanel({
             : `Mula dengan ${startCount}. Buang ${takeAwayTarget}.`}
         </p>
         <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} compact lang={lang} />
+        {answered && <CountTotalBadge count={selectedNumber} lang={lang} />}
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <button
             disabled={answered || removedCount <= 0}
@@ -3513,7 +3524,10 @@ function ActiveAnswerPanel({
                     ? `Take away ${takeAwayTarget}. ${answer} are left.`
                     : `Buang ${takeAwayTarget}. Tinggal ${answer}.`}
                 </p>
-                <CountedObjectRow count={startCount} emoji={emoji} crossed={takeAwayTarget} showCount countRemainingOnly showCrossCount compact lang={lang} />
+                <div>
+                  <CountedObjectRow count={startCount} emoji={emoji} crossed={takeAwayTarget} showCount countRemainingOnly showCrossCount compact lang={lang} />
+                  <CountTotalBadge count={answer} lang={lang} />
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -3540,6 +3554,7 @@ function ActiveAnswerPanel({
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
       <p className="mb-3 text-lg font-black text-slate-700">{instruction}</p>
       <ObjectGroup count={shownCount} emoji={emoji} numbered={answered} />
+      {answered && <CountTotalBadge count={shownCount} lang={lang} />}
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <button
           disabled={answered || builtCount <= 0}
@@ -4631,6 +4646,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
     return (
       <div className="space-y-3">
         <CountedObjectRow count={visual.count} emoji={emoji} showCount speakCount lang={lang} />
+        <CountTotalBadge count={visual.count} lang={lang} />
         <p className="text-center text-lg font-black text-emerald-800">
           {lang === "en" ? `This is ${visual.count}.` : `Ini ${visual.count}.`}
         </p>
@@ -4664,6 +4680,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
         </div>
         <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Join the groups. Count all." : "Gabungkan kumpulan. Kira semua."}</p>
         <CountedObjectRow count={visual.a + visual.b} emoji={emoji} showCount speakCount lang={lang} />
+        <CountTotalBadge count={visual.a + visual.b} lang={lang} />
         <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
           {visual.a} + {visual.b} = {visual.a + visual.b}
         </div>
