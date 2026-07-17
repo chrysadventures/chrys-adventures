@@ -79,6 +79,8 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",
 };
 const COUNTING_STEP_MS = 1100;
+const ADDITION_BANANA_TRAVEL_MS = 1200;
+const ADDITION_BANANA_STAGGER_MS = 1450;
 const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
 const WORDS: Record<Lang, string[]> = {
   en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
@@ -2335,6 +2337,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   actions?: LessonAction[];
 }) {
   const [step, setStep] = useState(0);
+  const bellyCounterRef = useRef<HTMLDivElement>(null);
   const totalSteps = 8;
   const storyText = lang === "en"
     ? [
@@ -2386,7 +2389,14 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
               <div className="min-h-40 rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
                 {showFirst && <StoryBananaGroup count={2} eating={eatFirst} label={lang === "en" ? "2 bananas" : "2 pisang"} />}
-                {showSecond && <StoryBananaGroup count={3} eating={eatSecond} label={lang === "en" ? "3 more bananas" : "3 pisang lagi"} />}
+                {showSecond && (
+                  <StoryBananaGroup
+                    count={3}
+                    eating={eatSecond}
+                    label={lang === "en" ? "3 more bananas" : "3 pisang lagi"}
+                    destinationRef={bellyCounterRef}
+                  />
+                )}
                 {step >= 4 && (
                   <div className="grid h-full min-h-32 place-items-center rounded-3xl bg-emerald-50 text-center">
                     <ObjectGroup count={5} emoji="🍌" numbered />
@@ -2405,6 +2415,8 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
 
               {bellyTarget > 0 && (
                 <BellyCounter
+                  ref={bellyCounterRef}
+                  start={eatSecond ? 2 : bellyTarget}
                   target={bellyTarget}
                   counting={eatSecond}
                   label={lang === "en" ? "belly counter" : "kira dalam perut"}
@@ -2521,15 +2533,62 @@ function ZeroAdditionBeat({ lang }: { lang: Lang }) {
   );
 }
 
-function StoryBananaGroup({ count, eating, label }: { count: number; eating: boolean; label: string }) {
+function StoryBananaGroup({ count, eating, label, destinationRef }: {
+  count: number;
+  eating: boolean;
+  label: string;
+  destinationRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  const bananaRefs = useRef<Array<HTMLSpanElement | null>>([]);
+
+  useEffect(() => {
+    const bananas = bananaRefs.current.slice(0, count);
+    bananas.forEach((banana) => {
+      banana?.getAnimations().forEach((animation) => animation.cancel());
+      if (banana) {
+        banana.style.opacity = "";
+        banana.style.transform = "";
+      }
+    });
+
+    if (!eating || !destinationRef?.current) return;
+
+    if (getReducedMotionPreference()) {
+      bananas.forEach((banana) => {
+        if (banana) banana.style.opacity = "0";
+      });
+      return;
+    }
+
+    const destination = destinationRef.current.getBoundingClientRect();
+    const animations = bananas.flatMap((banana, index) => {
+      if (!banana) return [];
+      const source = banana.getBoundingClientRect();
+      const x = destination.left + destination.width / 2 - (source.left + source.width / 2);
+      const y = destination.top + destination.height / 2 - (source.top + source.height / 2);
+      return [banana.animate([
+        { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
+        { offset: 0.62, transform: `translate3d(${x * 0.62}px, ${y * 0.62 - 28}px, 0) scale(.78)`, opacity: 1 },
+        { transform: `translate3d(${x}px, ${y}px, 0) scale(.3)`, opacity: 0 },
+      ], {
+        duration: ADDITION_BANANA_TRAVEL_MS,
+        delay: index * ADDITION_BANANA_STAGGER_MS,
+        easing: "cubic-bezier(.22,.72,.24,1)",
+        fill: "forwards",
+      })];
+    });
+
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [count, destinationRef, eating]);
+
   return (
     <div className="flex h-full min-h-32 flex-col items-center justify-center gap-3">
       <div className="flex flex-wrap justify-center gap-3">
         {Array.from({ length: count }, (_, i) => (
           <span
             key={i}
-            className={`grid h-16 w-16 place-items-center rounded-2xl bg-white text-4xl shadow-inner transition-all duration-1000 ${eating ? "translate-x-24 -translate-y-4 scale-50 opacity-0" : "translate-x-0 opacity-100"}`}
-            style={{ transitionDelay: `${i * 220}ms` }}
+            ref={(node) => { bananaRefs.current[i] = node; }}
+            className={`relative z-10 grid h-16 w-16 place-items-center rounded-2xl bg-white text-4xl shadow-inner ${eating && !destinationRef ? "translate-x-24 -translate-y-4 scale-50 opacity-0 transition-all duration-1000" : "opacity-100"}`}
           >
             <SpriteIcon value={String.fromCodePoint(0x1f34c)} className="h-12 w-12" />
           </span>
@@ -2540,8 +2599,15 @@ function StoryBananaGroup({ count, eating, label }: { count: number; eating: boo
   );
 }
 
-function BellyCounter({ target, counting, label, unit, lang }: { target: number; counting: boolean; label: string; unit: string; lang: Lang }) {
-  const [visible, setVisible] = useState(target);
+const BellyCounter = React.forwardRef<HTMLDivElement, {
+  start: number;
+  target: number;
+  counting: boolean;
+  label: string;
+  unit: string;
+  lang: Lang;
+}>(function BellyCounter({ start, target, counting, label, unit, lang }, ref) {
+  const [visible, setVisible] = useState(counting ? start : target);
 
   useEffect(() => {
     if (target === 0) {
@@ -2552,14 +2618,27 @@ function BellyCounter({ target, counting, label, unit, lang }: { target: number;
       setVisible(target);
       return;
     }
-    setVisible(0);
-    speakCountingSequence(target, lang);
-    const timers = Array.from({ length: target }, (_, i) => window.setTimeout(() => setVisible(i + 1), COUNTING_STEP_MS * (i + 1)));
-    return () => timers.forEach(window.clearTimeout);
-  }, [counting, target]);
+    if (getReducedMotionPreference()) {
+      setVisible(target);
+      return;
+    }
+
+    setVisible(start);
+    const additions = Math.max(0, target - start);
+    const timers = Array.from({ length: additions }, (_, index) => window.setTimeout(() => {
+      const nextValue = start + index + 1;
+      setVisible(nextValue);
+      speakNumber(nextValue, lang);
+    }, ADDITION_BANANA_TRAVEL_MS + index * ADDITION_BANANA_STAGGER_MS));
+
+    return () => {
+      timers.forEach(window.clearTimeout);
+      stopNumberAudio();
+    };
+  }, [counting, lang, start, target]);
 
   return (
-    <div className="mx-auto flex min-h-40 w-full max-w-52 flex-col items-center justify-center rounded-[2rem] border-4 border-pink-200 bg-pink-50 p-4 text-center shadow-inner">
+    <div ref={ref} className="mx-auto flex min-h-40 w-full max-w-52 flex-col items-center justify-center rounded-[2rem] border-4 border-pink-200 bg-pink-50 p-4 text-center shadow-inner">
       <p className="text-sm font-black uppercase text-pink-700">{label}</p>
       <div className="my-3 grid h-24 w-24 place-items-center rounded-full border-4 border-pink-300 bg-white">
         <span className="text-4xl font-black text-pink-700">{visible}</span>
@@ -2574,7 +2653,7 @@ function BellyCounter({ target, counting, label, unit, lang }: { target: number;
       </div>
     </div>
   );
-}
+});
 
 function SymbolIntro({ title, symbol, text, onPrevious, onNext, onSkip, t, lang }: {
   title: string;
