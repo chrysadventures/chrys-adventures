@@ -127,7 +127,18 @@ const OBJECT_SPRITES: Record<string, string> = {
 
 let activeNumberAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
+let audioMuted = false;
+let audioUserInteracted = false;
 const numberAudioCache = new Map<number, HTMLAudioElement>();
+
+function markAudioInteraction() {
+  audioUserInteracted = true;
+}
+
+function setGlobalAudioMuted(muted: boolean) {
+  audioMuted = muted;
+  if (muted) stopNumberAudio();
+}
 
 function cleanDisplayText(value: string) {
   return value;
@@ -729,34 +740,49 @@ function usePrefersReducedMotion() {
   return prefersReducedMotion;
 }
 
-function loadState(): { player: Player | null; lang: Lang } {
+function getReducedMotionPreference() {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function loadState(): { player: Player | null; lang: Lang; soundEnabled: boolean } {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
-    return { player: parsed.player ?? null, lang: parsed.lang === "ms" ? "ms" : "en" };
+    return { player: parsed.player ?? null, lang: parsed.lang === "ms" ? "ms" : "en", soundEnabled: parsed.soundEnabled !== false };
   } catch {
-    return { player: null, lang: "en" };
+    return { player: null, lang: "en", soundEnabled: true };
   }
 }
 
-function saveState(player: Player | null, lang: Lang) {
-  localStorage.setItem(STORE_KEY, JSON.stringify({ player, lang }));
+function saveState(player: Player | null, lang: Lang, soundEnabled: boolean) {
+  localStorage.setItem(STORE_KEY, JSON.stringify({ player, lang, soundEnabled }));
 }
 
 function App() {
   const initial = useMemo(() => loadState(), []);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [lang, setLang] = useState<Lang>(initial.lang);
   const [player, setPlayer] = useState<Player | null>(initial.player);
   const [screen, setScreen] = useState<Screen>(initial.player ? "menu" : "home");
-  const [lastScore, setLastScore] = useState<{ correct: number; total: number } | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
+  const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
 
-  useEffect(() => saveState(player, lang), [player, lang]);
+  useEffect(() => saveState(player, lang, soundEnabled), [player, lang, soundEnabled]);
+  useEffect(() => setGlobalAudioMuted(!soundEnabled), [soundEnabled]);
   useEffect(() => preloadNumberAudioFiles(), []);
 
   const t = UI[lang];
   const go = (next: Screen) => {
     setLastScore(null);
     setScreen(next);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+  };
+
+  const finishTest = (key: string, correct: number, total: number) => {
+    const mastered = correct >= Math.ceil(total * 0.7);
+    setLastScore({ correct, total, mastered });
+    awardStar(key, mastered ? 1 : 0);
+    setScreen("testMenu");
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
   const awardStar = (key: string, amount = 1) => {
@@ -769,7 +795,12 @@ function App() {
   };
 
   return (
-    <div className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden" style={APP_BACKGROUND_STYLE}>
+    <div
+      className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden"
+      style={APP_BACKGROUND_STYLE}
+      onPointerDownCapture={markAudioInteraction}
+      onKeyDownCapture={markAudioInteraction}
+    >
       <Decor />
       <div className="jungle-leaves relative z-10 min-h-[100dvh] mx-auto flex w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <Header
@@ -778,6 +809,8 @@ function App() {
           title={screen === "home" ? "" : t.title}
           stars={player?.stars ?? 0}
           t={t}
+          soundEnabled={soundEnabled}
+          onToggleSound={() => setSoundEnabled((current) => !current)}
           onBack={screen === "home" ? undefined : () => go(screen.startsWith("test") && screen !== "testMenu" ? "testMenu" : screen === "menu" ? "home" : "menu")}
         />
 
@@ -812,19 +845,24 @@ function App() {
           <TestMenu t={t} go={go} />
         )}
         {screen === "testNumbers" && (
-          <Quiz lang={lang} t={t} title={t.learnNumbers} questions={numberQuestions} onFinish={(correct, total) => { setLastScore({ correct, total }); awardStar("testNumbers", correct >= Math.ceil(total * 0.7) ? 1 : 0); go("testMenu"); }} />
+          <Quiz lang={lang} t={t} title={t.learnNumbers} questions={numberQuestions} chunkSize={6} onFinish={(correct, total) => finishTest("testNumbers", correct, total)} />
         )}
         {screen === "testOperations" && (
-          <Quiz lang={lang} t={t} title={t.learnOperations} questions={operationQuestions} onFinish={(correct, total) => { setLastScore({ correct, total }); awardStar("testOperations", correct >= Math.ceil(total * 0.7) ? 1 : 0); go("testMenu"); }} />
+          <Quiz lang={lang} t={t} title={t.learnOperations} questions={operationQuestions} chunkSize={6} onFinish={(correct, total) => finishTest("testOperations", correct, total)} />
         )}
         {screen === "testReal" && (
-          <Quiz lang={lang} t={t} title={t.learnReal} questions={realTestQuestions} onFinish={(correct, total) => { setLastScore({ correct, total }); awardStar("testReal", correct >= Math.ceil(total * 0.7) ? 1 : 0); go("testMenu"); }} />
+          <Quiz lang={lang} t={t} title={t.learnReal} questions={realTestQuestions} chunkSize={6} onFinish={(correct, total) => finishTest("testReal", correct, total)} />
         )}
 
         {lastScore && screen === "testMenu" && (
           <div className="mx-auto mt-4 w-full max-w-xl rounded-3xl border-2 border-white/80 bg-white/90 p-4 text-center shadow-[0_6px_0_rgba(0,0,0,.14)]">
-            <p className="text-lg font-black text-blue-900">{t.score}: {lastScore.correct}/{lastScore.total}</p>
-            <p className="text-sm font-bold text-slate-500">{lang === "en" ? "Review the method, then try again whenever you like." : "Semak cara, kemudian cuba lagi bila-bila masa."}</p>
+            <p className="text-xl font-black text-emerald-800">{lang === "en" ? "You finished the test. Nice work!" : "Kamu sudah habis ujian. Bagus!"}</p>
+            <p className="mt-1 text-lg font-black text-blue-900">{t.score}: {lastScore.correct}/{lastScore.total}</p>
+            <p className="text-sm font-bold text-slate-500">
+              {lastScore.mastered
+                ? (lang === "en" ? "You earned a star for mastery." : "Kamu dapat bintang untuk penguasaan.")
+                : (lang === "en" ? "You completed it. Keep practicing with Chrys." : "Kamu sudah lengkapkan. Terus berlatih dengan Chrys.")}
+            </p>
           </div>
         )}
       </div>
@@ -832,12 +870,14 @@ function App() {
   );
 }
 
-function Header({ lang, onToggleLang, title, stars, t, onBack }: {
+function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSound, onBack }: {
   lang: Lang;
   onToggleLang: () => void;
   title: string;
   stars: number;
   t: UIStrings;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
   onBack?: () => void;
 }) {
   return (
@@ -851,6 +891,18 @@ function Header({ lang, onToggleLang, title, stars, t, onBack }: {
         <h1 className="hidden truncate text-xl font-black leading-tight text-blue-950 sm:block md:text-2xl">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onToggleSound}
+          aria-pressed={soundEnabled}
+          aria-label={soundEnabled ? (lang === "en" ? "Sound is on" : "Bunyi dibuka") : (lang === "en" ? "Sound is off" : "Bunyi ditutup")}
+          className={`flex items-center gap-1 rounded-2xl border-2 px-3 py-2 text-sm font-black shadow-[0_4px_0_rgba(0,0,0,.12)] ${
+            soundEnabled ? "border-blue-200 bg-white/90 text-blue-800" : "border-slate-200 bg-slate-100 text-slate-500"
+          }`}
+        >
+          <SpeakerIcon />
+          <span>{soundEnabled ? (lang === "en" ? "Sound" : "Bunyi") : (lang === "en" ? "Muted" : "Senyap")}</span>
+        </button>
         <button onClick={onToggleLang} className="rounded-2xl border-2 border-white/80 bg-white/90 px-3 py-2 text-sm font-black text-blue-800 shadow-[0_4px_0_rgba(0,0,0,.12)]">
           {lang === "en" ? "BM" : "EN"}
         </button>
@@ -984,10 +1036,6 @@ function skipPracticeLabel(lang: Lang) {
 
 function skipNextNumberLabel(lang: Lang) {
   return lang === "en" ? "Skip to next number" : "Langkau ke nombor seterusnya";
-}
-
-function skipSubtractionLabel(lang: Lang) {
-  return lang === "en" ? "Skip to subtraction" : "Langkau ke tolak";
 }
 
 function alreadyKnowPracticeLabel(lang: Lang) {
@@ -1928,107 +1976,6 @@ function GroupingAnswerLine({ text }: { text: string }) {
   );
 }
 
-function OperationsLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [phase, setPhase] = useState<"addIntro" | "addSign" | "addStory" | "addPractice" | "subIntro" | "subSign" | "subStory" | "subPractice">("addIntro");
-  const skipToCurrentPractice = () => setPhase(phase.startsWith("add") ? "addPractice" : "subPractice");
-  const skipToSubtraction = () => setPhase("subIntro");
-
-  if (phase === "addPractice") {
-    return (
-      <Quiz
-        lang={lang}
-        t={t}
-        title={lang === "en" ? `${t.learnOperations}: Addition practice` : `${t.learnOperations}: Latihan tambah`}
-        questions={additionPracticeQuestions}
-        onFinish={() => setPhase("subIntro")}
-        extraAction={{ label: skipSubtractionLabel(lang), onClick: skipToSubtraction }}
-        onBackToLearning={() => setPhase("addIntro")}
-      />
-    );
-  }
-
-  if (phase === "subPractice") {
-    return (
-      <Quiz
-        lang={lang}
-        t={t}
-        title={lang === "en" ? `${t.learnOperations}: Subtraction practice` : `${t.learnOperations}: Latihan tolak`}
-        questions={subtractionPracticeQuestions}
-        onFinish={() => onDone()}
-        onBackToLearning={() => setPhase("subIntro")}
-      />
-    );
-  }
-
-  return (
-    <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell
-        title={t.learnOperations}
-        helper={phase.startsWith("add")
-          ? (lang === "en"
-            ? "Learn addition. Then try questions."
-            : "Mula-mula belajar tambah dengan Chrys, kemudian cuba soalan.")
-          : (lang === "en"
-            ? "Learn subtraction. Take away from one group."
-            : "Sekarang belajar tolak dengan mengambil daripada satu kumpulan.")}
-      >
-        {phase === "addIntro" && (
-          <AdditionIntroStep
-            title={lang === "en" ? "Addition" : "Tambah"}
-            text={lang === "en" ? "Addition puts groups together." : "Tambah gabungkan kumpulan."}
-            onNext={() => setPhase("addSign")}
-            t={t}
-            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: skipToCurrentPractice }}
-          />
-        )}
-        {phase === "addSign" && (
-          <SymbolIntro
-            title={lang === "en" ? "The plus sign" : "Tanda tambah"}
-            symbol="+"
-            text={lang === "en" ? "The + sign means we add more." : "Tanda + bermaksud kita tambah lagi."}
-            onNext={() => setPhase("addStory")}
-            t={t}
-          />
-        )}
-        {phase === "addStory" && (
-          <ChrysAdditionStory
-            lang={lang}
-            t={t}
-            onPrev={() => setPhase("addSign")}
-            onDone={() => setPhase("addPractice")}
-          />
-        )}
-        {phase === "subIntro" && (
-          <AdditionIntroStep
-            title={lang === "en" ? "Subtraction" : "Tolak"}
-            text={lang === "en" ? "Subtraction takes away from one group." : "Tolak ambil daripada satu kumpulan."}
-            onNext={() => setPhase("subSign")}
-            t={t}
-            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: skipToCurrentPractice }}
-          />
-        )}
-        {phase === "subSign" && (
-          <SymbolIntro
-            title={lang === "en" ? "The minus sign" : "Tanda tolak"}
-            symbol="-"
-            text={lang === "en" ? "The - sign means take away." : "Tanda - bermaksud ambil."}
-            onNext={() => setPhase("subStory")}
-            t={t}
-          />
-        )}
-        {phase === "subStory" && (
-          <ChrysSubtractionStory
-            lang={lang}
-            t={t}
-            onPrev={() => setPhase("subSign")}
-            onDone={() => setPhase("subPractice")}
-          />
-        )}
-      </LessonShell>
-    </main>
-  );
-}
-
 function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState<"intro" | "sign" | "story" | "practice">("intro");
 
@@ -2825,18 +2772,27 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
 
   useEffect(() => {
     if (phase !== "crossing") return;
+    if (prefersReducedMotion) {
+      setPhase("crossed");
+      return;
+    }
     const timer = window.setTimeout(() => setPhase("crossed"), Math.max(700, takeAway * intervalMs + 350));
     return () => window.clearTimeout(timer);
-  }, [intervalMs, phase, takeAway]);
+  }, [intervalMs, phase, prefersReducedMotion, takeAway]);
 
   useEffect(() => {
     if (phase !== "counting") return;
+    if (prefersReducedMotion) {
+      setPhase("done");
+      onComplete?.();
+      return;
+    }
     const timer = window.setTimeout(() => {
       setPhase("done");
       onComplete?.();
     }, Math.max(700, left * intervalMs + 350));
     return () => window.clearTimeout(timer);
-  }, [intervalMs, left, onComplete, phase]);
+  }, [intervalMs, left, onComplete, phase, prefersReducedMotion]);
 
   const instruction = getSubtractionFlowInstruction(lang, phase, start, takeAway, left);
   const actionLabel = phase === "start"
@@ -2984,76 +2940,6 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   );
 }
 
-function ConceptLesson({ lang, t, title, intro, note, questions, onDone, randomizePractice }: {
-  lang: Lang;
-  t: UIStrings;
-  title: string;
-  intro: string;
-  note: string;
-  questions: Question[];
-  onDone: () => void;
-  randomizePractice?: boolean;
-}) {
-  const examples = useMemo(() => shuffled(questions).slice(0, 3), [questions]);
-  const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState<"examples" | "practice">("examples");
-  const current = examples[index];
-
-  if (phase === "practice") {
-    return (
-      <Quiz
-        lang={lang}
-        t={t}
-        title={lang === "en" ? `${title}: Practice` : `${title}: Latihan`}
-        questions={questions}
-        randomize={randomizePractice ?? true}
-        onFinish={() => onDone()}
-        onBackToLearning={() => setPhase("examples")}
-      />
-    );
-  }
-
-  return (
-    <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={title} helper={intro}>
-        <div className="grid gap-4 md:grid-cols-[auto_1fr]">
-          <img src={chrysThinking} alt="Chrys teaching" className="mx-auto h-32 w-32 object-contain" />
-          <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
-            <p className="text-lg font-black text-blue-950">{note}</p>
-            <p className="mt-2 text-sm font-bold text-blue-800/70">{lang === "en" ? "Look. Count. Answer." : "Lihat. Kira. Jawab."}</p>
-          </div>
-        </div>
-        <div className="mt-5 rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_7px_0_rgba(0,0,0,.14)]">
-          <h3 className="mb-3 text-center text-xl font-black text-slate-900">{current.text[lang]}</h3>
-          <VisualDisplay visual={current.visual} lang={lang} />
-          <WorkedMethod q={current} lang={lang} />
-        </div>
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-          <button
-            disabled={index === 0}
-            onClick={() => setIndex((i) => Math.max(0, i - 1))}
-            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40"
-          >
-            {t.previous}
-          </button>
-          <div className="flex flex-1 flex-wrap justify-end gap-3">
-            <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPhase("practice")} variant="green" />
-          {index < examples.length - 1 ? (
-            <button onClick={() => setIndex((i) => i + 1)} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000]">
-              {t.next}
-            </button>
-          ) : (
-            <button onClick={() => setPhase("practice")} className="rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-8 py-3 font-black text-white shadow-[0_6px_0_#065f46]">
-              {t.practice}
-            </button>
-          )}
-          </div>
-        </div>
-      </LessonShell>
-    </main>
-  );
-}
-
 function TestMenu({ t, go }: { t: UIStrings; go: (screen: Screen) => void }) {
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
@@ -3071,7 +2957,7 @@ function TestMenu({ t, go }: { t: UIStrings; go: (screen: Screen) => void }) {
   );
 }
 
-function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = true, onBackToLearning }: {
+function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = true, onBackToLearning, chunkSize }: {
   lang: Lang;
   t: UIStrings;
   title: string;
@@ -3080,10 +2966,12 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   extraAction?: LessonAction;
   randomize?: boolean;
   onBackToLearning?: () => void;
+  chunkSize?: number;
 }) {
   const randomizedQuestions = useMemo(() => randomize ? shuffledQuestions(questions) : questions, [questions, randomize]);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number | string>>({});
+  const [showBreather, setShowBreather] = useState(false);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const qn = randomizedQuestions[index];
   const selected = answers[index] ?? null;
@@ -3098,7 +2986,13 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
 
   const next = () => {
     if (index === randomizedQuestions.length - 1) onFinish(correct, randomizedQuestions.length);
+    else if (chunkSize && (index + 1) % chunkSize === 0) setShowBreather(true);
     else setIndex((i) => i + 1);
+  };
+
+  const continueAfterBreather = () => {
+    setShowBreather(false);
+    setIndex((i) => Math.min(randomizedQuestions.length - 1, i + 1));
   };
 
   const focusOption = (nextIndex: number) => {
@@ -3124,6 +3018,32 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
       setAnswers((current) => ({ ...current, [index]: option }));
     }
   };
+
+  if (showBreather) {
+    return (
+      <main className="mx-auto w-full max-w-3xl pb-8">
+        <LessonShell title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length}`}>
+          <div className="rounded-[2rem] border-4 border-white bg-white p-6 text-center shadow-[0_8px_0_rgba(0,0,0,.16)]">
+            <img src={chrysExcited} alt="Chrys cheering" className="mx-auto h-32 w-32 object-contain" />
+            <h2 className="mt-2 text-3xl font-black text-emerald-800">{lang === "en" ? "Nice work!" : "Bagus!"}</h2>
+            <p className="mx-auto mt-2 max-w-md text-xl font-black text-blue-950">
+              {lang === "en" ? "Ready for more?" : "Sedia untuk lagi?"}
+            </p>
+            <p className="mt-1 text-sm font-bold text-slate-500">
+              {lang === "en" ? `You finished ${index + 1} questions.` : `Kamu sudah jawab ${index + 1} soalan.`}
+            </p>
+            <button
+              type="button"
+              onClick={continueAfterBreather}
+              className="mt-5 rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-8 py-3 text-xl font-black text-white shadow-[0_6px_0_#065f46] active:translate-y-1"
+            >
+              {lang === "en" ? "Continue" : "Teruskan"}
+            </button>
+          </div>
+        </LessonShell>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
@@ -3627,6 +3547,10 @@ function LessonShell({ title, helper, children }: { title: string; helper: strin
 }
 
 function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
+  useEffect(() => {
+    speakText(text, lang, { requireInteraction: true });
+  }, [lang, text]);
+
   return (
     <div className="talk-bubble flex items-center gap-3 rounded-3xl p-4">
       <img src={chrysThinking} alt="Chrys" className="h-20 w-20 object-contain" />
@@ -3634,8 +3558,8 @@ function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
       <button
         type="button"
         onClick={() => speakText(text, lang)}
-        aria-label={lang === "en" ? "Hear this teaching text" : "Dengar teks pengajaran ini"}
-        className="ml-auto grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-white text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1"
+        aria-label={audioMuted ? (lang === "en" ? "Sound is muted" : "Bunyi disenyapkan") : (lang === "en" ? "Hear this teaching text" : "Dengar teks pengajaran ini")}
+        className={`ml-auto grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-white text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1 ${audioMuted ? "opacity-45" : ""}`}
       >
         <SpeakerIcon />
       </button>
@@ -4729,6 +4653,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
 }
 
 function speakNumber(value: number, lang: Lang) {
+  if (audioMuted) return;
   stopNumberAudio();
   const runId = audioRunId;
   const file = NUMBER_AUDIO_FILES[value];
@@ -4742,7 +4667,9 @@ function speakNumber(value: number, lang: Lang) {
 }
 
 async function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = COUNTING_STEP_MS) {
+  if (audioMuted) return;
   if (count <= 0) return;
+  if (getReducedMotionPreference()) return;
   stopNumberAudio();
   const runId = audioRunId;
   const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
@@ -4813,6 +4740,7 @@ function preloadNumberAudioFiles() {
 }
 
 function speakNumberWithTts(value: number, lang: Lang) {
+  if (audioMuted) return;
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(WORDS[lang][value] ?? String(value));
@@ -4821,7 +4749,9 @@ function speakNumberWithTts(value: number, lang: Lang) {
   window.speechSynthesis.speak(utterance);
 }
 
-function speakText(text: string, lang: Lang) {
+function speakText(text: string, lang: Lang, options: { requireInteraction?: boolean } = {}) {
+  if (audioMuted) return;
+  if (options.requireInteraction && !audioUserInteracted) return;
   if (!("speechSynthesis" in window)) return;
   stopNumberAudio();
   const cleanText = text.replace(/\s+/g, " ").trim();

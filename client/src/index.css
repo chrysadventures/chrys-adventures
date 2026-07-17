@@ -431,6 +431,11 @@
     animation: none !important;
   }
 
+  [class*="animate-"],
+  [data-state] {
+    animation: none !important;
+  }
+
   .menu-card:hover,
   .game-btn:hover:not(:disabled),
   .answer-btn:hover:not(:disabled),
