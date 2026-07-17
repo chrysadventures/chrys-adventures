@@ -1038,10 +1038,6 @@ function skipNextNumberLabel(lang: Lang) {
   return lang === "en" ? "Skip to next number" : "Langkau ke nombor seterusnya";
 }
 
-function alreadyKnowPracticeLabel(lang: Lang) {
-  return lang === "en" ? "Already know this? Go to exercises." : "Dah tahu? Terus ke latihan.";
-}
-
 function backToLearningLabel(lang: Lang) {
   return lang === "en" ? "Back to learning mode" : "Kembali ke mod pembelajaran";
 }
@@ -1985,14 +1981,16 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.addition} helper={lang === "en" ? "Add more. Count all." : "Tambah lagi. Kira semua."}>
+      <LessonShell title={t.addition}>
         {phase === "intro" && (
           <AdditionIntroStep
             title={t.addition}
             text={lang === "en" ? "Addition puts groups together." : "Tambah gabungkan kumpulan."}
+            onPrevious={undefined}
             onNext={() => setPhase("sign")}
+            onSkip={() => setPhase("practice")}
             t={t}
-            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: () => setPhase("practice") }}
+            lang={lang}
           />
         )}
         {phase === "sign" && (
@@ -2000,8 +1998,11 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             title={lang === "en" ? "The plus sign" : "Tanda tambah"}
             symbol="+"
             text={lang === "en" ? "The + sign means add more." : "Tanda + bermaksud tambah lagi."}
+            onPrevious={() => setPhase("intro")}
             onNext={() => setPhase("story")}
+            onSkip={() => setPhase("practice")}
             t={t}
+            lang={lang}
           />
         )}
         {phase === "story" && (
@@ -2010,6 +2011,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             t={t}
             onPrev={() => setPhase("sign")}
             onDone={() => setPhase("practice")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
         )}
       </LessonShell>
@@ -2031,9 +2033,11 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
           <AdditionIntroStep
             title={t.subtraction}
             text={lang === "en" ? "Subtraction takes away from one group." : "Tolak ambil daripada satu kumpulan."}
+            onPrevious={undefined}
             onNext={() => setPhase("sign")}
+            onSkip={() => setPhase("practice")}
             t={t}
-            cornerAction={{ label: alreadyKnowPracticeLabel(lang), onClick: () => setPhase("practice") }}
+            lang={lang}
           />
         )}
         {phase === "sign" && (
@@ -2041,8 +2045,11 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             title={lang === "en" ? "The minus sign" : "Tanda tolak"}
             symbol="-"
             text={lang === "en" ? "The - sign means take away." : "Tanda - bermaksud ambil."}
+            onPrevious={() => setPhase("intro")}
             onNext={() => setPhase("story")}
+            onSkip={() => setPhase("practice")}
             t={t}
+            lang={lang}
           />
         )}
         {phase === "story" && (
@@ -2051,6 +2058,7 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             t={t}
             onPrev={() => setPhase("sign")}
             onDone={() => setPhase("practice")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
         )}
       </LessonShell>
@@ -2100,20 +2108,20 @@ function RealWorldLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone
           t={t}
           onPrevious={phase === 0 ? undefined : goPrevious}
           onNext={goNext}
-          cornerAction={phase === 0 ? { label: alreadyKnowPracticeLabel(lang), onClick: () => setPhase("practice") } : undefined}
+          onSkip={() => setPhase("practice")}
         />
       </LessonShell>
     </main>
   );
 }
 
-function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, cornerAction }: {
+function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: {
   phase: RealWorldTeachingIndex;
   lang: Lang;
   t: UIStrings;
   onPrevious?: () => void;
   onNext: () => void;
-  cornerAction?: LessonAction;
+  onSkip: () => void;
 }) {
   const banana = String.fromCodePoint(0x1f34c);
   const title = [
@@ -2140,17 +2148,7 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, cornerActi
 
   return (
     <div className="space-y-5">
-      <div className="relative rounded-[2rem] border-2 border-emerald-100 bg-white p-5 pt-20 shadow-[0_6px_0_rgba(0,0,0,.10)] sm:pt-5">
-        {cornerAction && (
-          <button
-            type="button"
-            onClick={cornerAction.onClick}
-            aria-label={cornerAction.label}
-            className="absolute right-4 top-4 max-w-[13rem] rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-black leading-tight text-slate-600 shadow-[0_3px_0_rgba(15,23,42,.12)] active:translate-y-1"
-          >
-            {cornerAction.label}
-          </button>
-        )}
+      <div className="relative rounded-[2rem] border-2 border-emerald-100 bg-white p-5 shadow-[0_6px_0_rgba(0,0,0,.10)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <img src={chrysThinking} alt="Chrys" className="mx-auto h-28 w-28 shrink-0 object-contain sm:mx-0" />
           <div>
@@ -2166,22 +2164,17 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, cornerActi
       {phase === 3 && <ChooseTakeAwayExample lang={lang} banana={banana} />}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {onPrevious ? (
+        <PreviousLessonButton label={t.previous} onClick={onPrevious} />
+        <div className="flex flex-wrap justify-end gap-3">
+          <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkip} variant="green" />
           <button
             type="button"
-            onClick={onPrevious}
-            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.10)] active:translate-y-1"
+            onClick={onNext}
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
           >
-            {t.previous}
+            {nextLabel}
           </button>
-        ) : <span />}
-        <button
-          type="button"
-          onClick={onNext}
-          className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
-        >
-          {nextLabel}
-        </button>
+        </div>
       </div>
     </div>
   );
@@ -2307,32 +2300,29 @@ function RealWorldStepGrid({ steps }: { steps: Array<{ label: string; value: str
   );
 }
 
-function AdditionIntroStep({ title, text, onNext, t, actions, cornerAction }: {
+function AdditionIntroStep({ title, text, onPrevious, onNext, onSkip, t, lang }: {
   title: string;
   text: string;
+  onPrevious?: () => void;
   onNext: () => void;
+  onSkip: () => void;
   t: UIStrings;
-  actions?: LessonAction[];
-  cornerAction?: LessonAction;
+  lang: Lang;
 }) {
   return (
     <div className="space-y-5 text-center">
       <img src={chrysHappy} alt="Chrys happy" className="mx-auto h-36 w-36 object-contain" />
-      <div className="relative rounded-3xl border-2 border-emerald-100 bg-white p-5 pt-16 text-left sm:pt-5">
-        {cornerAction && (
-          <button
-            type="button"
-            onClick={cornerAction.onClick}
-            aria-label={cornerAction.label}
-            className="absolute right-4 top-4 rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-black text-slate-600 shadow-[0_3px_0_rgba(15,23,42,.12)] active:translate-y-1"
-          >
-            {cornerAction.label}
-          </button>
-        )}
+      <div className="relative rounded-3xl border-2 border-emerald-100 bg-white p-5 text-left">
         <h3 className="text-3xl font-black text-blue-950">{title}</h3>
         <p className="mt-3 text-xl font-black leading-snug text-slate-700">{text}</p>
       </div>
-      <LessonActionRow primaryLabel={t.next} onPrimary={onNext} actions={actions} />
+      <LessonActionRow
+        previousLabel={t.previous}
+        onPrevious={onPrevious}
+        primaryLabel={t.next}
+        onPrimary={onNext}
+        actions={[{ label: skipPracticeLabel(lang), onClick: onSkip, variant: "green" }]}
+      />
     </div>
   );
 }
@@ -2434,27 +2424,25 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => step > 0 ? setStep((s) => s - 1) : onPrev()}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
           {t.previous}
         </button>
-        <button
-          onClick={() => step < totalSteps - 1 ? setStep((s) => s + 1) : onDone()}
-          className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
-        >
-          {step < totalSteps - 1 ? t.next : t.practice}
-        </button>
-      </div>
-      {actions.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-end gap-3">
           {actions.map((action) => (
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
+          <button
+            onClick={() => step < totalSteps - 1 ? setStep((s) => s + 1) : onDone()}
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+          >
+            {step < totalSteps - 1 ? t.next : t.practice}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -2484,28 +2472,26 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={onPrev}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
           {t.previous}
         </button>
-        <button
-          disabled={!complete}
-          onClick={onDone}
-          className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:opacity-40"
-        >
-          {t.practice}
-        </button>
-      </div>
-      {actions.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-end gap-3">
           {actions.map((action) => (
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
+          <button
+            disabled={!complete}
+            onClick={onDone}
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:opacity-40"
+          >
+            {t.practice}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -2590,13 +2576,15 @@ function BellyCounter({ target, counting, label, unit, lang }: { target: number;
   );
 }
 
-function SymbolIntro({ title, symbol, text, onNext, t, actions }: {
+function SymbolIntro({ title, symbol, text, onPrevious, onNext, onSkip, t, lang }: {
   title: string;
   symbol: "+" | "-";
   text: string;
+  onPrevious: () => void;
   onNext: () => void;
+  onSkip: () => void;
   t: UIStrings;
-  actions?: LessonAction[];
+  lang: Lang;
 }) {
   return (
     <div className="space-y-5 text-center">
@@ -2610,21 +2598,49 @@ function SymbolIntro({ title, symbol, text, onNext, t, actions }: {
       <div className="mx-auto grid h-40 w-40 place-items-center rounded-[2rem] border-4 border-yellow-400 bg-yellow-100 text-8xl font-black text-blue-900 shadow-[0_8px_0_rgba(0,0,0,.16)]">
         {symbol}
       </div>
-      <LessonActionRow primaryLabel={t.next} onPrimary={onNext} actions={actions} />
+      <LessonActionRow
+        previousLabel={t.previous}
+        onPrevious={onPrevious}
+        primaryLabel={t.next}
+        onPrimary={onNext}
+        actions={[{ label: skipPracticeLabel(lang), onClick: onSkip, variant: "green" }]}
+      />
     </div>
   );
 }
 
-function LessonActionRow({ primaryLabel, onPrimary, actions = [] }: { primaryLabel: string; onPrimary: () => void; actions?: LessonAction[] }) {
+function LessonActionRow({ previousLabel, onPrevious, primaryLabel, onPrimary, actions = [] }: {
+  previousLabel: string;
+  onPrevious?: () => void;
+  primaryLabel: string;
+  onPrimary: () => void;
+  actions?: LessonAction[];
+}) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-3">
-      {actions.map((action) => (
-        <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
-      ))}
-      <button onClick={onPrimary} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
-        {primaryLabel}
-      </button>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <PreviousLessonButton label={previousLabel} onClick={onPrevious} />
+      <div className="flex flex-wrap justify-end gap-3">
+        {actions.map((action) => (
+          <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
+        ))}
+        <button onClick={onPrimary} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
+          {primaryLabel}
+        </button>
+      </div>
     </div>
+  );
+}
+
+function PreviousLessonButton({ label, onClick }: { label: string; onClick?: () => void }) {
+  return (
+    <button
+      type="button"
+      disabled={!onClick}
+      onClick={onClick}
+      className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.10)] active:translate-y-1 disabled:opacity-40"
+    >
+      {label}
+    </button>
   );
 }
 
@@ -3534,12 +3550,12 @@ function ActiveResultMessage({ correct, lang, answer }: { correct: boolean; lang
   );
 }
 
-function LessonShell({ title, helper, children }: { title: string; helper: string; children: React.ReactNode }) {
+function LessonShell({ title, helper, children }: { title: string; helper?: string; children: React.ReactNode }) {
   return (
     <section className="lesson-panel rounded-[2rem] p-4 md:p-6">
       <div className="mb-5 text-center">
         <h2 className="text-3xl font-black leading-tight text-blue-950 md:text-4xl">{title}</h2>
-        <p className="mx-auto mt-2 max-w-2xl text-sm font-bold leading-snug text-slate-600 md:text-base">{helper}</p>
+        {helper && <p className="mx-auto mt-2 max-w-2xl text-sm font-bold leading-snug text-slate-600 md:text-base">{helper}</p>}
       </div>
       {children}
     </section>
