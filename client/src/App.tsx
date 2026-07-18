@@ -2388,7 +2388,14 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
           <>
             <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
               <div className="min-h-40 rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
-                {showFirst && <StoryBananaGroup count={2} eating={eatFirst} label={lang === "en" ? "2 bananas" : "2 pisang"} />}
+                {showFirst && (
+                  <StoryBananaGroup
+                    count={2}
+                    eating={eatFirst}
+                    label={lang === "en" ? "2 bananas" : "2 pisang"}
+                    destinationRef={bellyCounterRef}
+                  />
+                )}
                 {showSecond && (
                   <StoryBananaGroup
                     count={3}
@@ -2416,9 +2423,9 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
               {bellyTarget > 0 && (
                 <BellyCounter
                   ref={bellyCounterRef}
-                  start={eatSecond ? 2 : bellyTarget}
+                  start={eatFirst ? 0 : eatSecond ? 2 : bellyTarget}
                   target={bellyTarget}
-                  counting={eatSecond}
+                  counting={eatFirst || eatSecond}
                   label={lang === "en" ? "belly counter" : "kira dalam perut"}
                   unit={lang === "en" ? "bananas" : "pisang"}
                   lang={lang}
