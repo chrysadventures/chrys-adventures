@@ -2336,10 +2336,9 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   onDone: () => void;
   actions?: LessonAction[];
 }) {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [eatingStep, setEatingStep] = useState<number | null>(null);
   const bellyCounterRef = useRef<HTMLDivElement>(null);
-  const totalSteps = 8;
   const storyText = lang === "en"
     ? [
       "Chrys eats 2 bananas.",
@@ -2447,8 +2446,14 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
 
             {step >= 4 && (
               <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-                <p className="text-4xl font-black text-emerald-800">2 + 3 = 5</p>
-                <p className="mt-2 text-lg font-black text-emerald-900">{storyText[step]}</p>
+                {step === 4 ? (
+                  <AdditionBananaEquation lang={lang} />
+                ) : (
+                  <>
+                    <p className="text-4xl font-black text-emerald-800">2 + 3 = 5</p>
+                    <p className="mt-2 text-lg font-black text-emerald-900">{storyText[step]}</p>
+                  </>
+                )}
               </div>
             )}
           </>
@@ -2459,8 +2464,9 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
         <button
           onClick={() => {
             setEatingStep(null);
-            if (step > 0) setStep((current) => current - 1);
-            else onPrev();
+            if (step === 1) onPrev();
+            else if (step === 3) setStep(1);
+            else setStep((current) => current - 1);
           }}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
@@ -2473,12 +2479,13 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
           <button
             onClick={() => {
               setEatingStep(null);
-              if (step < totalSteps - 1) setStep((current) => current + 1);
+              if (step === 1) setStep(3);
+              else if (step < 7) setStep((current) => current + 1);
               else onDone();
             }}
             className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
           >
-            {step < totalSteps - 1 ? t.next : t.practice}
+            {step < 7 ? t.next : t.practice}
           </button>
         </div>
       </div>
@@ -2556,6 +2563,39 @@ function ZeroAdditionBeat({ lang }: { lang: Lang }) {
           {lang === "en" ? "4 bananas. Add 0 more. Still 4." : "4 pisang. Tambah 0 lagi. Masih 4."}
         </p>
       </div>
+    </div>
+  );
+}
+
+function AdditionBananaEquation({ lang }: { lang: Lang }) {
+  const banana = String.fromCodePoint(0x1f34c);
+  const groups = [2, 3, 5];
+  const labels = lang === "en"
+    ? ["2 bananas", "3 bananas", "5 bananas"]
+    : ["2 pisang", "3 pisang", "5 pisang"];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+        {groups.map((count, index) => (
+          <React.Fragment key={count}>
+            {index > 0 && (
+              <span className="text-4xl font-black text-blue-900" aria-hidden="true">
+                {index === 1 ? "+" : "="}
+              </span>
+            )}
+            <div className="rounded-2xl border-2 border-white bg-white p-3 shadow-[0_3px_0_rgba(0,0,0,.08)]">
+              <ObjectGroup count={count} emoji={banana} numbered />
+              <p className="mt-2 text-lg font-black text-emerald-900">{labels[index]}</p>
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+      <p className="text-xl font-black text-emerald-900">
+        {lang === "en"
+          ? "2 bananas plus 3 bananas makes 5 bananas."
+          : "2 pisang tambah 3 pisang menjadi 5 pisang."}
+      </p>
     </div>
   );
 }
