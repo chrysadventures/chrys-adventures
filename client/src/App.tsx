@@ -2337,6 +2337,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   actions?: LessonAction[];
 }) {
   const [step, setStep] = useState(0);
+  const [eatingStep, setEatingStep] = useState<number | null>(null);
   const bellyCounterRef = useRef<HTMLDivElement>(null);
   const totalSteps = 8;
   const storyText = lang === "en"
@@ -2362,9 +2363,10 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
     ];
   const zeroBeat = step === 7;
   const showFirst = step <= 1;
-  const eatFirst = step === 1;
+  const eatFirst = step === 1 && eatingStep === 1;
   const showSecond = step >= 2 && step <= 3;
-  const eatSecond = step === 3;
+  const eatSecond = step === 3 && eatingStep === 3;
+  const waitingToEat = (step === 1 || step === 3) && eatingStep !== step;
   const bellyTarget = step >= 3 ? 5 : step >= 1 ? 2 : 0;
   const helperText = step < 4
     ? storyText[step]
@@ -2411,21 +2413,31 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
                 )}
               </div>
 
-              <div className="relative mx-auto grid w-40 place-items-center">
-                <img src={chrysHappy} alt="Chrys eating bananas" className={`h-36 w-36 object-contain transition-transform duration-700 ${eatFirst || eatSecond ? "scale-110" : ""}`} />
-                {(eatFirst || eatSecond) && (
-                  <span className="absolute right-2 top-1 grid h-10 w-10 place-items-center rounded-full bg-white/90 shadow-md">
-                    <SpriteIcon value="🍌" className="h-8 w-8" />
-                  </span>
+              <div className="relative mx-auto flex w-44 flex-col items-center">
+                <img src={chrysHappy} alt="Chrys eating bananas" className={`h-36 w-36 -translate-y-3 object-contain transition-transform duration-700 ${eatFirst || eatSecond ? "scale-110" : ""}`} />
+                {(step === 1 || step === 3) && (
+                  <button
+                    type="button"
+                    disabled={eatingStep === step}
+                    onClick={() => setEatingStep(step)}
+                    aria-label={lang === "en" ? `Eat ${step === 1 ? 2 : 3} bananas` : `Makan ${step === 1 ? 2 : 3} pisang`}
+                    className="relative -mt-3 rounded-2xl border-2 border-amber-500 bg-amber-400 px-5 py-3 font-black text-amber-950 shadow-[0_5px_0_#a86000] active:translate-y-1 disabled:cursor-default disabled:opacity-60"
+                  >
+                    {lang === "en" ? `Eat ${step === 1 ? 2 : 3} bananas` : `Makan ${step === 1 ? 2 : 3} pisang`}
+                    <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+                      <PointerIcon />
+                    </span>
+                  </button>
                 )}
               </div>
 
               {bellyTarget > 0 && (
                 <BellyCounter
                   ref={bellyCounterRef}
-                  start={eatFirst ? 0 : eatSecond ? 2 : bellyTarget}
+                  start={step === 1 ? 0 : step === 3 ? 2 : bellyTarget}
                   target={bellyTarget}
                   counting={eatFirst || eatSecond}
+                  waiting={waitingToEat}
                   label={lang === "en" ? "belly counter" : "kira dalam perut"}
                   unit={lang === "en" ? "bananas" : "pisang"}
                   lang={lang}
@@ -2445,7 +2457,11 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
-          onClick={() => step > 0 ? setStep((s) => s - 1) : onPrev()}
+          onClick={() => {
+            setEatingStep(null);
+            if (step > 0) setStep((current) => current - 1);
+            else onPrev();
+          }}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
           {t.previous}
@@ -2455,7 +2471,11 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
           <button
-            onClick={() => step < totalSteps - 1 ? setStep((s) => s + 1) : onDone()}
+            onClick={() => {
+              setEatingStep(null);
+              if (step < totalSteps - 1) setStep((current) => current + 1);
+              else onDone();
+            }}
             className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
           >
             {step < totalSteps - 1 ? t.next : t.practice}
@@ -2610,15 +2630,20 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
   start: number;
   target: number;
   counting: boolean;
+  waiting: boolean;
   label: string;
   unit: string;
   lang: Lang;
-}>(function BellyCounter({ start, target, counting, label, unit, lang }, ref) {
-  const [visible, setVisible] = useState(counting ? start : target);
+}>(function BellyCounter({ start, target, counting, waiting, label, unit, lang }, ref) {
+  const [visible, setVisible] = useState(counting || waiting ? start : target);
 
   useEffect(() => {
     if (target === 0) {
       setVisible(0);
+      return;
+    }
+    if (waiting) {
+      setVisible(start);
       return;
     }
     if (!counting) {
@@ -2642,7 +2667,7 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
       timers.forEach(window.clearTimeout);
       stopNumberAudio();
     };
-  }, [counting, lang, start, target]);
+  }, [counting, lang, start, target, waiting]);
 
   return (
     <div ref={ref} className="mx-auto flex min-h-40 w-full max-w-52 flex-col items-center justify-center rounded-[2rem] border-4 border-pink-200 bg-pink-50 p-4 text-center shadow-inner">
