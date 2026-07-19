@@ -2421,7 +2421,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
               </div>
 
               <div className="relative mx-auto flex w-44 flex-col items-center">
-                <img src={chrysHappy} alt="Chrys eating bananas" className={`h-36 w-36 -translate-y-3 object-contain transition-transform duration-700 ${eatFirst || eatSecond ? "scale-110" : ""}`} />
+                <img src={chrysHappy} alt="Chrys eating bananas" className="h-36 w-36 -translate-y-3 object-contain" />
                 {(step === 1 || step === 3) && (
                   <button
                     type="button"
@@ -2784,6 +2784,15 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
       setVisible(nextValue);
       speakNumber(nextValue, lang);
     }, ADDITION_BANANA_TRAVEL_MS + index * ADDITION_BANANA_STAGGER_MS));
+    if (target === 5 && additions > 0) {
+      const finalCountDelay = ADDITION_BANANA_TRAVEL_MS + (additions - 1) * ADDITION_BANANA_STAGGER_MS;
+      timers.push(window.setTimeout(() => {
+        speakText(
+          lang === "en" ? "Chrys eats 5 bananas in total." : "Chrys makan 5 pisang semuanya.",
+          lang,
+        );
+      }, finalCountDelay + ADDITION_BANANA_COUNT_PAUSE_MS));
+    }
 
     return () => {
       timers.forEach(window.clearTimeout);
@@ -2792,7 +2801,7 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
   }, [counting, lang, start, target, waiting]);
 
   return (
-    <div ref={ref} className="mx-auto flex min-h-40 w-full max-w-52 flex-col items-center justify-center rounded-[2rem] border-4 border-pink-200 bg-pink-50 p-4 text-center shadow-inner">
+    <div ref={ref} className="mx-auto flex h-[15.25rem] w-full max-w-52 flex-col items-center justify-center rounded-[2rem] border-4 border-pink-200 bg-pink-50 p-4 text-center shadow-inner">
       <p className="text-sm font-black uppercase text-pink-700">{label}</p>
       <div className="my-3 grid h-24 w-24 place-items-center rounded-full border-4 border-pink-300 bg-white">
         <span className="text-4xl font-black text-pink-700">{visible}</span>
