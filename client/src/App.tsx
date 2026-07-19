@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { BookOpen, Search, X } from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
 import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
 import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
@@ -174,7 +176,7 @@ const UI = {
     menuTitle: "Where shall we learn today?",
     recognizeNumbers: "Recognize and Identify Numbers",
     numberValues: "Number Values",
-    sequencing: "Ascending, Descending, and Sequencing",
+    sequencing: "Number Order",
     learnNumbers: "Numbers 0-9",
     learnOperations: "Operations",
     learnOperationsShort: "Learning + and -",
@@ -219,7 +221,7 @@ const UI = {
     menuTitle: "Hari ini mahu belajar apa?",
     recognizeNumbers: "Kenal dan Cam Nombor",
     numberValues: "Nilai Nombor",
-    sequencing: "Menaik, Menurun, dan Turutan",
+    sequencing: "Turutan Nombor",
     learnNumbers: "Nombor 0-9",
     learnOperations: "Operasi",
     learnOperationsShort: "Belajar + dan -",
@@ -257,6 +259,68 @@ const UI = {
 } as const;
 
 type UIStrings = Record<keyof typeof UI["en"], string>;
+
+type GlossaryEntry = {
+  tier: 1 | 2 | 3;
+  term: Record<Lang, string>;
+  child: Record<Lang, string>;
+  note: Record<Lang, string>;
+};
+
+function glossaryEntry(
+  tier: GlossaryEntry["tier"],
+  termEn: string,
+  termMs: string,
+  childEn: string,
+  childMs: string,
+  noteEn: string,
+  noteMs: string,
+): GlossaryEntry {
+  return {
+    tier,
+    term: { en: termEn, ms: termMs },
+    child: { en: childEn, ms: childMs },
+    note: { en: noteEn, ms: noteMs },
+  };
+}
+
+const GLOSSARY_ENTRIES: GlossaryEntry[] = [
+  glossaryEntry(1, "Solution", "Penyelesaian", "The way to find the answer.", "Cara untuk mencari jawapan.", "The answer and the steps used to reach it.", "Jawapan dan langkah untuk mendapatkannya."),
+  glossaryEntry(1, "Method", "Cara", "The way we do it, step by step.", "Cara kita buat, langkah demi langkah.", "A set of steps used to solve something.", "Langkah-langkah yang digunakan untuk menyelesaikan sesuatu."),
+  glossaryEntry(1, "Ascending", "Menaik", "Going up. The numbers get bigger.", "Nombor naik dan menjadi lebih besar.", "Numbers placed from small to big.", "Nombor disusun daripada kecil kepada besar."),
+  glossaryEntry(1, "Descending", "Menurun", "Going down. The numbers get smaller.", "Nombor turun dan menjadi lebih kecil.", "Numbers placed from big to small.", "Nombor disusun daripada besar kepada kecil."),
+  glossaryEntry(1, "Symbol", "Tanda", "A little sign with a meaning, like + or -.", "Tanda kecil yang ada makna, seperti + atau -.", "A mark that stands for an idea or action.", "Tanda yang mewakili idea atau tindakan."),
+  glossaryEntry(1, "Tracing", "Surih", "Follow the dotted line with your finger or pencil.", "Ikut garisan bertitik dengan jari atau pensel.", "Draw over a shape by following its guide line.", "Lukis di atas bentuk dengan mengikut garis panduan."),
+
+  glossaryEntry(2, "Addition", "Tambah", "Put groups together to get more.", "Gabungkan kumpulan untuk mendapat lebih banyak.", "Addition uses the plus sign (+).", "Tambah menggunakan tanda tambah (+)."),
+  glossaryEntry(2, "Subtraction", "Tolak", "Take some away to find what is still there.", "Ambil sebahagian untuk tahu apa yang masih ada.", "Subtraction uses the minus sign (-).", "Tolak menggunakan tanda tolak (-)."),
+  glossaryEntry(2, "Greater", "Lebih besar", "Bigger. It is a larger number.", "Lebih besar. Nombornya lebih banyak.", "A number that is more than another number.", "Nombor yang lebih banyak daripada nombor lain."),
+  glossaryEntry(2, "Total", "Jumlah", "How many there are when everything is together.", "Berapa banyak apabila semuanya digabungkan.", "The whole amount after counting all the parts.", "Jumlah penuh selepas semua bahagian dikira."),
+  glossaryEntry(2, "Compare", "Banding", "Look at two things to see which has more or less.", "Lihat dua benda untuk tahu yang mana lebih atau kurang.", "Check how two numbers or groups are alike or different.", "Periksa bagaimana dua nombor atau kumpulan sama atau berbeza."),
+  glossaryEntry(2, "Value", "Nilai", "How much a number is worth.", "Berapa banyak yang ditunjukkan oleh nombor.", "The number of things a numeral stands for.", "Bilangan benda yang diwakili oleh satu nombor."),
+  glossaryEntry(2, "Amounts", "Bilangan", "How much or how many.", "Berapa banyak.", "The number of things in a group.", "Bilangan benda dalam satu kumpulan."),
+  glossaryEntry(2, "Objects", "Objek", "Things you can count, like bananas.", "Benda yang boleh dikira, seperti pisang.", "Items shown in a counting group.", "Benda yang ditunjukkan dalam kumpulan kiraan."),
+  glossaryEntry(2, "Order", "Turutan", "Which comes first, next, and last.", "Yang mana dahulu, seterusnya, dan terakhir.", "The way numbers or things are arranged.", "Cara nombor atau benda disusun."),
+  glossaryEntry(2, "Remove", "Keluarkan", "Take one away.", "Ambil satu.", "Move something out of a group.", "Keluarkan sesuatu daripada kumpulan."),
+  glossaryEntry(2, "Spread out", "Jarakkan", "Move things apart with space between them.", "Jarakkan benda supaya ada ruang di antaranya.", "The spaces change, but the count stays the same.", "Ruang berubah, tetapi bilangannya tetap sama."),
+
+  glossaryEntry(3, "Together", "Bersama", "Things joined in one place or group.", "Benda yang digabungkan di satu tempat atau kumpulan.", "Put the parts into one group.", "Gabungkan bahagian menjadi satu kumpulan."),
+  glossaryEntry(3, "Different", "Berbeza", "Not the same.", "Tidak sama.", "Two things do not match in some way.", "Dua benda tidak sepadan dalam sesuatu cara."),
+  glossaryEntry(3, "Missing", "Hilang", "Something that should be there is not shown.", "Sesuatu yang patut ada tidak ditunjukkan.", "Find the number that fills the empty space.", "Cari nombor yang mengisi ruang kosong."),
+  glossaryEntry(3, "Matches", "Padan", "Goes with it because they show the same thing.", "Sesuai dengannya kerana kedua-duanya menunjukkan benda yang sama.", "Two answers, numbers, or groups that fit together.", "Dua jawapan, nombor, atau kumpulan yang sepadan."),
+  glossaryEntry(3, "Smaller", "Lebih kecil", "Less big than another number.", "Lebih kecil daripada nombor lain.", "A number with less than another number.", "Nombor yang kurang daripada nombor lain."),
+  glossaryEntry(3, "Smallest", "Paling kecil", "The one with the least.", "Yang mempunyai paling sedikit.", "The lowest number in a group.", "Nombor paling rendah dalam kumpulan."),
+  glossaryEntry(3, "Biggest", "Paling besar", "The one with the most.", "Yang mempunyai paling banyak.", "The highest number in a group.", "Nombor paling tinggi dalam kumpulan."),
+  glossaryEntry(3, "Bigger", "Lebih besar", "More than another number.", "Lebih banyak daripada nombor lain.", "A number farther up the number line.", "Nombor yang lebih tinggi pada garis nombor."),
+  glossaryEntry(3, "Plus", "Tambah", "Put more in.", "Masukkan lebih banyak.", "The + sign tells us to add.", "Tanda + menyuruh kita menambah."),
+  glossaryEntry(3, "Minus", "Tolak", "Take some away.", "Ambil sebahagian.", "The - sign tells us to take away.", "Tanda - menyuruh kita mengambil."),
+  glossaryEntry(3, "Number line", "Garis nombor", "A row of numbers in order, like a ruler.", "Barisan nombor mengikut turutan, seperti pembaris.", "Move right for bigger numbers and left for smaller numbers.", "Bergerak ke kanan untuk nombor lebih besar dan ke kiri untuk nombor lebih kecil."),
+  glossaryEntry(3, "Count", "Kira", "Say one number for each thing.", "Sebut satu nombor untuk setiap benda.", "Count each thing once. The last number is the total.", "Kira setiap benda sekali. Nombor terakhir ialah jumlah."),
+  glossaryEntry(3, "Group", "Kumpulan", "Things kept together.", "Benda yang dikumpulkan bersama.", "A set of things that can be counted.", "Sekumpulan benda yang boleh dikira."),
+  glossaryEntry(3, "Empty", "Kosong", "There is nothing inside.", "Tiada apa-apa di dalam.", "An empty group has zero things.", "Kumpulan kosong mempunyai sifar benda."),
+  glossaryEntry(3, "Whole", "Keseluruhan", "All the parts together.", "Semua bahagian digabungkan.", "The complete group, with nothing missing.", "Kumpulan lengkap tanpa bahagian yang hilang."),
+  glossaryEntry(3, "Left", "Baki", "How many are still there after some are taken away.", "Berapa banyak yang masih ada selepas sebahagian diambil.", "Here, left means remaining, not the left direction.", "Di sini, baki bermaksud yang tinggal, bukan arah kiri."),
+];
 
 const recognitionPracticeQuestions: Question[] = [
   q("rec-tap-5", "numbers", { en: "Tap 5 bananas.", ms: "Tekan 5 pisang." }, [], 5, { kind: "number", value: 5 }, "tapObjects"),
@@ -771,6 +835,7 @@ function App() {
   const [player, setPlayer] = useState<Player | null>(initial.player);
   const [screen, setScreen] = useState<Screen>(initial.player ? "menu" : "home");
   const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
 
   useEffect(() => saveState(player, lang, soundEnabled), [player, lang, soundEnabled]);
@@ -818,14 +883,16 @@ function App() {
           t={t}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled((current) => !current)}
+          onOpenGlossary={() => setGlossaryOpen(true)}
           onBack={screen === "home" ? undefined : () => go(screen.startsWith("test") && screen !== "testMenu" ? "testMenu" : screen === "menu" ? "home" : "menu")}
         />
+        <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} />
 
         {screen === "home" && (
           <HomeScreen lang={lang} t={t} player={player} setPlayer={setPlayer} go={go} />
         )}
         {screen === "menu" && player && (
-          <MenuScreen t={t} player={player} go={go} />
+          <MenuScreen lang={lang} t={t} player={player} go={go} />
         )}
         {screen === "learnRecognize" && (
           <RecognizeNumbersLesson lang={lang} t={t} onDone={() => { awardStar("learnRecognize"); go("menu"); }} />
@@ -867,7 +934,7 @@ function App() {
             <p className="mt-1 text-lg font-black text-blue-900">{t.score}: {lastScore.correct}/{lastScore.total}</p>
             <p className="text-sm font-bold text-slate-500">
               {lastScore.mastered
-                ? (lang === "en" ? "You earned a star for mastery." : "Kamu dapat bintang untuk penguasaan.")
+                ? (lang === "en" ? "You did it! You earned a star." : "Kamu berjaya! Kamu dapat bintang.")
                 : (lang === "en" ? "You completed it. Keep practicing with Chrys." : "Kamu sudah lengkapkan. Terus berlatih dengan Chrys.")}
             </p>
           </div>
@@ -877,7 +944,7 @@ function App() {
   );
 }
 
-function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSound, onBack }: {
+function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSound, onOpenGlossary, onBack }: {
   lang: Lang;
   onToggleLang: () => void;
   title: string;
@@ -885,6 +952,7 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
   t: UIStrings;
   soundEnabled: boolean;
   onToggleSound: () => void;
+  onOpenGlossary: () => void;
   onBack?: () => void;
 }) {
   return (
@@ -910,6 +978,16 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
           <SpeakerIcon />
           <span>{soundEnabled ? (lang === "en" ? "Sound" : "Bunyi") : (lang === "en" ? "Muted" : "Senyap")}</span>
         </button>
+        <button
+          type="button"
+          onClick={onOpenGlossary}
+          aria-label={lang === "en" ? "Open glossary" : "Buka glosari"}
+          title={lang === "en" ? "Glossary" : "Glosari"}
+          className="flex items-center gap-1 rounded-2xl border-2 border-emerald-200 bg-white/90 px-3 py-2 text-sm font-black text-emerald-800 shadow-[0_4px_0_rgba(0,0,0,.12)]"
+        >
+          <BookOpen className="h-5 w-5" aria-hidden="true" />
+          <span className="hidden md:inline">{lang === "en" ? "Glossary" : "Glosari"}</span>
+        </button>
         <button onClick={onToggleLang} className="rounded-2xl border-2 border-white/80 bg-white/90 px-3 py-2 text-sm font-black text-blue-800 shadow-[0_4px_0_rgba(0,0,0,.12)]">
           {lang === "en" ? "BM" : "EN"}
         </button>
@@ -919,6 +997,99 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
         </div>
       </div>
     </header>
+  );
+}
+
+function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase(lang === "ms" ? "ms-MY" : "en-US");
+  const filteredEntries = GLOSSARY_ENTRIES.filter((entry) => {
+    if (!normalizedQuery) return true;
+    return [entry.term[lang], entry.child[lang], entry.note[lang]]
+      .some((value) => value.toLocaleLowerCase(lang === "ms" ? "ms-MY" : "en-US").includes(normalizedQuery));
+  });
+  const tierLabels: Record<GlossaryEntry["tier"], string> = lang === "en"
+    ? { 1: "New math words", 2: "Useful math words", 3: "Everyday math words" }
+    : { 1: "Perkataan matematik baharu", 2: "Perkataan matematik berguna", 3: "Perkataan matematik harian" };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-blue-950/45 backdrop-blur-sm" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[min(94vw,52rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-[0_12px_0_rgba(15,23,42,.22)] focus:outline-none">
+          <div className="border-b-2 border-emerald-100 bg-emerald-50 px-5 py-4 pr-16 sm:px-6">
+            <Dialog.Title className="flex items-center gap-3 text-2xl font-black text-blue-950 sm:text-3xl">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+                <BookOpen className="h-6 w-6" aria-hidden="true" />
+              </span>
+              {lang === "en" ? "Math Glossary" : "Glosari Matematik"}
+            </Dialog.Title>
+            <Dialog.Description className="sr-only">
+              {lang === "en" ? "Child-friendly meanings for math words." : "Maksud perkataan matematik yang mudah untuk kanak-kanak."}
+            </Dialog.Description>
+            <Dialog.Close asChild>
+              <button
+                type="button"
+                aria-label={lang === "en" ? "Close glossary" : "Tutup glosari"}
+                className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-2xl border-2 border-slate-200 bg-white text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.10)] active:translate-y-1"
+              >
+                <X className="h-6 w-6" aria-hidden="true" />
+              </button>
+            </Dialog.Close>
+            <label className="relative mt-4 block">
+              <span className="sr-only">{lang === "en" ? "Find a word" : "Cari perkataan"}</span>
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={lang === "en" ? "Find a word" : "Cari perkataan"}
+                className="w-full rounded-2xl border-2 border-emerald-200 bg-white py-3 pl-12 pr-4 text-base font-bold text-blue-950 outline-none focus:border-blue-400"
+              />
+            </label>
+          </div>
+
+          <div className="overflow-y-auto px-5 py-4 sm:px-6">
+            {([1, 2, 3] as const).map((tier) => {
+              const entries = filteredEntries.filter((entry) => entry.tier === tier);
+              if (entries.length === 0) return null;
+              return (
+                <section key={tier} className="mb-6 last:mb-0" aria-labelledby={`glossary-tier-${tier}`}>
+                  <h2 id={`glossary-tier-${tier}`} className="mb-2 text-lg font-black text-emerald-800">{tierLabels[tier]}</h2>
+                  <div className="divide-y-2 divide-slate-100 rounded-2xl border-2 border-slate-100 bg-white">
+                    {entries.map((entry) => (
+                      <article key={entry.term.en} className="flex items-start gap-3 p-4">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xl font-black text-blue-950">{entry.term[lang]}</h3>
+                          <p className="mt-1 font-bold leading-snug text-slate-700">
+                            <span className="text-emerald-700">{lang === "en" ? "Easy meaning:" : "Maksud mudah:"}</span> {entry.child[lang]}
+                          </p>
+                          <p className="mt-1 text-sm font-bold leading-snug text-slate-500">
+                            <span className="text-blue-700">{lang === "en" ? "Math note:" : "Nota matematik:"}</span> {entry.note[lang]}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => speakText(`${entry.term[lang]}. ${entry.child[lang]} ${entry.note[lang]}`, lang)}
+                          aria-label={lang === "en" ? `Hear ${entry.term.en}` : `Dengar ${entry.term.ms}`}
+                          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1"
+                        >
+                          <SpeakerIcon />
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+            {filteredEntries.length === 0 && (
+              <p className="rounded-2xl bg-slate-50 p-6 text-center text-lg font-black text-slate-500">
+                {lang === "en" ? "No matching word yet." : "Tiada perkataan yang sepadan."}
+              </p>
+            )}
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 
@@ -998,7 +1169,7 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
   );
 }
 
-function MenuScreen({ t, player, go }: { t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 pb-8">
       <section className="flex flex-col items-center text-center">
@@ -1008,8 +1179,8 @@ function MenuScreen({ t, player, go }: { t: UIStrings; player: Player; go: (scre
       </section>
       <div className="grid gap-4 md:grid-cols-2">
         <MenuCard title={t.recognizeNumbers} subtitle="See, spell, hear, trace" icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
-        <MenuCard title={t.numberValues} subtitle="Numbers mean quantity" icon="🍌" color="emerald" onClick={() => go("learnValues")} />
-        <MenuCard title={t.sequencing} subtitle="Number lines and order" icon="< >" color="sky" onClick={() => go("learnSequencing")} />
+        <MenuCard title={t.numberValues} subtitle={lang === "en" ? "Numbers show how many" : "Nombor tunjuk berapa banyak"} icon="🍌" color="emerald" onClick={() => go("learnValues")} />
+        <MenuCard title={t.sequencing} subtitle={lang === "en" ? "Numbers in the right order" : "Nombor dalam turutan yang betul"} icon="< >" color="sky" onClick={() => go("learnSequencing")} />
         <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="🧺" color="amber" onClick={() => go("groupingMode")} />
         <MenuCard title={t.addition} subtitle="Adding more" icon="➕" color="emerald" onClick={() => go("learnAddition")} />
         <MenuCard title={t.subtraction} subtitle="Taking away" icon="➖" color="pink" onClick={() => go("learnSubtraction")} />
@@ -1097,7 +1268,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
     <main className="mx-auto w-full max-w-3xl pb-8">
       <LessonShell
         title={`${t.learnNumbers}: ${number}`}
-        helper={lang === "en" ? "Chrys teaches each number through seeing, hearing, counting, sequencing, tracing, and drawing." : "Chrys ajar setiap nombor dengan lihat, dengar, kira, susun, surih, dan lukis."}
+        helper={lang === "en" ? "Chrys teaches each number through seeing, hearing, counting, number order, tracing, and drawing." : "Chrys ajar setiap nombor dengan lihat, dengar, kira, susun, surih, dan lukis."}
       >
         <div className="mb-4 grid grid-cols-5 gap-2">
           {[0, 1, 2, 3, 4].map((s) => (
@@ -1333,8 +1504,8 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
               className="rounded-xl border border-slate-200 bg-white/70 px-3 py-1.5 text-xs font-black text-slate-500 shadow-sm"
             >
               {showSkipOptions
-                ? (lang === "en" ? "Hide options" : "Sembunyi pilihan")
-                : (lang === "en" ? "More options" : "Pilihan lain")}
+                ? (lang === "en" ? "Hide choices" : "Sembunyi pilihan")
+                : (lang === "en" ? "More choices" : "Pilihan lain")}
             </button>
           </div>
           {showSkipOptions && (
@@ -1578,7 +1749,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
       visual: <NumberLineSequence nums={NUMBERS} marked={-1} arrow="right" />,
     },
     {
-      title: lang === "en" ? "Ascending" : "Menaik",
+      title: lang === "en" ? "Ascending: Going Up" : "Menaik: Nombor Naik",
       text: lang === "en" ? "Ascending means numbers go up." : "Menaik bermaksud nombor naik.",
       visual: <SequencingExample nums={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} arrow="right" />,
     },
@@ -1588,7 +1759,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
       visual: <TapRevealOrder nums={[1, 2, 3, 4]} lang={lang} mode="up" />,
     },
     {
-      title: lang === "en" ? "Descending" : "Menurun",
+      title: lang === "en" ? "Descending: Going Down" : "Menurun: Nombor Turun",
       text: lang === "en" ? "Descending means numbers go down." : "Menurun bermaksud nombor turun.",
       visual: <NumberLineSequence nums={[9, 8, 7, 6, 5, 4, 3, 2, 1, 0]} marked={-1} arrow="right" />,
     },
@@ -1598,7 +1769,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
       visual: <TapRevealOrder nums={[4, 3, 2, 1]} lang={lang} mode="down" />,
     },
     {
-      title: lang === "en" ? "Sequencing" : "Turutan",
+      title: lang === "en" ? "Number Order" : "Turutan Nombor",
       text: lang === "en" ? "Numbers follow an order." : "Nombor ada turutan.",
       visual: <TapRevealSequence lang={lang} />,
     },
@@ -3388,7 +3559,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                   : right
                     ? (lang === "en" ? ", correct answer" : ", jawapan betul")
                     : picked
-                      ? (lang === "en" ? ", your answer, incorrect" : ", jawapan awak, salah")
+                      ? (lang === "en" ? ", your answer, try again" : ", jawapan awak, cuba lagi")
                       : (lang === "en" ? ", not selected" : ", tidak dipilih");
                 const optionSize = typeof option === "string" ? "text-2xl sm:text-3xl" : "text-4xl";
                 const stateClass = !answered
@@ -3495,7 +3666,7 @@ function GroupChoiceAnswerPanel({
           : right
             ? (lang === "en" ? ", correct answer" : ", jawapan betul")
             : picked
-              ? (lang === "en" ? ", your answer, incorrect" : ", jawapan awak, salah")
+              ? (lang === "en" ? ", your answer, try again" : ", jawapan awak, cuba lagi")
               : (lang === "en" ? ", not selected" : ", tidak dipilih");
         return (
           <button
@@ -4736,7 +4907,7 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
 function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
   return (
     <div className="rounded-3xl border-2 border-amber-100 bg-white p-4 text-center">
-      <h3 className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Draw the quantity" : "Lukis kuantiti"}</h3>
+      <h3 className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Draw how many objects" : "Lukis berapa banyak objek"}</h3>
       <p className="mb-3 text-sm font-bold text-slate-500">{count === 0 ? (lang === "en" ? "For zero, draw nothing in the box." : "Untuk sifar, jangan lukis apa-apa dalam kotak.") : (lang === "en" ? `Draw ${count} dots or bananas on paper.` : `Lukis ${count} titik atau pisang di kertas.`)}</p>
       <ObjectGroup count={count} emoji="●" numbered />
     </div>
