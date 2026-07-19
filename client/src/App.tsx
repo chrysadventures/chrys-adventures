@@ -83,6 +83,7 @@ const SUBTRACTION_COUNTING_STEP_MS = 1500;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
 const ADDITION_BANANA_STAGGER_MS = ADDITION_BANANA_TRAVEL_MS + ADDITION_BANANA_COUNT_PAUSE_MS;
+const ADDITION_EQUATION_GROUPS = [2, 3, 5] as const;
 const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
 const WORDS: Record<Lang, string[]> = {
   en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
@@ -2571,24 +2572,100 @@ function ZeroAdditionBeat({ lang }: { lang: Lang }) {
 
 function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const banana = String.fromCodePoint(0x1f34c);
-  const groups = [2, 3, 5];
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [visibleCounts, setVisibleCounts] = useState([0, 0, 0]);
+  const [completedGroups, setCompletedGroups] = useState(0);
+  const [activeGroup, setActiveGroup] = useState(0);
   const labels = lang === "en"
     ? ["2 bananas", "3 bananas", "5 bananas"]
     : ["2 pisang", "3 pisang", "5 pisang"];
 
+  useEffect(() => {
+    let cancelled = false;
+    const intervalMs = 1400;
+
+    const runSequence = async () => {
+      stopNumberAudio();
+      setVisibleCounts([0, 0, 0]);
+      setCompletedGroups(0);
+      setActiveGroup(0);
+
+      for (let groupIndex = 0; groupIndex < ADDITION_EQUATION_GROUPS.length; groupIndex += 1) {
+        if (cancelled) return;
+        const count = ADDITION_EQUATION_GROUPS[groupIndex];
+        setActiveGroup(groupIndex);
+
+        if (prefersReducedMotion) {
+          setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? count : value));
+          await speakCountingSequence(count, lang, intervalMs);
+        } else if (audioMuted) {
+          for (let value = 1; value <= count; value += 1) {
+            if (cancelled) return;
+            setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+            await wait(intervalMs);
+          }
+        } else {
+          await speakCountingSequence(count, lang, intervalMs, (value) => {
+            if (cancelled) return;
+            setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+          });
+        }
+
+        if (cancelled) return;
+        setCompletedGroups(groupIndex + 1);
+        speakText(
+          lang === "en" ? `Total ${count} bananas.` : `Jumlah ${count} pisang.`,
+          lang,
+        );
+        await wait(audioMuted ? 800 : 2000);
+      }
+
+      if (!cancelled) setActiveGroup(-1);
+    };
+
+    void runSequence();
+    return () => {
+      cancelled = true;
+      stopNumberAudio();
+    };
+  }, [lang, prefersReducedMotion]);
+
   return (
     <div className="space-y-4">
       <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
-        {groups.map((count, index) => (
+        {ADDITION_EQUATION_GROUPS.map((count, index) => (
           <React.Fragment key={count}>
             {index > 0 && (
               <span className="text-4xl font-black text-blue-900" aria-hidden="true">
                 {index === 1 ? "+" : "="}
               </span>
             )}
-            <div className="rounded-2xl border-2 border-white bg-white p-3 shadow-[0_3px_0_rgba(0,0,0,.08)]">
-              <ObjectGroup count={count} emoji={banana} numbered />
-              <p className="mt-2 text-lg font-black text-emerald-900">{labels[index]}</p>
+            <div
+              aria-current={activeGroup === index ? "step" : undefined}
+              className={`rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
+                activeGroup === index
+                  ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
+                  : index > activeGroup && completedGroups <= index
+                    ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
+                    : "border-emerald-300 bg-white"
+              }`}
+            >
+              <div className="flex flex-wrap justify-center gap-3">
+                {Array.from({ length: count }, (_, objectIndex) => {
+                  const counted = objectIndex < visibleCounts[index];
+                  return (
+                    <div key={objectIndex} className="relative flex h-24 w-16 items-center justify-center rounded-2xl bg-amber-50 pt-4 shadow-inner">
+                      <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                        {objectIndex + 1}
+                      </span>
+                      <SpriteIcon value={banana} className="h-12 w-12" />
+                    </div>
+                  );
+                })}
+              </div>
+              <p className={`mt-2 rounded-xl px-2 py-1 text-lg font-black transition-colors ${completedGroups > index ? "bg-emerald-50 text-emerald-900" : "text-slate-500"}`}>
+                {labels[index]}
+              </p>
             </div>
           </React.Fragment>
         ))}
@@ -3166,6 +3243,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
+  const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway";
   const activePanelHasOwnCorrection = qn.inputMode === "tapObjects" || qn.inputMode === "takeAway";
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
@@ -3262,7 +3340,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
             </div>
           )}
           <h2 className="text-center text-2xl font-black text-slate-900">{qn.text[lang]}</h2>
-          {!groupChoiceVisual && (
+          {!groupChoiceVisual && !activePanelOwnsVisual && (
             <div className="my-4 rounded-3xl border-2 border-sky-100 bg-sky-50 p-3">
               <VisualDisplay visual={qn.visual} lang={lang} revealNumbers={answered && !isCorrect} />
             </div>
@@ -3581,6 +3659,105 @@ function ActiveAnswerPanel({
     );
   }
 
+  if (question.inputMode === "buildTotal" && question.visual.kind === "add") {
+    const groupCounts = [question.visual.a, question.visual.b];
+    const countedTotal = answered && Number.isFinite(selectedNumber) ? selectedNumber : selectedObjects.length;
+    const countExistingObject = (objectIndex: number) => {
+      if (answered || selectedObjects.includes(objectIndex)) return;
+      const nextObjects = [...selectedObjects, objectIndex];
+      setSelectedObjects(nextObjects);
+      speakNumber(nextObjects.length, lang);
+    };
+    let objectOffset = 0;
+
+    return (
+      <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
+        <p className="mb-4 text-lg font-black text-slate-700">
+          {lang === "en" ? "Tap each banana to count." : "Tekan setiap pisang untuk mengira."}
+        </p>
+        <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr]">
+          {groupCounts.map((groupCount, groupIndex) => {
+            const groupStart = objectOffset;
+            objectOffset += groupCount;
+            return (
+              <React.Fragment key={groupIndex}>
+                {groupIndex > 0 && <span className="text-4xl font-black text-blue-900" aria-hidden="true">+</span>}
+                <div className="rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {Array.from({ length: groupCount }, (_, localIndex) => {
+                      const objectIndex = groupStart + localIndex;
+                      const countOrder = selectedObjects.indexOf(objectIndex) + 1;
+                      const counted = countOrder > 0;
+                      return (
+                        <button
+                          key={objectIndex}
+                          type="button"
+                          disabled={answered || counted}
+                          onClick={() => countExistingObject(objectIndex)}
+                          aria-pressed={counted}
+                          aria-label={lang === "en"
+                            ? `Banana ${objectIndex + 1}${counted ? `, counted ${countOrder}` : ""}`
+                            : `Pisang ${objectIndex + 1}${counted ? `, dikira ${countOrder}` : ""}`}
+                          className={`relative grid h-24 w-16 place-items-center rounded-2xl border-2 pt-4 shadow-inner active:translate-y-1 disabled:opacity-100 ${counted ? "border-blue-600 bg-blue-50" : "border-amber-100 bg-white"}`}
+                        >
+                          {counted && (
+                            <span className="absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white">
+                              {countOrder}
+                            </span>
+                          )}
+                          <SpriteIcon value={emoji} className="h-12 w-12" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-3 text-xl font-black text-amber-900">
+                    {groupCount} {lang === "en" ? (groupCount === 1 ? "banana" : "bananas") : "pisang"}
+                  </p>
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+        {answered && <CountTotalBadge count={countedTotal} lang={lang} />}
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            disabled={answered || selectedObjects.length === 0}
+            onClick={() => setSelectedObjects([])}
+            className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Clear" : "Padam"}
+          </button>
+          <button
+            type="button"
+            disabled={answered}
+            onClick={() => onAnswer(selectedObjects.length)}
+            className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Check" : "Semak"}
+          </button>
+        </div>
+        {answered && (
+          <div className="space-y-3">
+            <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
+            {!isCorrect && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedObjects([]);
+                  onRetry();
+                }}
+                className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
+              >
+                {lang === "en" ? "Try again" : "Cuba lagi"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (question.inputMode === "takeAway" && question.visual.kind === "subtract") {
     const startCount = question.visual.a;
     const takeAwayTarget = question.visual.b;
@@ -3594,7 +3771,7 @@ function ActiveAnswerPanel({
             ? `Start with ${startCount} bananas.`
             : `Mula dengan ${startCount} pisang.`}
         </p>
-        <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} compact lang={lang} />
+        <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} lang={lang} />
         {answered && <CountTotalBadge count={selectedNumber} lang={lang} />}
         <p className="mt-4 text-lg font-black text-blue-800">
           {lang === "en" ? "Tap to take away." : "Ketik untuk buang."}
@@ -4859,7 +5036,12 @@ function speakNumber(value: number, lang: Lang) {
   });
 }
 
-async function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = COUNTING_STEP_MS) {
+async function speakCountingSequence(
+  count: number,
+  lang: Lang = "en",
+  intervalMs = COUNTING_STEP_MS,
+  onCount?: (value: number) => void,
+) {
   if (audioMuted) return;
   if (count <= 0) return;
   if (activeCountingRunId !== null) return;
@@ -4870,6 +5052,7 @@ async function speakCountingSequence(count: number, lang: Lang = "en", intervalM
   try {
     for (let value = 1; value <= Math.min(count, 10); value += 1) {
       if (runId !== audioRunId) return;
+      onCount?.(value);
       const startedAt = performance.now();
       const played = await playNumberFile(value, runId);
       if (!played && runId === audioRunId) {
