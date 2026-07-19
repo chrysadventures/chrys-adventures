@@ -79,6 +79,7 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",
 };
 const COUNTING_STEP_MS = 1100;
+const SUBTRACTION_COUNTING_STEP_MS = 1500;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_STAGGER_MS = 1450;
 const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
@@ -2932,7 +2933,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
   const [phase, setPhase] = useState<SubtractionPhase>("start");
   const prefersReducedMotion = usePrefersReducedMotion();
   const left = start - takeAway;
-  const intervalMs = prefersReducedMotion ? 140 : 720;
+  const intervalMs = prefersReducedMotion ? 140 : SUBTRACTION_COUNTING_STEP_MS;
   const crossed = phase === "start" ? 0 : takeAway;
   const showRemainingCount = phase === "counting" || phase === "done";
   const showCrossCount = phase !== "start";
@@ -2943,7 +2944,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
       setPhase("crossed");
       return;
     }
-    const timer = window.setTimeout(() => setPhase("crossed"), Math.max(700, takeAway * intervalMs + 350));
+    const timer = window.setTimeout(() => setPhase("crossed"), Math.max(700, (takeAway + 1) * intervalMs));
     return () => window.clearTimeout(timer);
   }, [intervalMs, phase, prefersReducedMotion, takeAway]);
 
@@ -2957,7 +2958,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
     const timer = window.setTimeout(() => {
       setPhase("done");
       onComplete?.();
-    }, Math.max(700, left * intervalMs + 350));
+    }, Math.max(700, (left + 1) * intervalMs));
     return () => window.clearTimeout(timer);
   }, [intervalMs, left, onComplete, phase, prefersReducedMotion]);
 
@@ -2978,6 +2979,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
           animateCrossOut={phase === "crossing"}
           showCrossCount={showCrossCount}
           intervalMs={intervalMs}
+          speakCrossCount={phase === "crossing"}
           speakCount={phase === "counting"}
           lang={lang}
         />
@@ -3024,7 +3026,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCount = false, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -3034,6 +3036,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   compact?: boolean;
   showCrossCount?: boolean;
   intervalMs?: number;
+  speakCrossCount?: boolean;
   speakCount?: boolean;
   lang?: Lang;
 }) {
@@ -3056,6 +3059,15 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
     const timers = Array.from({ length: crossed }, (_, i) => window.setTimeout(() => setVisibleCrossed(i + 1), stepIntervalMs * (i + 1)));
     return () => timers.forEach(window.clearTimeout);
   }, [animateCrossOut, crossed, prefersReducedMotion, stepIntervalMs]);
+
+  useEffect(() => {
+    if (!animateCrossOut || !speakCrossCount || crossed <= 0 || prefersReducedMotion) return;
+    const speechTimer = window.setTimeout(() => speakCountingSequence(crossed, lang, stepIntervalMs), stepIntervalMs);
+    return () => {
+      window.clearTimeout(speechTimer);
+      stopNumberAudio();
+    };
+  }, [animateCrossOut, crossed, lang, prefersReducedMotion, speakCrossCount, stepIntervalMs]);
 
   useEffect(() => {
     setVisible(0);
@@ -3088,7 +3100,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         return (
           <div key={i} className={`relative flex flex-col items-center justify-center rounded-2xl bg-amber-50 shadow-inner ${compact ? "h-20 w-12 pt-4 text-3xl" : "h-24 w-16 pt-5 text-4xl"}`}>
             {crossLabelVisible ? (
-              <span className={`absolute top-1 rounded-full bg-red-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
+              <span className={`absolute top-1 z-30 rounded-full bg-red-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
                 {i + 1}
               </span>
             ) : (
@@ -3099,7 +3111,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
             <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>
               <SpriteIcon value={emoji} className={compact ? "h-10 w-10" : "h-12 w-12"} />
             </span>
-            {gone && <span className={`absolute font-black text-red-500 transition-opacity duration-300 ${compact ? "top-0 text-4xl" : "top-1 text-5xl"}`}>x</span>}
+            {gone && <span className={`absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 font-black text-red-500 transition-opacity duration-300 ${compact ? "text-4xl" : "text-5xl"}`}>x</span>}
           </div>
         );
       })}
