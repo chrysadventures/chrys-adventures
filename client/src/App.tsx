@@ -81,7 +81,8 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
 const COUNTING_STEP_MS = 1100;
 const SUBTRACTION_COUNTING_STEP_MS = 1500;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
-const ADDITION_BANANA_STAGGER_MS = 1450;
+const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
+const ADDITION_BANANA_STAGGER_MS = ADDITION_BANANA_TRAVEL_MS + ADDITION_BANANA_COUNT_PAUSE_MS;
 const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
 const WORDS: Record<Lang, string[]> = {
   en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
@@ -2348,9 +2349,9 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
       "Chrys eats 2 bananas.",
       "Then Chrys eats 3 more bananas.",
       "Then Chrys eats 3 more bananas.",
-      "2 bananas and 3 more bananas make 5 bananas.",
-      "The + sign adds more bananas.",
-      "So, 2 + 3 = 5.",
+      "Count all the bananas.",
+      "See how the groups make 5.",
+      "",
       "4 bananas. Add 0 more. Still 4.",
     ]
     : [
@@ -2358,9 +2359,9 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
       "Chrys makan 2 pisang.",
       "Kemudian Chrys makan 3 pisang lagi.",
       "Kemudian Chrys makan 3 pisang lagi.",
-      "2 pisang dan 3 pisang lagi menjadi 5 pisang.",
-      "Tanda + bermaksud Chrys menambah pisang lagi.",
-      "Jadi, 2 + 3 = 5.",
+      "Kira semua pisang.",
+      "Lihat bagaimana kumpulan menjadi 5.",
+      "",
       "4 pisang. Tambah 0 lagi. Masih 4.",
     ];
   const zeroBeat = step === 7;
@@ -2370,13 +2371,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const eatSecond = step === 3 && eatingStep === 3;
   const waitingToEat = (step === 1 || step === 3) && eatingStep !== step;
   const bellyTarget = step >= 3 ? 5 : step >= 1 ? 2 : 0;
-  const helperText = step < 4
-    ? storyText[step]
-    : zeroBeat
-      ? storyText[step]
-      : lang === "en"
-      ? "Now write it."
-      : "Sekarang kita boleh tulis ayat nombor.";
+  const helperText = storyText[step];
 
   return (
     <div className="space-y-5">
@@ -2388,6 +2383,8 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
         {zeroBeat ? (
           <ZeroAdditionBeat lang={lang} />
+        ) : step === 5 ? (
+          <AdditionBananaEquation lang={lang} />
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
@@ -2408,9 +2405,16 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
                     destinationRef={bellyCounterRef}
                   />
                 )}
-                {step >= 4 && (
+                {step === 4 && (
                   <div className="grid h-full min-h-32 place-items-center rounded-3xl bg-emerald-50 text-center">
-                    <ObjectGroup count={5} emoji="🍌" numbered />
+                    <CountedObjectRow
+                      count={5}
+                      emoji={String.fromCodePoint(0x1f34c)}
+                      showCount
+                      speakCount
+                      intervalMs={1500}
+                      lang={lang}
+                    />
                   </div>
                 )}
               </div>
@@ -2440,23 +2444,16 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
                   target={bellyTarget}
                   counting={eatFirst || eatSecond}
                   waiting={waitingToEat}
-                  label={lang === "en" ? "belly counter" : "kira dalam perut"}
+                  label={lang === "en" ? "Chrys's belly" : "Perut Chrys"}
                   unit={lang === "en" ? "bananas" : "pisang"}
                   lang={lang}
                 />
               )}
             </div>
 
-            {step >= 4 && (
+            {step === 4 && (
               <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-                {step === 4 ? (
-                  <AdditionBananaEquation lang={lang} />
-                ) : (
-                  <>
-                    <p className="text-4xl font-black text-emerald-800">2 + 3 = 5</p>
-                    <p className="mt-2 text-lg font-black text-emerald-900">{storyText[step]}</p>
-                  </>
-                )}
+                <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>2 + 3 = 5</p>
               </div>
             )}
           </>
@@ -2469,6 +2466,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             setEatingStep(null);
             if (step === 1) onPrev();
             else if (step === 3) setStep(1);
+            else if (step === 7) setStep(5);
             else setStep((current) => current - 1);
           }}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
@@ -2483,6 +2481,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             onClick={() => {
               setEatingStep(null);
               if (step === 1) setStep(3);
+              else if (step === 5) setStep(7);
               else if (step < 7) setStep((current) => current + 1);
               else onDone();
             }}
@@ -2598,6 +2597,9 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
         {lang === "en"
           ? "2 bananas plus 3 bananas makes 5 bananas."
           : "2 pisang tambah 3 pisang menjadi 5 pisang."}
+      </p>
+      <p className="text-3xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>
+        2 + 3 = 5
       </p>
     </div>
   );
