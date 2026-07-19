@@ -130,6 +130,8 @@ const OBJECT_SPRITES: Record<string, string> = {
 
 let activeNumberAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
+let activeCountingRunId: number | null = null;
+let queuedAudioAfterCounting: (() => void) | null = null;
 let audioMuted = false;
 let audioUserInteracted = false;
 const numberAudioCache = new Map<number, HTMLAudioElement>();
@@ -397,7 +399,7 @@ const operationQuestions: Question[] = [
 
 const additionPracticeQuestions: Question[] = [
   q("l-add-build-2-3", "operations", { en: "Build the answer: 2 + 3.", ms: "Bina jawapan: 2 + 3." }, [], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }, "buildTotal"),
-  q("l-add-2-3", "operations", { en: "Chrys eats 2 bananas and 3 more bananas. How many bananas?", ms: "Chrys makan 2 pisang dan 3 pisang lagi. Berapa pisang?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }),
+  q("l-add-3-4", "operations", { en: "Chrys eats 3 bananas and 4 more bananas. How many bananas?", ms: "Chrys makan 3 pisang dan 4 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌" }),
   q("l-add-2-4", "operations", { en: "Chrys has 2 bananas and gets 4 more. How many bananas now?", ms: "Chrys ada 2 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 2, b: 4, emoji: "🍌" }),
   q("l-add-4-5", "operations", { en: "Chrys has 4 bananas. Chrys finds 5 more. How many bananas?", ms: "Chrys ada 4 pisang. Chrys jumpa 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
   q("l-add-0-6", "operations", { en: "Chrys starts with 0 bananas and gets 6 bananas. How many bananas?", ms: "Chrys mula dengan 0 pisang dan dapat 6 pisang. Berapa pisang?" }, [0, 5, 6, 7], 6, { kind: "add", a: 0, b: 6, emoji: "🍌" }),
@@ -407,7 +409,7 @@ const additionPracticeQuestions: Question[] = [
 
 const subtractionPracticeQuestions: Question[] = [
   q("l-sub-takeaway-7-3", "operations", { en: "Show 7 - 3. Start with 7, take away 3.", ms: "Tunjuk 7 - 3. Mula dengan 7, buang 3." }, [], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }, "takeAway"),
-  q("l-sub-7-3", "operations", { en: "Chrys has 7 bananas. He gives away 3 bananas. How many bananas are left?", ms: "Chrys ada 7 pisang. Dia beri 3 pisang. Tinggal berapa pisang?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }),
+  q("l-sub-8-5", "operations", { en: "Chrys has 8 bananas. He gives away 5 bananas. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia beri 5 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 8, b: 5, emoji: "🍌" }),
   q("l-sub-6-2", "operations", { en: "Chrys has 6 bananas. He eats 2 bananas. How many bananas are left?", ms: "Chrys ada 6 pisang. Dia makan 2 pisang. Tinggal berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 6, b: 2, emoji: "🍌" }),
   q("l-sub-9-6", "operations", { en: "There are 9 bananas. You take away 6 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 6 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 9, b: 6, emoji: "🍌" }),
   q("l-sub-5-0", "operations", { en: "Chrys has 5 bananas. He gives away 0 bananas. How many bananas are left?", ms: "Chrys ada 5 pisang. Dia beri 0 pisang. Tinggal berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "subtract", a: 5, b: 0, emoji: "🍌" }),
@@ -2209,7 +2211,7 @@ function FindActionExample({ lang, banana }: { lang: Lang; banana: string }) {
           lang={lang}
           story={lang === "en" ? "Chrys gets more bananas." : "Chrys dapat lagi pisang."}
           clue={lang === "en" ? "gets more" : "dapat lagi"}
-          note={lang === "en" ? "This is an add clue." : "Ini petunjuk tambah."}
+          note={lang === "en" ? "This is an ADDITION (+) clue." : "Ini petunjuk TAMBAH (+)."}
         >
           <div className="flex items-center justify-center gap-2">
             <ObjectGroup count={2} emoji={banana} />
@@ -2221,7 +2223,7 @@ function FindActionExample({ lang, banana }: { lang: Lang; banana: string }) {
           lang={lang}
           story={lang === "en" ? "Chrys gives away bananas." : "Chrys beri pisang."}
           clue={lang === "en" ? "gives away" : "beri"}
-          note={lang === "en" ? "This is a take-away clue." : "Ini petunjuk tolak."}
+          note={lang === "en" ? "This is a SUBTRACTION (-) clue." : "Ini petunjuk TOLAK (-)."}
         >
           <CountedObjectRow count={4} emoji={banana} crossed={1} showCount={false} compact />
         </RealWorldStoryCard>
@@ -2940,25 +2942,18 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
 
   useEffect(() => {
     if (phase !== "crossing") return;
-    if (prefersReducedMotion) {
-      setPhase("crossed");
-      return;
-    }
-    const timer = window.setTimeout(() => setPhase("crossed"), Math.max(700, (takeAway + 1) * intervalMs));
+    const audioIntervalMs = Math.max(intervalMs, COUNTING_STEP_MS);
+    const timer = window.setTimeout(() => setPhase("crossed"), Math.max(700, (takeAway + 1) * audioIntervalMs));
     return () => window.clearTimeout(timer);
   }, [intervalMs, phase, prefersReducedMotion, takeAway]);
 
   useEffect(() => {
     if (phase !== "counting") return;
-    if (prefersReducedMotion) {
-      setPhase("done");
-      onComplete?.();
-      return;
-    }
+    const audioIntervalMs = Math.max(intervalMs, COUNTING_STEP_MS);
     const timer = window.setTimeout(() => {
       setPhase("done");
       onComplete?.();
-    }, Math.max(700, (left + 1) * intervalMs));
+    }, Math.max(700, (left + 1) * audioIntervalMs));
     return () => window.clearTimeout(timer);
   }, [intervalMs, left, onComplete, phase, prefersReducedMotion]);
 
@@ -3061,11 +3056,13 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   }, [animateCrossOut, crossed, prefersReducedMotion, stepIntervalMs]);
 
   useEffect(() => {
-    if (!animateCrossOut || !speakCrossCount || crossed <= 0 || prefersReducedMotion) return;
-    const speechTimer = window.setTimeout(() => speakCountingSequence(crossed, lang, stepIntervalMs), stepIntervalMs);
+    if (!animateCrossOut || !speakCrossCount || crossed <= 0) return;
+    const speechTimer = window.setTimeout(
+      () => speakCountingSequence(crossed, lang, stepIntervalMs),
+      prefersReducedMotion ? 0 : stepIntervalMs,
+    );
     return () => {
       window.clearTimeout(speechTimer);
-      stopNumberAudio();
     };
   }, [animateCrossOut, crossed, lang, prefersReducedMotion, speakCrossCount, stepIntervalMs]);
 
@@ -3073,19 +3070,27 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
     setVisible(0);
     if (!showCount) return;
     const max = countRemainingOnly ? remaining : count;
+    const countDelay = animateCrossOut ? (crossed * stepIntervalMs) + stepIntervalMs : 0;
+    const speechTimer = speakCount && max > 0
+      ? window.setTimeout(
+          () => speakCountingSequence(max, lang, stepIntervalMs),
+          prefersReducedMotion ? 0 : countDelay + stepIntervalMs,
+        )
+      : null;
     if (prefersReducedMotion) {
       setVisible(max);
-      return;
+      return () => {
+        if (speechTimer) window.clearTimeout(speechTimer);
+      };
     }
-    const countDelay = animateCrossOut ? (crossed * stepIntervalMs) + stepIntervalMs : 0;
-    const speechTimer = speakCount && max > 0 ? window.setTimeout(() => speakCountingSequence(max, lang, stepIntervalMs), countDelay + stepIntervalMs) : null;
     const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => setVisible(i + 1), countDelay + (stepIntervalMs * (i + 1))));
     return () => {
       timers.forEach(window.clearTimeout);
       if (speechTimer) window.clearTimeout(speechTimer);
-      if (speakCount) stopNumberAudio();
     };
   }, [animateCrossOut, count, countRemainingOnly, crossed, lang, prefersReducedMotion, remaining, showCount, speakCount, stepIntervalMs]);
+
+  useEffect(() => () => stopNumberAudio(), []);
 
   let leftIndex = 0;
   return (
@@ -3584,11 +3589,14 @@ function ActiveAnswerPanel({
       <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
         <p className="mb-3 text-lg font-black text-slate-700">
           {lang === "en"
-            ? `Start with ${startCount}. Take away ${takeAwayTarget}.`
-            : `Mula dengan ${startCount}. Buang ${takeAwayTarget}.`}
+            ? `Start with ${startCount} bananas.`
+            : `Mula dengan ${startCount} pisang.`}
         </p>
         <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} compact lang={lang} />
         {answered && <CountTotalBadge count={selectedNumber} lang={lang} />}
+        <p className="mt-4 text-lg font-black text-blue-800">
+          {lang === "en" ? "Tap to take away." : "Ketik untuk buang."}
+        </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <button
             disabled={answered || removedCount <= 0}
@@ -3782,7 +3790,7 @@ function PointerIcon() {
 
 function NumberTile({ value, lang, large = false, showWord = true }: { value: number; lang: Lang; large?: boolean; showWord?: boolean }) {
   return (
-    <div className={`mx-auto grid place-items-center rounded-[2rem] border-4 ${value === 0 ? "border-slate-300 bg-slate-100 text-slate-500" : "border-yellow-500 bg-yellow-400 text-white"} ${large ? "h-48 w-48" : "h-24 w-24"}`}>
+    <div className={`mx-auto grid place-items-center rounded-[2rem] border-4 border-yellow-500 bg-yellow-400 text-white ${large ? "h-48 w-48" : "h-24 w-24"}`}>
       <div className="text-center">
         <div className={`${large ? "text-8xl" : "text-5xl"} font-black leading-none`} style={NUMBER_TEXT_STYLE}>{value}</div>
         {showWord && <div className="mt-1 text-sm font-black uppercase tracking-wide">{WORDS[lang][value]}</div>}
@@ -4833,6 +4841,10 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
 
 function speakNumber(value: number, lang: Lang) {
   if (audioMuted) return;
+  if (activeCountingRunId !== null) {
+    queuedAudioAfterCounting = () => speakNumber(value, lang);
+    return;
+  }
   stopNumberAudio();
   const runId = audioRunId;
   const file = NUMBER_AUDIO_FILES[value];
@@ -4848,26 +4860,38 @@ function speakNumber(value: number, lang: Lang) {
 async function speakCountingSequence(count: number, lang: Lang = "en", intervalMs = COUNTING_STEP_MS) {
   if (audioMuted) return;
   if (count <= 0) return;
-  if (getReducedMotionPreference()) return;
+  if (activeCountingRunId !== null) return;
   stopNumberAudio();
   const runId = audioRunId;
+  activeCountingRunId = runId;
   const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
-  for (let value = 1; value <= Math.min(count, 10); value += 1) {
-    if (runId !== audioRunId) return;
-    const startedAt = performance.now();
-    const played = await playNumberFile(value, runId);
-    if (!played && runId === audioRunId) {
-      speakNumberWithTts(value, lang);
-      await wait(Math.min(stepMs, 900));
+  try {
+    for (let value = 1; value <= Math.min(count, 10); value += 1) {
+      if (runId !== audioRunId) return;
+      const startedAt = performance.now();
+      const played = await playNumberFile(value, runId);
+      if (!played && runId === audioRunId) {
+        speakNumberWithTts(value, lang);
+        await wait(Math.min(stepMs, 900));
+      }
+      if (runId !== audioRunId) return;
+      const elapsed = performance.now() - startedAt;
+      await wait(Math.max(180, stepMs - elapsed));
     }
-    if (runId !== audioRunId) return;
-    const elapsed = performance.now() - startedAt;
-    await wait(Math.max(180, stepMs - elapsed));
+  } finally {
+    if (activeCountingRunId === runId) {
+      activeCountingRunId = null;
+      const queuedAudio = queuedAudioAfterCounting;
+      queuedAudioAfterCounting = null;
+      if (runId === audioRunId) queuedAudio?.();
+    }
   }
 }
 
 function stopNumberAudio() {
   audioRunId += 1;
+  activeCountingRunId = null;
+  queuedAudioAfterCounting = null;
   activeNumberAudio?.pause();
   activeNumberAudio = null;
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -4932,8 +4956,21 @@ function speakText(text: string, lang: Lang, options: { requireInteraction?: boo
   if (audioMuted) return;
   if (options.requireInteraction && !audioUserInteracted) return;
   if (!("speechSynthesis" in window)) return;
+  if (activeCountingRunId !== null) {
+    queuedAudioAfterCounting = () => speakText(text, lang, options);
+    return;
+  }
   stopNumberAudio();
-  const cleanText = text.replace(/\s+/g, " ").trim();
+  const mathWords = lang === "ms"
+    ? { minus: " tolak ", plus: " tambah ", equals: " sama dengan ", times: " darab " }
+    : { minus: " minus ", plus: " plus ", equals: " equals ", times: " times " };
+  const cleanText = text
+    .replace(/[−-]/g, mathWords.minus)
+    .replace(/\+/g, mathWords.plus)
+    .replace(/=/g, mathWords.equals)
+    .replace(/×/g, mathWords.times)
+    .replace(/\s+/g, " ")
+    .trim();
   if (!cleanText) return;
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
