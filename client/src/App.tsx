@@ -2523,27 +2523,19 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const [step, setStep] = useState(1);
   const [eatingStep, setEatingStep] = useState<number | null>(null);
   const bellyCounterRef = useRef<HTMLDivElement>(null);
-  const storyText = lang === "en"
-    ? [
-      "Chrys eats 2 bananas.",
-      "Chrys eats 2 bananas.",
-      "Then Chrys eats 3 more bananas.",
-      "Then Chrys eats 3 more bananas.",
-      "Count all the bananas.",
-      "See how the groups make 5.",
-      "",
-      "4 bananas. Add 0 more. Still 4.",
-    ]
-    : [
-      "Chrys makan 2 pisang.",
-      "Chrys makan 2 pisang.",
-      "Kemudian Chrys makan 3 pisang lagi.",
-      "Kemudian Chrys makan 3 pisang lagi.",
-      "Kira semua pisang.",
-      "Lihat bagaimana kumpulan menjadi 5.",
-      "",
-      "4 pisang. Tambah 0 lagi. Masih 4.",
-    ];
+  const storyText: Record<number, string> = lang === "en"
+    ? {
+      1: "Chrys eats 2 bananas.",
+      3: "Then Chrys eats 3 more bananas.",
+      5: "See how the groups make 5.",
+      7: "4 bananas. Add 0 more. Still 4.",
+    }
+    : {
+      1: "Chrys makan 2 pisang.",
+      3: "Kemudian Chrys makan 3 pisang lagi.",
+      5: "Lihat bagaimana kumpulan menjadi 5.",
+      7: "4 pisang. Tambah 0 lagi. Masih 4.",
+    };
   const zeroBeat = step === 7;
   const showFirst = step <= 1;
   const eatFirst = step === 1 && eatingStep === 1;
@@ -2585,18 +2577,6 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
                     destinationRef={bellyCounterRef}
                   />
                 )}
-                {step === 4 && (
-                  <div className="grid h-full min-h-32 place-items-center rounded-3xl bg-emerald-50 text-center">
-                    <CountedObjectRow
-                      count={5}
-                      emoji={String.fromCodePoint(0x1f34c)}
-                      showCount
-                      speakCount
-                      intervalMs={1500}
-                      lang={lang}
-                    />
-                  </div>
-                )}
               </div>
 
               <div className="relative mx-auto flex w-44 flex-col items-center">
@@ -2631,11 +2611,6 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
               )}
             </div>
 
-            {step === 4 && (
-              <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-                <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>2 + 3 = 5</p>
-              </div>
-            )}
           </>
         )}
       </div>
@@ -2646,6 +2621,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             setEatingStep(null);
             if (step === 1) onPrev();
             else if (step === 3) setStep(1);
+            else if (step === 5) setStep(3);
             else if (step === 7) setStep(5);
             else setStep((current) => current - 1);
           }}
@@ -2661,6 +2637,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             onClick={() => {
               setEatingStep(null);
               if (step === 1) setStep(3);
+              else if (step === 3) setStep(5);
               else if (step === 5) setStep(7);
               else if (step < 7) setStep((current) => current + 1);
               else onDone();
@@ -2756,8 +2733,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const [completedGroups, setCompletedGroups] = useState(0);
   const [activeGroup, setActiveGroup] = useState(0);
   const labels = lang === "en"
-    ? ["2 bananas", "3 bananas", "5 bananas"]
-    : ["2 pisang", "3 pisang", "5 pisang"];
+    ? ["Total: 2 bananas", "Total: 3 bananas", "Total: 5 bananas"]
+    : ["Jumlah: 2 pisang", "Jumlah: 3 pisang", "Jumlah: 5 pisang"];
 
   useEffect(() => {
     let cancelled = false;
