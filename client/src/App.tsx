@@ -3345,9 +3345,15 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
         const label = shouldCount ? ++leftIndex : 0;
         const labelVisible = shouldCount && label <= visible;
+        const isActiveCount = speakCount && labelVisible && label === visible;
         const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
         return (
-          <div key={i} className={`relative flex flex-col items-center justify-center rounded-2xl bg-amber-50 shadow-inner ${compact ? "h-20 w-12 pt-4 text-3xl" : "h-24 w-16 pt-5 text-4xl"}`}>
+          <div
+            key={i}
+            className={`relative flex flex-col items-center justify-center rounded-2xl shadow-inner transition-[background-color,box-shadow] duration-300 ${
+              isActiveCount ? "bg-blue-50 ring-4 ring-blue-300" : "bg-amber-50"
+            } ${compact ? "h-20 w-12 pt-4 text-3xl" : "h-24 w-16 pt-5 text-4xl"}`}
+          >
             {crossLabelVisible ? (
               <span className={`absolute top-1 z-30 rounded-full bg-red-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
                 {i + 1}
