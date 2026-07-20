@@ -115,6 +115,14 @@ const APP_BACKGROUND_STYLE = {
 } as React.CSSProperties;
 const BASKET_SPRITE = `${SPRITE_BASE}basket.png`;
 const OBJECT_SPRITES: Record<string, string> = {
+  "\u{1F350}": `${SPRITE_BASE}pear.png`,
+  "\u{1F349}": `${SPRITE_BASE}watermelon.png`,
+  "\u{1F95D}": `${SPRITE_BASE}kiwi.png`,
+  "\u{1F34A}": `${SPRITE_BASE}orange.png`,
+  "\u{1F34D}": `${SPRITE_BASE}pineapple.png`,
+  "\u{1F34E}": `${SPRITE_BASE}apple.png`,
+  "\u{1F353}": `${SPRITE_BASE}strawberry.png`,
+  "\u{1F34B}": `${SPRITE_BASE}lemon.png`,
   "🍌": `${SPRITE_BASE}banana.png`,
   "🍃": `${SPRITE_BASE}leaf.png`,
   "🥭": `${SPRITE_BASE}mango.png`,
@@ -502,14 +510,14 @@ q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the
 ];
 
 const realPracticeQuestions: Question[] = [
-  q("rp-count-2", "real", { en: "Chrys sees 2 bananas. How many bananas?", ms: "Chrys nampak 2 pisang. Berapa pisang?" }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🍌", count: 2 }),
-  q("rp-add-1-1", "real", { en: "Chrys has 1 banana and finds 1 more. How many bananas?", ms: "Chrys ada 1 pisang dan jumpa 1 lagi. Berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "add", a: 1, b: 1, emoji: "🍌" }),
-  q("rp-sub-3-1", "real", { en: "Chrys has 3 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 3 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "🍌" }),
-  q("rp-add-birds", "real", { en: "Chrys sees 2 birds. 3 more birds come. How many birds?", ms: "Chrys nampak 2 burung. 3 burung lagi datang. Berapa burung?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "🐦" }),
-  q("rp-sub-leaves", "real", { en: "Chrys has 5 leaves. He uses 1 leaf for a bed. How many leaves are left?", ms: "Chrys ada 5 daun. Dia guna 1 daun untuk katil. Tinggal berapa daun?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 5, b: 1, emoji: "🍃" }),
-  q("rp-add-basket", "real", { en: "2 coconuts are in the basket. Add 3 more. How many coconuts?", ms: "Ada 2 kelapa dalam bakul. Tambah 3 lagi. Berapa kelapa?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "🥥", container: "basket" }),
-  q("rp-choose-add", "real", { en: "Chrys has 4 bananas. He finds 2 more. Is this adding or taking away?", ms: "Chrys ada 4 pisang. Dia jumpa 2 lagi. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Adding", { kind: "add", a: 4, b: 2, emoji: "🍌" }),
-  q("rp-choose-subtract", "real", { en: "Chrys has 6 mangoes. He gives away 2. Is this adding or taking away?", ms: "Chrys ada 6 mangga. Dia beri 2. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Taking away", { kind: "subtract", a: 6, b: 2, emoji: "🥭" }),
+  q("rp-count-pears", "real", { en: "Chrys sees 2 pears. How many pears?", ms: "Chrys nampak 2 buah pir. Berapa buah pir?" }, [0, 1, 2, 3], 2, { kind: "count", emoji: "\u{1F350}", count: 2 }),
+  q("rp-add-watermelon", "real", { en: "Chrys has 1 watermelon slice and finds 1 more. How many slices?", ms: "Chrys ada 1 potong tembikai dan jumpa 1 lagi. Berapa potong tembikai?" }, [1, 2, 3, 4], 2, { kind: "add", a: 1, b: 1, emoji: "\u{1F349}" }),
+  q("rp-sub-kiwi", "real", { en: "Chrys has 3 kiwi slices. He eats 1. How many slices are left?", ms: "Chrys ada 3 potong kiwi. Dia makan 1. Tinggal berapa potong kiwi?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "\u{1F95D}" }),
+  q("rp-add-oranges", "real", { en: "Chrys has 2 oranges. He finds 3 more. How many oranges?", ms: "Chrys ada 2 oren. Dia jumpa 3 lagi. Berapa oren?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "\u{1F34A}" }),
+  q("rp-sub-pineapples", "real", { en: "Chrys has 5 pineapples. He gives away 1. How many are left?", ms: "Chrys ada 5 nanas. Dia beri 1. Tinggal berapa nanas?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 5, b: 1, emoji: "\u{1F34D}" }),
+  q("rp-add-apples", "real", { en: "2 apples are in the basket. Add 3 more. How many apples?", ms: "Ada 2 epal dalam bakul. Tambah 3 lagi. Berapa epal?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "\u{1F34E}", container: "basket" }),
+  q("rp-choose-strawberries", "real", { en: "Chrys has 4 strawberries. He finds 2 more. Is this adding or taking away?", ms: "Chrys ada 4 strawberi. Dia jumpa 2 lagi. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Adding", { kind: "add", a: 4, b: 2, emoji: "\u{1F353}" }),
+  q("rp-choose-lemons", "real", { en: "Chrys has 6 lemons. He gives away 2. Is this adding or taking away?", ms: "Chrys ada 6 lemon. Dia beri 2. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Taking away", { kind: "subtract", a: 6, b: 2, emoji: "\u{1F34B}" }),
 ];
 
 const realTestQuestions: Question[] = [
