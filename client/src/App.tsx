@@ -2522,19 +2522,20 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
 }) {
   const [step, setStep] = useState(1);
   const [eatingStep, setEatingStep] = useState<number | null>(null);
+  const [zeroStep, setZeroStep] = useState<1 | 2 | 3>(1);
   const bellyCounterRef = useRef<HTMLDivElement>(null);
   const storyText: Record<number, string> = lang === "en"
     ? {
       1: "Chrys eats 2 bananas.",
       3: "Then Chrys eats 3 more bananas.",
       5: "See how the groups make 5.",
-      7: "4 bananas. Add 0 more. Still 4.",
+      7: "Chrys is full.",
     }
     : {
       1: "Chrys makan 2 pisang.",
       3: "Kemudian Chrys makan 3 pisang lagi.",
       5: "Lihat bagaimana kumpulan menjadi 5.",
-      7: "4 pisang. Tambah 0 lagi. Masih 4.",
+      7: "Chrys kenyang.",
     };
   const zeroBeat = step === 7;
   const showFirst = step <= 1;
@@ -2554,7 +2555,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
         {zeroBeat ? (
-          <ZeroAdditionBeat lang={lang} />
+          <ZeroAdditionBeat step={zeroStep} onStepChange={setZeroStep} lang={lang} />
         ) : step === 5 ? (
           <AdditionBananaEquation lang={lang} />
         ) : (
@@ -2622,6 +2623,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             if (step === 1) onPrev();
             else if (step === 3) setStep(1);
             else if (step === 5) setStep(3);
+            else if (step === 7 && zeroStep > 1) setZeroStep((current) => (current - 1) as 1 | 2);
             else if (step === 7) setStep(5);
             else setStep((current) => current - 1);
           }}
@@ -2638,13 +2640,17 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
               setEatingStep(null);
               if (step === 1) setStep(3);
               else if (step === 3) setStep(5);
-              else if (step === 5) setStep(7);
+              else if (step === 5) {
+                setZeroStep(1);
+                setStep(7);
+              }
+              else if (step === 7 && zeroStep < 3) setZeroStep((current) => (current + 1) as 2 | 3);
               else if (step < 7) setStep((current) => current + 1);
               else onDone();
             }}
             className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
           >
-            {step < 7 ? t.next : t.practice}
+            {step < 7 || (step === 7 && zeroStep < 3) ? t.next : t.practice}
           </button>
         </div>
       </div>
@@ -2659,27 +2665,192 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   onDone: () => void;
   actions?: LessonAction[];
 }) {
-  const [complete, setComplete] = useState(false);
+  const [storyStep, setStoryStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [given, setGiven] = useState(0);
+  const [flight, setFlight] = useState<{ left: number; top: number; x: number; y: number; nextGiven: number } | null>(null);
+  const basketRef = useRef<HTMLDivElement>(null);
+  const friendRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const flyingBananaRef = useRef<HTMLDivElement>(null);
+  const left = 7 - given;
+  const storyText: Record<number, string> = lang === "en"
+    ? {
+      1: "Chrys has 7 bananas. Three friends are hungry!",
+      2: "Chrys gives 1 away. 6 left.",
+      3: "Chrys gives 1 more away. 5 left.",
+      4: "Count what is left. 4 bananas!",
+      5: "7 bananas. Give 3 away. 4 left.",
+    }
+    : {
+      1: "Chrys ada 7 pisang. Tiga kawan lapar!",
+      2: "Chrys beri 1. Tinggal 6.",
+      3: "Chrys beri 1 lagi. Tinggal 5.",
+      4: "Kira yang tinggal. 4 pisang!",
+      5: "7 pisang. Beri 3. Tinggal 4.",
+    };
+
+  useEffect(() => {
+    if (!flight || !flyingBananaRef.current) return;
+    const duration = getReducedMotionPreference() ? 1 : 900;
+    const animation = flyingBananaRef.current.animate([
+      { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
+      { offset: 0.55, transform: `translate3d(${flight.x * 0.55}px, ${flight.y * 0.55 - 36}px, 0) scale(.9)`, opacity: 1 },
+      { transform: `translate3d(${flight.x}px, ${flight.y}px, 0) scale(.65)`, opacity: 0 },
+    ], {
+      duration,
+      easing: "cubic-bezier(.22,.72,.24,1)",
+      fill: "forwards",
+    });
+
+    animation.finished.then(() => {
+      const nextGiven = flight.nextGiven;
+      setGiven(nextGiven);
+      setStoryStep((nextGiven + 1) as 2 | 3 | 4);
+      setFlight(null);
+      speakNumber(7 - nextGiven, lang);
+    }).catch(() => undefined);
+
+    return () => animation.cancel();
+  }, [flight, lang]);
+
+  const giveOne = () => {
+    if (flight || given >= 3 || !basketRef.current) return;
+    const target = friendRefs.current[given];
+    if (!target) return;
+    const sourceRect = basketRef.current.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const leftPosition = sourceRect.left + sourceRect.width / 2 - 24;
+    const topPosition = sourceRect.top + sourceRect.height / 2 - 24;
+    setFlight({
+      left: leftPosition,
+      top: topPosition,
+      x: targetRect.left + targetRect.width / 2 - 24 - leftPosition,
+      y: targetRect.top + targetRect.height / 2 - 24 - topPosition,
+      nextGiven: given + 1,
+    });
+  };
+
+  const setStoryPosition = (nextStep: 1 | 2 | 3 | 4 | 5) => {
+    setFlight(null);
+    setStoryStep(nextStep);
+    setGiven(nextStep === 1 ? 0 : nextStep === 2 ? 1 : nextStep === 3 ? 2 : 3);
+  };
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
-        <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys takes away bananas" : "Chrys mengambil pisang"}</h3>
-        <p className="mt-2 text-lg font-black text-slate-700">{lang === "en" ? "Use one banana group. Tap each step." : "Guna satu kumpulan pisang. Tekan setiap langkah."}</p>
+        <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys shares bananas" : "Chrys berkongsi pisang"}</h3>
+        <p className="mt-2 text-lg font-black text-slate-700">{storyText[storyStep]}</p>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
-        <div className="grid gap-4 md:grid-cols-[auto_1fr] md:items-center">
-          <div className="relative mx-auto grid w-36 place-items-center">
-            <img src={chrysThinking} alt="Chrys thinking" className="h-32 w-32 object-contain" />
+        {storyStep <= 3 && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+              <div ref={basketRef} className="col-span-2 min-h-44 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center md:col-span-1 md:min-h-56">
+                <p className="mb-3 text-sm font-black uppercase text-amber-800">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</p>
+                <div className="flex flex-wrap justify-center gap-2 rounded-3xl border-2 border-slate-100 bg-white p-3">
+                  {Array.from({ length: left }, (_, index) => (
+                    <span key={index} className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 shadow-inner sm:h-14 sm:w-14">
+                      <SpriteIcon value="🍌" className="h-9 w-9 sm:h-11 sm:w-11" />
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 text-xl font-black text-amber-950">{left} {lang === "en" ? "bananas" : "pisang"}</p>
+              </div>
+              <img src={chrysHappy} alt="Chrys sharing bananas" className="mx-auto h-24 w-24 object-contain md:h-32 md:w-32" />
+              <div className="mx-auto flex h-44 w-full max-w-52 flex-col items-center justify-center rounded-[2rem] border-4 border-blue-200 bg-blue-50 p-3 text-center shadow-inner md:h-[15.25rem] md:p-4">
+                <p className="text-sm font-black uppercase text-blue-700">{lang === "en" ? "Bananas left" : "Pisang tinggal"}</p>
+                <div className="my-2 grid h-20 w-20 place-items-center rounded-full border-4 border-blue-300 bg-white text-4xl font-black text-blue-800 md:my-3 md:h-24 md:w-24 md:text-5xl" style={NUMBER_TEXT_STYLE}>
+                  {left}
+                </div>
+                <p className="text-lg font-black text-blue-900">{left} {lang === "en" ? "left" : "tinggal"}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3" aria-label={lang === "en" ? "Three hungry friends" : "Tiga kawan lapar"}>
+              {["🧒", "👧", "👦"].map((friend, index) => (
+                <div
+                  key={friend}
+                  ref={(node) => { friendRefs.current[index] = node; }}
+                  className={`min-h-28 rounded-3xl border-2 p-3 text-center transition-colors ${index < given ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}
+                >
+                  <span className="text-4xl" aria-hidden="true">{friend}</span>
+                  <div className="mt-1 grid h-10 place-items-center">
+                    {index < given ? <SpriteIcon value="🍌" className="h-9 w-9" /> : <span className="text-sm font-black text-slate-500">{lang === "en" ? "Hungry" : "Lapar"}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                type="button"
+                disabled={Boolean(flight)}
+                onClick={giveOne}
+                className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
+              >
+                {lang === "en" ? "Give 1 banana" : "Beri 1 pisang"}
+                <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+                  <PointerIcon />
+                </span>
+              </button>
+            </div>
           </div>
-          <InteractiveSubtractionFlow start={7} takeAway={3} emoji="🍌" lang={lang} onComplete={() => setComplete(true)} />
-        </div>
+        )}
+
+        {storyStep === 4 && (
+          <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
+            <p className="text-2xl font-black text-blue-950">{lang === "en" ? "Count what is left." : "Kira yang tinggal."}</p>
+            <CountedObjectRow count={4} emoji="🍌" showCount speakCount lang={lang} intervalMs={COUNTING_STEP_MS} />
+            <p className="text-2xl font-black text-blue-900">{lang === "en" ? "4 bananas!" : "4 pisang!"}</p>
+          </div>
+        )}
+
+        {storyStep === 5 && (
+          <div className="space-y-5">
+            <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
+              <SubtractionStoryGroup title={lang === "en" ? "Start" : "Mula"} count={7} lang={lang} />
+              <span className="text-center text-5xl font-black text-blue-800">-</span>
+              <div className="rounded-3xl border-2 border-red-200 bg-red-50 p-4 text-center">
+                <p className="mb-3 text-lg font-black text-red-900">{lang === "en" ? "Given away" : "Sudah diberi"}</p>
+                <div className="grid grid-cols-3 gap-1">
+                  {["🧒", "👧", "👦"].map((friend) => (
+                    <div key={friend} className="flex flex-col items-center text-3xl">
+                      <span aria-hidden="true">{friend}</span>
+                      <SpriteIcon value="🍌" className="h-8 w-8" />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xl font-black text-red-900">{lang === "en" ? "3 bananas" : "3 pisang"}</p>
+              </div>
+              <span className="text-center text-5xl font-black text-blue-800">=</span>
+              <SubtractionStoryGroup title={lang === "en" ? "Left" : "Tinggal"} count={4} lang={lang} />
+            </div>
+            <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+              <p className="text-3xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>7 - 3 = 4</p>
+              <p className="mt-2 text-xl font-black text-emerald-900">{storyText[5]}</p>
+            </div>
+          </div>
+        )}
       </div>
+
+      {flight && (
+        <div
+          ref={flyingBananaRef}
+          className="pointer-events-none fixed z-[100] grid h-12 w-12 place-items-center"
+          style={{ left: flight.left, top: flight.top }}
+          aria-hidden="true"
+        >
+          <SpriteIcon value="🍌" className="h-12 w-12" />
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
-          onClick={onPrev}
+          onClick={() => {
+            if (storyStep === 1) onPrev();
+            else setStoryPosition((storyStep - 1) as 1 | 2 | 3 | 4);
+          }}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
           {t.previous}
@@ -2689,11 +2860,13 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
           <button
-            disabled={!complete}
-            onClick={onDone}
-            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:opacity-40"
+            onClick={() => {
+              if (storyStep < 5) setStoryPosition((storyStep + 1) as 2 | 3 | 4 | 5);
+              else onDone();
+            }}
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
           >
-            {t.practice}
+            {storyStep < 5 ? t.next : t.practice}
           </button>
         </div>
       </div>
@@ -2701,25 +2874,123 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   );
 }
 
-function ZeroAdditionBeat({ lang }: { lang: Lang }) {
+function SubtractionStoryGroup({ title, count, lang }: { title: string; count: number; lang: Lang }) {
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-        <div className="rounded-3xl border-2 border-amber-100 bg-amber-50 p-4 text-center">
-          <ObjectGroup count={4} emoji="🍌" numbered />
-          <p className="mt-3 text-xl font-black text-amber-900">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
+    <div className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-3 text-center">
+      <p className="mb-2 text-lg font-black text-blue-950">{title}</p>
+      <ObjectGroup count={count} emoji="🍌" numbered />
+      <p className="mt-2 text-xl font-black text-blue-900">{count} {lang === "en" ? "bananas" : "pisang"}</p>
+    </div>
+  );
+}
+
+function ZeroAdditionBeat({ step, onStepChange, lang }: {
+  step: 1 | 2 | 3;
+  onStepChange: (step: 1 | 2 | 3) => void;
+  lang: Lang;
+}) {
+  const [showFullHint, setShowFullHint] = useState(false);
+
+  const basket = (
+    <div className="min-h-52 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
+      <p className="text-sm font-black uppercase text-amber-800">{lang === "en" ? "Basket" : "Bakul"}</p>
+      <ObjectGroup count={4} emoji="🍌" numbered />
+      <p className="mt-3 text-xl font-black text-amber-950">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
+    </div>
+  );
+
+  const counter = (
+    <div className="min-h-52 rounded-3xl border-4 border-pink-200 bg-pink-50 p-4 text-center shadow-[0_5px_0_rgba(190,24,93,.12)]">
+      <p className="text-sm font-black uppercase text-pink-700">{lang === "en" ? "Chrys's belly" : "Perut Chrys"}</p>
+      <div className="mx-auto mt-3 grid h-24 w-24 place-items-center rounded-full border-4 border-pink-300 bg-white text-5xl font-black text-pink-700">
+        4
+      </div>
+      <p className="mt-3 text-xl font-black text-pink-900">
+        {step === 1
+          ? (lang === "en" ? "4 bananas" : "4 pisang")
+          : (lang === "en" ? "Still 4" : "Masih 4")}
+      </p>
+    </div>
+  );
+
+  if (step === 1) {
+    return (
+      <div className="space-y-5">
+        <p className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center text-xl font-black text-blue-950">
+          {lang === "en"
+            ? "Chrys already has 4 bananas. A friend offers more!"
+            : "Chrys sudah ada 4 pisang. Kawan tawarkan lagi!"}
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 md:items-center">
+          {basket}
+          {counter}
+          <div className="flex min-h-44 items-center justify-center">
+            <img src={chrysRestingWithAlyse} alt={lang === "en" ? "Chrys resting" : "Chrys berehat"} className="h-28 w-52 object-contain" />
+          </div>
+          <div className="min-h-44 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+            <p className="text-lg font-black text-emerald-900">{lang === "en" ? "A friend offers more." : "Kawan tawarkan lagi."}</p>
+            <div className="mt-3"><ObjectGroup count={2} emoji="🍌" /></div>
+          </div>
         </div>
-        <div className="text-center text-5xl font-black text-blue-800">+</div>
-        <div className="rounded-3xl border-2 border-slate-100 bg-slate-50 p-4 text-center">
-          <ObjectGroup count={0} emoji="🍌" numbered />
-          <p className="mt-3 text-xl font-black text-slate-600">{lang === "en" ? "0 more" : "0 lagi"}</p>
+        {showFullHint && (
+          <p className="text-center text-lg font-black text-slate-700">
+            {lang === "en" ? "Chrys is full. He does not need more." : "Chrys kenyang. Dia tidak mahu lagi."}
+          </p>
+        )}
+        <div className="flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowFullHint(true)}
+            className="rounded-2xl border-2 border-blue-300 bg-blue-50 px-5 py-3 font-black text-blue-900 shadow-[0_5px_0_#bfdbfe] active:translate-y-1"
+          >
+            {lang === "en" ? "Add more" : "Tambah lagi"}
+          </button>
+          <button
+            type="button"
+            onClick={() => onStepChange(2)}
+            className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-5 py-3 font-black text-white shadow-[0_5px_0_#047857] active:translate-y-1"
+          >
+            {lang === "en" ? "No thanks, I'm full" : "Tak apa, saya kenyang"}
+            <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+              <PointerIcon />
+            </span>
+          </button>
         </div>
       </div>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <div className="space-y-5">
+        <p className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center text-xl font-black text-blue-950">
+          {lang === "en" ? "Chrys adds 0 bananas. Nothing changes." : "Chrys tambah 0 pisang. Tiada perubahan."}
+        </p>
+        <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+          {basket}
+          <div className="text-center">
+            <div className="text-6xl font-black text-slate-400">0</div>
+            <p className="mt-2 font-black text-slate-600">{lang === "en" ? "bananas move" : "pisang bergerak"}</p>
+          </div>
+          {counter}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2 md:items-center">
+        {basket}
+        {counter}
+      </div>
       <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-        <ObjectGroup count={4} emoji="🍌" numbered />
         <p className="mt-3 text-3xl font-black text-emerald-800">4 + 0 = 4</p>
         <p className="mt-2 text-lg font-black text-emerald-900">
-          {lang === "en" ? "4 bananas. Add 0 more. Still 4." : "4 pisang. Tambah 0 lagi. Masih 4."}
+          {lang === "en" ? "4 bananas. Add 0. Still 4!" : "4 pisang. Tambah 0. Masih 4!"}
+        </p>
+        <p className="mt-2 text-lg font-black text-emerald-800">
+          {lang === "en" ? "Adding zero changes nothing!" : "Tambah sifar tidak mengubah apa-apa!"}
         </p>
       </div>
     </div>
