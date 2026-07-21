@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { BookOpen, Search, X } from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
@@ -81,7 +81,6 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",
 };
 const COUNTING_STEP_MS = 1100;
-const SUBTRACTION_COUNTING_STEP_MS = 1500;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
 const ADDITION_BANANA_STAGGER_MS = ADDITION_BANANA_TRAVEL_MS + ADDITION_BANANA_COUNT_PAUSE_MS;
@@ -2636,6 +2635,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
           <button
+            disabled={step === 7 && zeroStep === 1}
             onClick={() => {
               setEatingStep(null);
               if (step === 1) setStep(3);
@@ -2648,7 +2648,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
               else if (step < 7) setStep((current) => current + 1);
               else onDone();
             }}
-            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {step < 7 || (step === 7 && zeroStep < 3) ? t.next : t.practice}
           </button>
@@ -2665,7 +2665,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   onDone: () => void;
   actions?: LessonAction[];
 }) {
-  const [storyStep, setStoryStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [storyStep, setStoryStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
   const [given, setGiven] = useState(0);
   const [flight, setFlight] = useState<{ left: number; top: number; x: number; y: number; nextGiven: number } | null>(null);
   const basketRef = useRef<HTMLDivElement>(null);
@@ -2677,15 +2677,17 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       1: "Chrys has 7 bananas. Three friends are hungry!",
       2: "Chrys gives 1 away. 6 left.",
       3: "Chrys gives 1 more away. 5 left.",
-      4: "Count what is left. 4 bananas!",
-      5: "7 bananas. Give 3 away. 4 left.",
+      4: "Chrys gives 1 more away. 4 left.",
+      5: "Count what is left. 4 bananas!",
+      6: "7 bananas. Give 3 away. 4 left.",
     }
     : {
       1: "Chrys ada 7 pisang. Tiga kawan lapar!",
       2: "Chrys beri 1. Tinggal 6.",
       3: "Chrys beri 1 lagi. Tinggal 5.",
-      4: "Kira yang tinggal. 4 pisang!",
-      5: "7 pisang. Beri 3. Tinggal 4.",
+      4: "Chrys beri 1 lagi. Tinggal 4.",
+      5: "Kira yang tinggal. 4 pisang!",
+      6: "7 pisang. Beri 3. Tinggal 4.",
     };
 
   useEffect(() => {
@@ -2706,6 +2708,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       setGiven(nextGiven);
       setStoryStep((nextGiven + 1) as 2 | 3 | 4);
       setFlight(null);
+      // The remaining count is spoken only after the banana reaches the friend.
       speakNumber(7 - nextGiven, lang);
     }).catch(() => undefined);
 
@@ -2729,7 +2732,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
     });
   };
 
-  const setStoryPosition = (nextStep: 1 | 2 | 3 | 4 | 5) => {
+  const setStoryPosition = (nextStep: 1 | 2 | 3 | 4 | 5 | 6) => {
     setFlight(null);
     setStoryStep(nextStep);
     setGiven(nextStep === 1 ? 0 : nextStep === 2 ? 1 : nextStep === 3 ? 2 : 3);
@@ -2743,7 +2746,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
-        {storyStep <= 3 && (
+        {storyStep <= 4 && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
               <div ref={basketRef} className="col-span-2 min-h-44 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center md:col-span-1 md:min-h-56">
@@ -2783,22 +2786,35 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             </div>
 
             <div className="flex justify-center">
-              <button
-                type="button"
-                disabled={Boolean(flight)}
-                onClick={giveOne}
-                className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
-              >
-                {lang === "en" ? "Give 1 banana" : "Beri 1 pisang"}
-                <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
-                  <PointerIcon />
-                </span>
-              </button>
+              {given < 3 ? (
+                <button
+                  type="button"
+                  disabled={Boolean(flight)}
+                  onClick={giveOne}
+                  className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
+                >
+                  {lang === "en" ? "Give 1 banana" : "Beri 1 pisang"}
+                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+                    <PointerIcon />
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setStoryPosition(5)}
+                  className="relative rounded-2xl border-2 border-blue-600 bg-blue-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1d4ed8] active:translate-y-1"
+                >
+                  {lang === "en" ? "Count what is left" : "Kira yang tinggal"}
+                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+                    <PointerIcon />
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        {storyStep === 4 && (
+        {storyStep === 5 && (
           <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
             <p className="text-2xl font-black text-blue-950">{lang === "en" ? "Count what is left." : "Kira yang tinggal."}</p>
             <CountedObjectRow count={4} emoji="🍌" showCount speakCount lang={lang} intervalMs={COUNTING_STEP_MS} />
@@ -2806,7 +2822,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
           </div>
         )}
 
-        {storyStep === 5 && (
+        {storyStep === 6 && (
           <div className="space-y-5">
             <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
               <SubtractionStoryGroup title={lang === "en" ? "Start" : "Mula"} count={7} lang={lang} />
@@ -2828,7 +2844,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             </div>
             <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
               <p className="text-3xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>7 - 3 = 4</p>
-              <p className="mt-2 text-xl font-black text-emerald-900">{storyText[5]}</p>
+              <p className="mt-2 text-xl font-black text-emerald-900">{storyText[6]}</p>
             </div>
           </div>
         )}
@@ -2849,7 +2865,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         <button
           onClick={() => {
             if (storyStep === 1) onPrev();
-            else setStoryPosition((storyStep - 1) as 1 | 2 | 3 | 4);
+            else setStoryPosition((storyStep - 1) as 1 | 2 | 3 | 4 | 5);
           }}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
@@ -2860,13 +2876,14 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
           <button
+            disabled={storyStep <= 4}
             onClick={() => {
-              if (storyStep < 5) setStoryPosition((storyStep + 1) as 2 | 3 | 4 | 5);
+              if (storyStep < 6) setStoryPosition((storyStep + 1) as 2 | 3 | 4 | 5 | 6);
               else onDone();
             }}
-            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {storyStep < 5 ? t.next : t.practice}
+            {storyStep < 6 ? t.next : t.practice}
           </button>
         </div>
       </div>
@@ -2889,8 +2906,6 @@ function ZeroAdditionBeat({ step, onStepChange, lang }: {
   onStepChange: (step: 1 | 2 | 3) => void;
   lang: Lang;
 }) {
-  const [showFullHint, setShowFullHint] = useState(false);
-
   const basket = (
     <div className="min-h-52 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
       <p className="text-sm font-black uppercase text-amber-800">{lang === "en" ? "Basket" : "Bakul"}</p>
@@ -2932,19 +2947,7 @@ function ZeroAdditionBeat({ step, onStepChange, lang }: {
             <div className="mt-3"><ObjectGroup count={2} emoji="🍌" /></div>
           </div>
         </div>
-        {showFullHint && (
-          <p className="text-center text-lg font-black text-slate-700">
-            {lang === "en" ? "Chrys is full. He does not need more." : "Chrys kenyang. Dia tidak mahu lagi."}
-          </p>
-        )}
-        <div className="flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => setShowFullHint(true)}
-            className="rounded-2xl border-2 border-blue-300 bg-blue-50 px-5 py-3 font-black text-blue-900 shadow-[0_5px_0_#bfdbfe] active:translate-y-1"
-          >
-            {lang === "en" ? "Add more" : "Tambah lagi"}
-          </button>
+        <div className="flex justify-center">
           <button
             type="button"
             onClick={() => onStepChange(2)}
@@ -2964,7 +2967,9 @@ function ZeroAdditionBeat({ step, onStepChange, lang }: {
     return (
       <div className="space-y-5">
         <p className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center text-xl font-black text-blue-950">
-          {lang === "en" ? "Chrys adds 0 bananas. Nothing changes." : "Chrys tambah 0 pisang. Tiada perubahan."}
+          {lang === "en"
+            ? "Chrys adds 0 bananas. Look - still 4! Nothing changed."
+            : "Chrys tambah 0 pisang. Lihat - masih 4! Tiada perubahan."}
         </p>
         <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
           {basket}
@@ -2987,10 +2992,9 @@ function ZeroAdditionBeat({ step, onStepChange, lang }: {
       <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
         <p className="mt-3 text-3xl font-black text-emerald-800">4 + 0 = 4</p>
         <p className="mt-2 text-lg font-black text-emerald-900">
-          {lang === "en" ? "4 bananas. Add 0. Still 4!" : "4 pisang. Tambah 0. Masih 4!"}
-        </p>
-        <p className="mt-2 text-lg font-black text-emerald-800">
-          {lang === "en" ? "Adding zero changes nothing!" : "Tambah sifar tidak mengubah apa-apa!"}
+          {lang === "en"
+            ? "4 bananas. Add 0. Still 4. Adding zero changes nothing!"
+            : "4 pisang. Tambah 0. Masih 4. Tambah sifar tidak mengubah apa-apa!"}
         </p>
       </div>
     </div>
@@ -3448,29 +3452,17 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
   onComplete?: () => void;
 }) {
   const [phase, setPhase] = useState<SubtractionPhase>("start");
-  const prefersReducedMotion = usePrefersReducedMotion();
   const left = start - takeAway;
-  const intervalMs = prefersReducedMotion ? 140 : SUBTRACTION_COUNTING_STEP_MS;
+  const intervalMs = COUNTING_STEP_MS;
   const crossed = phase === "start" ? 0 : takeAway;
   const showRemainingCount = phase === "counting" || phase === "done";
   const showCrossCount = phase !== "start";
 
-  useEffect(() => {
-    if (phase !== "crossing") return;
-    const audioIntervalMs = Math.max(intervalMs, COUNTING_STEP_MS);
-    const timer = window.setTimeout(() => setPhase("crossed"), Math.max(700, (takeAway + 1) * audioIntervalMs));
-    return () => window.clearTimeout(timer);
-  }, [intervalMs, phase, prefersReducedMotion, takeAway]);
-
-  useEffect(() => {
-    if (phase !== "counting") return;
-    const audioIntervalMs = Math.max(intervalMs, COUNTING_STEP_MS);
-    const timer = window.setTimeout(() => {
-      setPhase("done");
-      onComplete?.();
-    }, Math.max(700, (left + 1) * audioIntervalMs));
-    return () => window.clearTimeout(timer);
-  }, [intervalMs, left, onComplete, phase, prefersReducedMotion]);
+  const finishCrossCount = useCallback(() => setPhase((current) => current === "crossing" ? "crossed" : current), []);
+  const finishRemainingCount = useCallback(() => {
+    setPhase((current) => current === "counting" ? "done" : current);
+    onComplete?.();
+  }, [onComplete]);
 
   const instruction = getSubtractionFlowInstruction(lang, phase, start, takeAway, left);
   const actionLabel = phase === "start"
@@ -3490,7 +3482,9 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
           showCrossCount={showCrossCount}
           intervalMs={intervalMs}
           speakCrossCount={phase === "crossing"}
-          speakCount={phase === "counting"}
+          speakCount={phase === "counting" || phase === "done"}
+          onCrossCountComplete={finishCrossCount}
+          onCountComplete={finishRemainingCount}
           lang={lang}
         />
       </div>
@@ -3536,7 +3530,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, onCrossCountComplete, onCountComplete, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -3548,62 +3542,115 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   intervalMs?: number;
   speakCrossCount?: boolean;
   speakCount?: boolean;
+  onCrossCountComplete?: () => void;
+  onCountComplete?: () => void;
   lang?: Lang;
 }) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const stepIntervalMs = prefersReducedMotion ? Math.min(intervalMs, 140) : Math.max(intervalMs, COUNTING_STEP_MS);
+  const stepIntervalMs = Math.max(intervalMs, COUNTING_STEP_MS);
   const remaining = count - crossed;
   const [visible, setVisible] = useState(0);
   const [visibleCrossed, setVisibleCrossed] = useState(animateCrossOut ? 0 : crossed);
 
   useEffect(() => {
+    let cancelled = false;
     if (!animateCrossOut) {
       setVisibleCrossed(crossed);
       return;
     }
-    if (prefersReducedMotion) {
-      setVisibleCrossed(crossed);
+    setVisibleCrossed(0);
+
+    if (crossed <= 0) {
+      onCrossCountComplete?.();
       return;
     }
-    setVisibleCrossed(0);
-    const timers = Array.from({ length: crossed }, (_, i) => window.setTimeout(() => setVisibleCrossed(i + 1), stepIntervalMs * (i + 1)));
-    return () => timers.forEach(window.clearTimeout);
-  }, [animateCrossOut, crossed, prefersReducedMotion, stepIntervalMs]);
 
-  useEffect(() => {
-    if (!animateCrossOut || !speakCrossCount || crossed <= 0) return;
-    const speechTimer = window.setTimeout(
-      () => speakCountingSequence(crossed, lang, stepIntervalMs),
-      prefersReducedMotion ? 0 : stepIntervalMs,
-    );
+    if (speakCrossCount && !audioMuted) {
+      void speakCountingSequence(
+        crossed,
+        lang,
+        stepIntervalMs,
+        (value) => {
+          if (!cancelled) setVisibleCrossed(value);
+        },
+      ).then(() => {
+        if (!cancelled) onCrossCountComplete?.();
+      });
+      return () => {
+        cancelled = true;
+        stopNumberAudio();
+      };
+    }
+
+    if (prefersReducedMotion) {
+      setVisibleCrossed(crossed);
+      onCrossCountComplete?.();
+      return;
+    }
+
+    const timers = Array.from({ length: crossed }, (_, i) => window.setTimeout(() => {
+      if (cancelled) return;
+      setVisibleCrossed(i + 1);
+      if (i + 1 === crossed) onCrossCountComplete?.();
+    }, stepIntervalMs * (i + 1)));
     return () => {
-      window.clearTimeout(speechTimer);
+      cancelled = true;
+      timers.forEach(window.clearTimeout);
     };
-  }, [animateCrossOut, crossed, lang, prefersReducedMotion, speakCrossCount, stepIntervalMs]);
+  }, [animateCrossOut, crossed, lang, onCrossCountComplete, prefersReducedMotion, speakCrossCount, stepIntervalMs]);
 
   useEffect(() => {
+    let cancelled = false;
     setVisible(0);
     if (!showCount) return;
     const max = countRemainingOnly ? remaining : count;
     const countDelay = animateCrossOut ? (crossed * stepIntervalMs) + stepIntervalMs : 0;
-    const speechTimer = speakCount && max > 0
-      ? window.setTimeout(
-          () => speakCountingSequence(max, lang, stepIntervalMs),
-          prefersReducedMotion ? 0 : countDelay + stepIntervalMs,
-        )
-      : null;
-    if (prefersReducedMotion) {
-      setVisible(max);
+
+    if (max <= 0) {
+      onCountComplete?.();
+      return;
+    }
+
+    if (speakCount && !audioMuted) {
+      const startAudioCount = () => {
+        void speakCountingSequence(
+          max,
+          lang,
+          stepIntervalMs,
+          (value) => {
+            if (!cancelled) setVisible(value);
+          },
+        ).then(() => {
+          if (!cancelled) onCountComplete?.();
+        });
+      };
+      const speechTimer = countDelay > 0
+        ? window.setTimeout(startAudioCount, countDelay)
+        : null;
+      if (!speechTimer) startAudioCount();
       return () => {
+        cancelled = true;
         if (speechTimer) window.clearTimeout(speechTimer);
+        stopNumberAudio();
       };
     }
-    const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => setVisible(i + 1), countDelay + (stepIntervalMs * (i + 1))));
+
+    if (prefersReducedMotion) {
+      setVisible(max);
+      onCountComplete?.();
+      return;
+    }
+
+    const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => {
+      if (cancelled) return;
+      setVisible(i + 1);
+      if (i + 1 === max) onCountComplete?.();
+    }, countDelay + (stepIntervalMs * (i + 1))));
     return () => {
+      cancelled = true;
       timers.forEach(window.clearTimeout);
-      if (speechTimer) window.clearTimeout(speechTimer);
     };
-  }, [animateCrossOut, count, countRemainingOnly, crossed, lang, prefersReducedMotion, remaining, showCount, speakCount, stepIntervalMs]);
+  }, [animateCrossOut, count, countRemainingOnly, crossed, lang, onCountComplete, prefersReducedMotion, remaining, showCount, speakCount, stepIntervalMs]);
 
   useEffect(() => () => stopNumberAudio(), []);
 
