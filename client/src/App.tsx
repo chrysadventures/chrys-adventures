@@ -2668,25 +2668,25 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const [given, setGiven] = useState(0);
   const [flight, setFlight] = useState<{ left: number; top: number; x: number; y: number; nextGiven: number } | null>(null);
   const basketRef = useRef<HTMLDivElement>(null);
-  const friendRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const alyseBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const flyingBananaRef = useRef<HTMLDivElement>(null);
   const left = 7 - given;
   const storyText: Record<number, string> = lang === "en"
     ? {
-      1: "Chrys has 7 bananas. Three friends are hungry!",
-      2: "Chrys gives 1 away. 6 left.",
-      3: "Chrys gives 1 more away. 5 left.",
-      4: "Chrys gives 1 more away. 4 left.",
+      1: "Chrys has 7 bananas. Alyse is hungry!",
+      2: "Chrys gives Alyse 1 banana. 6 are left.",
+      3: "Chrys gives Alyse 1 more. Alyse has 2. 5 are left.",
+      4: "Chrys gives Alyse 1 more. Alyse has 3. 4 are left.",
       5: "Count what is left. 4 bananas!",
-      6: "7 bananas. Give 3 away. 4 left.",
+      6: "7 bananas. Give Alyse 3. 4 are left.",
     }
     : {
-      1: "Chrys ada 7 pisang. Tiga kawan lapar!",
-      2: "Chrys beri 1. Tinggal 6.",
-      3: "Chrys beri 1 lagi. Tinggal 5.",
-      4: "Chrys beri 1 lagi. Tinggal 4.",
+      1: "Chrys ada 7 pisang. Alyse lapar!",
+      2: "Chrys beri Alyse 1 pisang. Tinggal 6.",
+      3: "Chrys beri Alyse 1 lagi. Alyse ada 2. Tinggal 5.",
+      4: "Chrys beri Alyse 1 lagi. Alyse ada 3. Tinggal 4.",
       5: "Kira yang tinggal. 4 pisang!",
-      6: "7 pisang. Beri 3. Tinggal 4.",
+      6: "7 pisang. Beri Alyse 3. Tinggal 4.",
     };
 
   useEffect(() => {
@@ -2707,7 +2707,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       setGiven(nextGiven);
       setStoryStep((nextGiven + 1) as 2 | 3 | 4);
       setFlight(null);
-      // The remaining count is spoken only after the banana reaches the friend.
+      // The remaining count is spoken only after the banana reaches Alyse.
       speakNumber(7 - nextGiven, lang);
     }).catch(() => undefined);
 
@@ -2716,7 +2716,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
 
   const giveOne = () => {
     if (flight || given >= 3 || !basketRef.current) return;
-    const target = friendRefs.current[given];
+    const target = alyseBananaRefs.current[given];
     if (!target) return;
     const sourceRect = basketRef.current.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
@@ -2740,48 +2740,79 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
-        <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys shares bananas" : "Chrys berkongsi pisang"}</h3>
+        <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys gives bananas to Alyse" : "Chrys beri pisang kepada Alyse"}</h3>
         <p className="mt-2 text-lg font-black text-slate-700">{storyText[storyStep]}</p>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
         {storyStep <= 4 && (
           <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-              <div ref={basketRef} className="col-span-2 min-h-44 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center md:col-span-1 md:min-h-56">
+            <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+              <div ref={basketRef} className="min-h-56 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
                 <p className="mb-3 text-sm font-black uppercase text-amber-800">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</p>
-                <div className="flex flex-wrap justify-center gap-2 rounded-3xl border-2 border-slate-100 bg-white p-3">
+                <div className="flex min-h-24 flex-wrap content-center justify-center gap-3 rounded-3xl border-2 border-slate-100 bg-white p-4">
                   {Array.from({ length: left }, (_, index) => (
-                    <span key={index} className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 shadow-inner sm:h-14 sm:w-14">
+                    <span key={index} className="relative grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 shadow-inner">
+                      <span className="absolute -top-2 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-xs font-black text-white shadow-sm">
+                        {index + 1}
+                      </span>
                       <SpriteIcon value="🍌" className="h-9 w-9 sm:h-11 sm:w-11" />
                     </span>
                   ))}
                 </div>
-                <p className="mt-3 text-xl font-black text-amber-950">{left} {lang === "en" ? "bananas" : "pisang"}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-lg font-black">
+                  <p className="rounded-2xl bg-amber-100 px-3 py-2 text-amber-950">
+                    {lang === "en" ? "Start: 7" : "Mula: 7"}
+                  </p>
+                  <p className="rounded-2xl bg-blue-100 px-3 py-2 text-blue-950">
+                    {lang === "en" ? `Left: ${left}` : `Tinggal: ${left}`}
+                  </p>
+                </div>
               </div>
               <img src={chrysHappy} alt="Chrys sharing bananas" className="mx-auto h-24 w-24 object-contain md:h-32 md:w-32" />
-              <div className="mx-auto flex h-44 w-full max-w-52 flex-col items-center justify-center rounded-[2rem] border-4 border-blue-200 bg-blue-50 p-3 text-center shadow-inner md:h-[15.25rem] md:p-4">
-                <p className="text-sm font-black uppercase text-blue-700">{lang === "en" ? "Bananas left" : "Pisang tinggal"}</p>
-                <div className="my-2 grid h-20 w-20 place-items-center rounded-full border-4 border-blue-300 bg-white text-4xl font-black text-blue-800 md:my-3 md:h-24 md:w-24 md:text-5xl" style={NUMBER_TEXT_STYLE}>
-                  {left}
+              <div className="min-h-56 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+                <div className="mb-2 flex items-center justify-center gap-2">
+                  <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
+                  <p className="text-sm font-black uppercase text-emerald-800">{lang === "en" ? "Alyse's basket" : "Bakul Alyse"}</p>
                 </div>
-                <p className="text-lg font-black text-blue-900">{left} {lang === "en" ? "left" : "tinggal"}</p>
+                <p className="mb-4 text-base font-black text-emerald-900">
+                  {lang === "en" ? "Alyse gets 3 bananas in total." : "Alyse dapat 3 pisang semuanya."}
+                </p>
+                <div className="grid grid-cols-3 gap-3 rounded-3xl border-2 border-emerald-100 bg-white p-4">
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <div
+                      key={index}
+                      ref={(node) => { alyseBananaRefs.current[index] = node; }}
+                      className={`relative grid h-16 min-w-0 place-items-center rounded-2xl border-2 ${
+                        index < given ? "border-emerald-300 bg-emerald-50" : "border-dashed border-slate-200 bg-slate-50"
+                      }`}
+                    >
+                      <span className={`absolute -top-3 grid h-7 min-w-7 place-items-center rounded-full px-2 text-xs font-black text-white shadow-sm ${index < given ? "bg-emerald-600" : "bg-slate-400"}`}>
+                        {index + 1}
+                      </span>
+                      {index < given && <SpriteIcon value="🍌" className="h-11 w-11" />}
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xl font-black text-emerald-950">
+                  {lang === "en" ? `Alyse has: ${given}` : `Alyse ada: ${given}`}
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3" aria-label={lang === "en" ? "Three hungry friends" : "Tiga kawan lapar"}>
-              {["🧒", "👧", "👦"].map((friend, index) => (
-                <div
-                  key={friend}
-                  ref={(node) => { friendRefs.current[index] = node; }}
-                  className={`min-h-28 rounded-3xl border-2 p-3 text-center transition-colors ${index < given ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}
-                >
-                  <span className="text-4xl" aria-hidden="true">{friend}</span>
-                  <div className="mt-1 grid h-10 place-items-center">
-                    {index < given ? <SpriteIcon value="🍌" className="h-9 w-9" /> : <span className="text-sm font-black text-slate-500">{lang === "en" ? "Hungry" : "Lapar"}</span>}
-                  </div>
-                </div>
-              ))}
+            <div className="grid gap-3 text-center sm:grid-cols-3" aria-label={lang === "en" ? "Subtraction number labels" : "Label nombor penolakan"}>
+              <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-black text-amber-800">{lang === "en" ? "Start" : "Mula"}</p>
+                <p className="text-3xl font-black text-amber-950" style={NUMBER_TEXT_STYLE}>7</p>
+              </div>
+              <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-sm font-black text-emerald-800">{lang === "en" ? "Given to Alyse" : "Diberi kepada Alyse"}</p>
+                <p className="text-3xl font-black text-emerald-950" style={NUMBER_TEXT_STYLE}>{given}</p>
+              </div>
+              <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-3">
+                <p className="text-sm font-black text-blue-800">{lang === "en" ? "Left" : "Tinggal"}</p>
+                <p className="text-3xl font-black text-blue-950" style={NUMBER_TEXT_STYLE}>{left}</p>
+              </div>
             </div>
 
             <div className="flex justify-center">
@@ -2792,7 +2823,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                   onClick={giveOne}
                   className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
                 >
-                  {lang === "en" ? "Give 1 banana" : "Beri 1 pisang"}
+                  {lang === "en" ? "Give Alyse 1 banana" : "Beri Alyse 1 pisang"}
                   <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
                     <PointerIcon />
                   </span>
@@ -2827,12 +2858,13 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
               <SubtractionStoryGroup title={lang === "en" ? "Start" : "Mula"} count={7} lang={lang} />
               <span className="text-center text-5xl font-black text-blue-800">-</span>
               <div className="rounded-3xl border-2 border-red-200 bg-red-50 p-4 text-center">
-                <p className="mb-3 text-lg font-black text-red-900">{lang === "en" ? "Given away" : "Sudah diberi"}</p>
-                <div className="grid grid-cols-3 gap-1">
-                  {["🧒", "👧", "👦"].map((friend) => (
-                    <div key={friend} className="flex flex-col items-center text-3xl">
-                      <span aria-hidden="true">{friend}</span>
-                      <SpriteIcon value="🍌" className="h-8 w-8" />
+                <p className="mb-3 text-lg font-black text-red-900">{lang === "en" ? "Given to Alyse" : "Diberi kepada Alyse"}</p>
+                <img src={alyseGuide} alt="Alyse" className="mx-auto mb-2 h-16 w-16 object-contain" />
+                <div className="flex justify-center gap-2">
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <div key={index} className="relative grid h-12 w-12 place-items-center rounded-2xl bg-white">
+                      <span className="absolute -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-red-600 px-1 text-xs font-black text-white">{index + 1}</span>
+                      <SpriteIcon value="🍌" className="h-9 w-9" />
                     </div>
                   ))}
                 </div>
@@ -3197,7 +3229,23 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
         }
       }
 
-      if (!cancelled) setActiveGroup(-1);
+      if (cancelled) return;
+      setActiveGroup(-1);
+
+      if (!audioMuted) {
+        speakText(
+          lang === "en"
+            ? "2 bananas plus 3 bananas equals to 5 bananas."
+            : "2 pisang tambah 3 pisang sama dengan 5 pisang.",
+          lang,
+        );
+        await wait(4200);
+        if (cancelled) return;
+        speakText(
+          lang === "en" ? "2 plus 3 equals to 5." : "2 tambah 3 sama dengan 5.",
+          lang,
+        );
+      }
     };
 
     void runSequence();
