@@ -2528,13 +2528,13 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
       1: "Chrys eats 2 bananas.",
       3: "Then Chrys eats 3 more bananas.",
       5: "See how the groups make 5.",
-      7: "Chrys is full.",
+      7: "Chrys and Alyse count bananas.",
     }
     : {
       1: "Chrys makan 2 pisang.",
       3: "Kemudian Chrys makan 3 pisang lagi.",
       5: "Lihat bagaimana kumpulan menjadi 5.",
-      7: "Chrys kenyang.",
+      7: "Chrys dan Alyse mengira pisang.",
     };
   const zeroBeat = step === 7;
   const showFirst = step <= 1;
@@ -2635,7 +2635,6 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
           <button
-            disabled={step === 7 && zeroStep === 1}
             onClick={() => {
               setEatingStep(null);
               if (step === 1) setStep(3);
@@ -2901,63 +2900,64 @@ function SubtractionStoryGroup({ title, count, lang }: { title: string; count: n
   );
 }
 
-function ZeroAdditionBeat({ step, onStepChange, lang }: {
+function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
   step: 1 | 2 | 3;
   onStepChange: (step: 1 | 2 | 3) => void;
   lang: Lang;
 }) {
-  const basket = (
-    <div className="min-h-52 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
-      <p className="text-sm font-black uppercase text-amber-800">{lang === "en" ? "Basket" : "Bakul"}</p>
-      <ObjectGroup count={4} emoji="🍌" numbered />
-      <p className="mt-3 text-xl font-black text-amber-950">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
-    </div>
-  );
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [alyseVisible, setAlyseVisible] = useState(step === 3 ? 4 : 0);
 
-  const counter = (
-    <div className="min-h-52 rounded-3xl border-4 border-pink-200 bg-pink-50 p-4 text-center shadow-[0_5px_0_rgba(190,24,93,.12)]">
-      <p className="text-sm font-black uppercase text-pink-700">{lang === "en" ? "Chrys's belly" : "Perut Chrys"}</p>
-      <div className="mx-auto mt-3 grid h-24 w-24 place-items-center rounded-full border-4 border-pink-300 bg-white text-5xl font-black text-pink-700">
-        4
-      </div>
-      <p className="mt-3 text-xl font-black text-pink-900">
-        {step === 1
-          ? (lang === "en" ? "4 bananas" : "4 pisang")
-          : (lang === "en" ? "Still 4" : "Masih 4")}
-      </p>
-    </div>
-  );
+  useEffect(() => {
+    let cancelled = false;
+    const timers: number[] = [];
+    stopNumberAudio();
+
+    if (step === 1) {
+      setAlyseVisible(0);
+      timers.push(window.setTimeout(() => speakNumber(0, lang), 300));
+    } else if (step === 2) {
+      setAlyseVisible(0);
+      if (!audioMuted) {
+        void speakCountingSequence(4, lang, COUNTING_STEP_MS, (value) => {
+          if (!cancelled) setAlyseVisible(value);
+        });
+      } else if (prefersReducedMotion) {
+        setAlyseVisible(4);
+      } else {
+        for (let value = 1; value <= 4; value += 1) {
+          timers.push(window.setTimeout(() => {
+            if (!cancelled) setAlyseVisible(value);
+          }, value * COUNTING_STEP_MS));
+        }
+      }
+    } else {
+      setAlyseVisible(4);
+    }
+
+    return () => {
+      cancelled = true;
+      timers.forEach(window.clearTimeout);
+      stopNumberAudio();
+    };
+  }, [lang, prefersReducedMotion, step]);
 
   if (step === 1) {
     return (
       <div className="space-y-5">
         <p className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center text-xl font-black text-blue-950">
-          {lang === "en"
-            ? "Chrys already has 4 bananas. A friend offers more!"
-            : "Chrys sudah ada 4 pisang. Kawan tawarkan lagi!"}
+          {lang === "en" ? "Look at Chrys's basket." : "Lihat bakul Chrys."}
         </p>
-        <div className="grid gap-4 md:grid-cols-2 md:items-center">
-          {basket}
-          {counter}
-          <div className="flex min-h-44 items-center justify-center">
-            <img src={chrysRestingWithAlyse} alt={lang === "en" ? "Chrys resting" : "Chrys berehat"} className="h-28 w-52 object-contain" />
+        <div className="grid gap-5 md:grid-cols-[auto_1fr] md:items-center">
+          <div className="flex justify-center">
+            <img src={chrysHappy} alt="Chrys" className="h-36 w-36 object-contain" />
           </div>
-          <div className="min-h-44 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-            <p className="text-lg font-black text-emerald-900">{lang === "en" ? "A friend offers more." : "Kawan tawarkan lagi."}</p>
-            <div className="mt-3"><ObjectGroup count={2} emoji="🍌" /></div>
+          <div>
+            <ContainerScene count={0} emoji="🍌" container="basket" hideEmptyLabel />
+            <p className="mt-3 text-center text-2xl font-black text-blue-950">
+              {lang === "en" ? "Chrys has 0 bananas." : "Chrys ada 0 pisang."}
+            </p>
           </div>
-        </div>
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={() => onStepChange(2)}
-            className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-5 py-3 font-black text-white shadow-[0_5px_0_#047857] active:translate-y-1"
-          >
-            {lang === "en" ? "No thanks, I'm full" : "Tak apa, saya kenyang"}
-            <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
-              <PointerIcon />
-            </span>
-          </button>
         </div>
       </div>
     );
@@ -2967,34 +2967,55 @@ function ZeroAdditionBeat({ step, onStepChange, lang }: {
     return (
       <div className="space-y-5">
         <p className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center text-xl font-black text-blue-950">
-          {lang === "en"
-            ? "Chrys adds 0 bananas. Look - still 4! Nothing changed."
-            : "Chrys tambah 0 pisang. Lihat - masih 4! Tiada perubahan."}
+          {lang === "en" ? "Now count Alyse's bananas." : "Sekarang kira pisang Alyse."}
         </p>
-        <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          {basket}
-          <div className="text-center">
-            <div className="text-6xl font-black text-slate-400">0</div>
-            <p className="mt-2 font-black text-slate-600">{lang === "en" ? "bananas move" : "pisang bergerak"}</p>
+        <div className="grid gap-5 md:grid-cols-[auto_1fr] md:items-center">
+          <div className="flex justify-center">
+            <img src={alyseGuide} alt="Alyse" className="h-32 w-32 object-contain" />
           </div>
-          {counter}
+          <div>
+            <ContainerScene count={alyseVisible} emoji="🍌" container="basket" numbered hideEmptyLabel />
+            <p className="mt-3 min-h-8 text-center text-2xl font-black text-emerald-900" aria-live="polite">
+              {alyseVisible === 4
+                ? (lang === "en" ? "Alyse has 4 bananas." : "Alyse ada 4 pisang.")
+                : (lang === "en" ? `Count: ${alyseVisible}` : `Kira: ${alyseVisible}`)}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2 md:items-center">
-        {basket}
-        {counter}
+    <div className="space-y-5">
+      <p className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center text-xl font-black text-blue-950">
+        {lang === "en" ? "Put both baskets together." : "Gabungkan kedua-dua bakul."}
+      </p>
+      <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <div className="text-center">
+          <div className="mb-2 flex items-center justify-center gap-2">
+            <img src={chrysHappy} alt="Chrys" className="h-16 w-16 object-contain" />
+            <p className="text-xl font-black text-blue-950">Chrys</p>
+          </div>
+          <ContainerScene count={0} emoji="🍌" container="basket" hideEmptyLabel />
+          <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "0 bananas" : "0 pisang"}</p>
+        </div>
+        <div className="text-center text-5xl font-black text-blue-800">+</div>
+        <div className="text-center">
+          <div className="mb-2 flex items-center justify-center gap-2">
+            <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
+            <p className="text-xl font-black text-blue-950">Alyse</p>
+          </div>
+          <ContainerScene count={4} emoji="🍌" container="basket" numbered hideEmptyLabel />
+          <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
+        </div>
       </div>
       <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-        <p className="mt-3 text-3xl font-black text-emerald-800">4 + 0 = 4</p>
-        <p className="mt-2 text-lg font-black text-emerald-900">
+        <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>0 + 4 = 4</p>
+        <p className="mt-2 text-xl font-black text-emerald-900">
           {lang === "en"
-            ? "4 bananas. Add 0. Still 4. Adding zero changes nothing!"
-            : "4 pisang. Tambah 0. Masih 4. Tambah sifar tidak mengubah apa-apa!"}
+            ? "0 bananas plus 4 bananas equals 4 bananas."
+            : "0 pisang tambah 4 pisang sama dengan 4 pisang."}
         </p>
       </div>
     </div>
@@ -3008,8 +3029,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const [completedGroups, setCompletedGroups] = useState(0);
   const [activeGroup, setActiveGroup] = useState(0);
   const labels = lang === "en"
-    ? ["Total: 2 bananas", "Total: 3 bananas", "Total: 5 bananas"]
-    : ["Jumlah: 2 pisang", "Jumlah: 3 pisang", "Jumlah: 5 pisang"];
+    ? ["2 bananas", "3 bananas", "5 bananas"]
+    : ["2 pisang", "3 pisang", "5 pisang"];
 
   useEffect(() => {
     let cancelled = false;
@@ -3071,44 +3092,38 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
                 {index === 1 ? "+" : "="}
               </span>
             )}
-            <div
-              aria-current={activeGroup === index ? "step" : undefined}
-              className={`rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
-                activeGroup === index
-                  ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
-                  : index > activeGroup && completedGroups <= index
-                    ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
-                    : "border-emerald-300 bg-white"
-              }`}
-            >
-              <div className="flex flex-wrap justify-center gap-3">
-                {Array.from({ length: count }, (_, objectIndex) => {
-                  const counted = objectIndex < visibleCounts[index];
-                  return (
-                    <div key={objectIndex} className="relative flex h-24 w-16 items-center justify-center rounded-2xl bg-amber-50 pt-4 shadow-inner">
-                      <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
-                        {objectIndex + 1}
-                      </span>
-                      <SpriteIcon value={banana} className="h-12 w-12" />
-                    </div>
-                  );
-                })}
+            <div className="flex h-full flex-col">
+              <div
+                aria-current={activeGroup === index ? "step" : undefined}
+                className={`flex flex-1 items-center rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
+                  activeGroup === index
+                    ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
+                    : index > activeGroup && completedGroups <= index
+                      ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
+                      : "border-emerald-300 bg-white"
+                }`}
+              >
+                <div className="flex w-full flex-wrap justify-center gap-3">
+                  {Array.from({ length: count }, (_, objectIndex) => {
+                    const counted = objectIndex < visibleCounts[index];
+                    return (
+                      <div key={objectIndex} className="relative flex h-24 w-16 items-center justify-center rounded-2xl bg-amber-50 pt-4 shadow-inner">
+                        <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                          {objectIndex + 1}
+                        </span>
+                        <SpriteIcon value={banana} className="h-12 w-12" />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <p className={`mt-2 rounded-xl px-2 py-1 text-lg font-black transition-colors ${completedGroups > index ? "bg-emerald-50 text-emerald-900" : "text-slate-500"}`}>
-                {labels[index]}
+              <p className="mt-3 min-h-9 text-center text-xl font-black text-emerald-900" aria-live="polite">
+                {completedGroups > index ? labels[index] : <span aria-hidden="true">&nbsp;</span>}
               </p>
             </div>
           </React.Fragment>
         ))}
       </div>
-      <p className="text-xl font-black text-emerald-900">
-        {lang === "en"
-          ? "2 bananas plus 3 bananas makes 5 bananas."
-          : "2 pisang tambah 3 pisang menjadi 5 pisang."}
-      </p>
-      <p className="text-3xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>
-        2 + 3 = 5
-      </p>
     </div>
   );
 }
