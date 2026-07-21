@@ -2980,7 +2980,13 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
             <img src={chrysHappy} alt="Chrys" className="h-36 w-36 object-contain" />
           </div>
           <div>
-            <ContainerScene count={0} emoji="🍌" container="basket" hideEmptyLabel />
+            <ContainerScene
+              count={0}
+              emoji="🍌"
+              container="basket"
+              hideEmptyLabel
+              label={lang === "en" ? "Chrys's basket" : "Bakul Chrys"}
+            />
             <p className="mt-3 text-center text-2xl font-black text-blue-950">
               {lang === "en" ? "Chrys has 0 bananas." : "Chrys ada 0 pisang."}
             </p>
@@ -3001,7 +3007,11 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
             <img src={alyseGuide} alt="Alyse" className="h-32 w-32 object-contain" />
           </div>
           <div>
-            <BasketBananaScene count={4} counted={alyseCounted} />
+            <BasketBananaScene
+              count={4}
+              counted={alyseCounted}
+              label={lang === "en" ? "Alyse's basket" : "Bakul Alyse"}
+            />
             <div className="mt-4 flex justify-center">
               <button
                 type="button"
@@ -3043,7 +3053,13 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
             <img src={chrysHappy} alt="Chrys" className="h-16 w-16 object-contain" />
             <p className="text-xl font-black text-blue-950">Chrys</p>
           </div>
-          <ContainerScene count={0} emoji="🍌" container="basket" hideEmptyLabel />
+          <ContainerScene
+            count={0}
+            emoji="🍌"
+            container="basket"
+            hideEmptyLabel
+            label={lang === "en" ? "Chrys's basket" : "Bakul Chrys"}
+          />
           <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "0 bananas" : "0 pisang"}</p>
         </div>
         <div className="text-center text-5xl font-black text-blue-800">+</div>
@@ -3052,7 +3068,11 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
             <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
             <p className="text-xl font-black text-blue-950">Alyse</p>
           </div>
-          <BasketBananaScene count={4} counted={4} />
+          <BasketBananaScene
+            count={4}
+            counted={4}
+            label={lang === "en" ? "Alyse's basket" : "Bakul Alyse"}
+          />
           <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
         </div>
       </div>
@@ -3068,7 +3088,7 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
   );
 }
 
-function BasketBananaScene({ count, counted }: { count: number; counted: number }) {
+function BasketBananaScene({ count, counted, label }: { count: number; counted: number; label: string }) {
   const banana = String.fromCodePoint(0x1f34c);
   const positions = [
     ["left-[29%]", "top-[35%]", "-rotate-12"],
@@ -3103,6 +3123,7 @@ function BasketBananaScene({ count, counted }: { count: number; counted: number 
           );
         })}
       </div>
+      <p className="mt-3 text-center text-xl font-black text-amber-900">{label}</p>
     </div>
   );
 }
@@ -3193,10 +3214,12 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
           <React.Fragment key={count}>
             {index > 0 && (
               <span
-                className={`text-4xl font-black transition-colors duration-300 ${
-                  activeSign === index - 1 || completedSigns >= index
-                    ? "text-blue-900"
-                    : "text-slate-300"
+                className={`grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow] duration-300 ${
+                  activeSign === index - 1
+                    ? "border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
+                    : completedSigns >= index
+                      ? "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_4px_0_#d97706]"
+                      : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
                 }`}
                 aria-hidden="true"
               >
@@ -4648,12 +4671,14 @@ function ContainerScene({
   container,
   numbered = false,
   hideEmptyLabel = false,
+  label,
 }: {
   count: number;
   emoji: string;
   container: ContainerKind;
   numbered?: boolean;
   hideEmptyLabel?: boolean;
+  label?: string;
 }) {
   const image = container === "basket" ? BASKET_SPRITE : trayPhoto;
   const alt = container === "basket" ? "basket" : "tray";
@@ -4686,6 +4711,7 @@ function ContainerScene({
           );
         })}
       </div>
+      {label && <p className="mt-3 text-center text-xl font-black text-amber-900">{label}</p>}
       {count === 0 && !hideEmptyLabel && (
         <div className="mx-auto mt-3 max-w-xs rounded-2xl border-2 border-dashed border-slate-200 bg-white/85 px-4 py-3 text-center text-2xl font-black text-slate-400">
           {numbered ? "0" : "empty"}
