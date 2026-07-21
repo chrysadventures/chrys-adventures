@@ -2906,41 +2906,68 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
   lang: Lang;
 }) {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [alyseVisible, setAlyseVisible] = useState(step === 3 ? 4 : 0);
+  const [alyseCounted, setAlyseCounted] = useState(step === 3 ? 4 : 0);
+  const [alyseCounting, setAlyseCounting] = useState(false);
+  const alyseCountRunRef = useRef(0);
 
   useEffect(() => {
-    let cancelled = false;
-    const timers: number[] = [];
+    const runId = ++alyseCountRunRef.current;
     stopNumberAudio();
+    setAlyseCounting(false);
 
     if (step === 1) {
-      setAlyseVisible(0);
-      timers.push(window.setTimeout(() => speakNumber(0, lang), 300));
+      setAlyseCounted(0);
+      const timer = window.setTimeout(() => {
+        if (alyseCountRunRef.current === runId) speakNumber(0, lang);
+      }, 300);
+      return () => {
+        window.clearTimeout(timer);
+        alyseCountRunRef.current += 1;
+        stopNumberAudio();
+      };
     } else if (step === 2) {
-      setAlyseVisible(0);
-      if (!audioMuted) {
-        void speakCountingSequence(4, lang, COUNTING_STEP_MS, (value) => {
-          if (!cancelled) setAlyseVisible(value);
-        });
-      } else if (prefersReducedMotion) {
-        setAlyseVisible(4);
-      } else {
-        for (let value = 1; value <= 4; value += 1) {
-          timers.push(window.setTimeout(() => {
-            if (!cancelled) setAlyseVisible(value);
-          }, value * COUNTING_STEP_MS));
-        }
-      }
+      setAlyseCounted(0);
     } else {
-      setAlyseVisible(4);
+      setAlyseCounted(4);
     }
 
     return () => {
-      cancelled = true;
-      timers.forEach(window.clearTimeout);
+      alyseCountRunRef.current += 1;
       stopNumberAudio();
     };
-  }, [lang, prefersReducedMotion, step]);
+  }, [lang, step]);
+
+  const countAlyseBananas = async () => {
+    if (alyseCounting) return;
+    const runId = ++alyseCountRunRef.current;
+    setAlyseCounting(true);
+    setAlyseCounted(0);
+    stopNumberAudio();
+
+    if (!audioMuted) {
+      await speakCountingSequence(4, lang, COUNTING_STEP_MS, (value) => {
+        if (alyseCountRunRef.current === runId) setAlyseCounted(value);
+      });
+    } else if (prefersReducedMotion) {
+      setAlyseCounted(4);
+    } else {
+      for (let value = 1; value <= 4; value += 1) {
+        await wait(COUNTING_STEP_MS);
+        if (alyseCountRunRef.current !== runId) return;
+        setAlyseCounted(value);
+      }
+    }
+
+    if (alyseCountRunRef.current !== runId) return;
+    setAlyseCounted(4);
+    setAlyseCounting(false);
+    if (!audioMuted) {
+      speakText(
+        lang === "en" ? "Alyse has 4 bananas." : "Alyse ada 4 pisang.",
+        lang,
+      );
+    }
+  };
 
   if (step === 1) {
     return (
@@ -2974,11 +3001,30 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
             <img src={alyseGuide} alt="Alyse" className="h-32 w-32 object-contain" />
           </div>
           <div>
-            <ContainerScene count={alyseVisible} emoji="🍌" container="basket" numbered hideEmptyLabel />
+            <BasketBananaScene count={4} counted={alyseCounted} />
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => void countAlyseBananas()}
+                disabled={alyseCounting}
+                className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
+              >
+                {alyseCounting
+                  ? (lang === "en" ? "Counting..." : "Mengira...")
+                  : alyseCounted === 4
+                    ? (lang === "en" ? "Count again" : "Kira lagi")
+                    : (lang === "en" ? "Tap to count" : "Ketik untuk mengira")}
+                <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+                  <PointerIcon />
+                </span>
+              </button>
+            </div>
             <p className="mt-3 min-h-8 text-center text-2xl font-black text-emerald-900" aria-live="polite">
-              {alyseVisible === 4
+              {alyseCounted === 4
                 ? (lang === "en" ? "Alyse has 4 bananas." : "Alyse ada 4 pisang.")
-                : (lang === "en" ? `Count: ${alyseVisible}` : `Kira: ${alyseVisible}`)}
+                : alyseCounted > 0
+                  ? (lang === "en" ? `Count: ${alyseCounted}` : `Kira: ${alyseCounted}`)
+                  : <span aria-hidden="true">&nbsp;</span>}
             </p>
           </div>
         </div>
@@ -3006,7 +3052,7 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
             <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
             <p className="text-xl font-black text-blue-950">Alyse</p>
           </div>
-          <ContainerScene count={4} emoji="🍌" container="basket" numbered hideEmptyLabel />
+          <BasketBananaScene count={4} counted={4} />
           <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
         </div>
       </div>
@@ -3022,12 +3068,53 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
   );
 }
 
+function BasketBananaScene({ count, counted }: { count: number; counted: number }) {
+  const banana = String.fromCodePoint(0x1f34c);
+  const positions = [
+    ["left-[29%]", "top-[35%]", "-rotate-12"],
+    ["left-[63%]", "top-[30%]", "rotate-12"],
+    ["left-[39%]", "top-[62%]", "rotate-6"],
+    ["left-[69%]", "top-[59%]", "-rotate-6"],
+  ];
+
+  return (
+    <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-200 bg-white p-4">
+      <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
+        <img src={BASKET_SPRITE} alt="basket" className="absolute inset-0 h-full w-full object-contain" />
+        {Array.from({ length: count }, (_, index) => {
+          const [x, y, rotation] = positions[index];
+          const isCounted = index < counted;
+          return (
+            <div
+              key={index}
+              className={`absolute ${x} ${y} ${rotation} grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,transform] duration-300 ${
+                isCounted
+                  ? "border-blue-500 bg-transparent"
+                  : "border-transparent bg-transparent"
+              }`}
+            >
+              <SpriteIcon value={banana} className="h-14 w-14" />
+              {isCounted && (
+                <span className="absolute -top-3 grid h-8 min-w-8 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white shadow-md">
+                  {index + 1}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const banana = String.fromCodePoint(0x1f34c);
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visibleCounts, setVisibleCounts] = useState([0, 0, 0]);
   const [completedGroups, setCompletedGroups] = useState(0);
   const [activeGroup, setActiveGroup] = useState(0);
+  const [completedSigns, setCompletedSigns] = useState(0);
+  const [activeSign, setActiveSign] = useState(-1);
   const labels = lang === "en"
     ? ["2 bananas", "3 bananas", "5 bananas"]
     : ["2 pisang", "3 pisang", "5 pisang"];
@@ -3041,6 +3128,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
       setVisibleCounts([0, 0, 0]);
       setCompletedGroups(0);
       setActiveGroup(0);
+      setCompletedSigns(0);
+      setActiveSign(-1);
 
       for (let groupIndex = 0; groupIndex < ADDITION_EQUATION_GROUPS.length; groupIndex += 1) {
         if (cancelled) return;
@@ -3070,6 +3159,21 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
           lang,
         );
         await wait(audioMuted ? 800 : 2000);
+
+        if (groupIndex < ADDITION_EQUATION_GROUPS.length - 1) {
+          if (cancelled) return;
+          setActiveSign(groupIndex);
+          speakText(
+            groupIndex === 0
+              ? (lang === "en" ? "Plus." : "Tambah.")
+              : (lang === "en" ? "Equals to." : "Sama dengan."),
+            lang,
+          );
+          await wait(audioMuted ? 600 : 1300);
+          if (cancelled) return;
+          setCompletedSigns(groupIndex + 1);
+          setActiveSign(-1);
+        }
       }
 
       if (!cancelled) setActiveGroup(-1);
@@ -3088,7 +3192,14 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
         {ADDITION_EQUATION_GROUPS.map((count, index) => (
           <React.Fragment key={count}>
             {index > 0 && (
-              <span className="text-4xl font-black text-blue-900" aria-hidden="true">
+              <span
+                className={`text-4xl font-black transition-colors duration-300 ${
+                  activeSign === index - 1 || completedSigns >= index
+                    ? "text-blue-900"
+                    : "text-slate-300"
+                }`}
+                aria-hidden="true"
+              >
                 {index === 1 ? "+" : "="}
               </span>
             )}
@@ -3124,6 +3235,16 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
           </React.Fragment>
         ))}
       </div>
+      {completedGroups === ADDITION_EQUATION_GROUPS.length && completedSigns === 2 && (
+        <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center" aria-live="polite">
+          <p className="text-xl font-black text-emerald-900">
+            {lang === "en"
+              ? "2 bananas + 3 bananas = 5 bananas"
+              : "2 pisang + 3 pisang = 5 pisang"}
+          </p>
+          <p className="mt-2 text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>2 + 3 = 5</p>
+        </div>
+      )}
     </div>
   );
 }
