@@ -74,7 +74,9 @@ type LessonAction = {
 };
 
 const STORE_KEY = "chrys_adventures_rebuild_state";
-const AUDIO_FEATURE_ENABLED = false;
+const NUMBER_AUDIO_ENABLED = true;
+const WORD_AUDIO_ENABLED = false;
+const MATH_CUE_AUDIO_ENABLED = true;
 const NUMBERS = Array.from({ length: 10 }, (_, n) => n);
 const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontFamily: "var(--app-font-number)",
@@ -146,10 +148,10 @@ let activeNumberAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
 let queuedAudioAfterCounting: (() => void) | null = null;
-let audioMuted = !AUDIO_FEATURE_ENABLED;
+let audioMuted = !NUMBER_AUDIO_ENABLED;
 let audioUserInteracted = false;
 const numberAudioCache = new Map<number, HTMLAudioElement>();
-const AudioEnabledContext = React.createContext(AUDIO_FEATURE_ENABLED);
+const AudioEnabledContext = React.createContext(NUMBER_AUDIO_ENABLED);
 
 function markAudioInteraction() {
   audioUserInteracted = true;
@@ -352,7 +354,7 @@ const recognitionPracticeQuestions: Question[] = [
   q("rec-audio-word-5", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["three", "four", "five", "six"], "five", { kind: "audioNumber", value: 5 }),
   q("rec-audio-word-8", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "eight", { kind: "audioNumber", value: 8 }),
   q("rec-audio-word-9", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "nine", { kind: "audioNumber", value: 9 }),
-].filter((question) => AUDIO_FEATURE_ENABLED || question.visual.kind !== "audioNumber");
+].filter((question) => NUMBER_AUDIO_ENABLED || question.visual.kind !== "audioNumber");
 
 const valuePracticeQuestions: Question[] = [
   q("val-tap-0", "numbers", { en: "Make 0.", ms: "Bina 0." }, [], 0, { kind: "number", value: 0 }, "tapObjects"),
@@ -829,14 +831,14 @@ function getReducedMotionPreference() {
 function loadState(): { player: Player | null; lang: Lang; soundEnabled: boolean } {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
-    return { player: parsed.player ?? null, lang: parsed.lang === "ms" ? "ms" : "en", soundEnabled: parsed.soundEnabled !== false };
+    return { player: parsed.player ?? null, lang: parsed.lang === "ms" ? "ms" : "en", soundEnabled: parsed.numberSoundEnabled !== false };
   } catch {
     return { player: null, lang: "en", soundEnabled: true };
   }
 }
 
 function saveState(player: Player | null, lang: Lang, soundEnabled: boolean) {
-  localStorage.setItem(STORE_KEY, JSON.stringify({ player, lang, soundEnabled }));
+  localStorage.setItem(STORE_KEY, JSON.stringify({ player, lang, soundEnabled, numberSoundEnabled: soundEnabled }));
 }
 
 function App() {
@@ -845,14 +847,14 @@ function App() {
   const [lang, setLang] = useState<Lang>(initial.lang);
   const [player, setPlayer] = useState<Player | null>(initial.player);
   const [screen, setScreen] = useState<Screen>(initial.player ? "menu" : "home");
-  const [soundEnabled, setSoundEnabled] = useState(AUDIO_FEATURE_ENABLED && initial.soundEnabled);
+  const [soundEnabled, setSoundEnabled] = useState(NUMBER_AUDIO_ENABLED && initial.soundEnabled);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
 
   useEffect(() => saveState(player, lang, soundEnabled), [player, lang, soundEnabled]);
   useEffect(() => setGlobalAudioMuted(!soundEnabled), [soundEnabled]);
   useEffect(() => {
-    if (AUDIO_FEATURE_ENABLED) preloadNumberAudioFiles();
+    if (NUMBER_AUDIO_ENABLED) preloadNumberAudioFiles();
   }, []);
 
   const t = UI[lang];
@@ -981,7 +983,7 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
         <h1 className="hidden truncate text-xl font-black leading-tight text-blue-950 sm:block md:text-2xl">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
-        {AUDIO_FEATURE_ENABLED && (
+        {NUMBER_AUDIO_ENABLED && (
           <button
             type="button"
             onClick={onToggleSound}
@@ -1084,7 +1086,7 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
                             <span className="text-blue-700">{lang === "en" ? "Math note:" : "Nota matematik:"}</span> {entry.note[lang]}
                           </p>
                         </div>
-                        {AUDIO_FEATURE_ENABLED && (
+                        {WORD_AUDIO_ENABLED && (
                           <button
                             type="button"
                             onClick={() => speakText(`${entry.term[lang]}. ${entry.child[lang]} ${entry.note[lang]}`, lang)}
@@ -1396,7 +1398,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
             <CharacterTalk lang={lang} text={lang === "en" ? `This word says ${WORDS.en[number]}.` : `Perkataan ini ${WORDS.ms[number]}.`} />
             <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
               <p className="text-6xl font-black text-blue-950">{WORDS[lang][number]}</p>
-              {AUDIO_FEATURE_ENABLED && (
+              {NUMBER_AUDIO_ENABLED && (
                 <button
                   onClick={() => speakNumber(number, lang)}
                   aria-label={lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}
@@ -3284,6 +3286,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const [hasStarted, setHasStarted] = useState(false);
   const [isCounting, setIsCounting] = useState(false);
   const [countRun, setCountRun] = useState(0);
+  const [joiningResult, setJoiningResult] = useState(false);
+  const [resultJoined, setResultJoined] = useState(false);
   const labels = lang === "en"
     ? ["2 bananas", "3 bananas", "5 bananas"]
     : ["2 pisang", "3 pisang", "5 pisang"];
@@ -3301,6 +3305,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
       setActiveGroup(0);
       setCompletedSigns(0);
       setActiveSign(-1);
+      setJoiningResult(false);
+      setResultJoined(false);
 
       for (let groupIndex = 0; groupIndex < ADDITION_EQUATION_GROUPS.length; groupIndex += 1) {
         if (cancelled) return;
@@ -3324,23 +3330,27 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
         }
 
         if (cancelled) return;
+        if (groupIndex === ADDITION_EQUATION_GROUPS.length - 1) {
+          setJoiningResult(true);
+          await wait(prefersReducedMotion ? 0 : 1100);
+          if (cancelled) return;
+          setResultJoined(true);
+          setJoiningResult(false);
+          await wait(prefersReducedMotion ? 0 : 250);
+        }
+
         setCompletedGroups(groupIndex + 1);
         speakText(
           lang === "en" ? `Total ${count} bananas.` : `Jumlah ${count} pisang.`,
           lang,
         );
-        await wait(audioMuted ? 800 : 2000);
+        await wait(WORD_AUDIO_ENABLED && !audioMuted ? 2000 : 800);
 
         if (groupIndex < ADDITION_EQUATION_GROUPS.length - 1) {
           if (cancelled) return;
           setActiveSign(groupIndex);
-          speakText(
-            groupIndex === 0
-              ? (lang === "en" ? "Plus." : "Tambah.")
-              : (lang === "en" ? "Equals to." : "Sama dengan."),
-            lang,
-          );
-          await wait(audioMuted ? 600 : 1300);
+          speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+          await wait(MATH_CUE_AUDIO_ENABLED && !audioMuted ? 1300 : 600);
           if (cancelled) return;
           setCompletedSigns(groupIndex + 1);
           setActiveSign(-1);
@@ -3350,7 +3360,7 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
       if (cancelled) return;
       setActiveGroup(-1);
 
-      if (!audioMuted) {
+      if (WORD_AUDIO_ENABLED && !audioMuted) {
         speakText(
           lang === "en"
             ? "2 bananas plus 3 bananas equals to 5 bananas."
@@ -3380,6 +3390,28 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
     setIsCounting(true);
     setHasStarted(true);
     setCountRun((current) => current + 1);
+  };
+
+  const renderBanana = (groupIndex: number, countIndex: number, layoutCount: number, layoutIndex: number) => {
+    const counted = countIndex < visibleCounts[groupIndex];
+    const currentBanana = activeGroup === groupIndex && visibleCounts[groupIndex] === countIndex + 1;
+    return (
+      <div
+        key={`${groupIndex}-${countIndex}`}
+        className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+          currentBanana
+            ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+            : counted
+              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+              : "border-transparent bg-amber-50 opacity-55 grayscale"
+        } ${layoutCount % 2 === 1 && layoutIndex === layoutCount - 1 ? "col-span-2 justify-self-center" : ""}`}
+      >
+        <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+          {countIndex + 1}
+        </span>
+        <SpriteIcon value={banana} className={`h-12 w-12 transition-[filter,transform] duration-300 ${currentBanana ? "scale-110 drop-shadow-lg" : ""}`} />
+      </div>
+    );
   };
 
   return (
@@ -3428,32 +3460,34 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
                     : !hasStarted || (index > activeGroup && completedGroups <= index)
                       ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
                       : "border-emerald-300 bg-white"
-                }`}
+              }`}
             >
               <div className="flex flex-1 items-center justify-center">
-                <div className="grid grid-cols-2 place-items-center gap-3">
-                  {Array.from({ length: count }, (_, objectIndex) => {
-                    const counted = objectIndex < visibleCounts[index];
-                    const currentBanana = activeGroup === index && visibleCounts[index] === objectIndex + 1;
-                    return (
-                      <div
-                        key={objectIndex}
-                        className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
-                          currentBanana
-                            ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
-                            : counted
-                              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
-                              : "border-transparent bg-amber-50 opacity-55 grayscale"
-                        } ${count % 2 === 1 && objectIndex === count - 1 ? "col-span-2 justify-self-center" : ""}`}
-                      >
-                        <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
-                          {objectIndex + 1}
-                        </span>
-                        <SpriteIcon value={banana} className={`h-12 w-12 transition-[filter,transform] duration-300 ${currentBanana ? "scale-110 drop-shadow-lg" : ""}`} />
-                      </div>
-                    );
-                  })}
-                </div>
+                {index === 2 && !resultJoined ? (
+                  <div className={`flex flex-col items-center transition-[gap,transform] duration-1000 ${joiningResult ? "gap-0 scale-95" : "gap-5"}`}>
+                    {[2, 3].map((subgroupCount, subgroupIndex) => {
+                      const countOffset = subgroupIndex === 0 ? 0 : 2;
+                      return (
+                        <div
+                          key={subgroupCount}
+                          className={`grid grid-cols-2 place-items-center gap-3 transition-transform duration-1000 ${
+                            joiningResult ? (subgroupIndex === 0 ? "translate-y-8" : "-translate-y-8") : ""
+                          }`}
+                        >
+                          {Array.from({ length: subgroupCount }, (_, objectIndex) => (
+                            renderBanana(index, countOffset + objectIndex, subgroupCount, objectIndex)
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 place-items-center gap-3">
+                    {Array.from({ length: count }, (_, objectIndex) => (
+                      renderBanana(index, objectIndex, count, objectIndex)
+                    ))}
+                  </div>
+                )}
               </div>
               <div className={`mt-3 min-h-12 rounded-full px-4 py-2 text-center text-base font-black transition-colors sm:text-xl ${
                 completedGroups > index ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-transparent"
@@ -4916,7 +4950,7 @@ function LessonShell({ lang, title, helper, children }: { lang: Lang; title: str
         <h2 className="text-3xl font-black leading-tight text-blue-950 md:text-4xl">{title}</h2>
         {helper && <p className="mx-auto mt-2 max-w-2xl text-sm font-bold leading-snug text-slate-600 md:text-base">{helper}</p>}
       </div>
-      {soundEnabled && (
+      {WORD_AUDIO_ENABLED && soundEnabled && (
         <div className="mb-5 flex justify-center" data-lesson-narration-control="true" data-narration-ignore="true">
           <button
             type="button"
@@ -4943,7 +4977,7 @@ function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
     <div className="talk-bubble flex items-center gap-3 rounded-3xl p-4">
       <img src={chrysThinking} alt="Chrys" className="h-20 w-20 object-contain" />
       <p className="whitespace-pre-line text-lg font-black leading-snug text-slate-800">{text}</p>
-      {AUDIO_FEATURE_ENABLED && (
+      {WORD_AUDIO_ENABLED && (
         <button
           type="button"
           onClick={() => speakText(text, lang)}
@@ -5711,7 +5745,7 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
         >
           {lang === "en" ? "Check my answer" : "Semak jawapan saya"}
         </button>
-        {AUDIO_FEATURE_ENABLED && (
+        {NUMBER_AUDIO_ENABLED && (
           <button
             onClick={() => speakNumber(value, lang)}
             aria-label={lang === "en" ? `Hear ${WORDS.en[value]}` : `Dengar ${WORDS.ms[value]}`}
@@ -5779,7 +5813,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
     );
   }
   if (visual.kind === "audioNumber") {
-    if (!AUDIO_FEATURE_ENABLED) return null;
+    if (!NUMBER_AUDIO_ENABLED) return null;
     return (
       <AudioHearButton label={lang === "en" ? "Hear it" : "Dengar"} onClick={() => speakNumber(visual.value, lang)} />
     );
@@ -5931,7 +5965,7 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
     <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h4 className="text-lg font-black text-emerald-900">{lang === "en" ? "How to solve it" : "Cara selesaikan"}</h4>
-        {AUDIO_FEATURE_ENABLED && (
+        {WORD_AUDIO_ENABLED && (
           <button
             type="button"
             onClick={() => speakText(spokenSteps, lang)}
@@ -6051,7 +6085,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
 }
 
 function speakNumber(value: number, lang: Lang) {
-  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
   if (activeCountingRunId !== null) {
     queuedAudioAfterCounting = () => speakNumber(value, lang);
     return;
@@ -6074,7 +6108,7 @@ async function speakCountingSequence(
   intervalMs = COUNTING_STEP_MS,
   onCount?: (value: number) => void,
 ) {
-  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
   if (count <= 0) return;
   if (activeCountingRunId !== null) return;
   stopNumberAudio();
@@ -6162,7 +6196,7 @@ function preloadNumberAudioFiles() {
 }
 
 function speakNumberWithTts(value: number, lang: Lang) {
-  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(WORDS[lang][value] ?? String(value));
@@ -6171,8 +6205,26 @@ function speakNumberWithTts(value: number, lang: Lang) {
   window.speechSynthesis.speak(utterance);
 }
 
+function speakMathCue(cue: "plus" | "equals" | "minus", lang: Lang) {
+  if (!MATH_CUE_AUDIO_ENABLED || audioMuted) return;
+  if (!("speechSynthesis" in window)) return;
+  if (activeCountingRunId !== null) {
+    queuedAudioAfterCounting = () => speakMathCue(cue, lang);
+    return;
+  }
+  stopNumberAudio();
+  const cueText: Record<Lang, Record<typeof cue, string>> = {
+    en: { plus: "plus", equals: "equals to", minus: "minus" },
+    ms: { plus: "tambah", equals: "sama dengan", minus: "tolak" },
+  };
+  const utterance = new SpeechSynthesisUtterance(cueText[lang][cue]);
+  utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
+  utterance.rate = SPEECH_RATE;
+  window.speechSynthesis.speak(utterance);
+}
+
 function speakText(text: string, lang: Lang, options: { requireInteraction?: boolean } = {}) {
-  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
+  if (!WORD_AUDIO_ENABLED || audioMuted) return;
   if (options.requireInteraction && !audioUserInteracted) return;
   if (!("speechSynthesis" in window)) return;
   if (activeCountingRunId !== null) {
