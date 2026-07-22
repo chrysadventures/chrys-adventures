@@ -74,6 +74,7 @@ type LessonAction = {
 };
 
 const STORE_KEY = "chrys_adventures_rebuild_state";
+const AUDIO_FEATURE_ENABLED = false;
 const NUMBERS = Array.from({ length: 10 }, (_, n) => n);
 const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontFamily: "var(--app-font-number)",
@@ -145,10 +146,10 @@ let activeNumberAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
 let queuedAudioAfterCounting: (() => void) | null = null;
-let audioMuted = false;
+let audioMuted = !AUDIO_FEATURE_ENABLED;
 let audioUserInteracted = false;
 const numberAudioCache = new Map<number, HTMLAudioElement>();
-const AudioEnabledContext = React.createContext(true);
+const AudioEnabledContext = React.createContext(AUDIO_FEATURE_ENABLED);
 
 function markAudioInteraction() {
   audioUserInteracted = true;
@@ -351,7 +352,7 @@ const recognitionPracticeQuestions: Question[] = [
   q("rec-audio-word-5", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["three", "four", "five", "six"], "five", { kind: "audioNumber", value: 5 }),
   q("rec-audio-word-8", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "eight", { kind: "audioNumber", value: 8 }),
   q("rec-audio-word-9", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "nine", { kind: "audioNumber", value: 9 }),
-];
+].filter((question) => AUDIO_FEATURE_ENABLED || question.visual.kind !== "audioNumber");
 
 const valuePracticeQuestions: Question[] = [
   q("val-tap-0", "numbers", { en: "Make 0.", ms: "Bina 0." }, [], 0, { kind: "number", value: 0 }, "tapObjects"),
@@ -844,13 +845,15 @@ function App() {
   const [lang, setLang] = useState<Lang>(initial.lang);
   const [player, setPlayer] = useState<Player | null>(initial.player);
   const [screen, setScreen] = useState<Screen>(initial.player ? "menu" : "home");
-  const [soundEnabled, setSoundEnabled] = useState(initial.soundEnabled);
+  const [soundEnabled, setSoundEnabled] = useState(AUDIO_FEATURE_ENABLED && initial.soundEnabled);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
 
   useEffect(() => saveState(player, lang, soundEnabled), [player, lang, soundEnabled]);
   useEffect(() => setGlobalAudioMuted(!soundEnabled), [soundEnabled]);
-  useEffect(() => preloadNumberAudioFiles(), []);
+  useEffect(() => {
+    if (AUDIO_FEATURE_ENABLED) preloadNumberAudioFiles();
+  }, []);
 
   const t = UI[lang];
   const go = (next: Screen) => {
@@ -978,18 +981,20 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
         <h1 className="hidden truncate text-xl font-black leading-tight text-blue-950 sm:block md:text-2xl">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onToggleSound}
-          aria-pressed={soundEnabled}
-          aria-label={soundEnabled ? (lang === "en" ? "Sound is on" : "Bunyi dibuka") : (lang === "en" ? "Sound is off" : "Bunyi ditutup")}
-          className={`flex items-center gap-1 rounded-2xl border-2 px-3 py-2 text-sm font-black shadow-[0_4px_0_rgba(0,0,0,.12)] ${
-            soundEnabled ? "border-blue-200 bg-white/90 text-blue-800" : "border-slate-200 bg-slate-100 text-slate-500"
-          }`}
-        >
-          <SpeakerIcon />
-          <span>{soundEnabled ? (lang === "en" ? "Sound" : "Bunyi") : (lang === "en" ? "Muted" : "Senyap")}</span>
-        </button>
+        {AUDIO_FEATURE_ENABLED && (
+          <button
+            type="button"
+            onClick={onToggleSound}
+            aria-pressed={soundEnabled}
+            aria-label={soundEnabled ? (lang === "en" ? "Sound is on" : "Bunyi dibuka") : (lang === "en" ? "Sound is off" : "Bunyi ditutup")}
+            className={`flex items-center gap-1 rounded-2xl border-2 px-3 py-2 text-sm font-black shadow-[0_4px_0_rgba(0,0,0,.12)] ${
+              soundEnabled ? "border-blue-200 bg-white/90 text-blue-800" : "border-slate-200 bg-slate-100 text-slate-500"
+            }`}
+          >
+            <SpeakerIcon />
+            <span>{soundEnabled ? (lang === "en" ? "Sound" : "Bunyi") : (lang === "en" ? "Muted" : "Senyap")}</span>
+          </button>
+        )}
         <button
           type="button"
           onClick={onOpenGlossary}
@@ -1079,14 +1084,16 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
                             <span className="text-blue-700">{lang === "en" ? "Math note:" : "Nota matematik:"}</span> {entry.note[lang]}
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => speakText(`${entry.term[lang]}. ${entry.child[lang]} ${entry.note[lang]}`, lang)}
-                          aria-label={lang === "en" ? `Hear ${entry.term.en}` : `Dengar ${entry.term.ms}`}
-                          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1"
-                        >
-                          <SpeakerIcon />
-                        </button>
+                        {AUDIO_FEATURE_ENABLED && (
+                          <button
+                            type="button"
+                            onClick={() => speakText(`${entry.term[lang]}. ${entry.child[lang]} ${entry.note[lang]}`, lang)}
+                            aria-label={lang === "en" ? `Hear ${entry.term.en}` : `Dengar ${entry.term.ms}`}
+                            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1"
+                          >
+                            <SpeakerIcon />
+                          </button>
+                        )}
                       </article>
                     ))}
                   </div>
@@ -1190,7 +1197,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
         <p className="text-lg font-bold text-blue-900/70">{t.menuTitle}</p>
       </section>
       <div className="grid gap-4 md:grid-cols-2">
-        <MenuCard title={t.recognizeNumbers} subtitle="See, spell, hear, trace" icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
+        <MenuCard title={t.recognizeNumbers} subtitle="See, spell, trace, write" icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
         <MenuCard title={t.numberValues} subtitle={lang === "en" ? "Numbers show how many" : "Nombor tunjuk berapa banyak"} icon="🍌" color="emerald" onClick={() => go("learnValues")} />
         <MenuCard title={t.sequencing} subtitle={lang === "en" ? "Numbers in the right order" : "Nombor dalam turutan yang betul"} icon="< >" color="sky" onClick={() => go("learnSequencing")} />
         <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="🧺" color="amber" onClick={() => go("groupingMode")} />
@@ -1281,7 +1288,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
       <LessonShell
         lang={lang}
         title={`${t.learnNumbers}: ${number}`}
-        helper={lang === "en" ? "Chrys teaches each number through seeing, hearing, counting, number order, tracing, and drawing." : "Chrys ajar setiap nombor dengan lihat, dengar, kira, susun, surih, dan lukis."}
+        helper={lang === "en" ? "Chrys teaches each number through seeing, counting, number order, tracing, and drawing." : "Chrys ajar setiap nombor dengan lihat, kira, susun, surih, dan lukis."}
       >
         <div className="mb-4 grid grid-cols-5 gap-2">
           {[0, 1, 2, 3, 4].map((s) => (
@@ -1374,7 +1381,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell lang={lang} title={t.recognizeNumbers} helper={lang === "en" ? "See it. Hear it. Spell it. Trace it. Write it." : "Lihat. Dengar. Eja. Surih. Tulis."}>
+      <LessonShell lang={lang} title={t.recognizeNumbers} helper={lang === "en" ? "See it. Spell it. Trace it. Write it." : "Lihat. Eja. Surih. Tulis."}>
         <div className="mb-4 grid grid-cols-5 gap-2">
           {[0, 1, 2, 3, 4].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
         </div>
@@ -1389,16 +1396,18 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
             <CharacterTalk lang={lang} text={lang === "en" ? `This word says ${WORDS.en[number]}.` : `Perkataan ini ${WORDS.ms[number]}.`} />
             <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
               <p className="text-6xl font-black text-blue-950">{WORDS[lang][number]}</p>
-              <button
-                onClick={() => speakNumber(number, lang)}
-                aria-label={lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}
-                className="relative mt-4 inline-grid h-20 w-20 place-items-center rounded-3xl bg-blue-600 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
-              >
-                <SpeakerIcon />
-                <span className="pointer-events-none absolute -right-4 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 text-yellow-700 shadow-md" aria-hidden="true">
-                  <PointerIcon />
-                </span>
-              </button>
+              {AUDIO_FEATURE_ENABLED && (
+                <button
+                  onClick={() => speakNumber(number, lang)}
+                  aria-label={lang === "en" ? `Hear ${WORDS.en[number]}` : `Dengar ${WORDS.ms[number]}`}
+                  className="relative mt-4 inline-grid h-20 w-20 place-items-center rounded-3xl bg-blue-600 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
+                >
+                  <SpeakerIcon />
+                  <span className="pointer-events-none absolute -right-4 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 text-yellow-700 shadow-md" aria-hidden="true">
+                    <PointerIcon />
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -4136,7 +4145,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               {extraAction && <SecondaryLessonButton label={extraAction.label} onClick={extraAction.onClick} variant={extraAction.variant} />}
             </div>
           )}
-          <h2 className="text-center text-2xl font-black text-slate-900">{qn.text[lang]}</h2>
+          <h2 data-narration-read="true" className="text-center text-2xl font-black text-slate-900">{qn.text[lang]}</h2>
           {!groupChoiceVisual && !activePanelOwnsVisual && (
             <div className="my-4 rounded-3xl border-2 border-sky-100 bg-sky-50 p-3">
               <VisualDisplay visual={qn.visual} lang={lang} revealNumbers={answered && !isCorrect} />
@@ -4752,7 +4761,9 @@ function collectLessonNarrationTokens(root: HTMLElement, lang: Lang) {
 
   while (node) {
     const parent = node.parentElement;
-    if (parent && !parent.closest("button, [aria-hidden='true'], [hidden], [data-narration-ignore='true']")) {
+    const explicitlyReadable = parent?.closest("[data-narration-read='true']");
+    const blocked = parent?.closest("button, h1, h2, h3, h4, h5, h6, [role='heading'], [aria-hidden='true'], [hidden], [data-narration-ignore='true']");
+    if (parent && (explicitlyReadable || !blocked)) {
       const style = window.getComputedStyle(parent);
       const visible = parent.getClientRects().length > 0
         && style.display !== "none"
@@ -4855,7 +4866,7 @@ function LessonShell({ lang, title, helper, children }: { lang: Lang; title: str
         }
       }}
     >
-      <div className="mb-5 text-center">
+      <div className="mb-5 text-center" data-narration-ignore="true">
         <h2 className="text-3xl font-black leading-tight text-blue-950 md:text-4xl">{title}</h2>
         {helper && <p className="mx-auto mt-2 max-w-2xl text-sm font-bold leading-snug text-slate-600 md:text-base">{helper}</p>}
       </div>
@@ -4886,14 +4897,16 @@ function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
     <div className="talk-bubble flex items-center gap-3 rounded-3xl p-4">
       <img src={chrysThinking} alt="Chrys" className="h-20 w-20 object-contain" />
       <p className="whitespace-pre-line text-lg font-black leading-snug text-slate-800">{text}</p>
-      <button
-        type="button"
-        onClick={() => speakText(text, lang)}
-        aria-label={audioMuted ? (lang === "en" ? "Sound is muted" : "Bunyi disenyapkan") : (lang === "en" ? "Hear this teaching text" : "Dengar teks pengajaran ini")}
-        className={`ml-auto grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-white text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1 ${audioMuted ? "opacity-45" : ""}`}
-      >
-        <SpeakerIcon />
-      </button>
+      {AUDIO_FEATURE_ENABLED && (
+        <button
+          type="button"
+          onClick={() => speakText(text, lang)}
+          aria-label={audioMuted ? (lang === "en" ? "Sound is muted" : "Bunyi disenyapkan") : (lang === "en" ? "Hear this teaching text" : "Dengar teks pengajaran ini")}
+          className={`ml-auto grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-white text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1 ${audioMuted ? "opacity-45" : ""}`}
+        >
+          <SpeakerIcon />
+        </button>
+      )}
     </div>
   );
 }
@@ -5652,13 +5665,15 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
         >
           {lang === "en" ? "Check my answer" : "Semak jawapan saya"}
         </button>
-        <button
-          onClick={() => speakNumber(value, lang)}
-          aria-label={lang === "en" ? `Hear ${WORDS.en[value]}` : `Dengar ${WORDS.ms[value]}`}
-          className="grid flex-1 place-items-center rounded-2xl border-2 border-blue-700 bg-blue-600 py-2 font-black text-white"
-        >
-          <SpeakerIcon />
-        </button>
+        {AUDIO_FEATURE_ENABLED && (
+          <button
+            onClick={() => speakNumber(value, lang)}
+            aria-label={lang === "en" ? `Hear ${WORDS.en[value]}` : `Dengar ${WORDS.ms[value]}`}
+            className="grid flex-1 place-items-center rounded-2xl border-2 border-blue-700 bg-blue-600 py-2 font-black text-white"
+          >
+            <SpeakerIcon />
+          </button>
+        )}
       </div>
       {showModel && (
         <div className="mt-4 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
@@ -5718,6 +5733,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
     );
   }
   if (visual.kind === "audioNumber") {
+    if (!AUDIO_FEATURE_ENABLED) return null;
     return (
       <AudioHearButton label={lang === "en" ? "Hear it" : "Dengar"} onClick={() => speakNumber(visual.value, lang)} />
     );
@@ -5869,14 +5885,16 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
     <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h4 className="text-lg font-black text-emerald-900">{lang === "en" ? "How to solve it" : "Cara selesaikan"}</h4>
-        <button
-          type="button"
-          onClick={() => speakText(spokenSteps, lang)}
-          aria-label={lang === "en" ? "Hear the solution steps" : "Dengar langkah penyelesaian"}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-emerald-700 shadow-[0_4px_0_rgba(4,120,87,.14)] active:translate-y-1"
-        >
-          <SpeakerIcon />
-        </button>
+        {AUDIO_FEATURE_ENABLED && (
+          <button
+            type="button"
+            onClick={() => speakText(spokenSteps, lang)}
+            aria-label={lang === "en" ? "Hear the solution steps" : "Dengar langkah penyelesaian"}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-emerald-700 shadow-[0_4px_0_rgba(4,120,87,.14)] active:translate-y-1"
+          >
+            <SpeakerIcon />
+          </button>
+        )}
       </div>
       <div className="mb-3">
         <SolutionVisual visual={q.visual} lang={lang} />
@@ -5987,7 +6005,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
 }
 
 function speakNumber(value: number, lang: Lang) {
-  if (audioMuted) return;
+  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
   if (activeCountingRunId !== null) {
     queuedAudioAfterCounting = () => speakNumber(value, lang);
     return;
@@ -6010,7 +6028,7 @@ async function speakCountingSequence(
   intervalMs = COUNTING_STEP_MS,
   onCount?: (value: number) => void,
 ) {
-  if (audioMuted) return;
+  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
   if (count <= 0) return;
   if (activeCountingRunId !== null) return;
   stopNumberAudio();
@@ -6098,7 +6116,7 @@ function preloadNumberAudioFiles() {
 }
 
 function speakNumberWithTts(value: number, lang: Lang) {
-  if (audioMuted) return;
+  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(WORDS[lang][value] ?? String(value));
@@ -6108,7 +6126,7 @@ function speakNumberWithTts(value: number, lang: Lang) {
 }
 
 function speakText(text: string, lang: Lang, options: { requireInteraction?: boolean } = {}) {
-  if (audioMuted) return;
+  if (!AUDIO_FEATURE_ENABLED || audioMuted) return;
   if (options.requireInteraction && !audioUserInteracted) return;
   if (!("speechSynthesis" in window)) return;
   if (activeCountingRunId !== null) {
