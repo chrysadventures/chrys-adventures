@@ -80,7 +80,9 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontWeight: 700,
   fontVariantNumeric: "tabular-nums",
 };
-const COUNTING_STEP_MS = 1100;
+const SPEECH_RATE = 0.68;
+const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
+const COUNTING_STEP_MS = 1400;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
 const ADDITION_BANANA_STAGGER_MS = ADDITION_BANANA_TRAVEL_MS + ADDITION_BANANA_COUNT_PAUSE_MS;
@@ -4813,7 +4815,7 @@ function LessonShell({ lang, title, helper, children }: { lang: Lang; title: str
     const runId = ++narrationRunRef.current;
     const utterance = new SpeechSynthesisUtterance(tokens.map((token) => token.spoken).join(" "));
     utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-    utterance.rate = 0.82;
+    utterance.rate = SPEECH_RATE;
     setNarrating(true);
     showLessonSpeechHighlight(contentRef.current, lang, 0);
 
@@ -6066,6 +6068,8 @@ function playNumberFile(value: number, runId: number) {
     activeNumberAudio = audio;
     audio.pause();
     audio.currentTime = 0;
+    audio.playbackRate = NUMBER_AUDIO_PLAYBACK_RATE;
+    audio.preservesPitch = true;
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
     timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 2600);
@@ -6099,7 +6103,7 @@ function speakNumberWithTts(value: number, lang: Lang) {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(WORDS[lang][value] ?? String(value));
   utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-  utterance.rate = 0.8;
+  utterance.rate = SPEECH_RATE;
   window.speechSynthesis.speak(utterance);
 }
 
@@ -6125,7 +6129,7 @@ function speakText(text: string, lang: Lang, options: { requireInteraction?: boo
   if (!cleanText) return;
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-  utterance.rate = 0.82;
+  utterance.rate = SPEECH_RATE;
   window.speechSynthesis.speak(utterance);
 }
 
