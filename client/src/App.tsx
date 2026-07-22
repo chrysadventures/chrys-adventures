@@ -2685,95 +2685,174 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   actions?: LessonAction[];
 }) {
   const [storyStep, setStoryStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [showSituation, setShowSituation] = useState(true);
   const [given, setGiven] = useState(0);
-  const [flight, setFlight] = useState<{ left: number; top: number; x: number; y: number; nextGiven: number } | null>(null);
+  const [flight, setFlight] = useState<Array<{ left: number; top: number; x: number; y: number; targetIndex: number }> | null>(null);
   const basketRef = useRef<HTMLDivElement>(null);
+  const chrysBananaRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const alyseBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const flyingBananaRef = useRef<HTMLDivElement>(null);
+  const flyingBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const left = 7 - given;
   const storyText: Record<number, string> = lang === "en"
     ? {
-      1: "Chrys has 7 bananas. Alyse is hungry!",
-      2: "Chrys gives Alyse 1 banana. 6 are left.",
-      3: "Chrys gives Alyse 1 more. Alyse has 2. 5 are left.",
-      4: "Chrys gives Alyse 1 more. Alyse has 3. 4 are left.",
+      1: "Chrys will give Alyse 3 bananas.",
+      4: "Chrys gives Alyse 3 bananas. 4 are left.",
       5: "Count what is left. 4 bananas!",
       6: "7 bananas. Give Alyse 3. 4 are left.",
     }
     : {
-      1: "Chrys ada 7 pisang. Alyse lapar!",
-      2: "Chrys beri Alyse 1 pisang. Tinggal 6.",
-      3: "Chrys beri Alyse 1 lagi. Alyse ada 2. Tinggal 5.",
-      4: "Chrys beri Alyse 1 lagi. Alyse ada 3. Tinggal 4.",
+      1: "Chrys akan beri Alyse 3 pisang.",
+      4: "Chrys beri Alyse 3 pisang. Tinggal 4.",
       5: "Kira yang tinggal. 4 pisang!",
       6: "7 pisang. Beri Alyse 3. Tinggal 4.",
     };
 
   useEffect(() => {
-    if (!flight || !flyingBananaRef.current) return;
-    const duration = getReducedMotionPreference() ? 1 : 900;
-    const animation = flyingBananaRef.current.animate([
-      { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
-      { offset: 0.55, transform: `translate3d(${flight.x * 0.55}px, ${flight.y * 0.55 - 36}px, 0) scale(.9)`, opacity: 1 },
-      { transform: `translate3d(${flight.x}px, ${flight.y}px, 0) scale(.65)`, opacity: 0 },
-    ], {
-      duration,
-      easing: "cubic-bezier(.22,.72,.24,1)",
-      fill: "forwards",
+    if (!flight) return;
+    const reducedMotion = getReducedMotionPreference();
+    const animations = flight.flatMap((item) => {
+      const banana = flyingBananaRefs.current[item.targetIndex];
+      if (!banana) return [];
+      const arcHeight = Math.max(135, Math.min(210, Math.abs(item.x) * 0.38)) + item.targetIndex * 12;
+      const keyframes = reducedMotion
+        ? [
+          { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
+          { transform: `translate3d(${item.x}px, ${item.y}px, 0) scale(.65)`, opacity: 0 },
+        ]
+        : [
+          { transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)", opacity: 1 },
+          { offset: 0.24, transform: `translate3d(${item.x * 0.22}px, ${item.y * 0.22 - arcHeight * 0.72}px, 0) rotate(-8deg) scale(1.02)`, opacity: 1 },
+          { offset: 0.52, transform: `translate3d(${item.x * 0.52}px, ${item.y * 0.52 - arcHeight}px, 0) rotate(5deg) scale(.96)`, opacity: 1 },
+          { offset: 0.8, transform: `translate3d(${item.x * 0.82}px, ${item.y * 0.82 - arcHeight * 0.55}px, 0) rotate(10deg) scale(.82)`, opacity: 1 },
+          { transform: `translate3d(${item.x}px, ${item.y}px, 0) rotate(0deg) scale(.65)`, opacity: 0 },
+        ];
+      return [banana.animate(keyframes, {
+        duration: reducedMotion ? 1 : 2600,
+        easing: "cubic-bezier(.4,0,.2,1)",
+        fill: "forwards",
+      })];
     });
 
-    animation.finished.then(() => {
-      const nextGiven = flight.nextGiven;
-      setGiven(nextGiven);
-      setStoryStep((nextGiven + 1) as 2 | 3 | 4);
+    if (animations.length !== 3) return;
+    let cancelled = false;
+    Promise.all(animations.map((animation) => animation.finished.catch(() => undefined))).then(() => {
+      if (cancelled) return;
+      setGiven(3);
+      setStoryStep(4);
       setFlight(null);
-      // The remaining count is spoken only after the banana reaches Alyse.
-      speakNumber(7 - nextGiven, lang);
-    }).catch(() => undefined);
+      // The remaining count is spoken only after all three bananas reach Alyse.
+      speakNumber(4, lang);
+    });
 
-    return () => animation.cancel();
+    return () => {
+      cancelled = true;
+      animations.forEach((animation) => animation.cancel());
+    };
   }, [flight, lang]);
 
-  const giveOne = () => {
+  const giveThree = () => {
     if (flight || given >= 3 || !basketRef.current) return;
-    const target = alyseBananaRefs.current[given];
-    if (!target) return;
-    const sourceRect = basketRef.current.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    const leftPosition = sourceRect.left + sourceRect.width / 2 - 24;
-    const topPosition = sourceRect.top + sourceRect.height / 2 - 24;
-    setFlight({
-      left: leftPosition,
-      top: topPosition,
-      x: targetRect.left + targetRect.width / 2 - 24 - leftPosition,
-      y: targetRect.top + targetRect.height / 2 - 24 - topPosition,
-      nextGiven: given + 1,
-    });
+    const sourceBananas = chrysBananaRefs.current.slice(4, 7);
+    const targets = alyseBananaRefs.current.slice(0, 3);
+    if (sourceBananas.some((banana) => !banana) || targets.some((target) => !target)) return;
+
+    setFlight(sourceBananas.map((source, targetIndex) => {
+      const sourceRect = source!.getBoundingClientRect();
+      const targetRect = targets[targetIndex]!.getBoundingClientRect();
+      const leftPosition = sourceRect.left + sourceRect.width / 2 - 24;
+      const topPosition = sourceRect.top + sourceRect.height / 2 - 24;
+      return {
+        left: leftPosition,
+        top: topPosition,
+        x: targetRect.left + targetRect.width / 2 - 24 - leftPosition,
+        y: targetRect.top + targetRect.height / 2 - 24 - topPosition,
+        targetIndex,
+      };
+    }));
   };
 
   const setStoryPosition = (nextStep: 1 | 2 | 3 | 4 | 5 | 6) => {
     setFlight(null);
     setStoryStep(nextStep);
-    setGiven(nextStep === 1 ? 0 : nextStep === 2 ? 1 : nextStep === 3 ? 2 : 3);
+    setGiven(nextStep === 1 ? 0 : 3);
   };
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
         <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys gives bananas to Alyse" : "Chrys beri pisang kepada Alyse"}</h3>
-        <p className="mt-2 text-lg font-black text-slate-700">{storyText[storyStep]}</p>
+        <p className="mt-2 text-lg font-black text-slate-700">
+          {showSituation
+            ? (lang === "en" ? "Alyse is hungry. Chrys wants to share 3 bananas." : "Alyse lapar. Chrys mahu berkongsi 3 pisang.")
+            : storyText[storyStep]}
+        </p>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
-        {storyStep <= 4 && (
+        {showSituation && (
+          <div className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+              <div className="rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
+                <img src={chrysHappy} alt="Chrys" className="mx-auto h-24 w-24 object-contain" />
+                <p className="mb-3 text-sm font-black uppercase text-amber-800">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</p>
+                <div className="flex flex-wrap justify-center gap-3 rounded-3xl border-2 border-amber-100 bg-white p-4">
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <div key={index} className="relative grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 shadow-inner">
+                      <span className="absolute -top-2 grid h-7 min-w-10 place-items-center rounded-full bg-blue-600 px-3 text-xs font-black text-white shadow-sm">{index + 1}</span>
+                      <SpriteIcon value="🍌" className="h-10 w-10" />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xl font-black text-amber-950">{lang === "en" ? "Chrys has 7 bananas." : "Chrys ada 7 pisang."}</p>
+              </div>
+
+              <div className="text-center">
+                <p className="text-5xl font-black text-emerald-600" aria-hidden="true">→</p>
+                <p className="mt-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-black text-emerald-900">
+                  {lang === "en" ? "Share 3" : "Kongsi 3"}
+                </p>
+              </div>
+
+              <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+                <img src={alyseGuide} alt="Alyse" className="mx-auto h-24 w-24 object-contain" />
+                <p className="mb-3 text-sm font-black uppercase text-emerald-800">{lang === "en" ? "Alyse's basket" : "Bakul Alyse"}</p>
+                <div className="grid min-h-28 place-items-center rounded-3xl border-2 border-dashed border-emerald-200 bg-white">
+                  <p className="rounded-full bg-slate-100 px-5 py-2 text-xl font-black text-slate-600">{lang === "en" ? "0 bananas" : "0 pisang"}</p>
+                </div>
+                <p className="mt-3 text-xl font-black text-emerald-950">{lang === "en" ? "Alyse is hungry." : "Alyse lapar."}</p>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryPosition(1);
+                  setShowSituation(false);
+                }}
+                className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1"
+              >
+                {lang === "en" ? "Help Chrys share" : "Bantu Chrys berkongsi"}
+                <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+                  <PointerIcon />
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!showSituation && storyStep <= 4 && (
           <div className="space-y-5">
             <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
               <div ref={basketRef} className="min-h-56 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
                 <p className="mb-3 text-sm font-black uppercase text-amber-800">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</p>
                 <div className="flex min-h-24 flex-wrap content-center justify-center gap-3 rounded-3xl border-2 border-slate-100 bg-white p-4">
                   {Array.from({ length: left }, (_, index) => (
-                    <span key={index} className="relative grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 shadow-inner">
-                      <span className="absolute -top-2 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-xs font-black text-white shadow-sm">
+                    <span
+                      key={index}
+                      ref={(node) => { chrysBananaRefs.current[index] = node; }}
+                      className={`relative grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 shadow-inner ${flight && index >= 4 ? "opacity-0" : "opacity-100"}`}
+                    >
+                      <span className="absolute -top-2 grid h-7 min-w-10 place-items-center rounded-full bg-blue-600 px-3 text-xs font-black text-white shadow-sm">
                         {index + 1}
                       </span>
                       <SpriteIcon value="🍌" className="h-9 w-9 sm:h-11 sm:w-11" />
@@ -2807,7 +2886,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                         index < given ? "border-emerald-300 bg-emerald-50" : "border-dashed border-slate-200 bg-slate-50"
                       }`}
                     >
-                      <span className={`absolute -top-3 grid h-7 min-w-7 place-items-center rounded-full px-2 text-xs font-black text-white shadow-sm ${index < given ? "bg-emerald-600" : "bg-slate-400"}`}>
+                      <span className={`absolute -top-3 grid h-7 min-w-10 place-items-center rounded-full px-3 text-xs font-black text-white shadow-sm ${index < given ? "bg-emerald-600" : "bg-slate-400"}`}>
                         {index + 1}
                       </span>
                       {index < given && <SpriteIcon value="🍌" className="h-11 w-11" />}
@@ -2840,10 +2919,10 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                 <button
                   type="button"
                   disabled={Boolean(flight)}
-                  onClick={giveOne}
+                  onClick={giveThree}
                   className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
                 >
-                  {lang === "en" ? "Give Alyse 1 banana" : "Beri Alyse 1 pisang"}
+                  {lang === "en" ? "Give Alyse 3 bananas" : "Beri Alyse 3 pisang"}
                   <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
                     <PointerIcon />
                   </span>
@@ -2864,7 +2943,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
           </div>
         )}
 
-        {storyStep === 5 && (
+        {!showSituation && storyStep === 5 && (
           <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
             <p className="text-2xl font-black text-blue-950">{lang === "en" ? "Count what is left." : "Kira yang tinggal."}</p>
             <CountedObjectRow count={4} emoji="🍌" showCount speakCount lang={lang} intervalMs={COUNTING_STEP_MS} />
@@ -2872,7 +2951,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
           </div>
         )}
 
-        {storyStep === 6 && (
+        {!showSituation && storyStep === 6 && (
           <div className="space-y-5">
             <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
               <SubtractionStoryGroup title={lang === "en" ? "Start" : "Mula"} count={7} lang={lang} />
@@ -2883,7 +2962,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                 <div className="flex justify-center gap-2">
                   {Array.from({ length: 3 }, (_, index) => (
                     <div key={index} className="relative grid h-12 w-12 place-items-center rounded-2xl bg-white">
-                      <span className="absolute -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-red-600 px-1 text-xs font-black text-white">{index + 1}</span>
+                      <span className="absolute -top-2 grid h-6 min-w-9 place-items-center rounded-full bg-red-600 px-2 text-xs font-black text-white">{index + 1}</span>
                       <SpriteIcon value="🍌" className="h-9 w-9" />
                     </div>
                   ))}
@@ -2901,22 +2980,25 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         )}
       </div>
 
-      {flight && (
+      {flight?.map((item) => (
         <div
-          ref={flyingBananaRef}
+          key={item.targetIndex}
+          ref={(node) => { flyingBananaRefs.current[item.targetIndex] = node; }}
           className="pointer-events-none fixed z-[100] grid h-12 w-12 place-items-center"
-          style={{ left: flight.left, top: flight.top }}
+          style={{ left: item.left, top: item.top }}
           aria-hidden="true"
         >
           <SpriteIcon value="🍌" className="h-12 w-12" />
         </div>
-      )}
+      ))}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => {
-            if (storyStep === 1) onPrev();
-            else setStoryPosition((storyStep - 1) as 1 | 2 | 3 | 4 | 5);
+            if (showSituation) onPrev();
+            else if (storyStep === 1) setShowSituation(true);
+            else if (storyStep === 4) setStoryPosition(1);
+            else setStoryPosition((storyStep - 1) as 4 | 5);
           }}
           className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
         >
@@ -2927,7 +3009,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
           <button
-            disabled={storyStep <= 4}
+            disabled={showSituation || storyStep <= 4}
             onClick={() => {
               if (storyStep < 6) setStoryPosition((storyStep + 1) as 2 | 3 | 4 | 5 | 6);
               else onDone();
