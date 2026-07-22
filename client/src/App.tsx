@@ -1818,7 +1818,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
     <main className="mx-auto w-full max-w-3xl pb-8">
       <LessonShell lang={lang} title={t.sequencing} helper={lang === "en" ? "Learn one step at a time." : "Belajar satu langkah demi satu langkah."}>
         <div className="rounded-[2rem] border-4 border-white bg-white p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
-          <h3 className="mb-2 text-center text-3xl font-black text-blue-950">{current.title}</h3>
+          <p className="mb-2 text-center text-sm font-black text-blue-700">{current.title}</p>
           <CharacterTalk lang={lang} text={current.text} />
           <div className="mt-4">{current.visual}</div>
         </div>
@@ -1947,7 +1947,9 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
         <div className="mb-4 grid gap-3 md:grid-cols-[auto_1fr] md:items-center">
           <img src={chrysHappy} alt="Chrys" className="mx-auto h-28 w-28 object-contain" />
           <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 shadow-[0_5px_0_rgba(6,95,70,.12)]">
-            <p className="text-xl font-black text-emerald-950">{instruction}</p>
+            <p className="text-2xl font-black leading-snug text-emerald-950">
+              <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">{instruction}</span>
+            </p>
             <p className="mt-1 text-sm font-bold text-emerald-900/70">
               {lang === "en" ? `Step ${activityIndex + 1} of ${GROUPING_LESSON_STEPS.length}` : `Langkah ${activityIndex + 1} daripada ${GROUPING_LESSON_STEPS.length}`}
             </p>
@@ -2370,8 +2372,10 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <img src={chrysThinking} alt="Chrys" className="mx-auto h-28 w-28 shrink-0 object-contain sm:mx-0" />
           <div>
-            <h3 className="text-3xl font-black text-blue-950">{title}</h3>
-            <p className="mt-2 text-lg font-black leading-snug text-slate-700">{talk}</p>
+            <p className="text-sm font-black text-blue-700">{title}</p>
+            <h3 className="mt-2 text-2xl font-black leading-snug text-blue-950 md:text-3xl">
+              <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">{talk}</span>
+            </h3>
           </div>
         </div>
       </div>
@@ -2531,8 +2535,10 @@ function AdditionIntroStep({ title, text, onPrevious, onNext, onSkip, t, lang }:
     <div className="space-y-5 text-center">
       <img src={chrysHappy} alt="Chrys happy" className="mx-auto h-36 w-36 object-contain" />
       <div className="relative rounded-3xl border-2 border-emerald-100 bg-white p-5 text-left">
-        <h3 className="text-3xl font-black text-blue-950">{title}</h3>
-        <p className="mt-3 text-xl font-black leading-snug text-slate-700">{text}</p>
+        <p className="text-sm font-black text-blue-700">{title}</p>
+        <h3 className="mt-3 text-2xl font-black leading-snug text-blue-950 md:text-3xl">
+          <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">{text}</span>
+        </h3>
       </div>
       <LessonActionRow
         previousLabel={t.previous}
@@ -2576,13 +2582,25 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const eatSecond = step === 3 && eatingStep === 3;
   const waitingToEat = (step === 1 || step === 3) && eatingStep !== step;
   const bellyTarget = step >= 3 ? 5 : step >= 1 ? 2 : 0;
-  const helperText = storyText[step];
+  const zeroStoryText: Record<1 | 2 | 3, string> = lang === "en"
+    ? {
+      1: "Chrys has 0 bananas.",
+      2: "Alyse has 4 bananas.",
+      3: "Put both baskets together.",
+    }
+    : {
+      1: "Chrys ada 0 pisang.",
+      2: "Alyse ada 4 pisang.",
+      3: "Gabungkan kedua-dua bakul.",
+    };
+  const helperText = zeroBeat ? zeroStoryText[zeroStep] : storyText[step];
 
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
-        <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys and bananas" : "Chrys dan pisang"}</h3>
-        <p className="mt-2 text-lg font-black text-slate-700">{helperText}</p>
+        <h3 className="text-2xl font-black leading-snug text-blue-950 md:text-3xl">
+          <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">{helperText}</span>
+        </h3>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
@@ -2793,12 +2811,13 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
-        <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys gives bananas to Alyse" : "Chrys beri pisang kepada Alyse"}</h3>
-        <p className="mt-2 text-lg font-black text-slate-700">
-          {showSituation
-            ? (lang === "en" ? "Alyse is hungry. Chrys wants to share 3 bananas." : "Alyse lapar. Chrys mahu berkongsi 3 pisang.")
-            : storyText[storyStep]}
-        </p>
+        <h3 className="text-2xl font-black leading-snug text-blue-950 md:text-3xl">
+          <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">
+            {showSituation
+              ? (lang === "en" ? "Alyse is hungry. Chrys wants to share 3 bananas." : "Alyse lapar. Chrys mahu berkongsi 3 pisang.")
+              : storyText[storyStep]}
+          </span>
+        </h3>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
@@ -3661,8 +3680,10 @@ function SymbolIntro({ title, symbol, text, onPrevious, onNext, onSkip, t, lang 
       <div className="grid gap-4 md:grid-cols-[auto_1fr] md:items-center">
         <img src={chrysThinking} alt="Chrys teaching" className="mx-auto h-32 w-32 object-contain" />
         <div className="rounded-3xl border-2 border-emerald-100 bg-white p-5 text-left">
-          <h3 className="text-2xl font-black text-blue-950">{title}</h3>
-          <p className="mt-2 text-lg font-black text-slate-600">{text}</p>
+          <p className="text-sm font-black text-blue-700">{title}</p>
+          <h3 className="mt-2 text-2xl font-black leading-snug text-blue-950 md:text-3xl">
+            <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">{text}</span>
+          </h3>
         </div>
       </div>
       <div className="mx-auto grid h-40 w-40 place-items-center rounded-[2rem] border-4 border-yellow-400 bg-yellow-100 text-8xl font-black text-blue-900 shadow-[0_8px_0_rgba(0,0,0,.16)]">
@@ -3743,8 +3764,10 @@ function SlowOperationExample({ kind, lang, t, doneLabel, onPrev, onDone }: {
   return (
     <div className="space-y-5">
       <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
-        <h3 className="text-3xl font-black text-blue-950">{title}</h3>
-        <p className="mt-2 text-lg font-black text-slate-700">{text}</p>
+        <p className="text-lg font-black text-blue-700">{title}</p>
+        <h3 className="mt-2 text-2xl font-black leading-snug text-blue-950 md:text-3xl">
+          <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">{text}</span>
+        </h3>
       </div>
       <div className="rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
         {isAdd ? <AdditionExampleVisual step={step} /> : <SubtractionExampleVisual step={step} />}
@@ -4976,7 +4999,9 @@ function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
   return (
     <div className="talk-bubble flex items-center gap-3 rounded-3xl p-4">
       <img src={chrysThinking} alt="Chrys" className="h-20 w-20 object-contain" />
-      <p className="whitespace-pre-line text-lg font-black leading-snug text-slate-800">{text}</p>
+      <p className="whitespace-pre-line text-xl font-black leading-snug text-slate-800 md:text-2xl">
+        <span className="box-decoration-clone rounded-xl bg-yellow-100 px-2 py-1 text-blue-950">{text}</span>
+      </p>
       {WORD_AUDIO_ENABLED && (
         <button
           type="button"
