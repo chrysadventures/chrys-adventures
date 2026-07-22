@@ -3483,14 +3483,21 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
             >
               <div className="flex flex-1 items-center justify-center">
                 {index === 2 && !resultJoined ? (
-                  <div className={`flex flex-col items-center transition-[gap,transform] duration-1000 ${joiningResult ? "gap-0 scale-95" : "gap-5"}`}>
+                  <div
+                    className={`flex w-full max-w-56 flex-col items-center transition-[gap,transform] duration-1000 ${
+                      joiningResult ? "gap-0 scale-95" : "gap-4"
+                    }`}
+                    aria-label={lang === "en" ? "A group of 2 bananas and a group of 3 bananas" : "Satu kumpulan 2 pisang dan satu kumpulan 3 pisang"}
+                  >
                     {[2, 3].map((subgroupCount, subgroupIndex) => {
                       const countOffset = subgroupIndex === 0 ? 0 : 2;
                       return (
                         <div
                           key={subgroupCount}
-                          className={`grid grid-cols-2 place-items-center gap-3 transition-transform duration-1000 ${
-                            joiningResult ? (subgroupIndex === 0 ? "translate-y-8" : "-translate-y-8") : ""
+                          className={`grid w-full grid-cols-2 place-items-center gap-3 rounded-2xl border-2 p-3 transition-[transform,border-color,background-color,box-shadow] duration-1000 ${
+                            joiningResult
+                              ? `${subgroupIndex === 0 ? "translate-y-7" : "-translate-y-7"} border-blue-400 bg-blue-50 shadow-lg`
+                              : "border-emerald-300 bg-emerald-50/60 shadow-sm"
                           }`}
                         >
                           {Array.from({ length: subgroupCount }, (_, objectIndex) => (
