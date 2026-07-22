@@ -3278,18 +3278,23 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visibleCounts, setVisibleCounts] = useState([0, 0, 0]);
   const [completedGroups, setCompletedGroups] = useState(0);
-  const [activeGroup, setActiveGroup] = useState(0);
+  const [activeGroup, setActiveGroup] = useState(-1);
   const [completedSigns, setCompletedSigns] = useState(0);
   const [activeSign, setActiveSign] = useState(-1);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isCounting, setIsCounting] = useState(false);
+  const [countRun, setCountRun] = useState(0);
   const labels = lang === "en"
     ? ["2 bananas", "3 bananas", "5 bananas"]
     : ["2 pisang", "3 pisang", "5 pisang"];
 
   useEffect(() => {
+    if (!hasStarted) return;
     let cancelled = false;
     const intervalMs = 1400;
 
     const runSequence = async () => {
+      setIsCounting(true);
       stopNumberAudio();
       setVisibleCounts([0, 0, 0]);
       setCompletedGroups(0);
@@ -3359,6 +3364,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
           lang,
         );
       }
+
+      if (!cancelled) setIsCounting(false);
     };
 
     void runSequence();
@@ -3366,10 +3373,36 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
       cancelled = true;
       stopNumberAudio();
     };
-  }, [lang, prefersReducedMotion]);
+  }, [countRun, hasStarted, lang, prefersReducedMotion]);
+
+  const startCounting = () => {
+    if (isCounting) return;
+    setIsCounting(true);
+    setHasStarted(true);
+    setCountRun((current) => current + 1);
+  };
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={startCounting}
+          disabled={isCounting}
+          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
+        >
+          {isCounting
+            ? (lang === "en" ? "Counting..." : "Sedang mengira...")
+            : completedGroups === ADDITION_EQUATION_GROUPS.length
+              ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
+              : (lang === "en" ? "Start Counting!" : "Mula Mengira!")}
+          {!isCounting && (
+            <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+              <PointerIcon />
+            </span>
+          )}
+        </button>
+      </div>
       <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
         {ADDITION_EQUATION_GROUPS.map((count, index) => (
           <React.Fragment key={count}>
@@ -3387,41 +3420,51 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
                 {index === 1 ? "+" : "="}
               </span>
             )}
-            <div className="flex h-full flex-col">
-              <div
-                aria-current={activeGroup === index ? "step" : undefined}
-                className={`flex flex-1 items-center rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
+            <div
+              aria-current={activeGroup === index ? "step" : undefined}
+              className={`flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
                   activeGroup === index
                     ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
-                    : index > activeGroup && completedGroups <= index
+                    : !hasStarted || (index > activeGroup && completedGroups <= index)
                       ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
                       : "border-emerald-300 bg-white"
                 }`}
-              >
-                <div className="flex w-full flex-wrap justify-center gap-3">
+            >
+              <div className="flex flex-1 items-center justify-center">
+                <div className="grid grid-cols-2 place-items-center gap-3">
                   {Array.from({ length: count }, (_, objectIndex) => {
                     const counted = objectIndex < visibleCounts[index];
+                    const currentBanana = activeGroup === index && visibleCounts[index] === objectIndex + 1;
                     return (
-                      <div key={objectIndex} className="relative flex h-24 w-16 items-center justify-center rounded-2xl bg-amber-50 pt-4 shadow-inner">
+                      <div
+                        key={objectIndex}
+                        className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+                          currentBanana
+                            ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                            : counted
+                              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                              : "border-transparent bg-amber-50 opacity-55 grayscale"
+                        } ${count % 2 === 1 && objectIndex === count - 1 ? "col-span-2 justify-self-center" : ""}`}
+                      >
                         <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
                           {objectIndex + 1}
                         </span>
-                        <SpriteIcon value={banana} className="h-12 w-12" />
+                        <SpriteIcon value={banana} className={`h-12 w-12 transition-[filter,transform] duration-300 ${currentBanana ? "scale-110 drop-shadow-lg" : ""}`} />
                       </div>
                     );
                   })}
                 </div>
               </div>
+              <div className={`mt-3 min-h-12 rounded-full px-4 py-2 text-center text-base font-black transition-colors sm:text-xl ${
+                completedGroups > index ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-transparent"
+              }`} aria-live="polite">
+                {completedGroups > index
+                  ? `${lang === "en" ? "Total" : "Jumlah"}: ${labels[index]}`
+                  : <span aria-hidden="true">&nbsp;</span>}
+              </div>
             </div>
           </React.Fragment>
         ))}
-      </div>
-      <div className="grid min-h-9 grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center text-base font-black text-emerald-900 sm:gap-3 sm:text-xl" aria-live="polite">
-        <span>{completedGroups > 0 ? labels[0] : ""}</span>
-        <span className={completedSigns >= 1 ? "text-blue-950" : "text-transparent"}>+</span>
-        <span>{completedGroups > 1 ? labels[1] : ""}</span>
-        <span className={completedSigns >= 2 ? "text-blue-950" : "text-transparent"}>=</span>
-        <span>{completedGroups > 2 ? labels[2] : ""}</span>
       </div>
       {completedGroups === ADDITION_EQUATION_GROUPS.length && completedSigns === 2 && (
         <p className="text-center text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>2 + 3 = 5</p>
@@ -3555,9 +3598,12 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
         <span className="text-4xl font-black text-pink-700">{visible}</span>
       </div>
       <p className="text-lg font-black text-pink-900">{visible} {unit}</p>
-      <div className="mt-2 flex max-w-40 flex-wrap justify-center gap-1">
+      <div className="mt-3 flex min-h-10 max-w-40 flex-wrap justify-center gap-1">
         {Array.from({ length: visible }, (_, i) => (
-          <span key={i} className="grid h-7 w-7 place-items-center">
+          <span key={i} className="relative grid h-10 w-7 place-items-end">
+            <span className="absolute -top-1 left-1/2 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-2 text-[0.65rem] font-black leading-none text-white shadow-sm">
+              {i + 1}
+            </span>
             <SpriteIcon value="🍌" className="h-6 w-6" />
           </span>
         ))}
