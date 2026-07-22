@@ -401,6 +401,16 @@
   }
 }
 
+.lesson-spoken-word-highlight {
+  background-color: #f5ff3b;
+  color: #10245c;
+  border-radius: 0.25rem;
+  padding-inline: 0.08em;
+  text-decoration: underline;
+  text-decoration-color: #f59e0b;
+  text-decoration-thickness: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -146,6 +146,7 @@ let queuedAudioAfterCounting: (() => void) | null = null;
 let audioMuted = false;
 let audioUserInteracted = false;
 const numberAudioCache = new Map<number, HTMLAudioElement>();
+const AudioEnabledContext = React.createContext(true);
 
 function markAudioInteraction() {
   audioUserInteracted = true;
@@ -874,12 +875,13 @@ function App() {
   };
 
   return (
-    <div
-      className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden"
-      style={APP_BACKGROUND_STYLE}
-      onPointerDownCapture={markAudioInteraction}
-      onKeyDownCapture={markAudioInteraction}
-    >
+    <AudioEnabledContext.Provider value={soundEnabled}>
+      <div
+        className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden"
+        style={APP_BACKGROUND_STYLE}
+        onPointerDownCapture={markAudioInteraction}
+        onKeyDownCapture={markAudioInteraction}
+      >
       <Decor />
       <div className="jungle-leaves relative z-10 min-h-[100dvh] mx-auto flex w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <Header
@@ -947,7 +949,8 @@ function App() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AudioEnabledContext.Provider>
   );
 }
 
@@ -1274,6 +1277,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
       <LessonShell
+        lang={lang}
         title={`${t.learnNumbers}: ${number}`}
         helper={lang === "en" ? "Chrys teaches each number through seeing, hearing, counting, number order, tracing, and drawing." : "Chrys ajar setiap nombor dengan lihat, dengar, kira, susun, surih, dan lukis."}
       >
@@ -1368,7 +1372,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.recognizeNumbers} helper={lang === "en" ? "See it. Hear it. Spell it. Trace it. Write it." : "Lihat. Dengar. Eja. Surih. Tulis."}>
+      <LessonShell lang={lang} title={t.recognizeNumbers} helper={lang === "en" ? "See it. Hear it. Spell it. Trace it. Write it." : "Lihat. Dengar. Eja. Surih. Tulis."}>
         <div className="mb-4 grid grid-cols-5 gap-2">
           {[0, 1, 2, 3, 4].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
         </div>
@@ -1493,7 +1497,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.numberValues} helper={lang === "en" ? "A number tells us how many." : "Nombor memberitahu berapa banyak."}>
+      <LessonShell lang={lang} title={t.numberValues} helper={lang === "en" ? "A number tells us how many." : "Nombor memberitahu berapa banyak."}>
         <div className="grid gap-4 md:grid-cols-[auto_1fr]">
           <CharacterTalk lang={lang} text={lessonText} />
           <div className="rounded-[2rem] border-4 border-white bg-white p-5 text-center shadow-[0_7px_0_rgba(0,0,0,.12)]">
@@ -1799,7 +1803,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.sequencing} helper={lang === "en" ? "Learn one step at a time." : "Belajar satu langkah demi satu langkah."}>
+      <LessonShell lang={lang} title={t.sequencing} helper={lang === "en" ? "Learn one step at a time." : "Belajar satu langkah demi satu langkah."}>
         <div className="rounded-[2rem] border-4 border-white bg-white p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
           <h3 className="mb-2 text-center text-3xl font-black text-blue-950">{current.title}</h3>
           <CharacterTalk lang={lang} text={current.text} />
@@ -1923,6 +1927,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
   return (
     <main className="mx-auto w-full max-w-4xl pb-8">
       <LessonShell
+        lang={lang}
         title={lang === "en" ? "Grouping: Jungle Groups" : "Kumpulan: Kumpulan Rimba"}
         helper={lang === "en" ? "Make groups. Count groups. Then put groups together." : "Bina kumpulan. Kira kumpulan. Kemudian gabungkan."}
       >
@@ -2158,7 +2163,7 @@ function GroupingAnswerLine({ text }: { text: string }) {
 }
 
 function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "practice">("intro");
+  const [phase, setPhase] = useState<"intro" | "sign" | "equals" | "story" | "practice">("intro");
 
   if (phase === "practice") {
     return <Quiz lang={lang} t={t} title={`${t.addition}: ${t.practice}`} questions={additionPracticeQuestions} randomize={false} onFinish={() => onDone()} onBackToLearning={() => setPhase("intro")} />;
@@ -2166,7 +2171,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.addition}>
+      <LessonShell lang={lang} title={t.addition}>
         {phase === "intro" && (
           <AdditionIntroStep
             title={t.addition}
@@ -2184,6 +2189,20 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             symbol="+"
             text={lang === "en" ? "The + sign means add more." : "Tanda + bermaksud tambah lagi."}
             onPrevious={() => setPhase("intro")}
+            onNext={() => setPhase("equals")}
+            onSkip={() => setPhase("practice")}
+            t={t}
+            lang={lang}
+          />
+        )}
+        {phase === "equals" && (
+          <SymbolIntro
+            title={lang === "en" ? "The equals sign" : "Tanda sama dengan"}
+            symbol="="
+            text={lang === "en"
+              ? "The = sign means the same amount on both sides."
+              : "Tanda = bermaksud jumlah yang sama pada kedua-dua belah."}
+            onPrevious={() => setPhase("sign")}
             onNext={() => setPhase("story")}
             onSkip={() => setPhase("practice")}
             t={t}
@@ -2194,7 +2213,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
           <ChrysAdditionStory
             lang={lang}
             t={t}
-            onPrev={() => setPhase("sign")}
+            onPrev={() => setPhase("equals")}
             onDone={() => setPhase("practice")}
             actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
@@ -2213,7 +2232,7 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={t.subtraction} helper={lang === "en" ? "Take away. Count what is left." : "Ambil. Kira yang tinggal."}>
+      <LessonShell lang={lang} title={t.subtraction} helper={lang === "en" ? "Take away. Count what is left." : "Ambil. Kira yang tinggal."}>
         {phase === "intro" && (
           <AdditionIntroStep
             title={t.subtraction}
@@ -2282,6 +2301,7 @@ function RealWorldLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
       <LessonShell
+        lang={lang}
         title={t.learnReal}
         helper={lang === "en"
           ? "Read the story. Find the numbers. Find the clue."
@@ -3299,22 +3319,19 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
                   })}
                 </div>
               </div>
-              <p className="mt-3 min-h-9 text-center text-xl font-black text-emerald-900" aria-live="polite">
-                {completedGroups > index ? labels[index] : <span aria-hidden="true">&nbsp;</span>}
-              </p>
             </div>
           </React.Fragment>
         ))}
       </div>
+      <div className="grid min-h-9 grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 text-center text-base font-black text-emerald-900 sm:gap-3 sm:text-xl" aria-live="polite">
+        <span>{completedGroups > 0 ? labels[0] : ""}</span>
+        <span className={completedSigns >= 1 ? "text-blue-950" : "text-transparent"}>+</span>
+        <span>{completedGroups > 1 ? labels[1] : ""}</span>
+        <span className={completedSigns >= 2 ? "text-blue-950" : "text-transparent"}>=</span>
+        <span>{completedGroups > 2 ? labels[2] : ""}</span>
+      </div>
       {completedGroups === ADDITION_EQUATION_GROUPS.length && completedSigns === 2 && (
-        <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center" aria-live="polite">
-          <p className="text-xl font-black text-emerald-900">
-            {lang === "en"
-              ? "2 bananas + 3 bananas = 5 bananas"
-              : "2 pisang + 3 pisang = 5 pisang"}
-          </p>
-          <p className="mt-2 text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>2 + 3 = 5</p>
-        </div>
+        <p className="text-center text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>2 + 3 = 5</p>
       )}
     </div>
   );
@@ -3458,7 +3475,7 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
 
 function SymbolIntro({ title, symbol, text, onPrevious, onNext, onSkip, t, lang }: {
   title: string;
-  symbol: "+" | "-";
+  symbol: "+" | "-" | "=";
   text: string;
   onPrevious: () => void;
   onNext: () => void;
@@ -3982,7 +3999,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   if (showBreather) {
     return (
       <main className="mx-auto w-full max-w-3xl pb-8">
-        <LessonShell title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length}`}>
+        <LessonShell lang={lang} title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length}`}>
           <div className="rounded-[2rem] border-4 border-white bg-white p-6 text-center shadow-[0_8px_0_rgba(0,0,0,.16)]">
             <img src={chrysExcited} alt="Chrys cheering" className="mx-auto h-32 w-32 object-contain" />
             <h2 className="mt-2 text-3xl font-black text-emerald-800">{lang === "en" ? "Nice work!" : "Bagus!"}</h2>
@@ -4007,7 +4024,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length} - ${index + 1}/${randomizedQuestions.length}`}>
+      <LessonShell lang={lang} title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length} - ${index + 1}/${randomizedQuestions.length}`}>
         <div className="rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_8px_0_rgba(0,0,0,.16)]">
           <div className="mb-3 h-3 overflow-hidden rounded-full bg-slate-100">
             <div className="h-full rounded-full bg-blue-500" style={{ width: `${(answeredCount / randomizedQuestions.length) * 100}%` }} />
@@ -4596,23 +4613,191 @@ function ActiveResultMessage({ correct, lang, answer }: { correct: boolean; lang
   );
 }
 
-function LessonShell({ title, helper, children }: { title: string; helper?: string; children: React.ReactNode }) {
+let lessonSpeechHighlightElement: HTMLElement | null = null;
+
+type LessonNarrationToken = {
+  range: Range;
+  spoken: string;
+  spokenStart: number;
+};
+
+function clearLessonSpeechHighlight() {
+  if (lessonSpeechHighlightElement) {
+    const parent = lessonSpeechHighlightElement.parentNode;
+    lessonSpeechHighlightElement.replaceWith(document.createTextNode(lessonSpeechHighlightElement.textContent ?? ""));
+    parent?.normalize();
+    lessonSpeechHighlightElement = null;
+  }
+}
+
+function showLessonSpeechHighlight(root: HTMLElement, lang: Lang, tokenIndex: number) {
+  clearLessonSpeechHighlight();
+  const range = collectLessonNarrationTokens(root, lang)[tokenIndex]?.range;
+  if (!range) return;
+
+  const highlight = document.createElement("span");
+  highlight.className = "lesson-spoken-word-highlight";
+  range.surroundContents(highlight);
+  lessonSpeechHighlightElement = highlight;
+}
+
+function lessonTokenSpeech(token: string, lang: Lang) {
+  const cleanToken = token
+    .replace(/^[^A-Za-zÀ-ž0-9+\-=×−]+|[^A-Za-zÀ-ž0-9+\-=×−]+$/g, "")
+    .trim();
+  if (!cleanToken) return "";
+  const mathWords = lang === "ms"
+    ? { minus: "tolak", plus: "tambah", equals: "sama dengan", times: "darab" }
+    : { minus: "minus", plus: "plus", equals: "equals to", times: "times" };
+  if (/^[0-9+=×−-]+$/.test(cleanToken)) {
+    return cleanToken
+      .replace(/[−-]/g, ` ${mathWords.minus} `)
+      .replace(/\+/g, ` ${mathWords.plus} `)
+      .replace(/=/g, ` ${mathWords.equals} `)
+      .replace(/×/g, ` ${mathWords.times} `)
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  return cleanToken;
+}
+
+function collectLessonNarrationTokens(root: HTMLElement, lang: Lang) {
+  const rawTokens: Array<{ range: Range; spoken: string }> = [];
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+
+  while (node) {
+    const parent = node.parentElement;
+    if (parent && !parent.closest("button, [aria-hidden='true'], [hidden], [data-narration-ignore='true']")) {
+      const style = window.getComputedStyle(parent);
+      const visible = parent.getClientRects().length > 0
+        && style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity || "1") > 0
+        && style.color !== "rgba(0, 0, 0, 0)";
+      if (visible) {
+        const text = node.textContent ?? "";
+        for (const match of text.matchAll(/\S+/g)) {
+          if (match.index === undefined) continue;
+          const spoken = lessonTokenSpeech(match[0], lang);
+          if (!spoken) continue;
+          const range = document.createRange();
+          range.setStart(node, match.index);
+          range.setEnd(node, match.index + match[0].length);
+          rawTokens.push({ range, spoken });
+        }
+      }
+    }
+    node = walker.nextNode();
+  }
+
+  let spokenOffset = 0;
+  return rawTokens.map(({ range, spoken }) => {
+    const token: LessonNarrationToken = { range, spoken, spokenStart: spokenOffset };
+    spokenOffset += spoken.length + 1;
+    return token;
+  });
+}
+
+function LessonShell({ lang, title, helper, children }: { lang: Lang; title: string; helper?: string; children: React.ReactNode }) {
+  const soundEnabled = React.useContext(AudioEnabledContext);
+  const contentRef = useRef<HTMLElement>(null);
+  const narrationRunRef = useRef(0);
+  const [narrating, setNarrating] = useState(false);
+
+  const stopLessonNarration = useCallback(() => {
+    narrationRunRef.current += 1;
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    clearLessonSpeechHighlight();
+    setNarrating(false);
+  }, []);
+
+  useEffect(() => {
+    if (!soundEnabled) stopLessonNarration();
+  }, [soundEnabled, stopLessonNarration]);
+
+  useEffect(() => () => {
+    narrationRunRef.current += 1;
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    clearLessonSpeechHighlight();
+  }, []);
+
+  const startLessonNarration = () => {
+    if (!soundEnabled || !contentRef.current || !("speechSynthesis" in window)) return;
+    const tokens = collectLessonNarrationTokens(contentRef.current, lang);
+    if (tokens.length === 0) return;
+
+    stopNumberAudio();
+    const runId = ++narrationRunRef.current;
+    const utterance = new SpeechSynthesisUtterance(tokens.map((token) => token.spoken).join(" "));
+    utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
+    utterance.rate = 0.82;
+    setNarrating(true);
+    showLessonSpeechHighlight(contentRef.current, lang, 0);
+
+    const finish = () => {
+      if (narrationRunRef.current !== runId) return;
+      clearLessonSpeechHighlight();
+      setNarrating(false);
+    };
+
+    utterance.onstart = () => {
+      if (narrationRunRef.current === runId && contentRef.current) {
+        showLessonSpeechHighlight(contentRef.current, lang, 0);
+      }
+    };
+    utterance.onboundary = (event) => {
+      if (narrationRunRef.current !== runId) return;
+      let tokenIndex = 0;
+      for (let index = 1; index < tokens.length; index += 1) {
+        if (tokens[index].spokenStart > event.charIndex) break;
+        tokenIndex = index;
+      }
+      if (contentRef.current) showLessonSpeechHighlight(contentRef.current, lang, tokenIndex);
+    };
+    utterance.onend = finish;
+    utterance.onerror = finish;
+    window.speechSynthesis.speak(utterance);
+  };
+
   return (
-    <section className="lesson-panel rounded-[2rem] p-4 md:p-6">
+    <section
+      ref={contentRef}
+      className="lesson-panel rounded-[2rem] p-4 md:p-6"
+      onClickCapture={(event) => {
+        const target = event.target as Element;
+        if (narrating && target.closest("button") && !target.closest("[data-lesson-narration-control='true']")) {
+          stopLessonNarration();
+        }
+      }}
+    >
       <div className="mb-5 text-center">
         <h2 className="text-3xl font-black leading-tight text-blue-950 md:text-4xl">{title}</h2>
         {helper && <p className="mx-auto mt-2 max-w-2xl text-sm font-bold leading-snug text-slate-600 md:text-base">{helper}</p>}
       </div>
+      {soundEnabled && (
+        <div className="mb-5 flex justify-center" data-lesson-narration-control="true" data-narration-ignore="true">
+          <button
+            type="button"
+            onClick={startLessonNarration}
+            disabled={narrating}
+            className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
+          >
+            {narrating
+              ? (lang === "en" ? "Playing lesson..." : "Pelajaran dimainkan...")
+              : (lang === "en" ? "Tap to start lesson" : "Ketik untuk mula belajar")}
+            <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+              <PointerIcon />
+            </span>
+          </button>
+        </div>
+      )}
       {children}
     </section>
   );
 }
 
 function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
-  useEffect(() => {
-    speakText(text, lang, { requireInteraction: true });
-  }, [lang, text]);
-
   return (
     <div className="talk-bubble flex items-center gap-3 rounded-3xl p-4">
       <img src={chrysThinking} alt="Chrys" className="h-20 w-20 object-contain" />
