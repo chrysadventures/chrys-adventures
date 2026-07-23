@@ -100,7 +100,7 @@ const ADDITION_EQUATION_GROUPS = [2, 3, 5] as const;
 const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
 const WORDS: Record<Lang, string[]> = {
   en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
-  ms: ["sifar", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "lapan", "sembilan"],
+  ms: ["kosong", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "lapan", "sembilan"],
 };
 
 const NUMBER_AUDIO_FILES: Record<number, string> = {
@@ -273,7 +273,7 @@ const UI = {
     finish: "Tamat",
     score: "Markah",
     done: "Selesai",
-    noNegative: "Tolak tidak akan kurang daripada sifar di sini.",
+    noNegative: "Tolak tidak akan kurang daripada 0 (kosong) di sini.",
     language: "English",
   },
 } as const;
@@ -337,7 +337,7 @@ const GLOSSARY_ENTRIES: GlossaryEntry[] = [
   glossaryEntry(3, "Number line", "Garis nombor", "A row of numbers in order, like a ruler.", "Barisan nombor mengikut turutan, seperti pembaris.", "Move right for bigger numbers and left for smaller numbers.", "Bergerak ke kanan untuk nombor lebih besar dan ke kiri untuk nombor lebih kecil."),
   glossaryEntry(3, "Count", "Kira", "Say one number for each thing.", "Sebut satu nombor untuk setiap benda.", "Count each thing once. The last number is the total.", "Kira setiap benda sekali. Nombor terakhir ialah jumlah."),
   glossaryEntry(3, "Group", "Kumpulan", "Things kept together.", "Benda yang dikumpulkan bersama.", "A set of things that can be counted.", "Sekumpulan benda yang boleh dikira."),
-  glossaryEntry(3, "Empty", "Kosong", "There is nothing inside.", "Tiada apa-apa di dalam.", "An empty group has zero things.", "Kumpulan kosong mempunyai sifar benda."),
+  glossaryEntry(3, "Empty", "Kosong", "There is nothing inside.", "Tiada apa-apa di dalam.", "An empty group has zero things.", "Kumpulan kosong ada 0 benda."),
   glossaryEntry(3, "Whole", "Keseluruhan", "All the parts together.", "Semua bahagian digabungkan.", "The complete group, with nothing missing.", "Kumpulan lengkap tanpa bahagian yang hilang."),
   glossaryEntry(3, "Left", "Baki", "How many are still there after some are taken away.", "Berapa banyak yang masih ada selepas sebahagian diambil.", "Here, left means remaining, not the left direction.", "Di sini, baki bermaksud yang tinggal, bukan arah kiri."),
 ];
@@ -1321,7 +1321,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
         )}
         {step === 1 && (
           <div className="space-y-4 text-center">
-            <CharacterTalk lang={lang} text={number === 0 ? (lang === "en" ? "Zero means nothing. The basket is empty." : "Sifar bermaksud tiada apa-apa. Bakul kosong.") : (lang === "en" ? `Count ${number} bananas slowly.` : `Kira ${number} pisang perlahan-lahan.`)} />
+            <CharacterTalk lang={lang} text={number === 0 ? (lang === "en" ? "Zero means nothing. The basket is empty." : "Kosong bermaksud tiada apa-apa. Bakul kosong.") : (lang === "en" ? `Count ${number} bananas slowly.` : `Kira ${number} pisang perlahan-lahan.`)} />
             <ObjectGroup count={number} emoji="🍌" numbered />
           </div>
         )}
@@ -5835,7 +5835,7 @@ function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
   return (
     <div className="rounded-3xl border-2 border-amber-100 bg-white p-4 text-center">
       <h3 className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Draw how many objects" : "Lukis berapa banyak objek"}</h3>
-      <p className="mb-3 text-sm font-bold text-slate-500">{count === 0 ? (lang === "en" ? "For zero, draw nothing in the box." : "Untuk sifar, jangan lukis apa-apa dalam kotak.") : (lang === "en" ? `Draw ${count} dots or bananas on paper.` : `Lukis ${count} titik atau pisang di kertas.`)}</p>
+      <p className="mb-3 text-sm font-bold text-slate-500">{count === 0 ? (lang === "en" ? "For zero, draw nothing in the box." : "Untuk nombor kosong, jangan lukis apa-apa dalam kotak.") : (lang === "en" ? `Draw ${count} dots or bananas on paper.` : `Lukis ${count} titik atau pisang di kertas.`)}</p>
       <ObjectGroup count={count} emoji="●" numbered />
     </div>
   );
