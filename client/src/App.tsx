@@ -239,8 +239,8 @@ const UI = {
     start: "Mula",
     continue: "Teruskan",
     menuTitle: "Hari ini mahu belajar apa?",
-    recognizeNumbers: "Kenal dan Cam Nombor",
-    numberValues: "Nilai Nombor",
+    recognizeNumbers: "Kenal Nombor",
+    numberValues: "Kumpulan nombor",
     sequencing: "Susunan Nombor",
     learnNumbers: "Nombor 0-9",
     learnOperations: "Operasi",
@@ -249,7 +249,7 @@ const UI = {
     groupingModeShort: "Gabungkan kumpulan",
     addition: "Tambah",
     subtraction: "Tolak",
-    learnReal: "Dunia Sebenar",
+    learnReal: "Menaplikasi Konsep",
     testMode: "Mod Ujian",
     testHelp: "Ujian boleh dibuka bila-bila masa. Setiap jawapan tetap tunjuk cara.",
     lesson: "Pelajaran",
@@ -946,7 +946,7 @@ function App() {
           <RealWorldLesson lang={lang} t={t} onDone={() => { awardStar("learnReal"); go("menu"); }} />
         )}
         {screen === "testMenu" && (
-          <TestMenu t={t} go={go} />
+          <TestMenu lang={lang} t={t} go={go} />
         )}
         {screen === "testNumbers" && (
           <Quiz lang={lang} t={t} title={t.learnNumbers} questions={numberQuestions} chunkSize={6} onFinish={(correct, total) => finishTest("testNumbers", correct, total)} />
@@ -1213,13 +1213,13 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
         <p className="text-lg font-bold text-blue-900/70">{t.menuTitle}</p>
       </section>
       <div className="grid gap-4 md:grid-cols-2">
-        <MenuCard title={t.recognizeNumbers} subtitle="See, spell, trace, write" icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
+        <MenuCard title={t.recognizeNumbers} subtitle={lang === "en" ? "See, spell, trace, write numbers" : "Lihat, eja, ikut garisan, tulis nombor"} icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
         <MenuCard title={t.numberValues} subtitle={lang === "en" ? "Numbers show how many" : "Nombor tunjuk berapa banyak"} icon="🍌" color="emerald" onClick={() => go("learnValues")} />
         <MenuCard title={t.sequencing} subtitle={lang === "en" ? "Numbers in the right order" : "Nombor dalam susunan yang betul"} icon="< >" color="sky" onClick={() => go("learnSequencing")} />
         <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="🧺" color="amber" onClick={() => go("groupingMode")} />
-        <MenuCard title={t.addition} subtitle="Adding more" icon="➕" color="emerald" onClick={() => go("learnAddition")} />
-        <MenuCard title={t.subtraction} subtitle="Taking away" icon="➖" color="pink" onClick={() => go("learnSubtraction")} />
-        <MenuCard title={t.learnReal} subtitle="Counting objects in simple stories" icon="🍎" color="pink" onClick={() => go("learnReal")} />
+        <MenuCard title={t.addition} subtitle={lang === "en" ? "Adding more" : "Tambah lagi"} icon="➕" color="emerald" onClick={() => go("learnAddition")} />
+        <MenuCard title={t.subtraction} subtitle={lang === "en" ? "Taking away" : "Ambil"} icon="➖" color="pink" onClick={() => go("learnSubtraction")} />
+        <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Counting objects in simple stories" : "Kira objek dalam cerita mudah"} icon="🍎" color="pink" onClick={() => go("learnReal")} />
         <MenuCard title={t.testMode} subtitle={t.testHelp} icon="⭐" color="amber" onClick={() => go("testMenu")} />
       </div>
     </main>
@@ -4143,7 +4143,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   );
 }
 
-function TestMenu({ t, go }: { t: UIStrings; go: (screen: Screen) => void }) {
+function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Screen) => void }) {
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
       <section className="mb-4 rounded-[2rem] border-4 border-white/80 bg-white/90 p-5 text-center shadow-[0_8px_0_rgba(0,0,0,.16)]">
@@ -4152,9 +4152,9 @@ function TestMenu({ t, go }: { t: UIStrings; go: (screen: Screen) => void }) {
         <p className="mt-2 font-bold text-slate-500">{t.testHelp}</p>
       </section>
       <div className="grid gap-4">
-        <MenuCard title={t.learnNumbers} subtitle="25 questions, all 0-9" icon="🔢" color="sky" onClick={() => go("testNumbers")} />
-        <MenuCard title={t.learnOperations} subtitle="Solve number sentences using + and −" icon="➕" color="emerald" onClick={() => go("testOperations")} />
-        <MenuCard title={t.learnReal} subtitle="Solve everyday stories using visible objects" icon="🍎" color="pink" onClick={() => go("testReal")} />
+        <MenuCard title={t.learnNumbers} subtitle={lang === "en" ? "25 questions, all 0-9" : "25 soalan, semua nombor 0-9"} icon="🔢" color="sky" onClick={() => go("testNumbers")} />
+        <MenuCard title={t.learnOperations} subtitle={lang === "en" ? "Solve number sentences using + and −" : "Jawab ayat nombor dengan + dan −"} icon="➕" color="emerald" onClick={() => go("testOperations")} />
+        <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Solve everyday stories using visible objects" : "Jawab cerita harian dengan objek yang boleh dilihat"} icon="🍎" color="pink" onClick={() => go("testReal")} />
       </div>
     </main>
   );
