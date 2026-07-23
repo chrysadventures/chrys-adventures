@@ -3,6 +3,14 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+@font-face {
+  font-family: "WakNan";
+  src: url("/chrys-adventures/assets/fonts/WakNan.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

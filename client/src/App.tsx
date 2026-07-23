@@ -83,6 +83,13 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontWeight: 700,
   fontVariantNumeric: "tabular-nums",
 };
+const WAKNAN_NINE_TEXT_STYLE: React.CSSProperties = {
+  ...NUMBER_TEXT_STYLE,
+  fontFamily: '"WakNan", var(--app-font-number)',
+  fontWeight: 400,
+};
+const getNumberTextStyle = (value: number | string): React.CSSProperties =>
+  String(value) === "9" ? WAKNAN_NINE_TEXT_STYLE : NUMBER_TEXT_STYLE;
 const SPEECH_RATE = 0.68;
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
 const COUNTING_STEP_MS = 1400;
@@ -370,7 +377,7 @@ const valuePracticeQuestions: Question[] = [
   q("val-make-group-3", "numbers", { en: "Make a group of 3.", ms: "Bina kumpulan 3." }, [], 3, { kind: "groupMake", emoji: "🍌", count: 3 }, "makeGroup"),
   q("val-support-3", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [2, 3, 4], 3, { kind: "numberWithGroup", value: 3, emoji: "🍌" }),
   q("val-support-6", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [5, 6, 7], 6, { kind: "numberWithGroup", value: 6, emoji: "🍄" }),
-  q("val-count-0", "numbers", { en: "The basket is empty. How many bananas?", ms: "Bakul kosong. Ada berapa pisang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
+  q("val-count-0", "numbers", { en: "How many bananas are in the basket?", ms: "Ada berapa pisang dalam bakul?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
   q("val-count-1", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "count", emoji: "🍌", count: 1 }),
   q("val-count-2", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [1, 2, 3, 4], 2, { kind: "count", emoji: "🍌", count: 2 }),
   q("val-count-3", "numbers", { en: "How many bananas are there?", ms: "Ada berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍌", count: 3 }),
@@ -411,13 +418,13 @@ const numberPracticeQuestions: Question[] = [
   q("lp-n-word-1", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [1, 6, 7, 9], 1, { kind: "number", value: 1 }),
   q("lp-n-word-8", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [3, 5, 8, 0], 8, { kind: "number", value: 8 }),
   q("lp-n-count-3", "numbers", { en: "Count the bananas.", ms: "Kira pisang." }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍌", count: 3 }),
-q("lp-n-count-0", "numbers", { en: "The basket is empty. How many bananas?", ms: "Bakul kosong. Ada berapa pisang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
+q("lp-n-count-0", "numbers", { en: "How many bananas are in the basket?", ms: "Ada berapa pisang dalam bakul?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
   q("lp-n-after-4", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [3, 4, 5, 6], 5, { kind: "sequence", nums: [2, 3, 4, "?"] }),
   q("lp-n-before-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 6, { kind: "sequence", nums: [5, "?", 7, 8] }),
   q("lp-n-missing-2", "numbers", { en: "What number is missing on the number line?", ms: "Nombor apa yang hilang pada garis nombor?" }, [1, 2, 3, 4], 2, { kind: "sequence", nums: [0, 1, "?", 3] }),
   q("lp-n-skip-even", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [2, 3, 4, 5], 4, { kind: "sequence", nums: [0, 2, "?", 6, 8] }),
   q("lp-n-skip-odd", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [3, 4, 5, 6], 5, { kind: "sequence", nums: [1, 3, "?", 7, 9] }),
-  q("lp-n-smaller", "numbers", { en: "Which number is smaller: 9 or 2?", ms: "Nombor mana lebih kecil: 9 atau 2?" }, [1, 2, 7, 9], 2, { kind: "compare", a: 9, b: 2 }),
+  q("lp-n-smaller", "numbers", { en: "Which number is less: 9 or 2?", ms: "Nombor mana lebih kecil: 9 atau 2?" }, [1, 2, 7, 9], 2, { kind: "compare", a: 9, b: 2 }),
 ];
 
 const numberQuestions: Question[] = [
@@ -425,7 +432,7 @@ const numberQuestions: Question[] = [
   q("n-count-stars-4", "numbers", { en: "Count the stars.", ms: "Kira bintang." }, [2, 3, 4, 5], 4, { kind: "count", emoji: "⭐", count: 4 }),
   q("n-count-shells-9", "numbers", { en: "Count the shells.", ms: "Kira cangkerang." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🐚", count: 9 }),
   q("n-count-apples-2", "numbers", { en: "Count the apples.", ms: "Kira epal." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🍎", count: 2 }),
-  q("n-count-empty", "numbers", { en: "There are no flowers. How many?", ms: "Tiada bunga. Berapa?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🌸", count: 0 }),
+  q("n-count-empty", "numbers", { en: "How many flowers are there?", ms: "Ada berapa bunga?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🌸", count: 0 }),
   q("n-word-0", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [0, 2, 4, 6], 0, { kind: "number", value: 0 }),
   q("n-word-3", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [3, 5, 7, 9], 3, { kind: "number", value: 3 }),
   q("n-word-5", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [2, 5, 6, 8], 5, { kind: "number", value: 5 }),
@@ -442,38 +449,43 @@ const numberQuestions: Question[] = [
   q("n-skip-odd-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 9], 7, { kind: "sequence", nums: [1, 3, 5, "?", 9] }),
   q("n-skip-even-8", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [6, 7, 8, 9], 8, { kind: "sequence", nums: [0, 2, 4, 6, "?"] }),
   q("n-skip-odd-9", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [6, 7, 8, 9], 9, { kind: "sequence", nums: [1, 3, 5, 7, "?"] }),
-  q("n-greater-2-7", "numbers", { en: "Which number is greater: 2 or 7?", ms: "Nombor mana lebih besar: 2 atau 7?" }, [2, 4, 7, 9], 7, { kind: "compare", a: 2, b: 7 }),
-  q("n-greater-6-8", "numbers", { en: "Which number is greater: 6 or 8?", ms: "Nombor mana lebih besar: 6 atau 8?" }, [4, 6, 8, 9], 8, { kind: "compare", a: 6, b: 8 }),
-  q("n-smaller-6-1", "numbers", { en: "Which number is smaller: 6 or 1?", ms: "Nombor mana lebih kecil: 6 atau 1?" }, [1, 3, 6, 8], 1, { kind: "compare", a: 6, b: 1 }),
-  q("n-smaller-4-0", "numbers", { en: "Which number is smaller: 4 or 0?", ms: "Nombor mana lebih kecil: 4 atau 0?" }, [0, 2, 4, 6], 0, { kind: "compare", a: 4, b: 0 }),
+  q("n-greater-2-7", "numbers", { en: "Which number is more: 2 or 7?", ms: "Nombor mana lebih besar: 2 atau 7?" }, [2, 4, 7, 9], 7, { kind: "compare", a: 2, b: 7 }),
+  q("n-greater-6-8", "numbers", { en: "Which number is more: 6 or 8?", ms: "Nombor mana lebih besar: 6 atau 8?" }, [4, 6, 8, 9], 8, { kind: "compare", a: 6, b: 8 }),
+  q("n-smaller-6-1", "numbers", { en: "Which number is less: 6 or 1?", ms: "Nombor mana lebih kecil: 6 atau 1?" }, [1, 3, 6, 8], 1, { kind: "compare", a: 6, b: 1 }),
+  q("n-smaller-4-0", "numbers", { en: "Which number is less: 4 or 0?", ms: "Nombor mana lebih kecil: 4 atau 0?" }, [0, 2, 4, 6], 0, { kind: "compare", a: 4, b: 0 }),
 ];
 
+const operationPrompt = (a: number, operator: "+" | "-", b: number): Record<Lang, string> => ({
+  en: `Solve: ${a} ${operator} ${b}.`,
+  ms: `Selesaikan: ${a} ${operator} ${b}.`,
+});
+
 const operationQuestions: Question[] = [
-  q("o-add-1-2", "operations", { en: "Chrys has 1 banana and finds 2 more. How many now?", ms: "Chrys ada 1 pisang dan jumpa 2 lagi. Jadi berapa?" }, [2, 3, 4, 5], 3, { kind: "add", a: 1, b: 2, emoji: "🍌" }),
-  q("o-add-2-5", "operations", { en: "2 bananas join 5 more bananas. How many bananas?", ms: "2 pisang bergabung dengan 5 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 2, b: 5, emoji: "🍌" }),
-  q("o-add-3-4", "operations", { en: "3 flowers and 4 more flowers. How many flowers?", ms: "3 bunga dan 4 bunga lagi. Berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🌸" }),
-  q("o-add-6-1", "operations", { en: "Chrys has 6 bananas and gets 1 more. How many bananas?", ms: "Chrys ada 6 pisang dan dapat 1 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍌" }),
-  q("o-add-8-1", "operations", { en: "8 shells and 1 more shell. How many shells?", ms: "8 cangkerang dan 1 lagi. Berapa cangkerang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🐚" }),
-  q("o-add-9-0", "operations", { en: "9 stars and 0 more stars. How many stars?", ms: "9 bintang dan 0 bintang lagi. Berapa bintang?" }, [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "⭐" }),
-  q("o-add-4-2", "operations", { en: "4 bananas join 2 more bananas. How many bananas?", ms: "4 pisang bergabung dengan 2 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 4, b: 2, emoji: "🍌" }),
-  q("o-add-5-3", "operations", { en: "5 apples and 3 more apples. How many apples?", ms: "5 epal dan 3 epal lagi. Berapa epal?" }, [6, 7, 8, 9], 8, { kind: "add", a: 5, b: 3, emoji: "🍎" }),
-  q("o-add-7-0", "operations", { en: "7 bananas and 0 more bananas. How many bananas?", ms: "7 pisang dan 0 pisang lagi. Berapa pisang?" }, [0, 6, 7, 8], 7, { kind: "add", a: 7, b: 0, emoji: "🍌" }),
-  q("o-add-0-8", "operations", { en: "0 flowers and 8 more flowers. How many flowers?", ms: "0 bunga dan 8 bunga lagi. Berapa bunga?" }, [0, 7, 8, 9], 8, { kind: "add", a: 0, b: 8, emoji: "🌸" }),
-  q("o-add-2-6", "operations", { en: "2 stars and 6 more stars. How many stars?", ms: "2 bintang dan 6 bintang lagi. Berapa bintang?" }, [6, 7, 8, 9], 8, { kind: "add", a: 2, b: 6, emoji: "⭐" }),
-  q("o-add-4-4", "operations", { en: "4 shells and 4 more shells. How many shells?", ms: "4 cangkerang dan 4 cangkerang lagi. Berapa cangkerang?" }, [6, 7, 8, 9], 8, { kind: "add", a: 4, b: 4, emoji: "🐚" }),
-  q("o-sub-8-2", "operations", { en: "Chrys has 8 bananas. He gives away 2 bananas. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia beri 2 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "subtract", a: 8, b: 2, emoji: "🍌" }),
-  q("o-sub-9-5", "operations", { en: "There are 9 shells. You take away 5 shells. How many shells are left?", ms: "Ada 9 cangkerang. Kamu ambil 5 cangkerang. Tinggal berapa cangkerang?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 9, b: 5, emoji: "🐚" }),
-  q("o-sub-7-7", "operations", { en: "There are 7 stars. All 7 stars go away. How many stars are left?", ms: "Ada 7 bintang. Semua 7 bintang pergi. Tinggal berapa bintang?" }, [0, 1, 2, 3], 0, { kind: "subtract", a: 7, b: 7, emoji: "⭐" }),
-  q("o-sub-6-1", "operations", { en: "There are 6 bananas. You take away 1 banana. How many bananas are left?", ms: "Ada 6 pisang. Kamu ambil 1 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 5, { kind: "subtract", a: 6, b: 1, emoji: "🍌" }),
-  q("o-sub-5-3", "operations", { en: "There are 5 flowers. You take away 3 flowers. How many flowers are left?", ms: "Ada 5 bunga. Kamu ambil 3 bunga. Tinggal berapa bunga?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 5, b: 3, emoji: "🌸" }),
-  q("o-sub-4-0", "operations", { en: "There are 4 apples. You take away 0 apples. How many apples are left?", ms: "Ada 4 epal. Kamu ambil 0 epal. Tinggal berapa epal?" }, [0, 3, 4, 5], 4, { kind: "subtract", a: 4, b: 0, emoji: "🍎" }),
-  q("o-sub-9-8", "operations", { en: "There are 9 bananas. You take away 8 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 8 pisang. Tinggal berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 9, b: 8, emoji: "🍌" }),
-  q("o-sub-8-4", "operations", { en: "There are 8 shells. You take away 4 shells. How many shells are left?", ms: "Ada 8 cangkerang. Kamu ambil 4 cangkerang. Tinggal berapa cangkerang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 8, b: 4, emoji: "🐚" }),
-  q("o-sub-6-5", "operations", { en: "There are 6 stars. You take away 5 stars. How many stars are left?", ms: "Ada 6 bintang. Kamu ambil 5 bintang. Tinggal berapa bintang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 6, b: 5, emoji: "⭐" }),
-  q("o-sub-3-2", "operations", { en: "There are 3 bananas. You take away 2 bananas. How many bananas are left?", ms: "Ada 3 pisang. Kamu ambil 2 pisang. Tinggal berapa pisang?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 3, b: 2, emoji: "🍌" }),
-  q("o-sub-9-0", "operations", { en: "There are 9 flowers. You take away 0 flowers. How many flowers are left?", ms: "Ada 9 bunga. Kamu ambil 0 bunga. Tinggal berapa bunga?" }, [0, 7, 8, 9], 9, { kind: "subtract", a: 9, b: 0, emoji: "🌸" }),
-  q("o-sub-7-4", "operations", { en: "There are 7 apples. You take away 4 apples. How many apples are left?", ms: "Ada 7 epal. Kamu ambil 4 epal. Tinggal berapa epal?" }, [2, 3, 4, 5], 3, { kind: "subtract", a: 7, b: 4, emoji: "🍎" }),
-  q("o-sub-5-5", "operations", { en: "There are 5 bananas. You take away all 5 bananas. How many bananas are left?", ms: "Ada 5 pisang. Kamu ambil semua 5 pisang. Tinggal berapa pisang?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🍌" }),
+  q("o-add-1-2", "operations", operationPrompt(1, "+", 2), [2, 3, 4, 5], 3, { kind: "add", a: 1, b: 2, emoji: "🍌" }),
+  q("o-add-2-5", "operations", operationPrompt(2, "+", 5), [5, 6, 7, 8], 7, { kind: "add", a: 2, b: 5, emoji: "🍌" }),
+  q("o-add-3-4", "operations", operationPrompt(3, "+", 4), [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🌸" }),
+  q("o-add-6-1", "operations", operationPrompt(6, "+", 1), [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍌" }),
+  q("o-add-8-1", "operations", operationPrompt(8, "+", 1), [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🐚" }),
+  q("o-add-9-0", "operations", operationPrompt(9, "+", 0), [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "⭐" }),
+  q("o-add-4-2", "operations", operationPrompt(4, "+", 2), [5, 6, 7, 8], 6, { kind: "add", a: 4, b: 2, emoji: "🍌" }),
+  q("o-add-5-3", "operations", operationPrompt(5, "+", 3), [6, 7, 8, 9], 8, { kind: "add", a: 5, b: 3, emoji: "🍎" }),
+  q("o-add-7-0", "operations", operationPrompt(7, "+", 0), [0, 6, 7, 8], 7, { kind: "add", a: 7, b: 0, emoji: "🍌" }),
+  q("o-add-0-8", "operations", operationPrompt(0, "+", 8), [0, 7, 8, 9], 8, { kind: "add", a: 0, b: 8, emoji: "🌸" }),
+  q("o-add-2-6", "operations", operationPrompt(2, "+", 6), [6, 7, 8, 9], 8, { kind: "add", a: 2, b: 6, emoji: "⭐" }),
+  q("o-add-4-4", "operations", operationPrompt(4, "+", 4), [6, 7, 8, 9], 8, { kind: "add", a: 4, b: 4, emoji: "🐚" }),
+  q("o-sub-8-2", "operations", operationPrompt(8, "-", 2), [4, 5, 6, 7], 6, { kind: "subtract", a: 8, b: 2, emoji: "🍌" }),
+  q("o-sub-9-5", "operations", operationPrompt(9, "-", 5), [3, 4, 5, 6], 4, { kind: "subtract", a: 9, b: 5, emoji: "🐚" }),
+  q("o-sub-7-7", "operations", operationPrompt(7, "-", 7), [0, 1, 2, 3], 0, { kind: "subtract", a: 7, b: 7, emoji: "⭐" }),
+  q("o-sub-6-1", "operations", operationPrompt(6, "-", 1), [4, 5, 6, 7], 5, { kind: "subtract", a: 6, b: 1, emoji: "🍌" }),
+  q("o-sub-5-3", "operations", operationPrompt(5, "-", 3), [1, 2, 3, 4], 2, { kind: "subtract", a: 5, b: 3, emoji: "🌸" }),
+  q("o-sub-4-0", "operations", operationPrompt(4, "-", 0), [0, 3, 4, 5], 4, { kind: "subtract", a: 4, b: 0, emoji: "🍎" }),
+  q("o-sub-9-8", "operations", operationPrompt(9, "-", 8), [0, 1, 2, 3], 1, { kind: "subtract", a: 9, b: 8, emoji: "🍌" }),
+  q("o-sub-8-4", "operations", operationPrompt(8, "-", 4), [2, 3, 4, 5], 4, { kind: "subtract", a: 8, b: 4, emoji: "🐚" }),
+  q("o-sub-6-5", "operations", operationPrompt(6, "-", 5), [0, 1, 2, 3], 1, { kind: "subtract", a: 6, b: 5, emoji: "⭐" }),
+  q("o-sub-3-2", "operations", operationPrompt(3, "-", 2), [0, 1, 2, 3], 1, { kind: "subtract", a: 3, b: 2, emoji: "🍌" }),
+  q("o-sub-9-0", "operations", operationPrompt(9, "-", 0), [0, 7, 8, 9], 9, { kind: "subtract", a: 9, b: 0, emoji: "🌸" }),
+  q("o-sub-7-4", "operations", operationPrompt(7, "-", 4), [2, 3, 4, 5], 3, { kind: "subtract", a: 7, b: 4, emoji: "🍎" }),
+  q("o-sub-5-5", "operations", operationPrompt(5, "-", 5), [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🥤" }),
 ];
 
 const additionPracticeQuestions: Question[] = [
@@ -499,7 +511,7 @@ const subtractionPracticeQuestions: Question[] = [
 const realQuestions: Question[] = [
   q("r-count-apples", "real", { en: "Count the apples.", ms: "Kira epal." }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🍎", count: 5 }),
   q("r-count-pencils", "real", { en: "Count the pencils.", ms: "Kira pensel." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "✏️", count: 7 }),
-q("r-count-cups", "real", { en: "The tray is empty. How many cups are on it?", ms: "Dulang kosong. Ada berapa cawan di atasnya?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🥤", count: 0, container: "tray" }),
+q("r-count-cups", "real", { en: "How many cups are on the tray?", ms: "Ada berapa cawan di atas dulang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🥤", count: 0, container: "tray" }),
 q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the basket. How many oranges?", ms: "Ada 3 oren. Letak 4 oren lagi dalam bakul. Berapa oren?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍊", container: "basket" }),
   q("r-add-books", "real", { en: "Chrys has 1 book and gets 6 more books. How many books?", ms: "Chrys ada 1 buku dan dapat 6 buku lagi. Berapa buku?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "📘" }),
   q("r-add-bananas", "real", { en: "Chrys has 2 bananas. His friend gives him 5 more. How many bananas?", ms: "Chrys ada 2 pisang. Kawannya beri 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 2, b: 5, emoji: "🍌" }),
@@ -515,7 +527,7 @@ q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the
 ];
 
 const realPracticeQuestions: Question[] = [
-  q("rp-count-pears", "real", { en: "Chrys sees 2 pears. How many pears?", ms: "Chrys nampak 2 buah pir. Berapa buah pir?" }, [0, 1, 2, 3], 2, { kind: "count", emoji: "\u{1F350}", count: 2 }),
+  q("rp-count-pears", "real", { en: "How many pears does Chrys see?", ms: "Berapa buah pir yang Chrys nampak?" }, [0, 1, 2, 3], 2, { kind: "count", emoji: "\u{1F350}", count: 2 }),
   q("rp-add-watermelon", "real", { en: "Chrys has 1 watermelon slice and finds 1 more. How many slices?", ms: "Chrys ada 1 potong tembikai dan jumpa 1 lagi. Berapa potong tembikai?" }, [1, 2, 3, 4], 2, { kind: "add", a: 1, b: 1, emoji: "\u{1F349}" }),
   q("rp-sub-kiwi", "real", { en: "Chrys has 3 kiwi slices. He eats 1. How many slices are left?", ms: "Chrys ada 3 potong kiwi. Dia makan 1. Tinggal berapa potong kiwi?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "\u{1F95D}" }),
   q("rp-add-oranges", "real", { en: "Chrys has 2 oranges. He finds 3 more. How many oranges?", ms: "Chrys ada 2 oren. Dia jumpa 3 lagi. Berapa oren?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "\u{1F34A}" }),
@@ -530,7 +542,7 @@ q("rt-count-bananas-4", "real", { en: "Count the bananas in the picnic basket.",
   q("rt-count-apples-8", "real", { en: "Count the apples.", ms: "Kira epal." }, [6, 7, 8, 9], 8, { kind: "count", emoji: "🍎", count: 8 }),
 q("rt-count-oranges-3", "real", { en: "Count the oranges in the basket.", ms: "Kira oren dalam bakul." }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍊", count: 3, container: "basket" }),
   q("rt-count-books-5", "real", { en: "Count the books.", ms: "Kira buku." }, [3, 4, 5, 6], 5, { kind: "count", emoji: "📘", count: 5 }),
-q("rt-count-cups-1", "real", { en: "Count the cup on the tray.", ms: "Kira cawan di atas dulang." }, [0, 1, 2, 3], 1, { kind: "count", emoji: "🥤", count: 1, container: "tray" }),
+q("rt-count-cups-1", "real", { en: "How many cups are on the tray?", ms: "Ada berapa cawan di atas dulang?" }, [0, 1, 2, 3], 1, { kind: "count", emoji: "🥤", count: 1, container: "tray" }),
   q("rt-count-flowers-9", "real", { en: "Count the flowers.", ms: "Kira bunga." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🌸", count: 9 }),
   q("rt-count-eggs-2", "real", { en: "Count the eggs.", ms: "Kira telur." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🥚", count: 2 }),
   q("rt-count-toys-7", "real", { en: "Count the toy cars.", ms: "Kira kereta mainan." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "🚗", count: 7 }),
@@ -778,6 +790,7 @@ function objectName(emoji: string | undefined, count: number, lang: Lang) {
     "🥥": { en: ["coconut", "coconuts"], ms: "kelapa" },
     "🍃": { en: ["leaf", "leaves"], ms: "daun" },
     "🌸": { en: ["flower", "flowers"], ms: "bunga" },
+    "⭐": { en: ["star", "stars"], ms: "bintang" },
     "🍄": { en: ["mushroom", "mushrooms"], ms: "cendawan" },
     "🪨": { en: ["rock", "rocks"], ms: "batu" },
     "🐦": { en: ["bird", "birds"], ms: "burung" },
@@ -788,6 +801,7 @@ function objectName(emoji: string | undefined, count: number, lang: Lang) {
     "🥤": { en: ["cup", "cups"], ms: "cawan" },
     "🥚": { en: ["egg", "eggs"], ms: "telur" },
     "🚗": { en: ["toy car", "toy cars"], ms: "kereta mainan" },
+    "🐚": { en: ["shell", "shells"], ms: "cangkerang" },
   };
   const fallback = { en: ["object", "objects"] as [string, string], ms: "objek" };
   const name = names[emoji ?? ""] ?? fallback;
@@ -1731,7 +1745,7 @@ function ValueLayoutCard({ label, count, emoji, layout }: { label: string; count
           </div>
         )}
       </div>
-      <p className="mt-3 text-2xl font-black text-blue-950" style={NUMBER_TEXT_STYLE}>{count}</p>
+      <p className="mt-3 text-2xl font-black text-blue-950" style={getNumberTextStyle(count)}>{count}</p>
     </div>
   );
 }
@@ -2489,7 +2503,7 @@ function RealWorldNumberGroup({ count, label, emoji }: { count: number; label: s
   return (
     <div className="rounded-3xl border-2 border-white bg-white p-3 text-center shadow-[0_4px_0_rgba(0,0,0,.08)]">
       <ObjectGroup count={count} emoji={emoji} />
-      <p className="mt-2 text-4xl font-black text-blue-950" style={NUMBER_TEXT_STYLE}>{label}</p>
+      <p className="mt-2 text-4xl font-black text-blue-950" style={getNumberTextStyle(label)}>{label}</p>
     </div>
   );
 }
@@ -3891,7 +3905,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
     onComplete?.();
   }, [onComplete]);
 
-  const instruction = getSubtractionFlowInstruction(lang, phase, start, takeAway, left);
+  const instruction = getSubtractionFlowInstruction(lang, phase, start, takeAway, left, emoji);
   const actionLabel = phase === "start"
     ? (lang === "en" ? "Tap to take away" : "Tekan untuk ambil")
     : (lang === "en" ? "Tap to count what is left" : "Tekan untuk kira yang tinggal");
@@ -3935,17 +3949,20 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
   );
 }
 
-function getSubtractionFlowInstruction(lang: Lang, phase: SubtractionPhase, start: number, takeAway: number, left: number) {
+function getSubtractionFlowInstruction(lang: Lang, phase: SubtractionPhase, start: number, takeAway: number, left: number, emoji: string) {
+  const startItem = objectName(emoji, start, lang);
+  const takeAwayItem = objectName(emoji, takeAway, lang);
+  const leftItem = objectName(emoji, left, lang);
   if (lang === "ms") {
-    if (phase === "start") return [`Mula dengan ${start} pisang.`];
-    if (phase === "crossing" || phase === "crossed") return [`Ambil ${takeAway} pisang.`];
-    if (phase === "counting") return ["Kira pisang yang tinggal."];
-    return [`${left} pisang tinggal.`, `Jadi, ${start} - ${takeAway} = ${left}.`];
+    if (phase === "start") return [`Mula dengan ${start} ${startItem}.`];
+    if (phase === "crossing" || phase === "crossed") return [`Ambil ${takeAway} ${takeAwayItem}.`];
+    if (phase === "counting") return [`Kira ${leftItem} yang tinggal.`];
+    return [`${left} ${leftItem} tinggal.`, `Jadi, ${start} - ${takeAway} = ${left}.`];
   }
-  if (phase === "start") return [`Start with ${start} bananas.`];
-  if (phase === "crossing" || phase === "crossed") return [`Take away ${takeAway} bananas.`];
+  if (phase === "start") return [`Start with ${start} ${startItem}.`];
+  if (phase === "crossing" || phase === "crossed") return [`Take away ${takeAway} ${takeAwayItem}.`];
   if (phase === "counting") return ["Count what is left."];
-  return [`${left} bananas are left.`, `So, ${start} - ${takeAway} = ${left}.`];
+  return [`${left} ${leftItem} ${left === 1 ? "is" : "are"} left.`, `So, ${start} - ${takeAway} = ${left}.`];
 }
 
 function LabeledGroup({ count, label, emoji }: { count: number; label: string; emoji: string }) {
@@ -4083,7 +4100,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
 
   let leftIndex = 0;
   return (
-    <div className={`flex flex-wrap justify-center rounded-3xl border-2 border-slate-100 bg-white ${compact ? "gap-2 p-3" : "gap-3 p-4"}`}>
+    <div className={`flex flex-wrap justify-center rounded-3xl border-2 border-slate-100 bg-white ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
         const willBeTaken = i < crossed;
@@ -4095,23 +4112,30 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         return (
           <div
             key={i}
-            className={`relative flex flex-col items-center justify-center rounded-2xl shadow-inner transition-[background-color,box-shadow] duration-300 ${
+            className={`relative flex flex-col items-center justify-center overflow-visible rounded-2xl shadow-inner transition-[background-color,box-shadow] duration-300 ${
               isActiveCount ? "bg-blue-50 ring-4 ring-blue-300" : "bg-amber-50"
-            } ${compact ? "h-20 w-12 pt-4 text-3xl" : "h-24 w-16 pt-5 text-4xl"}`}
+            } ${compact ? "h-20 w-12 text-3xl" : "h-24 w-16 text-4xl"}`}
           >
             {crossLabelVisible ? (
-              <span className={`absolute top-1 z-30 rounded-full bg-red-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
+              <span className={`absolute -top-7 z-20 rounded-full bg-red-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
                 {i + 1}
               </span>
             ) : (
-              <span className={`absolute top-1 rounded-full bg-blue-600 px-2 font-black text-white transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
+              <span className={`absolute -top-7 z-20 rounded-full bg-blue-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
                 {labelVisible ? label : "."}
               </span>
             )}
-            <span className={`transition-all duration-300 ${gone ? "scale-95 opacity-25 grayscale brightness-125" : "opacity-100"}`}>
-              <SpriteIcon value={emoji} className={compact ? "h-10 w-10" : "h-12 w-12"} />
+            <span className={`relative inline-flex items-center justify-center ${compact ? "h-10 w-10" : "h-12 w-12"}`}>
+              <SpriteIcon value={emoji} className="h-full w-full opacity-100 saturate-100 grayscale-0" />
+              {gone && (
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-0 z-10 flex items-center justify-center font-black leading-none text-red-500 drop-shadow-sm transition-opacity duration-300 ${compact ? "text-4xl" : "text-5xl"}`}
+                >
+                  &times;
+                </span>
+              )}
             </span>
-            {gone && <span className={`absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 font-black text-red-500 transition-opacity duration-300 ${compact ? "text-4xl" : "text-5xl"}`}>x</span>}
           </div>
         );
       })}
@@ -4129,8 +4153,8 @@ function TestMenu({ t, go }: { t: UIStrings; go: (screen: Screen) => void }) {
       </section>
       <div className="grid gap-4">
         <MenuCard title={t.learnNumbers} subtitle="25 questions, all 0-9" icon="🔢" color="sky" onClick={() => go("testNumbers")} />
-        <MenuCard title={t.learnOperations} subtitle="25 questions, 0-9 only" icon="➕" color="emerald" onClick={() => go("testOperations")} />
-        <MenuCard title={t.learnReal} subtitle="25 stories with visible objects" icon="🍎" color="pink" onClick={() => go("testReal")} />
+        <MenuCard title={t.learnOperations} subtitle="Solve number sentences using + and −" icon="➕" color="emerald" onClick={() => go("testOperations")} />
+        <MenuCard title={t.learnReal} subtitle="Solve everyday stories using visible objects" icon="🍎" color="pink" onClick={() => go("testReal")} />
       </div>
     </main>
   );
@@ -4316,7 +4340,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                     onClick={() => setAnswers((current) => ({ ...current, [index]: option }))}
                     onKeyDown={(event) => handleOptionKeyDown(event, optionIndex, option)}
                     className={`relative min-h-20 rounded-3xl border-2 px-2 font-black shadow-[0_5px_0_rgba(0,0,0,.14)] ${optionSize} ${stateClass}`}
-                    style={typeof option === "number" ? NUMBER_TEXT_STYLE : undefined}
+                    style={typeof option === "number" ? getNumberTextStyle(option) : undefined}
                   >
                     <span className="inline-block pr-8">{option}</span>
                     {feedbackIcon && (
@@ -4467,7 +4491,7 @@ function ActiveAnswerPanel({
               disabled={answered}
               onClick={() => onAnswer(n)}
               className="min-h-16 rounded-2xl border-2 border-blue-100 bg-blue-50 text-3xl font-black text-blue-900 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1 disabled:opacity-60"
-              style={NUMBER_TEXT_STYLE}
+              style={getNumberTextStyle(n)}
             >
               {n}
             </button>
@@ -5061,7 +5085,7 @@ function NumberTile({ value, lang, large = false, showWord = true }: { value: nu
   return (
     <div className={`mx-auto grid place-items-center rounded-[2rem] border-4 border-yellow-500 bg-yellow-400 text-white ${large ? "h-48 w-48" : "h-24 w-24"}`}>
       <div className="text-center">
-        <div className={`${large ? "text-8xl" : "text-5xl"} font-black leading-none`} style={NUMBER_TEXT_STYLE}>{value}</div>
+        <div className={`${large ? "text-8xl" : "text-5xl"} font-black leading-none`} style={getNumberTextStyle(value)}>{value}</div>
         {showWord && <div className="mt-1 text-sm font-black uppercase tracking-wide">{WORDS[lang][value]}</div>}
       </div>
     </div>
@@ -5095,7 +5119,7 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: n
         const gone = i < crossed;
         return (
           <div key={i} className="relative grid h-16 w-16 place-items-center rounded-2xl bg-amber-50 text-4xl shadow-inner">
-            <span className={gone ? "opacity-25" : ""}>
+            <span>
               <SpriteIcon value={emoji} className="h-12 w-12" />
             </span>
             {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
@@ -5124,34 +5148,22 @@ function ContainerScene({
 }) {
   const image = container === "basket" ? BASKET_SPRITE : trayPhoto;
   const alt = container === "basket" ? "basket" : "tray";
-  const positions = [
-    ["left-[23%]", "top-[38%]"],
-    ["left-[40%]", "top-[30%]"],
-    ["left-[57%]", "top-[38%]"],
-    ["left-[31%]", "top-[52%]"],
-    ["left-[50%]", "top-[50%]"],
-    ["left-[66%]", "top-[54%]"],
-    ["left-[17%]", "top-[58%]"],
-    ["left-[42%]", "top-[62%]"],
-    ["left-[58%]", "top-[66%]"],
-  ];
 
   return (
     <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 h-full w-full object-contain" />
-        {Array.from({ length: count }, (_, i) => {
-          const [x, y] = positions[i % positions.length];
-          return (
+        <div className={`absolute inset-[12%] ${count === 1 ? "grid place-items-center" : "flex flex-wrap content-center items-center justify-center gap-1.5"}`}>
+          {Array.from({ length: count }, (_, i) => (
             <div
               key={i}
-              className={`absolute ${x} ${y} grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl bg-white/80 text-4xl shadow-md`}
+              className={`relative grid place-items-center rounded-2xl bg-white/85 shadow-md ${count === 1 ? "h-14 w-14" : "aspect-square min-w-8 max-w-14 basis-[28%]"}`}
             >
-              <SpriteIcon value={emoji} className="h-11 w-11" />
+              <SpriteIcon value={emoji} className="h-[78%] w-[78%]" />
               {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
       {label && <p className="mt-3 text-center text-xl font-black text-amber-900">{label}</p>}
       {count === 0 && !hideEmptyLabel && (
@@ -5412,7 +5424,7 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
                   ? "border-dashed border-yellow-400 bg-yellow-50 text-yellow-900"
                   : "border-blue-100 bg-blue-50 text-blue-950"
               }`}
-              style={typeof item === "number" ? NUMBER_TEXT_STYLE : undefined}
+              style={typeof item === "number" ? getNumberTextStyle(item) : undefined}
             >
               {item === "?" ? (selected ?? "?") : item}
             </span>
@@ -5429,7 +5441,7 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
             className={`grid h-16 w-16 place-items-center rounded-2xl border-2 text-3xl font-black shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 ${
               selected === choice ? "border-blue-700 bg-blue-600 text-white" : "border-blue-100 bg-white text-blue-950"
             }`}
-            style={NUMBER_TEXT_STYLE}
+            style={getNumberTextStyle(choice)}
           >
             {choice}
           </button>
@@ -5636,7 +5648,7 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
       <div className="relative h-72 rounded-3xl border-2 border-sky-100 bg-sky-50">
         <div
           className="pointer-events-none absolute inset-0 grid place-items-center text-[12rem] font-black leading-none text-blue-200/45"
-          style={NUMBER_TEXT_STYLE}
+          style={getNumberTextStyle(value)}
         >
           {value}
         </div>
@@ -5644,7 +5656,7 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
           <div
             className="trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none text-blue-950"
             aria-hidden="true"
-            style={NUMBER_TEXT_STYLE}
+            style={getNumberTextStyle(value)}
           >
             {value}
           </div>
@@ -5759,7 +5771,7 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
         {showModel && (
           <div className="rounded-3xl border-4 border-blue-100 bg-blue-50 p-4 text-center md:w-56">
             <p className="mb-2 text-sm font-black text-blue-900">{lang === "en" ? "Look at this model" : "Lihat contoh ini"}</p>
-            <div className="mx-auto grid h-40 w-40 place-items-center rounded-[2rem] border-4 border-blue-200 bg-white text-8xl font-black leading-none text-blue-950 shadow-inner" style={NUMBER_TEXT_STYLE}>
+            <div className="mx-auto grid h-40 w-40 place-items-center rounded-[2rem] border-4 border-blue-200 bg-white text-8xl font-black leading-none text-blue-950 shadow-inner" style={getNumberTextStyle(value)}>
               {value}
             </div>
             <p className="mt-3 text-base font-black leading-snug text-blue-950">
@@ -6272,6 +6284,7 @@ function speakText(text: string, lang: Lang, options: { requireInteraction?: boo
     .replace(/\+/g, mathWords.plus)
     .replace(/=/g, mathWords.equals)
     .replace(/×/g, mathWords.times)
+    .replace(/\b([0-9])\b/g, (_, digit: string) => WORDS[lang][Number(digit)] ?? digit)
     .replace(/\s+/g, " ")
     .trim();
   if (!cleanText) return;
