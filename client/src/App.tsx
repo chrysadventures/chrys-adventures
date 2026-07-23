@@ -28,6 +28,15 @@ type Screen =
   | "testOperations"
   | "testReal";
 
+type LearningSectionKey =
+  | "recognizeNumbers"
+  | "numberValues"
+  | "sequencing"
+  | "groupingMode"
+  | "addition"
+  | "subtraction"
+  | "learnReal";
+
 type Visual =
   | { kind: "count"; emoji: string; count: number; container?: ContainerKind }
   | { kind: "number"; value: number }
@@ -668,19 +677,19 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const wordMs = WORDS.ms[visual.value];
     return {
       en: typeof answer === "string"
-        ? [`This is ${visual.value}.`, `The word is ${word}.`]
-        : [`This is ${visual.value}.`, `Say ${word}.`],
+        ? [`This symbol is ${visual.value}.`, `The word for ${visual.value} is ${word}.`]
+        : [`This symbol is ${visual.value}.`, `Say ${word}.`],
       ms: typeof answer === "string"
-        ? [`Ini ${visual.value}.`, `Perkataannya ${wordMs}.`]
-        : [`Ini ${visual.value}.`, `Sebut ${wordMs}.`],
+        ? [`Simbol ini ialah ${visual.value}.`, `Perkataan bagi ${visual.value} ialah ${wordMs}.`]
+        : [`Simbol ini ialah ${visual.value}.`, `Sebut ${wordMs}.`],
     };
   }
   if (visual.kind === "word") {
     const word = WORDS.en[visual.value];
     const wordMs = WORDS.ms[visual.value];
     return {
-      en: [`The word is ${word}.`, `The number is ${visual.value}.`],
-      ms: [`Perkataan ini ${wordMs}.`, `Nombor itu ${visual.value}.`],
+      en: [`This word is ${word}.`, `The symbol for ${word} is ${visual.value}.`],
+      ms: [`Perkataan ini ialah ${wordMs}.`, `Simbol bagi ${wordMs} ialah ${visual.value}.`],
     };
   }
   if (visual.kind === "audioNumber") {
@@ -691,8 +700,8 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const namedWord = word.charAt(0).toUpperCase() + word.slice(1);
     const namedWordMs = wordMs.charAt(0).toUpperCase() + wordMs.slice(1);
     return {
-      en: [`The audio said "${spelledWord}".`, `${namedWord} is the number ${visual.value}.`],
-      ms: [`Audio menyebut "${spelledWordMs}".`, `${namedWordMs} ialah nombor ${visual.value}.`],
+      en: [`The audio said "${spelledWord}".`, `The symbol for ${namedWord.toLowerCase()} is ${visual.value}.`],
+      ms: [`Audio menyebut "${spelledWordMs}".`, `Simbol bagi ${namedWordMs.toLowerCase()} ialah ${visual.value}.`],
     };
   }
   if (visual.kind === "numberWithGroup") {
@@ -884,6 +893,7 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(NUMBER_AUDIO_ENABLED && initial.soundEnabled);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
+  const [completedLesson, setCompletedLesson] = useState<LearningSectionKey | null>(null);
 
   useEffect(() => saveState(player, lang, soundEnabled), [player, lang, soundEnabled]);
   useEffect(() => setGlobalAudioMuted(!soundEnabled), [soundEnabled]);
@@ -894,6 +904,7 @@ function App() {
   const t = UI[lang];
   const go = (next: Screen) => {
     setLastScore(null);
+    setCompletedLesson(null);
     setScreen(next);
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
@@ -913,6 +924,12 @@ function App() {
       const gained = Math.max(0, amount - old);
       return { ...current, stars: current.stars + gained, progress: { ...current.progress, [key]: Math.max(old, amount) } };
     });
+  };
+
+  const finishLesson = (progressKey: string, sectionKey: LearningSectionKey) => {
+    awardStar(progressKey);
+    setCompletedLesson(sectionKey);
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
   return (
@@ -944,26 +961,33 @@ function App() {
         {screen === "menu" && player && (
           <MenuScreen lang={lang} t={t} player={player} go={go} />
         )}
-        {screen === "learnRecognize" && (
-          <RecognizeNumbersLesson lang={lang} t={t} onDone={() => { awardStar("learnRecognize"); go("menu"); }} />
+        {completedLesson && (
+          <LessonCompletionScreen
+            lang={lang}
+            sectionName={t[completedLesson]}
+            onContinue={() => go("menu")}
+          />
         )}
-        {screen === "learnValues" && (
-          <NumberValuesLesson lang={lang} t={t} onDone={() => { awardStar("learnValues"); go("menu"); }} />
+        {!completedLesson && screen === "learnRecognize" && (
+          <RecognizeNumbersLesson lang={lang} t={t} onDone={() => finishLesson("learnRecognize", "recognizeNumbers")} />
         )}
-        {screen === "learnSequencing" && (
-          <SequencingLesson lang={lang} t={t} onDone={() => { awardStar("learnSequencing"); go("menu"); }} />
+        {!completedLesson && screen === "learnValues" && (
+          <NumberValuesLesson lang={lang} t={t} onDone={() => finishLesson("learnValues", "numberValues")} />
         )}
-        {screen === "groupingMode" && (
-          <GroupingMode lang={lang} t={t} onDone={() => { awardStar("groupingMode"); go("menu"); }} />
+        {!completedLesson && screen === "learnSequencing" && (
+          <SequencingLesson lang={lang} t={t} onDone={() => finishLesson("learnSequencing", "sequencing")} />
         )}
-        {screen === "learnAddition" && (
-          <AdditionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnAddition"); go("menu"); }} />
+        {!completedLesson && screen === "groupingMode" && (
+          <GroupingMode lang={lang} t={t} onDone={() => finishLesson("groupingMode", "groupingMode")} />
         )}
-        {screen === "learnSubtraction" && (
-          <SubtractionOnlyLesson lang={lang} t={t} onDone={() => { awardStar("learnSubtraction"); go("menu"); }} />
+        {!completedLesson && screen === "learnAddition" && (
+          <AdditionOnlyLesson lang={lang} t={t} onDone={() => finishLesson("learnAddition", "addition")} />
         )}
-        {screen === "learnReal" && (
-          <RealWorldLesson lang={lang} t={t} onDone={() => { awardStar("learnReal"); go("menu"); }} />
+        {!completedLesson && screen === "learnSubtraction" && (
+          <SubtractionOnlyLesson lang={lang} t={t} onDone={() => finishLesson("learnSubtraction", "subtraction")} />
+        )}
+        {!completedLesson && screen === "learnReal" && (
+          <RealWorldLesson lang={lang} t={t} onDone={() => finishLesson("learnReal", "learnReal")} />
         )}
         {screen === "testMenu" && (
           <TestMenu lang={lang} t={t} go={go} />
@@ -992,6 +1016,36 @@ function App() {
       </div>
       </div>
     </AudioEnabledContext.Provider>
+  );
+}
+
+function LessonCompletionScreen({ lang, sectionName, onContinue }: {
+  lang: Lang;
+  sectionName: string;
+  onContinue: () => void;
+}) {
+  return (
+    <main className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center pb-8" aria-live="polite">
+      <section className="relative w-full overflow-hidden rounded-[2rem] border-4 border-yellow-300 bg-white p-6 text-center shadow-[0_10px_0_rgba(161,98,7,.22)] sm:p-10">
+        <CorrectCelebration />
+        <img src={chrysExcited} alt="Chrys celebrating" className="mx-auto h-40 w-40 object-contain" />
+        <h2 className="mt-2 text-4xl font-black text-emerald-700 sm:text-5xl">
+          {lang === "en" ? "Congratulations!" : "Tahniah!"}
+        </h2>
+        <p className="mx-auto mt-4 max-w-xl text-2xl font-black text-blue-950 sm:text-3xl">
+          {lang === "en"
+            ? `You completed the ${sectionName} section!`
+            : `Kamu sudah tamat bahagian ${sectionName}!`}
+        </p>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="mt-7 rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-8 py-4 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1"
+        >
+          {lang === "en" ? "Back to learning menu" : "Kembali ke menu belajar"}
+        </button>
+      </section>
+    </main>
   );
 }
 
@@ -1749,35 +1803,29 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
         <div className="grid gap-4 md:grid-cols-2">
           <LabeledValueGroup
             key={`${n}-${comparisonEmojiA}-${countRun}`}
-            label={firstValueLabel}
+            label={lang === "en" ? `This is ${firstValueLabel}.` : `Ini ${firstValueLabel}.`}
             count={n}
             emoji={comparisonEmojiA}
             counted={counting}
             speakCount={counting}
             onCountProgress={updatePairedCount}
             showLabel={comparisonComplete}
+            active={counting}
+            complete={comparisonComplete}
             lang={lang}
           />
           <LabeledValueGroup
-            label={secondValueLabel}
+            label={lang === "en" ? `This is ${secondValueLabel}.` : `Ini ${secondValueLabel}.`}
             count={n}
             emoji={comparisonEmojiB}
             counted={counting}
             visibleCount={pairedCount}
             showLabel={comparisonComplete}
+            active={counting}
+            complete={comparisonComplete}
             lang={lang}
           />
         </div>
-        <p
-          className="min-h-14 rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900"
-          aria-live="polite"
-        >
-          {comparisonComplete
-            ? (lang === "en"
-                ? `This is ${firstValueLabel}. This is ${secondValueLabel}.`
-                : `Ini ${firstValueLabel}. Ini ${secondValueLabel}.`)
-            : (lang === "en" ? "Count both groups." : "Kira kedua-dua kumpulan.")}
-        </p>
       </div>
     );
   }
@@ -1808,7 +1856,7 @@ function ZeroContainerCard({ label, container, lang }: { label: string; containe
   );
 }
 
-function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, lang }: {
+function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, active = false, complete = false, lang }: {
   label: string;
   count: number;
   emoji: string;
@@ -1817,10 +1865,16 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
   visibleCount?: number;
   onCountProgress?: (value: number) => void;
   showLabel?: boolean;
+  active?: boolean;
+  complete?: boolean;
   lang: Lang;
 }) {
   return (
-    <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4 text-center">
+    <div className={`rounded-3xl border-4 p-4 text-center transition-[border-color,background-color,box-shadow] duration-300 ${
+      active
+        ? "border-blue-400 bg-blue-50 shadow-[0_6px_0_rgba(37,99,235,.18)]"
+        : "border-emerald-100 bg-emerald-50"
+    }`}>
       {counted ? (
         <CountedObjectRow
           count={count}
@@ -1830,10 +1884,14 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
           speakCount={speakCount}
           visibleCount={visibleCount}
           onCountProgress={onCountProgress}
+          highlightActiveCount={!complete}
           lang={lang}
         />
       ) : <ObjectGroup count={count} emoji={emoji} />}
-      <p className={`mt-3 min-h-7 text-xl font-black text-emerald-950 ${showLabel ? "opacity-100" : "opacity-0"}`}>
+      <p
+        className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black text-emerald-950 transition-opacity ${showLabel ? "bg-white opacity-100" : "opacity-0"}`}
+        aria-live="polite"
+      >
         {showLabel ? label : "\u00a0"}
       </p>
     </div>
@@ -4053,7 +4111,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, highlightActiveCount = true, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -4069,6 +4127,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   onCountProgress?: (value: number) => void;
   onCrossCountComplete?: () => void;
   onCountComplete?: () => void;
+  highlightActiveCount?: boolean;
   lang?: Lang;
 }) {
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -4196,7 +4255,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
         const label = shouldCount ? ++leftIndex : 0;
         const labelVisible = shouldCount && label <= displayedCount;
-        const isActiveCount = (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
+        const isActiveCount = highlightActiveCount && (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
         const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
         return (
           <div
@@ -4709,8 +4768,6 @@ function ActiveAnswerPanel({
               </button>
             );
           })}
-        </div>
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
           <button
             type="button"
             disabled={answered}
@@ -4719,12 +4776,16 @@ function ActiveAnswerPanel({
               setSelectedObjects([]);
               setSelectedNone(true);
             }}
-            className={`rounded-2xl border-2 px-5 py-3 font-black shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40 ${
-              selectedNone ? "border-blue-700 bg-blue-600 text-white" : "border-blue-200 bg-blue-50 text-blue-800"
+            className={`grid h-20 place-items-center rounded-3xl border-2 px-3 text-center text-lg font-black shadow-inner active:translate-y-1 disabled:opacity-80 ${
+              selectedNone
+                ? "border-blue-700 bg-blue-600 text-white"
+                : "border-blue-200 bg-blue-50 text-blue-800"
             }`}
           >
             {lang === "en" ? "No objects" : "Tiada objek"}
           </button>
+        </div>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
           <button
             disabled={answered || !hasSelection}
             onClick={() => {
@@ -6291,19 +6352,34 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
   const [started, setStarted] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const spokenSteps = q.method[lang].join(". ");
+  const startsWithCounting =
+    (q.visual.kind === "count" && q.visual.count > 0) ||
+    (q.visual.kind === "add" && !q.visual.container) ||
+    q.visual.kind === "groupObserve" ||
+    q.visual.kind === "groupMake" ||
+    q.visual.kind === "groupTwo" ||
+    q.visual.kind === "groupCompare" ||
+    q.visual.kind === "groupCombine";
+  const startPrompt = startsWithCounting
+    ? (lang === "en" ? "Ready to count?" : "Sedia untuk mengira?")
+    : (lang === "en" ? "Ready to see how?" : "Sedia lihat caranya?");
+  const startLabel = startsWithCounting
+    ? (lang === "en" ? "Tap to start counting" : "Tekan untuk mula mengira")
+    : (lang === "en" ? "Tap to start the solution" : "Tekan untuk mula cara jawab");
 
   if (!started) {
     return (
       <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-5 text-center">
         <h4 className="text-xl font-black text-emerald-900">
-          {lang === "en" ? "Ready to see how?" : "Sedia lihat caranya?"}
+          {startPrompt}
         </h4>
         <button
           type="button"
           onClick={() => setStarted(true)}
+          aria-label={startLabel}
           className="relative mt-4 rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1"
         >
-          {lang === "en" ? "Tap to start the solution" : "Tekan untuk mula cara jawab"}
+          {startLabel}
           <span
             className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
             aria-hidden="true"
