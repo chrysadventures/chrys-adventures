@@ -61,6 +61,8 @@ type Question = {
   inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects" | "takeAway";
 };
 
+const DONT_KNOW_ANSWER = "__dont_know__";
+
 type Player = {
   name: string;
   stars: number;
@@ -77,6 +79,7 @@ const STORE_KEY = "chrys_adventures_rebuild_state";
 const NUMBER_AUDIO_ENABLED = true;
 const WORD_AUDIO_ENABLED = false;
 const MATH_CUE_AUDIO_ENABLED = true;
+const SUCCESS_FANFARE_FILE = "tada-fanfare.mp3";
 const NUMBERS = Array.from({ length: 10 }, (_, n) => n);
 const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontFamily: "var(--app-font-number)",
@@ -91,7 +94,12 @@ const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
 const ADDITION_BANANA_STAGGER_MS = ADDITION_BANANA_TRAVEL_MS + ADDITION_BANANA_COUNT_PAUSE_MS;
 const ADDITION_EQUATION_GROUPS = [2, 3, 5] as const;
-const VALUE_EMOJIS = ["🍌", "🍃", "🥭", "🍌", "🪨", "🥥", "🍄", "🌸", "📘", "🚗"];
+const VALUE_COMPARISON_PAIRS = [
+  ["🍃", "🪨"],
+  ["🥭", "🌸"],
+  ["🥥", "🍄"],
+  ["🍎", "🍊"],
+] as const;
 const WORDS: Record<Lang, string[]> = {
   en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
   ms: ["kosong", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "lapan", "sembilan"],
@@ -160,6 +168,7 @@ const OBJECT_SPRITES: Record<string, string> = {
 };
 
 let activeNumberAudio: HTMLAudioElement | null = null;
+let activeCelebrationAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
 let queuedAudioAfterCounting: (() => void) | null = null;
@@ -174,7 +183,10 @@ function markAudioInteraction() {
 
 function setGlobalAudioMuted(muted: boolean) {
   audioMuted = muted;
-  if (muted) stopNumberAudio();
+  if (muted) {
+    stopNumberAudio();
+    stopCelebrationAudio();
+  }
 }
 
 function cleanDisplayText(value: string) {
@@ -351,12 +363,12 @@ const GLOSSARY_ENTRIES: GlossaryEntry[] = [
 ];
 
 const recognitionPracticeQuestions: Question[] = [
-  q("rec-tap-5", "numbers", { en: "Listen. Make the number.", ms: "Dengar. Bina nombor itu." }, [], 5, { kind: "audioNumber", value: 5 }, "tapObjects"),
-  q("rec-audio-make-6", "numbers", { en: "Listen. Make the number.", ms: "Dengar. Bina nombor itu." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
-  q("rec-audio-symbol-0", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [0, 1, 2, 3], 0, { kind: "audioNumber", value: 0 }),
-  q("rec-audio-symbol-2", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [1, 2, 3, 4], 2, { kind: "audioNumber", value: 2 }),
-  q("rec-audio-symbol-5", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [3, 4, 5, 6], 5, { kind: "audioNumber", value: 5 }),
-  q("rec-audio-symbol-8", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [6, 7, 8, 9], 8, { kind: "audioNumber", value: 8 }),
+  q("rec-audio-symbol-5", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 5, { kind: "audioNumber", value: 5 }),
+  q("rec-audio-symbol-6", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 6, { kind: "audioNumber", value: 6 }),
+  q("rec-audio-symbol-0", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 0, { kind: "audioNumber", value: 0 }),
+  q("rec-audio-symbol-2", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 2, { kind: "audioNumber", value: 2 }),
+  q("rec-audio-symbol-5-review", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 5, { kind: "audioNumber", value: 5 }),
+  q("rec-audio-symbol-8", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 8, { kind: "audioNumber", value: 8 }),
   q("rec-symbol-word-1", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["zero", "one", "two", "three"], "one", { kind: "number", value: 1 }),
   q("rec-symbol-word-3", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["one", "two", "three", "four"], "three", { kind: "number", value: 3 }),
   q("rec-symbol-word-6", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["four", "five", "six", "seven"], "six", { kind: "number", value: 6 }),
@@ -372,16 +384,16 @@ const recognitionPracticeQuestions: Question[] = [
 ].filter((question) => NUMBER_AUDIO_ENABLED || question.visual.kind !== "audioNumber");
 
 const valuePracticeQuestions: Question[] = [
-  q("val-tap-0", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 0, { kind: "audioNumber", value: 0 }, "tapObjects"),
-  q("val-tap-1", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 1, { kind: "audioNumber", value: 1 }, "tapObjects"),
-  q("val-tap-2", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 2, { kind: "audioNumber", value: 2 }, "tapObjects"),
-  q("val-tap-3", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 3, { kind: "audioNumber", value: 3 }, "tapObjects"),
-  q("val-tap-4", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 4, { kind: "audioNumber", value: 4 }, "tapObjects"),
-  q("val-tap-5", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 5, { kind: "audioNumber", value: 5 }, "tapObjects"),
-  q("val-tap-6", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
-  q("val-tap-7", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 7, { kind: "audioNumber", value: 7 }, "tapObjects"),
-  q("val-tap-8", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 8, { kind: "audioNumber", value: 8 }, "tapObjects"),
-  q("val-tap-9", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 9, { kind: "audioNumber", value: 9 }, "tapObjects"),
+  q("val-audio-group-0", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 0, { kind: "audioNumber", value: 0 }, "tapObjects"),
+  q("val-symbol-group-1", "numbers", { en: "Look at the number. Build the group.", ms: "Lihat nombor. Bina kumpulan." }, [], 1, { kind: "number", value: 1 }, "tapObjects"),
+  q("val-word-group-2", "numbers", { en: "Read the word. Build the group.", ms: "Baca perkataan. Bina kumpulan." }, [], 2, { kind: "word", value: 2 }, "tapObjects"),
+  q("val-audio-group-3", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 3, { kind: "audioNumber", value: 3 }, "tapObjects"),
+  q("val-symbol-group-4", "numbers", { en: "Look at the number. Build the group.", ms: "Lihat nombor. Bina kumpulan." }, [], 4, { kind: "number", value: 4 }, "tapObjects"),
+  q("val-word-group-5", "numbers", { en: "Read the word. Build the group.", ms: "Baca perkataan. Bina kumpulan." }, [], 5, { kind: "word", value: 5 }, "tapObjects"),
+  q("val-audio-group-6", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
+  q("val-symbol-group-7", "numbers", { en: "Look at the number. Build the group.", ms: "Lihat nombor. Bina kumpulan." }, [], 7, { kind: "number", value: 7 }, "tapObjects"),
+  q("val-word-group-8", "numbers", { en: "Read the word. Build the group.", ms: "Baca perkataan. Bina kumpulan." }, [], 8, { kind: "word", value: 8 }, "tapObjects"),
+  q("val-audio-group-9", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 9, { kind: "audioNumber", value: 9 }, "tapObjects"),
   q("val-make-group-3", "numbers", { en: "Copy this group.", ms: "Salin kumpulan ini." }, [], 3, { kind: "groupMake", emoji: "🍌", count: 3 }, "makeGroup"),
   q("val-support-3", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [2, 3, 4], 3, { kind: "numberWithGroup", value: 3, emoji: "🍌" }),
   q("val-support-6", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [5, 6, 7], 6, { kind: "numberWithGroup", value: 6, emoji: "🍄" }),
@@ -1268,6 +1280,10 @@ function skipNextNumberLabel(lang: Lang) {
   return lang === "en" ? "Skip to next number" : "Terus ke nombor seterusnya";
 }
 
+function skipPreviousNumberLabel(lang: Lang) {
+  return lang === "en" ? "Skip to previous number" : "Terus ke nombor sebelumnya";
+}
+
 function backToLearningLabel(lang: Lang) {
   return lang === "en" ? "Back to learning mode" : "Kembali ke mod belajar";
 }
@@ -1386,8 +1402,11 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
   const [number, setNumber] = useState(0);
   const [step, setStep] = useState(0);
   const [practice, setPractice] = useState(false);
+  const [reviewingPreviousNumber, setReviewingPreviousNumber] = useState(false);
+  const [numberDrawings, setNumberDrawings] = useState<Record<number, string>>({});
 
   const next = () => {
+    setReviewingPreviousNumber(false);
     if (step < 4) setStep((s) => s + 1);
     else if (number < 9) {
       setNumber((n) => n + 1);
@@ -1397,22 +1416,32 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 
   const previous = () => {
     if (step > 0) {
+      setReviewingPreviousNumber(false);
       setStep((s) => s - 1);
       return;
     }
     if (number > 0) {
       setNumber((n) => n - 1);
-      setStep(0);
+      setStep(4);
+      setReviewingPreviousNumber(true);
     }
   };
 
   const skipNextNumber = () => {
+    setReviewingPreviousNumber(false);
     if (number < 9) {
       setNumber((n) => n + 1);
       setStep(0);
     } else {
       setPractice(true);
     }
+  };
+
+  const skipPreviousNumber = () => {
+    if (number === 0) return;
+    setReviewingPreviousNumber(false);
+    setNumber((n) => n - 1);
+    setStep(0);
   };
 
   if (practice) {
@@ -1458,12 +1487,44 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
           </div>
         )}
         {step === 3 && <TracePad value={number} t={t} lang={lang} onComplete={next} />}
-        {step === 4 && <WriteNumberPad value={number} t={t} lang={lang} onComplete={next} />}
+        {step === 4 && (
+          <WriteNumberPad
+            value={number}
+            t={t}
+            lang={lang}
+            onComplete={next}
+            initialDrawing={numberDrawings[number]}
+            initialShowModel={reviewingPreviousNumber}
+            onDrawingChange={(drawing) => {
+              setNumberDrawings((current) => {
+                if (drawing) return { ...current, [number]: drawing };
+                const updated = { ...current };
+                delete updated[number];
+                return updated;
+              });
+            }}
+          />
+        )}
         <div className="mt-5 flex flex-wrap justify-between gap-3">
           <button disabled={number === 0 && step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            <SecondaryLessonButton label={number < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)} onClick={skipNextNumber} />
+            <button
+              type="button"
+              disabled={number === 0}
+              onClick={skipPreviousNumber}
+              className="rounded-xl border-2 border-blue-200 bg-white/80 px-4 py-2 text-sm font-black text-blue-700 shadow-[0_3px_0_rgba(30,64,175,.14)] active:translate-y-1 disabled:border-slate-200 disabled:text-slate-400 disabled:shadow-none"
+            >
+              {skipPreviousNumberLabel(lang)}
+            </button>
+            <button
+              type="button"
+              disabled={number === 9}
+              onClick={skipNextNumber}
+              className="rounded-xl border-2 border-blue-200 bg-white/80 px-4 py-2 text-sm font-black text-blue-700 shadow-[0_3px_0_rgba(30,64,175,.14)] active:translate-y-1 disabled:border-slate-200 disabled:text-slate-400 disabled:shadow-none"
+            >
+              {skipNextNumberLabel(lang)}
+            </button>
             <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 4 ? t.practice : t.next}</button>
           </div>
         </div>
@@ -1484,7 +1545,6 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
       : (lang === "en" ? `This is ${n} bananas.` : `Ini ${n} pisang.`),
   }));
   const current = examples[step];
-  const valueEmojis = VALUE_EMOJIS;
   const conceptSlides = [
     {
       text: lang === "en" ? "Different objects. Same number." : "Objek berbeza. Nombor sama.",
@@ -1501,7 +1561,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   ];
   const inConcept = step >= examples.length;
   const currentNumber = Math.min(current?.n ?? 9, 9);
-  const currentEmoji = valueEmojis[currentNumber] ?? "🍌";
+  const currentEmoji = "🍌";
   const concept = conceptSlides[step - examples.length];
   const lessonText = inConcept ? concept.text : getNumberValueLessonText(currentNumber, phase, lang);
   const maxPhase = inConcept ? 0 : getNumberValueMaxPhase(currentNumber);
@@ -1578,9 +1638,9 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
         : "0 maksudnya tiada.\nJadi, ada 0 pisang.";
     }
     if (phase === 0) return `Ini ${n}.`;
-    if (phase === 1) return `${n} maksudnya ${n} objek.`;
-    if (phase === 2) return `Kira setiap objek. Nombor terakhir ialah ${n}.`;
-    if (phase === 3) return `Objek berbeza. Masih ${n}.`;
+    if (phase === 1) return `Ini ${n} pisang.`;
+    if (phase === 2) return `Kira setiap pisang. Nombor terakhir ialah ${n}.`;
+    if (phase === 3) return `Objek berbeza. Nombor sama, ${n}.`;
     return `Susunan berbeza. Masih ${n}.`;
   }
   if (n === 0) {
@@ -1589,24 +1649,28 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
       : "0 means none.\nSo, there are 0 bananas.";
   }
   if (phase === 0) return `This is ${n}.`;
-  if (phase === 1) return `${n} means ${n} things.`;
-  if (phase === 2) return `Count each object. The last number is ${n}.`;
-  if (phase === 3) return `Different objects. Still ${n}.`;
+  if (phase === 1) return `This is ${n} bananas.`;
+  if (phase === 2) return `Count each banana. The last number is ${n}.`;
+  if (phase === 3) return `Different objects. Same number, ${n}.`;
   return `Different arrangement. Still ${n}.`;
 }
 
 function getNumberValueMaxPhase(n: number) {
   if (n === 0) return 1;
-  if (n === 1) return 3;
-  return 4;
+  return 3;
 }
 
 function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: string; phase: number; lang: Lang }) {
   const [counting, setCounting] = useState(false);
-  const alternateEmoji = getAlternateValueEmoji(emoji);
+  const [pairedCount, setPairedCount] = useState(0);
+  const [countRun, setCountRun] = useState(0);
+  const [comparisonEmojiA, comparisonEmojiB] = VALUE_COMPARISON_PAIRS[(Math.max(1, n) - 1) % VALUE_COMPARISON_PAIRS.length];
+  const updatePairedCount = useCallback((value: number) => setPairedCount(value), []);
 
   useEffect(() => {
     setCounting(false);
+    setPairedCount(0);
+    setCountRun(0);
   }, [n, emoji, phase]);
 
   if (n === 0) {
@@ -1638,9 +1702,15 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
       <div className="space-y-3">
         <button
           onClick={() => setCounting(true)}
-          className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
+          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
         >
           {lang === "en" ? "Tap to count" : "Tekan untuk kira"}
+          <span
+            className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
+            aria-hidden="true"
+          >
+            <PointerIcon />
+          </span>
         </button>
         {counting
           ? <CountedObjectRow key={`${n}-${emoji}-count-on`} count={n} emoji={emoji} showCount speakCount lang={lang} intervalMs={650} />
@@ -1652,28 +1722,61 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     );
   }
   if (phase === 3) {
+    const comparisonComplete = pairedCount >= n;
+    const firstValueLabel = valueObjectLabel(n, comparisonEmojiA, lang);
+    const secondValueLabel = valueObjectLabel(n, comparisonEmojiB, lang);
     return (
       <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => {
+            setPairedCount(0);
+            setCounting(true);
+            setCountRun((run) => run + 1);
+          }}
+          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
+        >
+          {counting
+            ? (lang === "en" ? "Count again" : "Kira lagi")
+            : (lang === "en" ? "Tap to count both groups" : "Tekan untuk kira kedua-dua kumpulan")}
+          <span
+            className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
+            aria-hidden="true"
+          >
+            <PointerIcon />
+          </span>
+        </button>
         <div className="grid gap-4 md:grid-cols-2">
-          <LabeledValueGroup label={valueObjectLabel(n, emoji, lang)} count={n} emoji={emoji} counted />
-          <LabeledValueGroup label={valueObjectLabel(n, alternateEmoji, lang)} count={n} emoji={alternateEmoji} counted />
+          <LabeledValueGroup
+            key={`${n}-${comparisonEmojiA}-${countRun}`}
+            label={firstValueLabel}
+            count={n}
+            emoji={comparisonEmojiA}
+            counted={counting}
+            speakCount={counting}
+            onCountProgress={updatePairedCount}
+            showLabel={comparisonComplete}
+            lang={lang}
+          />
+          <LabeledValueGroup
+            label={secondValueLabel}
+            count={n}
+            emoji={comparisonEmojiB}
+            counted={counting}
+            visibleCount={pairedCount}
+            showLabel={comparisonComplete}
+            lang={lang}
+          />
         </div>
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
-          {lang === "en" ? "Different things. Same number." : "Objek berbeza. Nombor sama."}
-        </p>
-      </div>
-    );
-  }
-  if (phase === 4) {
-    return (
-      <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-3">
-          <ValueLayoutCard label={lang === "en" ? "Row" : "Baris"} count={n} emoji={emoji} layout="row" />
-          <ValueLayoutCard label={lang === "en" ? "Groups" : "Kumpulan"} count={n} emoji={emoji} layout="groups" />
-          <ValueLayoutCard label={lang === "en" ? "Spread out" : "Berselerak"} count={n} emoji={emoji} layout="spread" />
-        </div>
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
-          {lang === "en" ? `They look different. They are all ${n}.` : `Rupa berbeza. Semua ialah ${n}.`}
+        <p
+          className="min-h-14 rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900"
+          aria-live="polite"
+        >
+          {comparisonComplete
+            ? (lang === "en"
+                ? `This is ${firstValueLabel}. This is ${secondValueLabel}.`
+                : `Ini ${firstValueLabel}. Ini ${secondValueLabel}.`)
+            : (lang === "en" ? "Count both groups." : "Kira kedua-dua kumpulan.")}
         </p>
       </div>
     );
@@ -1687,16 +1790,6 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
       </p>
     </div>
   );
-}
-
-function getAlternateValueEmoji(emoji: string) {
-  const symbol = cleanDisplayText(emoji);
-  if (symbol === "🍃") return "🍌";
-  if (symbol === "🥥") return "📘";
-  if (symbol === "🍄") return "🍌";
-  if (symbol === "📘") return "🌸";
-  if (symbol === "🚗") return "🍌";
-  return "🍃";
 }
 
 function valueObjectLabel(count: number, emoji: string, lang: Lang) {
@@ -1715,69 +1808,36 @@ function ZeroContainerCard({ label, container, lang }: { label: string; containe
   );
 }
 
-function LabeledValueGroup({ label, count, emoji, counted }: { label: string; count: number; emoji: string; counted: boolean }) {
+function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, lang }: {
+  label: string;
+  count: number;
+  emoji: string;
+  counted: boolean;
+  speakCount?: boolean;
+  visibleCount?: number;
+  onCountProgress?: (value: number) => void;
+  showLabel?: boolean;
+  lang: Lang;
+}) {
   return (
     <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4 text-center">
-      {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact intervalMs={500} /> : <ObjectGroup count={count} emoji={emoji} />}
-      <p className="mt-3 text-xl font-black text-emerald-950">{label}</p>
+      {counted ? (
+        <CountedObjectRow
+          count={count}
+          emoji={emoji}
+          showCount
+          compact
+          speakCount={speakCount}
+          visibleCount={visibleCount}
+          onCountProgress={onCountProgress}
+          lang={lang}
+        />
+      ) : <ObjectGroup count={count} emoji={emoji} />}
+      <p className={`mt-3 min-h-7 text-xl font-black text-emerald-950 ${showLabel ? "opacity-100" : "opacity-0"}`}>
+        {showLabel ? label : "\u00a0"}
+      </p>
     </div>
   );
-}
-
-function ValueLayoutCard({ label, count, emoji, layout }: { label: string; count: number; emoji: string; layout: "row" | "groups" | "spread" }) {
-  const items = Array.from({ length: count }, (_, i) => i);
-  const groupA = Math.ceil(count / 2);
-  const groupB = count - groupA;
-
-  return (
-    <div className="rounded-3xl border-2 border-yellow-100 bg-yellow-50 p-4 text-center">
-      <p className="mb-3 text-lg font-black text-yellow-900">{label}</p>
-      <div className="rounded-3xl bg-white p-3">
-        {layout === "groups" ? (
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <MiniObjectSet count={groupA} emoji={emoji} />
-            <div className="h-24 w-1 rounded-full bg-yellow-200" aria-hidden="true" />
-            <MiniObjectSet count={groupB} emoji={emoji} />
-          </div>
-        ) : (
-          <div className={layout === "row" ? "flex min-h-28 flex-nowrap items-center justify-center gap-2 overflow-x-auto" : "relative mx-auto h-32 max-w-64"}>
-            {items.map((i) => (
-              <span
-                key={i}
-                className={`grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-3xl shadow-inner ${layout === "spread" ? "absolute" : "shrink-0"}`}
-                style={layout === "spread" ? spreadObjectStyle(i, count) : undefined}
-              >
-                <SpriteIcon value={emoji} className="h-9 w-9" />
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-      <p className="mt-3 text-2xl font-black text-blue-950" style={getNumberTextStyle(count)}>{count}</p>
-    </div>
-  );
-}
-
-function MiniObjectSet({ count, emoji }: { count: number; emoji: string }) {
-  return (
-    <div className="flex min-h-24 flex-wrap content-center justify-center gap-2 rounded-2xl border-2 border-dashed border-yellow-200 bg-yellow-50 p-2">
-      {Array.from({ length: count }, (_, i) => (
-        <span key={i} className="grid h-10 w-10 place-items-center rounded-xl bg-white text-2xl shadow-inner">
-          <SpriteIcon value={emoji} className="h-8 w-8" />
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function spreadObjectStyle(index: number, total: number): React.CSSProperties {
-  const positions = [
-    [8, 10], [58, 6], [34, 34], [76, 42], [14, 62],
-    [50, 72], [72, 12], [26, 82], [4, 38],
-  ];
-  const [left, top] = positions[index % positions.length];
-  const offset = Math.max(0, 9 - total) * 2;
-  return { left: `${Math.min(82, left + offset)}%`, top: `${top}%` };
 }
 
 function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
@@ -1895,6 +1955,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
   const [groupB, setGroupB] = useState(0);
   const [checked, setChecked] = useState(false);
   const [practice, setPractice] = useState(false);
+  const [celebrationKey, setCelebrationKey] = useState(0);
   const activity = GROUPING_LESSON_STEPS[activityIndex];
   const maxStep = getNewGroupingMaxStep(activity);
   const activeTarget = getActiveGroupingTarget(activity, step);
@@ -1933,8 +1994,17 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
 
   const checkGroup = () => {
     setChecked(true);
-    if (correct) setStep((current) => Math.min(maxStep, current + 1));
+    if (correct) {
+      setCelebrationKey((current) => current + 1);
+      setStep((current) => Math.min(maxStep, current + 1));
+    }
   };
+
+  useEffect(() => {
+    if (celebrationKey === 0) return;
+    const timer = window.setTimeout(() => setCelebrationKey(0), 3200);
+    return () => window.clearTimeout(timer);
+  }, [celebrationKey]);
 
   const next = () => {
     setChecked(false);
@@ -1961,6 +2031,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
 
   return (
     <main className="mx-auto w-full max-w-4xl pb-8">
+      {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} />}
       <LessonShell
         lang={lang}
         title={lang === "en" ? "Grouping: Jungle Groups" : "Kumpulan: Kumpulan Rimba"}
@@ -3982,7 +4053,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, onCrossCountComplete, onCountComplete, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -3994,6 +4065,8 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   intervalMs?: number;
   speakCrossCount?: boolean;
   speakCount?: boolean;
+  visibleCount?: number;
+  onCountProgress?: (value: number) => void;
   onCrossCountComplete?: () => void;
   onCountComplete?: () => void;
   lang?: Lang;
@@ -4053,7 +4126,9 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
 
   useEffect(() => {
     let cancelled = false;
+    if (visibleCount !== undefined) return;
     setVisible(0);
+    onCountProgress?.(0);
     if (!showCount) return;
     const max = countRemainingOnly ? remaining : count;
     const countDelay = animateCrossOut ? (crossed * stepIntervalMs) + stepIntervalMs : 0;
@@ -4070,7 +4145,10 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
           lang,
           stepIntervalMs,
           (value) => {
-            if (!cancelled) setVisible(value);
+            if (!cancelled) {
+              setVisible(value);
+              onCountProgress?.(value);
+            }
           },
         ).then(() => {
           if (!cancelled) onCountComplete?.();
@@ -4089,6 +4167,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
 
     if (prefersReducedMotion) {
       setVisible(max);
+      onCountProgress?.(max);
       onCountComplete?.();
       return;
     }
@@ -4096,16 +4175,18 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
     const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => {
       if (cancelled) return;
       setVisible(i + 1);
+      onCountProgress?.(i + 1);
       if (i + 1 === max) onCountComplete?.();
     }, countDelay + (stepIntervalMs * (i + 1))));
     return () => {
       cancelled = true;
       timers.forEach(window.clearTimeout);
     };
-  }, [animateCrossOut, count, countRemainingOnly, crossed, lang, onCountComplete, prefersReducedMotion, remaining, showCount, speakCount, stepIntervalMs]);
+  }, [animateCrossOut, count, countRemainingOnly, crossed, lang, onCountComplete, onCountProgress, prefersReducedMotion, remaining, showCount, speakCount, stepIntervalMs, visibleCount]);
 
   useEffect(() => () => stopNumberAudio(), []);
 
+  const displayedCount = visibleCount ?? visible;
   let leftIndex = 0;
   return (
     <div className={`flex flex-wrap justify-center rounded-3xl border-2 border-slate-100 bg-white ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
@@ -4114,8 +4195,8 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         const willBeTaken = i < crossed;
         const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
         const label = shouldCount ? ++leftIndex : 0;
-        const labelVisible = shouldCount && label <= visible;
-        const isActiveCount = speakCount && labelVisible && label === visible;
+        const labelVisible = shouldCount && label <= displayedCount;
+        const isActiveCount = (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
         const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
         return (
           <div
@@ -4168,6 +4249,12 @@ function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Scre
   );
 }
 
+function localizedQuestionOption(question: Question, option: number | string, lang: Lang) {
+  if (lang === "en" || typeof option !== "string" || !question.id.startsWith("rec-")) return option;
+  const numberWordIndex = WORDS.en.indexOf(option);
+  return numberWordIndex >= 0 ? WORDS.ms[numberWordIndex] : option;
+}
+
 function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = true, onBackToLearning, chunkSize }: {
   lang: Lang;
   t: UIStrings;
@@ -4188,6 +4275,9 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const qn = randomizedQuestions[index];
   const selected = answers[index] ?? null;
   const answered = selected !== null;
+  const choseDontKnow = selected === DONT_KNOW_ANSWER;
+  const displayedSelected = selected === null ? "" : localizedQuestionOption(qn, selected, lang);
+  const displayedAnswer = localizedQuestionOption(qn, qn.answer, lang);
   const isCorrect = selected === qn.answer;
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
@@ -4214,6 +4304,11 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const answerQuestion = (answer: number | string) => {
     setShowSolution(false);
     setAnswers((current) => ({ ...current, [index]: answer }));
+  };
+
+  const showUnknownSolution = () => {
+    setAnswers((current) => ({ ...current, [index]: DONT_KNOW_ANSWER }));
+    setShowSolution(true);
   };
 
   const retryQuestion = () => {
@@ -4334,8 +4429,17 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               onAnswer={answerQuestion}
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div
+              className={`grid gap-3 ${
+                qn.visual.kind === "audioNumber" &&
+                qn.options.length === NUMBERS.length &&
+                qn.options.every((option) => typeof option === "number")
+                  ? "grid-cols-2 sm:grid-cols-5"
+                  : "grid-cols-2"
+              }`}
+            >
               {qn.options.map((option, optionIndex) => {
+                const displayedOption = localizedQuestionOption(qn, option, lang);
                 const picked = selected === option;
                 const right = option === qn.answer;
                 const revealCorrect = isCorrect || showSolution;
@@ -4347,7 +4451,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                     : picked
                       ? (lang === "en" ? ", your answer, try again" : ", jawapan awak, cuba lagi")
                       : (lang === "en" ? ", not selected" : ", tidak dipilih");
-                const optionSize = typeof option === "string" ? "text-2xl sm:text-3xl" : "text-4xl";
+                const optionSize = typeof displayedOption === "string" ? "text-2xl sm:text-3xl" : "text-4xl";
                 const stateClass = !answered
                   ? "border-slate-200 bg-white text-slate-900"
                   : right && revealCorrect
@@ -4362,13 +4466,13 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                       optionRefs.current[optionIndex] = element;
                     }}
                     disabled={answered}
-                    aria-label={`${lang === "en" ? "Answer" : "Jawapan"} ${option}${resultText}`}
+                    aria-label={`${lang === "en" ? "Answer" : "Jawapan"} ${displayedOption}${resultText}`}
                     onClick={() => answerQuestion(option)}
                     onKeyDown={(event) => handleOptionKeyDown(event, optionIndex, option)}
                     className={`relative min-h-20 rounded-3xl border-2 px-2 font-black shadow-[0_5px_0_rgba(0,0,0,.14)] ${optionSize} ${stateClass}`}
                     style={typeof option === "number" ? getNumberTextStyle(option) : undefined}
                   >
-                    <span className="inline-block pr-8">{option}</span>
+                    <span className="inline-block pr-8">{displayedOption}</span>
                     {feedbackIcon && (
                       <span
                         aria-hidden="true"
@@ -4382,6 +4486,17 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               })}
             </div>
           )}
+          {!answered && (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={showUnknownSolution}
+                className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-7 py-3 font-black text-amber-900 shadow-[0_5px_0_rgba(180,83,9,.18)] active:translate-y-1"
+              >
+                {lang === "en" ? "I don't know" : "Tidak tahu"}
+              </button>
+            </div>
+          )}
           {answered && (
             <div className="relative mt-5 overflow-hidden rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4">
               {isCorrect && <CorrectCelebration />}
@@ -4393,8 +4508,10 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                       ? (isValueQuestion ? (lang === "en" ? "Great job! Count with Chrys." : "Bagus! Kira dengan Chrys.") : (isCountQuestion ? (lang === "en" ? `Great job! It is ${qn.answer}.` : `Bagus! Ini ${qn.answer}.`) : t.greatJob))
                       : (isCountQuestion ? (lang === "en" ? "Good try. Let's count." : "Cubaan baik. Mari kira.") : t.lookAgain)}
                   </p>
-                  <p className="font-black text-slate-700">{t.yourAnswer}: {selected}</p>
-                  {!isCorrect && showSolution && <p className="font-black text-slate-700">{t.correctAnswer}: {qn.answer}</p>}
+                  <p className="font-black text-slate-700">
+                    {t.yourAnswer}: {choseDontKnow ? (lang === "en" ? "I don't know" : "Tidak tahu") : displayedSelected}
+                  </p>
+                  {!isCorrect && showSolution && <p className="font-black text-slate-700">{t.correctAnswer}: {displayedAnswer}</p>}
                   {!isCorrect && showSolution && qn.visual.kind === "count" && (
                     <p className="font-black text-blue-800">{lang === "en" ? `This is ${qn.visual.count}.` : `Ini ${qn.visual.count}.`}</p>
                   )}
@@ -4507,6 +4624,7 @@ function ActiveAnswerPanel({
 }) {
   const [builtCount, setBuiltCount] = useState(0);
   const [selectedObjects, setSelectedObjects] = useState<number[]>([]);
+  const [selectedNone, setSelectedNone] = useState(false);
   const [removedCount, setRemovedCount] = useState(0);
   const answer = Number(question.answer);
   const emoji =
@@ -4544,6 +4662,7 @@ function ActiveAnswerPanel({
   if (question.inputMode === "tapObjects") {
     const toggleObject = (objectIndex: number) => {
       if (answered) return;
+      setSelectedNone(false);
       setSelectedObjects((current) => {
         if (current.includes(objectIndex)) return current.filter((item) => item !== objectIndex);
         if (current.length >= 9) return current;
@@ -4551,11 +4670,15 @@ function ActiveAnswerPanel({
       });
     };
     const selectionOrder = (objectIndex: number) => selectedObjects.indexOf(objectIndex) + 1;
-    const checkSelection = () => onAnswer(selectedObjects.length);
+    const hasSelection = selectedNone || selectedObjects.length > 0;
+    const checkSelection = () => {
+      if (!hasSelection) return;
+      onAnswer(selectedNone ? 0 : selectedObjects.length);
+    };
     const instruction = question.visual.kind === "audioNumber"
-      ? (lang === "en" ? "Tap the objects you hear. Then press Check." : "Tekan objek yang kamu dengar. Kemudian tekan Semak.")
+      ? (lang === "en" ? "Tap the objects you hear, or choose No objects. Then press Check." : "Tekan objek yang kamu dengar, atau pilih Tiada objek. Kemudian tekan Semak.")
       : answer === 0
-        ? (lang === "en" ? "Select none. Then press Check." : "Pilih tiada. Kemudian tekan Semak.")
+        ? (lang === "en" ? "Choose No objects. Then press Check." : "Pilih Tiada objek. Kemudian tekan Semak.")
         : (lang === "en" ? "Tap the objects. Then press Check." : "Tekan objek. Kemudian tekan Semak.");
 
     return (
@@ -4589,14 +4712,31 @@ function ActiveAnswerPanel({
         </div>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <button
+            type="button"
             disabled={answered}
-            onClick={() => setSelectedObjects([])}
+            aria-pressed={selectedNone}
+            onClick={() => {
+              setSelectedObjects([]);
+              setSelectedNone(true);
+            }}
+            className={`rounded-2xl border-2 px-5 py-3 font-black shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40 ${
+              selectedNone ? "border-blue-700 bg-blue-600 text-white" : "border-blue-200 bg-blue-50 text-blue-800"
+            }`}
+          >
+            {lang === "en" ? "No objects" : "Tiada objek"}
+          </button>
+          <button
+            disabled={answered || !hasSelection}
+            onClick={() => {
+              setSelectedObjects([]);
+              setSelectedNone(false);
+            }}
             className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
           >
             {lang === "en" ? "Clear" : "Padam"}
           </button>
           <button
-            disabled={answered}
+            disabled={answered || !hasSelection}
             onClick={checkSelection}
             className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
           >
@@ -4678,7 +4818,7 @@ function ActiveAnswerPanel({
           </button>
           <button
             type="button"
-            disabled={answered}
+            disabled={answered || selectedObjects.length === 0}
             onClick={() => onAnswer(selectedObjects.length)}
             className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
           >
@@ -4723,7 +4863,7 @@ function ActiveAnswerPanel({
             {lang === "en" ? "Remove one" : "Ambil satu"}
           </button>
           <button
-            disabled={answered}
+            disabled={answered || removedCount === 0}
             onClick={() => onAnswer(leftCount)}
             className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
           >
@@ -4759,7 +4899,7 @@ function ActiveAnswerPanel({
           {lang === "en" ? "Tap banana" : "Tekan pisang"}
         </button>
         <button
-          disabled={answered}
+          disabled={answered || builtCount === 0}
           onClick={() => onAnswer(builtCount)}
           className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
         >
@@ -4771,23 +4911,64 @@ function ActiveAnswerPanel({
 }
 
 function CorrectCelebration() {
-  const colors = ["#facc15", "#22c55e", "#3b82f6", "#fb7185", "#a855f7"];
+  const colors = ["#facc15", "#22c55e", "#3b82f6", "#fb7185", "#a855f7", "#f97316", "#14b8a6"];
+  const balloons = [
+    { left: "3%", color: "#fb7185", delay: "0ms" },
+    { left: "14%", color: "#60a5fa", delay: "210ms" },
+    { left: "28%", color: "#facc15", delay: "90ms" },
+    { left: "45%", color: "#c084fc", delay: "320ms" },
+    { left: "62%", color: "#34d399", delay: "150ms" },
+    { left: "78%", color: "#fb923c", delay: "380ms" },
+    { left: "91%", color: "#38bdf8", delay: "40ms" },
+  ];
+
+  useEffect(() => {
+    playSuccessFanfare();
+    return stopCelebrationAudio;
+  }, []);
+
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-3xl" aria-hidden="true">
-      {Array.from({ length: 20 }, (_, index) => (
+    <div className="pointer-events-none fixed inset-0 z-[100] overflow-hidden" aria-hidden="true">
+      <span className="correct-celebration-burst" />
+      {Array.from({ length: 64 }, (_, index) => (
         <span
           key={`confetti-${index}`}
           className="correct-confetti"
           style={{
-            left: `${4 + ((index * 17) % 92)}%`,
+            left: `${1 + ((index * 37) % 98)}%`,
             backgroundColor: colors[index % colors.length],
-            animationDelay: `${(index % 6) * 70}ms`,
-            transform: `rotate(${index * 31}deg)`,
+            animationDelay: `${(index % 12) * 55}ms`,
+            animationDuration: `${2300 + (index % 7) * 130}ms`,
+            width: `${7 + (index % 4) * 2}px`,
+            height: `${11 + (index % 5) * 2}px`,
           }}
         />
       ))}
-      <span className="correct-balloon left-[4%] bg-pink-400" />
-      <span className="correct-balloon right-[5%] bg-blue-400 [animation-delay:180ms]" />
+      {balloons.map((balloon, index) => (
+        <span
+          key={`balloon-${index}`}
+          className="correct-balloon"
+          style={{
+            left: balloon.left,
+            backgroundColor: balloon.color,
+            animationDelay: balloon.delay,
+          }}
+        />
+      ))}
+      {Array.from({ length: 14 }, (_, index) => (
+        <span
+          key={`sparkle-${index}`}
+          className="correct-sparkle"
+          style={{
+            left: `${5 + ((index * 29) % 90)}%`,
+            top: `${8 + ((index * 41) % 72)}%`,
+            color: colors[(index + 2) % colors.length],
+            animationDelay: `${(index % 7) * 120}ms`,
+          }}
+        >
+          ★
+        </span>
+      ))}
     </div>
   );
 }
@@ -5364,6 +5545,7 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
   const choices = [2, 3, 5];
   const [selected, setSelected] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
+  const [celebrationKey, setCelebrationKey] = useState(0);
   const correct = checked && selected === answer;
 
   const choose = (value: number) => {
@@ -5371,8 +5553,20 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
     setChecked(false);
   };
 
+  const checkAnswer = () => {
+    setChecked(true);
+    if (selected === answer) setCelebrationKey((current) => current + 1);
+  };
+
+  useEffect(() => {
+    if (celebrationKey === 0) return;
+    const timer = window.setTimeout(() => setCelebrationKey(0), 3200);
+    return () => window.clearTimeout(timer);
+  }, [celebrationKey]);
+
   return (
     <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
+      {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} />}
       <NumberLineSequence nums={NUMBERS} marked={selected ?? -1} arrow="right" />
       <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-white bg-white p-3">
         {[0, 1, 2, "?", 4, 5].map((item, index) => (
@@ -5411,7 +5605,7 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
         <button
           type="button"
           disabled={selected === null}
-          onClick={() => setChecked(true)}
+          onClick={checkAnswer}
           className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] active:translate-y-1 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
         >
           {lang === "en" ? "Check" : "Semak"}
@@ -5717,7 +5911,23 @@ function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings;
   );
 }
 
-function WriteNumberPad({ value, t, lang, onComplete }: { value: number; t: UIStrings; lang: Lang; onComplete: () => void }) {
+function WriteNumberPad({
+  value,
+  t,
+  lang,
+  onComplete,
+  initialDrawing,
+  initialShowModel = false,
+  onDrawingChange,
+}: {
+  value: number;
+  t: UIStrings;
+  lang: Lang;
+  onComplete: () => void;
+  initialDrawing?: string;
+  initialShowModel?: boolean;
+  onDrawingChange?: (drawing: string) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -5727,8 +5937,8 @@ function WriteNumberPad({ value, t, lang, onComplete }: { value: number; t: UISt
   const [tool, setTool] = useState<DrawingTool>("pen");
 
   useEffect(() => {
-    setHasDrawn(false);
-    setShowModel(false);
+    setHasDrawn(Boolean(initialDrawing));
+    setShowModel(initialShowModel);
     setMatched(false);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -5743,7 +5953,12 @@ function WriteNumberPad({ value, t, lang, onComplete }: { value: number; t: UISt
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#2563eb";
     ctx.lineWidth = 12;
-  }, [value]);
+    if (initialDrawing) {
+      const image = new Image();
+      image.onload = () => ctx.drawImage(image, 0, 0, rect.width, rect.height);
+      image.src = initialDrawing;
+    }
+  }, [initialDrawing, initialShowModel, value]);
 
   useEffect(() => {
     if (!matched) return;
@@ -5778,7 +5993,13 @@ function WriteNumberPad({ value, t, lang, onComplete }: { value: number; t: UISt
     ctx?.lineTo(p.x, p.y);
     ctx?.stroke();
   };
-  const stop = () => { drawing.current = false; };
+  const stop = () => {
+    if (drawing.current) {
+      const canvas = canvasRef.current;
+      if (canvas) onDrawingChange?.(canvas.toDataURL("image/png"));
+    }
+    drawing.current = false;
+  };
   const clear = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -5786,6 +6007,7 @@ function WriteNumberPad({ value, t, lang, onComplete }: { value: number; t: UISt
     setHasDrawn(false);
     setShowModel(false);
     setMatched(false);
+    onDrawingChange?.("");
   };
   const checkAnswer = () => {
     if (!hasDrawn) return;
@@ -6082,7 +6304,12 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
           className="relative mt-4 rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1"
         >
           {lang === "en" ? "Tap to start the solution" : "Tekan untuk mula cara jawab"}
-          <PointerIcon />
+          <span
+            className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
+            aria-hidden="true"
+          >
+            <PointerIcon />
+          </span>
         </button>
       </div>
     );
@@ -6228,13 +6455,8 @@ function speakNumber(value: number, lang: Lang) {
   stopNumberAudio();
   const runId = audioRunId;
   const file = NUMBER_AUDIO_FILES[lang][value];
-  if (!file) {
-    speakNumberWithTts(value, lang);
-    return;
-  }
-  playNumberFile(value, lang, runId).then((played) => {
-    if (!played && runId === audioRunId) speakNumberWithTts(value, lang);
-  });
+  if (!file) return;
+  void playNumberFile(value, lang, runId);
 }
 
 async function speakCountingSequence(
@@ -6255,11 +6477,7 @@ async function speakCountingSequence(
       if (runId !== audioRunId) return;
       onCount?.(value);
       const startedAt = performance.now();
-      const played = await playNumberFile(value, lang, runId);
-      if (!played && runId === audioRunId) {
-        speakNumberWithTts(value, lang);
-        await wait(Math.min(stepMs, 900));
-      }
+      await playNumberFile(value, lang, runId);
       if (runId !== audioRunId) return;
       const elapsed = performance.now() - startedAt;
       await wait(Math.max(180, stepMs - elapsed));
@@ -6283,6 +6501,27 @@ function stopNumberAudio() {
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 
+function stopCelebrationAudio() {
+  activeCelebrationAudio?.pause();
+  if (activeCelebrationAudio) activeCelebrationAudio.currentTime = 0;
+  activeCelebrationAudio = null;
+}
+
+function playSuccessFanfare() {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+  stopCelebrationAudio();
+  const audio = new Audio(`${import.meta.env.BASE_URL}audio/${SUCCESS_FANFARE_FILE}`);
+  audio.preload = "auto";
+  audio.volume = 0.72;
+  activeCelebrationAudio = audio;
+  const clear = () => {
+    if (activeCelebrationAudio === audio) activeCelebrationAudio = null;
+  };
+  audio.onended = clear;
+  audio.onerror = clear;
+  void audio.play().catch(clear);
+}
+
 function playNumberFile(value: number, lang: Lang, runId: number) {
   const file = NUMBER_AUDIO_FILES[lang][value];
   if (!file) return Promise.resolve(false);
@@ -6304,7 +6543,10 @@ function playNumberFile(value: number, lang: Lang, runId: number) {
     audio.playbackRate = NUMBER_AUDIO_PLAYBACK_RATE;
     audio.preservesPitch = true;
     audio.onended = () => finish(true);
-    audio.onerror = () => finish(false);
+    audio.onerror = () => {
+      numberAudioCache.delete(`${lang}-${value}`);
+      finish(false);
+    };
     timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 2600);
     audio.play().catch(() => finish(false));
     if (runId !== audioRunId) {
@@ -6331,16 +6573,6 @@ function preloadNumberAudioFiles() {
       getNumberAudio(Number(value), lang).load();
     });
   });
-}
-
-function speakNumberWithTts(value: number, lang: Lang) {
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(WORDS[lang][value] ?? String(value));
-  utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-  utterance.rate = SPEECH_RATE;
-  window.speechSynthesis.speak(utterance);
 }
 
 function speakMathCue(cue: "plus" | "equals" | "minus", lang: Lang) {
