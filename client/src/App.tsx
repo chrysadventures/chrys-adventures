@@ -33,7 +33,7 @@ type Visual =
   | { kind: "number"; value: number }
   | { kind: "word"; value: number }
   | { kind: "audioNumber"; value: number }
-  | { kind: "groupChoices"; emoji: string; groups: number[] }
+  | { kind: "groupChoices"; emoji: string; groups: number[]; audioValue?: number }
   | { kind: "groupObserve"; emoji: string; count: number }
   | { kind: "groupMake"; emoji: string; count: number }
   | { kind: "groupTwo"; emoji: string; a: number; b: number }
@@ -343,7 +343,7 @@ const GLOSSARY_ENTRIES: GlossaryEntry[] = [
 ];
 
 const recognitionPracticeQuestions: Question[] = [
-  q("rec-tap-5", "numbers", { en: "Tap 5 bananas.", ms: "Tekan 5 pisang." }, [], 5, { kind: "number", value: 5 }, "tapObjects"),
+  q("rec-tap-5", "numbers", { en: "Listen. Make the number.", ms: "Dengar. Bina nombor itu." }, [], 5, { kind: "audioNumber", value: 5 }, "tapObjects"),
   q("rec-audio-make-6", "numbers", { en: "Listen. Make the number.", ms: "Dengar. Bina nombor itu." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
   q("rec-audio-symbol-0", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [0, 1, 2, 3], 0, { kind: "audioNumber", value: 0 }),
   q("rec-audio-symbol-2", "numbers", { en: "What number did you hear?", ms: "Nombor apa yang kamu dengar?" }, [1, 2, 3, 4], 2, { kind: "audioNumber", value: 2 }),
@@ -364,17 +364,17 @@ const recognitionPracticeQuestions: Question[] = [
 ].filter((question) => NUMBER_AUDIO_ENABLED || question.visual.kind !== "audioNumber");
 
 const valuePracticeQuestions: Question[] = [
-  q("val-tap-0", "numbers", { en: "Make 0.", ms: "Bina 0." }, [], 0, { kind: "number", value: 0 }, "tapObjects"),
-  q("val-tap-1", "numbers", { en: "Make 1.", ms: "Bina 1." }, [], 1, { kind: "number", value: 1 }, "tapObjects"),
-  q("val-tap-2", "numbers", { en: "Make 2.", ms: "Bina 2." }, [], 2, { kind: "number", value: 2 }, "tapObjects"),
-  q("val-tap-3", "numbers", { en: "Make 3.", ms: "Bina 3." }, [], 3, { kind: "number", value: 3 }, "tapObjects"),
-  q("val-tap-4", "numbers", { en: "Make 4.", ms: "Bina 4." }, [], 4, { kind: "number", value: 4 }, "tapObjects"),
-  q("val-tap-5", "numbers", { en: "Make 5.", ms: "Bina 5." }, [], 5, { kind: "number", value: 5 }, "tapObjects"),
-  q("val-tap-6", "numbers", { en: "Make 6.", ms: "Bina 6." }, [], 6, { kind: "number", value: 6 }, "tapObjects"),
-  q("val-tap-7", "numbers", { en: "Make 7.", ms: "Bina 7." }, [], 7, { kind: "number", value: 7 }, "tapObjects"),
-  q("val-tap-8", "numbers", { en: "Make 8.", ms: "Bina 8." }, [], 8, { kind: "number", value: 8 }, "tapObjects"),
-  q("val-tap-9", "numbers", { en: "Make 9.", ms: "Bina 9." }, [], 9, { kind: "number", value: 9 }, "tapObjects"),
-  q("val-make-group-3", "numbers", { en: "Make a group of 3.", ms: "Bina kumpulan 3." }, [], 3, { kind: "groupMake", emoji: "🍌", count: 3 }, "makeGroup"),
+  q("val-tap-0", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 0, { kind: "audioNumber", value: 0 }, "tapObjects"),
+  q("val-tap-1", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 1, { kind: "audioNumber", value: 1 }, "tapObjects"),
+  q("val-tap-2", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 2, { kind: "audioNumber", value: 2 }, "tapObjects"),
+  q("val-tap-3", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 3, { kind: "audioNumber", value: 3 }, "tapObjects"),
+  q("val-tap-4", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 4, { kind: "audioNumber", value: 4 }, "tapObjects"),
+  q("val-tap-5", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 5, { kind: "audioNumber", value: 5 }, "tapObjects"),
+  q("val-tap-6", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
+  q("val-tap-7", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 7, { kind: "audioNumber", value: 7 }, "tapObjects"),
+  q("val-tap-8", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 8, { kind: "audioNumber", value: 8 }, "tapObjects"),
+  q("val-tap-9", "numbers", { en: "Listen. Make the group.", ms: "Dengar. Bina kumpulan." }, [], 9, { kind: "audioNumber", value: 9 }, "tapObjects"),
+  q("val-make-group-3", "numbers", { en: "Copy this group.", ms: "Salin kumpulan ini." }, [], 3, { kind: "groupMake", emoji: "🍌", count: 3 }, "makeGroup"),
   q("val-support-3", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [2, 3, 4], 3, { kind: "numberWithGroup", value: 3, emoji: "🍌" }),
   q("val-support-6", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [5, 6, 7], 6, { kind: "numberWithGroup", value: 6, emoji: "🍄" }),
   q("val-count-0", "numbers", { en: "How many bananas are in the basket?", ms: "Ada berapa pisang dalam bakul?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
@@ -387,8 +387,8 @@ const valuePracticeQuestions: Question[] = [
   q("val-count-7", "numbers", { en: "How many flowers are there?", ms: "Ada berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "count", emoji: "🌸", count: 7 }),
   q("val-count-8", "numbers", { en: "How many coconuts are there?", ms: "Ada berapa kelapa?" }, [6, 7, 8, 9], 8, { kind: "count", emoji: "🥥", count: 8 }),
   q("val-count-9", "numbers", { en: "How many mushrooms are there?", ms: "Ada berapa cendawan?" }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🍄", count: 9 }),
-  q("val-group-4", "numbers", { en: "Which banana group shows 4?", ms: "Kumpulan pisang mana tunjuk 4?" }, [2, 4, 6], 4, { kind: "groupChoices", emoji: "🍌", groups: [2, 4, 6] }),
-  q("val-group-7", "numbers", { en: "Which banana group shows 7?", ms: "Kumpulan pisang mana tunjuk 7?" }, [5, 7, 9], 7, { kind: "groupChoices", emoji: "🍌", groups: [5, 7, 9] }),
+  q("val-group-4", "numbers", { en: "Listen. Which banana group matches?", ms: "Dengar. Kumpulan pisang mana padan?" }, [2, 4, 6], 4, { kind: "groupChoices", emoji: "🍌", groups: [2, 4, 6], audioValue: 4 }),
+  q("val-group-7", "numbers", { en: "Listen. Which banana group matches?", ms: "Dengar. Kumpulan pisang mana padan?" }, [5, 7, 9], 7, { kind: "groupChoices", emoji: "🍌", groups: [5, 7, 9], audioValue: 7 }),
   q("val-group-number-5", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🥭", count: 5 }),
   q("val-same-3", "numbers", { en: "Are these the same number?", ms: "Adakah ini nombor yang sama?" }, ["Yes", "No"], "Yes", { kind: "sameValue", count: 3, emojis: ["🍌", "🍃"] }),
   q("val-layout-6", "numbers", { en: "Do they show the same number?", ms: "Adakah semua tunjuk nombor sama?" }, ["Yes", "No"], "Yes", { kind: "layoutValue", count: 6, emoji: "🍌" }),
@@ -1525,7 +1525,7 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
       <LessonShell lang={lang} title={t.numberValues} helper={lang === "en" ? "A number tells us how many." : "Nombor memberitahu berapa banyak."}>
-        <div className="grid gap-4 md:grid-cols-[auto_1fr]">
+        <div className="grid gap-4">
           <CharacterTalk lang={lang} text={lessonText} />
           <div className="rounded-[2rem] border-4 border-white bg-white p-5 text-center shadow-[0_7px_0_rgba(0,0,0,.12)]">
             {inConcept ? concept.visual : <NumberValueStepVisual n={currentNumber} emoji={currentEmoji} phase={phase} lang={lang} />}
@@ -4175,6 +4175,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number | string>>({});
   const [showBreather, setShowBreather] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const qn = randomizedQuestions[index];
   const selected = answers[index] ?? null;
@@ -4184,19 +4185,36 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isValueQuestion = qn.id.startsWith("val-");
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
   const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway";
-  const activePanelHasOwnCorrection = qn.inputMode === "tapObjects" || qn.inputMode === "takeAway";
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
 
   const next = () => {
     if (index === randomizedQuestions.length - 1) onFinish(correct, randomizedQuestions.length);
     else if (chunkSize && (index + 1) % chunkSize === 0) setShowBreather(true);
-    else setIndex((i) => i + 1);
+    else {
+      setShowSolution(false);
+      setIndex((i) => i + 1);
+    }
   };
 
   const continueAfterBreather = () => {
     setShowBreather(false);
+    setShowSolution(false);
     setIndex((i) => Math.min(randomizedQuestions.length - 1, i + 1));
+  };
+
+  const answerQuestion = (answer: number | string) => {
+    setShowSolution(false);
+    setAnswers((current) => ({ ...current, [index]: answer }));
+  };
+
+  const retryQuestion = () => {
+    setShowSolution(false);
+    setAnswers((current) => {
+      const nextAnswers = { ...current };
+      delete nextAnswers[index];
+      return nextAnswers;
+    });
   };
 
   const focusOption = (nextIndex: number) => {
@@ -4219,7 +4237,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
     }
     if ((event.key === "Enter" || event.key === " ") && !answered) {
       event.preventDefault();
-      setAnswers((current) => ({ ...current, [index]: option }));
+      answerQuestion(option);
     }
   };
 
@@ -4261,7 +4279,10 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               <div className="flex flex-wrap gap-3">
                 {index > 0 && (
                   <button
-                    onClick={() => setIndex((i) => Math.max(0, i - 1))}
+                    onClick={() => {
+                      setShowSolution(false);
+                      setIndex((i) => Math.max(0, i - 1));
+                    }}
                     className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1"
                   >
                     {t.previous}
@@ -4282,7 +4303,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
           <h2 data-narration-read="true" className="text-center text-2xl font-black text-slate-900">{qn.text[lang]}</h2>
           {!groupChoiceVisual && !activePanelOwnsVisual && (
             <div className="my-4 rounded-3xl border-2 border-sky-100 bg-sky-50 p-3">
-              <VisualDisplay visual={qn.visual} lang={lang} revealNumbers={answered && !isCorrect} />
+              <VisualDisplay visual={qn.visual} lang={lang} revealNumbers={showSolution} />
             </div>
           )}
           {groupChoiceVisual ? (
@@ -4291,32 +4312,29 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               lang={lang}
               selected={selected}
               answered={answered}
+              revealCorrect={isCorrect || showSolution}
               answer={Number(qn.answer)}
-              onAnswer={(answer) => setAnswers((current) => ({ ...current, [index]: answer }))}
+              onAnswer={answerQuestion}
             />
           ) : qn.inputMode && qn.inputMode !== "choice" ? (
             <ActiveAnswerPanel
-              key={qn.id}
+              key={`${qn.id}-${answered ? "answered" : "open"}`}
               question={qn}
               lang={lang}
               answered={answered}
               selected={selected}
-              onAnswer={(answer) => setAnswers((current) => ({ ...current, [index]: answer }))}
-              onRetry={() => setAnswers((current) => {
-                const nextAnswers = { ...current };
-                delete nextAnswers[index];
-                return nextAnswers;
-              })}
+              onAnswer={answerQuestion}
             />
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {qn.options.map((option, optionIndex) => {
                 const picked = selected === option;
                 const right = option === qn.answer;
-                const feedbackIcon = answered && right ? "✓" : answered && picked && !right ? "×" : null;
+                const revealCorrect = isCorrect || showSolution;
+                const feedbackIcon = answered && right && revealCorrect ? "✓" : answered && picked && !right ? "×" : null;
                 const resultText = !answered
                   ? ""
-                  : right
+                  : right && revealCorrect
                     ? (lang === "en" ? ", correct answer" : ", jawapan betul")
                     : picked
                       ? (lang === "en" ? ", your answer, try again" : ", jawapan awak, cuba lagi")
@@ -4324,7 +4342,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                 const optionSize = typeof option === "string" ? "text-2xl sm:text-3xl" : "text-4xl";
                 const stateClass = !answered
                   ? "border-slate-200 bg-white text-slate-900"
-                  : right
+                  : right && revealCorrect
                     ? "border-emerald-600 bg-emerald-500 text-white"
                     : picked
                       ? "border-orange-500 bg-orange-400 text-white"
@@ -4337,7 +4355,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                     }}
                     disabled={answered}
                     aria-label={`${lang === "en" ? "Answer" : "Jawapan"} ${option}${resultText}`}
-                    onClick={() => setAnswers((current) => ({ ...current, [index]: option }))}
+                    onClick={() => answerQuestion(option)}
                     onKeyDown={(event) => handleOptionKeyDown(event, optionIndex, option)}
                     className={`relative min-h-20 rounded-3xl border-2 px-2 font-black shadow-[0_5px_0_rgba(0,0,0,.14)] ${optionSize} ${stateClass}`}
                     style={typeof option === "number" ? getNumberTextStyle(option) : undefined}
@@ -4356,14 +4374,9 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               })}
             </div>
           )}
-          {answered && activePanelHasOwnCorrection ? (
-            <div className="mt-5 flex gap-3">
-              <button onClick={next} className="flex-[2] rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
-                {index === randomizedQuestions.length - 1 ? t.finish : t.nextQuestion}
-              </button>
-            </div>
-          ) : answered && (
-            <div className="mt-5 rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4">
+          {answered && (
+            <div className="relative mt-5 overflow-hidden rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4">
+              {isCorrect && <CorrectCelebration />}
               <div className="mb-3 flex items-center gap-3">
                 <img src={isCorrect ? chrysExcited : chrysThinking} alt="Chrys feedback" className="h-20 w-20 object-contain" />
                 <div>
@@ -4373,19 +4386,31 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                       : (isCountQuestion ? (lang === "en" ? "Good try. Let's count." : "Cubaan baik. Mari kira.") : t.lookAgain)}
                   </p>
                   <p className="font-black text-slate-700">{t.yourAnswer}: {selected}</p>
-                  {!isCorrect && <p className="font-black text-slate-700">{t.correctAnswer}: {qn.answer}</p>}
-                  {!isCorrect && qn.visual.kind === "count" && (
+                  {!isCorrect && showSolution && <p className="font-black text-slate-700">{t.correctAnswer}: {qn.answer}</p>}
+                  {!isCorrect && showSolution && qn.visual.kind === "count" && (
                     <p className="font-black text-blue-800">{lang === "en" ? `This is ${qn.visual.count}.` : `Ini ${qn.visual.count}.`}</p>
                   )}
-                  {!isCorrect && <p className="font-bold text-slate-600">{t.seeMethod}</p>}
+                  {!isCorrect && showSolution && <p className="font-bold text-slate-600">{t.seeMethod}</p>}
                 </div>
               </div>
-              {(!isCorrect || qn.visual.kind === "subtract") && <WorkedMethod q={qn} lang={lang} />}
-              <div className="mt-4 flex gap-3">
-                <button onClick={next} className="flex-[2] rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
-                  {index === randomizedQuestions.length - 1 ? t.finish : t.nextQuestion}
-                </button>
-              </div>
+              {!isCorrect && !showSolution && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button onClick={retryQuestion} className="rounded-2xl border-2 border-amber-300 bg-white px-6 py-3 font-black text-amber-800 shadow-[0_5px_0_rgba(180,83,9,.18)] active:translate-y-1">
+                    {lang === "en" ? "Try again" : "Cuba lagi"}
+                  </button>
+                  <button onClick={() => setShowSolution(true)} className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1">
+                    {lang === "en" ? "Show me how" : "Tunjuk cara"}
+                  </button>
+                </div>
+              )}
+              {!isCorrect && showSolution && <WorkedMethod q={qn} lang={lang} />}
+              {(isCorrect || showSolution) && (
+                <div className="mt-4 flex gap-3">
+                  <button onClick={next} className="flex-[2] rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
+                    {index === randomizedQuestions.length - 1 ? t.finish : t.nextQuestion}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -4399,6 +4424,7 @@ function GroupChoiceAnswerPanel({
   lang,
   selected,
   answered,
+  revealCorrect,
   answer,
   onAnswer,
 }: {
@@ -4406,24 +4432,32 @@ function GroupChoiceAnswerPanel({
   lang: Lang;
   selected: number | string | null;
   answered: boolean;
+  revealCorrect: boolean;
   answer: number;
   onAnswer: (answer: number) => void;
 }) {
   return (
-    <div className="my-4 grid gap-3 md:grid-cols-3">
-      {visual.groups.map((count) => {
+    <div className="my-4 space-y-4">
+      {NUMBER_AUDIO_ENABLED && visual.audioValue !== undefined && (
+        <AudioHearButton
+          label={lang === "en" ? "Hear the number" : "Dengar nombor"}
+          onClick={() => speakNumber(visual.audioValue!, lang)}
+        />
+      )}
+      <div className="grid gap-3 md:grid-cols-3">
+        {visual.groups.map((count) => {
         const picked = selected === count;
         const right = count === answer;
         const stateClass = !answered
           ? "border-blue-100 bg-white hover:border-blue-300"
-          : right
+          : right && revealCorrect
             ? "border-emerald-600 bg-emerald-50"
             : picked
               ? "border-orange-500 bg-orange-50"
               : "border-slate-100 bg-slate-50 opacity-70";
         const status = !answered
           ? ""
-          : right
+          : right && revealCorrect
             ? (lang === "en" ? ", correct answer" : ", jawapan betul")
             : picked
               ? (lang === "en" ? ", your answer, try again" : ", jawapan awak, cuba lagi")
@@ -4436,15 +4470,16 @@ function GroupChoiceAnswerPanel({
             aria-label={`${lang === "en" ? "Group answer with" : "Jawapan kumpulan dengan"} ${count}${status}`}
             className={`rounded-3xl border-4 p-3 text-center shadow-[0_6px_0_rgba(0,0,0,.12)] transition active:translate-y-1 ${stateClass}`}
           >
-            <ObjectGroup count={count} emoji={visual.emoji} numbered={answered} />
-            {answered && (
+            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealCorrect} />
+            {answered && (picked || (right && revealCorrect)) && (
               <span className={`mt-3 inline-grid h-10 w-10 place-items-center rounded-full border-2 bg-white text-2xl font-black ${right ? "border-emerald-700 text-emerald-700" : picked ? "border-orange-700 text-orange-700" : "border-slate-200 text-slate-300"}`} aria-hidden="true">
                 {right ? "✓" : picked ? "×" : ""}
               </span>
             )}
           </button>
         );
-      })}
+        })}
+      </div>
     </div>
   );
 }
@@ -4455,14 +4490,12 @@ function ActiveAnswerPanel({
   answered,
   selected,
   onAnswer,
-  onRetry,
 }: {
   question: Question;
   lang: Lang;
   answered: boolean;
   selected: number | string | null;
   onAnswer: (answer: number) => void;
-  onRetry: () => void;
 }) {
   const [builtCount, setBuiltCount] = useState(0);
   const [selectedObjects, setSelectedObjects] = useState<number[]>([]);
@@ -4476,7 +4509,6 @@ function ActiveAnswerPanel({
     "🍌";
   const selectedNumber = typeof selected === "number" ? selected : Number(selected);
   const shownCount = answered && Number.isFinite(selectedNumber) ? selectedNumber : builtCount;
-  const isCorrect = answered && selectedNumber === answer;
 
   if (question.inputMode === "keypad") {
     return (
@@ -4497,13 +4529,11 @@ function ActiveAnswerPanel({
             </button>
           ))}
         </div>
-        {answered && <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />}
       </div>
     );
   }
 
   if (question.inputMode === "tapObjects") {
-    const chosenCount = answered && Number.isFinite(selectedNumber) ? selectedNumber : selectedObjects.length;
     const toggleObject = (objectIndex: number) => {
       if (answered) return;
       setSelectedObjects((current) => {
@@ -4518,7 +4548,7 @@ function ActiveAnswerPanel({
       ? (lang === "en" ? "Tap the objects you hear. Then press Check." : "Tekan objek yang kamu dengar. Kemudian tekan Semak.")
       : answer === 0
         ? (lang === "en" ? "Select none. Then press Check." : "Pilih tiada. Kemudian tekan Semak.")
-        : (lang === "en" ? `Tap ${answer} objects.` : `Tekan ${answer} objek.`);
+        : (lang === "en" ? "Tap the objects. Then press Check." : "Tekan objek. Kemudian tekan Semak.");
 
     return (
       <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
@@ -4565,36 +4595,6 @@ function ActiveAnswerPanel({
             {lang === "en" ? "Check" : "Semak"}
           </button>
         </div>
-        {answered && (
-          <div className="mt-4 space-y-3">
-            <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
-            <div>
-              {chosenCount > 0 && <CountedObjectRow count={chosenCount} emoji={emoji} showCount compact speakCount lang={lang} />}
-              <CountTotalBadge count={chosenCount} lang={lang} />
-            </div>
-            {!isCorrect && (
-              <div className="space-y-3 rounded-3xl border-2 border-blue-100 bg-blue-50 p-3">
-                <p className="font-black text-blue-900">
-                  {lang === "en" ? `The model has ${answer}.` : `Contoh ada ${answer}.`}
-                </p>
-                <div>
-                  {answer > 0 ? <CountedObjectRow count={answer} emoji={emoji} showCount compact lang={lang} /> : <ObjectGroup count={0} emoji={emoji} numbered />}
-                  <CountTotalBadge count={answer} lang={lang} />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedObjects([]);
-                    onRetry();
-                  }}
-                  className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
-                >
-                  {lang === "en" ? "Try again" : "Cuba lagi"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     );
   }
@@ -4651,7 +4651,7 @@ function ActiveAnswerPanel({
                     })}
                   </div>
                   <p className="mt-3 text-xl font-black text-amber-900">
-                    {groupCount} {lang === "en" ? (groupCount === 1 ? "banana" : "bananas") : "pisang"}
+                    {lang === "en" ? `Group ${groupIndex + 1}` : `Kumpulan ${groupIndex + 1}`}
                   </p>
                 </div>
               </React.Fragment>
@@ -4677,30 +4677,12 @@ function ActiveAnswerPanel({
             {lang === "en" ? "Check" : "Semak"}
           </button>
         </div>
-        {answered && (
-          <div className="space-y-3">
-            <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
-            {!isCorrect && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedObjects([]);
-                  onRetry();
-                }}
-                className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
-              >
-                {lang === "en" ? "Try again" : "Cuba lagi"}
-              </button>
-            )}
-          </div>
-        )}
       </div>
     );
   }
 
   if (question.inputMode === "takeAway" && question.visual.kind === "subtract") {
     const startCount = question.visual.a;
-    const takeAwayTarget = question.visual.b;
     const shownRemoved = answered ? startCount - selectedNumber : removedCount;
     const leftCount = startCount - shownRemoved;
 
@@ -4740,41 +4722,13 @@ function ActiveAnswerPanel({
             {lang === "en" ? "Check" : "Semak"}
           </button>
         </div>
-        {answered && (
-          <div className="space-y-3">
-            <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
-            {!isCorrect && (
-              <div className="space-y-3 rounded-3xl border-2 border-blue-100 bg-blue-50 p-3">
-                <p className="font-black text-blue-900">
-                  {lang === "en"
-                    ? `Take away ${takeAwayTarget}. ${answer} are left.`
-                    : `Ambil ${takeAwayTarget}. Tinggal ${answer}.`}
-                </p>
-                <div>
-                  <CountedObjectRow count={startCount} emoji={emoji} crossed={takeAwayTarget} showCount countRemainingOnly showCrossCount compact lang={lang} />
-                  <CountTotalBadge count={answer} lang={lang} />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRemovedCount(0);
-                    onRetry();
-                  }}
-                  className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
-                >
-                  {lang === "en" ? "Try again" : "Cuba lagi"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     );
   }
 
-  const instruction = question.inputMode === "buildTotal"
-    ? (lang === "en" ? `Tap to make ${answer}.` : `Tekan untuk bina ${answer}.`)
-    : (lang === "en" ? `Tap to make a group of ${answer}.` : `Tekan untuk bina kumpulan ${answer}.`);
+  const instruction = lang === "en"
+    ? "Tap bananas to build your group."
+    : "Tekan pisang untuk bina kumpulan.";
 
   return (
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
@@ -4804,39 +4758,29 @@ function ActiveAnswerPanel({
           {lang === "en" ? "Check" : "Semak"}
         </button>
       </div>
-      {answered && (
-        <div className="space-y-3">
-          <ActiveResultMessage correct={isCorrect} lang={lang} answer={answer} />
-          {!isCorrect && (
-            <button
-              type="button"
-              onClick={() => {
-                setBuiltCount(0);
-                onRetry();
-              }}
-              className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 font-black text-amber-800 shadow-[0_4px_0_rgba(180,83,9,.18)] active:translate-y-1"
-            >
-              {lang === "en" ? "Try again" : "Cuba lagi"}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-function ActiveResultMessage({ correct, lang, answer }: { correct: boolean; lang: Lang; answer: number }) {
+function CorrectCelebration() {
+  const colors = ["#facc15", "#22c55e", "#3b82f6", "#fb7185", "#a855f7"];
   return (
-    <p className={`mt-4 flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-lg font-black ${correct ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700"}`}>
-      <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-full bg-white shadow-sm">
-        {correct ? "\u2713" : "\u00d7"}
-      </span>
-      <span>
-        {correct
-          ? (lang === "en" ? `Great job. This is ${answer}.` : `Bagus. Ini ${answer}.`)
-          : (lang === "en" ? "Good try. Let's count again." : "Cubaan baik. Mari kira lagi.")}
-      </span>
-    </p>
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-3xl" aria-hidden="true">
+      {Array.from({ length: 20 }, (_, index) => (
+        <span
+          key={`confetti-${index}`}
+          className="correct-confetti"
+          style={{
+            left: `${4 + ((index * 17) % 92)}%`,
+            backgroundColor: colors[index % colors.length],
+            animationDelay: `${(index % 6) * 70}ms`,
+            transform: `rotate(${index * 31}deg)`,
+          }}
+        />
+      ))}
+      <span className="correct-balloon left-[4%] bg-pink-400" />
+      <span className="correct-balloon right-[5%] bg-blue-400 [animation-delay:180ms]" />
+    </div>
   );
 }
 
@@ -5118,8 +5062,8 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: n
       {Array.from({ length: count }, (_, i) => {
         const gone = i < crossed;
         return (
-          <div key={i} className="relative grid h-16 w-16 place-items-center rounded-2xl bg-amber-50 text-4xl shadow-inner">
-            <span>
+          <div key={i} className={`relative grid h-16 w-16 place-items-center rounded-2xl text-4xl shadow-inner ${gone ? "bg-slate-100" : "bg-amber-50"}`}>
+            <span className={gone ? "grayscale opacity-35" : ""}>
               <SpriteIcon value={emoji} className="h-12 w-12" />
             </span>
             {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
@@ -5584,9 +5528,14 @@ function SkipCountingPanel({ marked, lang }: { marked: number; lang: Lang }) {
 function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; lang: Lang; onTraced: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
+  const finishTimerRef = useRef<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
+    if (finishTimerRef.current !== null) {
+      window.clearTimeout(finishTimerRef.current);
+      finishTimerRef.current = null;
+    }
     setConfirmed(false);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -5601,6 +5550,12 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#2563eb";
     ctx.lineWidth = 12;
+    return () => {
+      if (finishTimerRef.current !== null) {
+        window.clearTimeout(finishTimerRef.current);
+        finishTimerRef.current = null;
+      }
+    };
   }, [value]);
 
   const point = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -5631,7 +5586,11 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
   };
   const confirmTrace = () => {
     setConfirmed(true);
-    window.setTimeout(onTraced, 4200);
+    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current);
+    finishTimerRef.current = window.setTimeout(() => {
+      finishTimerRef.current = null;
+      onTraced();
+    }, 4200);
   };
 
   return (
@@ -5997,14 +5956,36 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
   const emoji = visual.emoji ?? "🍌";
   return (
     <div className="space-y-3">
-      <ObjectGroup count={visual.a} emoji={emoji} />
+      <ObjectGroup count={visual.a} emoji={emoji} crossed={visual.b} />
       {revealNumbers && <p className="text-center text-2xl font-black text-slate-500">{visual.a} - {visual.b} = ?</p>}
     </div>
   );
 }
 
 function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
+  const [started, setStarted] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
   const spokenSteps = q.method[lang].join(". ");
+
+  if (!started) {
+    return (
+      <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-5 text-center">
+        <h4 className="text-xl font-black text-emerald-900">
+          {lang === "en" ? "Ready to see how?" : "Sedia lihat caranya?"}
+        </h4>
+        <button
+          type="button"
+          onClick={() => setStarted(true)}
+          className="relative mt-4 rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1"
+        >
+          {lang === "en" ? "Tap to start the solution" : "Tekan untuk mula cara jawab"}
+          <PointerIcon />
+        </button>
+      </div>
+    );
+  }
+
+  const lastStep = stepIndex >= q.method[lang].length - 1;
   return (
     <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -6023,14 +6004,21 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
       <div className="mb-3">
         <SolutionVisual visual={q.visual} lang={lang} />
       </div>
-      <ol className="space-y-2">
-        {q.method[lang].map((step, i) => (
-          <li key={`${i}-${step}`} className="flex gap-2 rounded-2xl bg-white px-3 py-2 text-sm font-black text-slate-700">
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs text-white">{i + 1}</span>
-            {step}
-          </li>
-        ))}
-      </ol>
+      <div className="rounded-3xl border-2 border-emerald-200 bg-white px-5 py-4 text-center">
+        <p className="text-sm font-black uppercase text-emerald-600">
+          {lang === "en" ? `Step ${stepIndex + 1}` : `Langkah ${stepIndex + 1}`}
+        </p>
+        <p className="mt-1 text-xl font-black text-slate-800">{q.method[lang][stepIndex]}</p>
+      </div>
+      {!lastStep && (
+        <button
+          type="button"
+          onClick={() => setStepIndex((current) => Math.min(q.method[lang].length - 1, current + 1))}
+          className="mt-3 w-full rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] active:translate-y-1"
+        >
+          {lang === "en" ? "Next step" : "Langkah lepas ni"}
+        </button>
+      )}
     </div>
   );
 }
