@@ -3518,8 +3518,8 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
 
         if (groupIndex < groups.length - 1) {
           setActiveSign(groupIndex);
-          speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
-          await wait(MATH_CUE_AUDIO_ENABLED && !audioMuted ? 1300 : 600);
+          await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+          await wait(300);
           if (cancelled) return;
           setCompletedSigns(groupIndex + 1);
           setActiveSign(-1);
@@ -3710,6 +3710,7 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const [activeGroup, setActiveGroup] = useState(-1);
   const [completedSigns, setCompletedSigns] = useState(0);
   const [activeSign, setActiveSign] = useState(-1);
+  const [activeBanana, setActiveBanana] = useState<{ groupIndex: number; objectIndex: number } | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [isCounting, setIsCounting] = useState(false);
   const [countRun, setCountRun] = useState(0);
@@ -3732,6 +3733,7 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
       setActiveGroup(0);
       setCompletedSigns(0);
       setActiveSign(-1);
+      setActiveBanana(null);
       setJoiningResult(false);
       setResultJoined(false);
 
@@ -3740,23 +3742,38 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
         const count = ADDITION_EQUATION_GROUPS[groupIndex];
         setActiveGroup(groupIndex);
 
-        if (prefersReducedMotion) {
-          setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? count : value));
-          await speakCountingSequence(count, lang, intervalMs);
-        } else if (audioMuted) {
-          for (let value = 1; value <= count; value += 1) {
-            if (cancelled) return;
-            setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-            await wait(intervalMs);
+        if (audioMuted) {
+          if (prefersReducedMotion) {
+            setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? count : value));
+          } else {
+            for (let value = 1; value <= count; value += 1) {
+              if (cancelled) return;
+              setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+              setActiveBanana({ groupIndex, objectIndex: value - 1 });
+              await wait(intervalMs);
+              if (cancelled) return;
+              setActiveBanana(null);
+            }
           }
         } else {
-          await speakCountingSequence(count, lang, intervalMs, (value) => {
-            if (cancelled) return;
-            setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-          });
+          await speakCountingSequence(
+            count,
+            lang,
+            intervalMs,
+            (value) => {
+              if (cancelled) return;
+              setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+              setActiveBanana({ groupIndex, objectIndex: value - 1 });
+            },
+            (value) => {
+              if (cancelled) return;
+              setActiveBanana((current) => current?.groupIndex === groupIndex && current.objectIndex === value - 1 ? null : current);
+            },
+          );
         }
 
         if (cancelled) return;
+        setActiveBanana(null);
         if (groupIndex === ADDITION_EQUATION_GROUPS.length - 1) {
           setJoiningResult(true);
           await wait(prefersReducedMotion ? 0 : 1100);
@@ -3776,8 +3793,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
         if (groupIndex < ADDITION_EQUATION_GROUPS.length - 1) {
           if (cancelled) return;
           setActiveSign(groupIndex);
-          speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
-          await wait(MATH_CUE_AUDIO_ENABLED && !audioMuted ? 1300 : 600);
+          await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+          await wait(300);
           if (cancelled) return;
           setCompletedSigns(groupIndex + 1);
           setActiveSign(-1);
@@ -3822,15 +3839,15 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const renderBanana = (groupIndex: number, countIndex: number, layoutCount: number, layoutIndex: number) => {
     const counted = countIndex < visibleCounts[groupIndex];
     const groupComplete = visibleCounts[groupIndex] >= ADDITION_EQUATION_GROUPS[groupIndex];
-    const currentBanana = !groupComplete && activeGroup === groupIndex && visibleCounts[groupIndex] === countIndex + 1;
+    const currentBanana = activeBanana?.groupIndex === groupIndex && activeBanana.objectIndex === countIndex;
     return (
       <div
         key={`${groupIndex}-${countIndex}`}
         className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
-          groupComplete
-            ? "border-amber-100 bg-amber-50"
-            : currentBanana
+          currentBanana
             ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+            : groupComplete
+              ? "border-amber-100 bg-amber-50"
             : counted
               ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
               : "border-transparent bg-amber-50 opacity-55 grayscale"
@@ -3893,10 +3910,10 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
               }`}
             >
               <div className="flex flex-1 items-center justify-center">
-                {index === 2 && !resultJoined ? (
+                {index === 2 ? (
                   <div
                     className={`flex w-full max-w-56 flex-col items-center transition-[gap,transform] duration-1000 ${
-                      joiningResult ? "gap-0 scale-95" : "gap-4"
+                      joiningResult || resultJoined ? "gap-0 scale-95" : "gap-4"
                     }`}
                     aria-label={lang === "en" ? "A group of 2 bananas and a group of 3 bananas" : "Satu kumpulan 2 pisang dan satu kumpulan 3 pisang"}
                   >
@@ -3908,6 +3925,8 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
                           className={`grid w-full grid-cols-2 place-items-center gap-3 rounded-2xl border-2 p-3 transition-[transform,border-color,background-color,box-shadow] duration-1000 ${
                             joiningResult
                               ? `${subgroupIndex === 0 ? "translate-y-7" : "-translate-y-7"} border-blue-400 bg-blue-50 shadow-lg`
+                              : resultJoined
+                                ? "border-blue-400 bg-blue-50 shadow-sm"
                               : "border-emerald-300 bg-emerald-50/60 shadow-sm"
                           }`}
                         >
@@ -7106,6 +7125,7 @@ async function speakCountingSequence(
   lang: Lang = "en",
   intervalMs = COUNTING_STEP_MS,
   onCount?: (value: number) => void,
+  onCountComplete?: (value: number) => void,
 ) {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
   if (count <= 0) return;
@@ -7121,6 +7141,7 @@ async function speakCountingSequence(
       const startedAt = performance.now();
       await playNumberFile(value, lang, runId);
       if (runId !== audioRunId) return;
+      onCountComplete?.(value);
       const elapsed = performance.now() - startedAt;
       await wait(Math.max(180, stepMs - elapsed));
     }
@@ -7217,10 +7238,10 @@ function preloadNumberAudioFiles() {
   });
 }
 
-function speakMathCue(cue: MathCue, lang: Lang) {
+async function speakMathCue(cue: MathCue, lang: Lang) {
   if (!MATH_CUE_AUDIO_ENABLED || audioMuted) return;
   if (activeCountingRunId !== null) {
-    queuedAudioAfterCounting = () => speakMathCue(cue, lang);
+    queuedAudioAfterCounting = () => void speakMathCue(cue, lang);
     return;
   }
   stopNumberAudio();
@@ -7231,25 +7252,47 @@ function speakMathCue(cue: MathCue, lang: Lang) {
 
   const recordedFile = MATH_CUE_AUDIO_FILES[lang]?.[cue];
   if (recordedFile) {
-    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${recordedFile}`);
-    activeNumberAudio = audio;
-    audio.preload = "auto";
-    audio.playbackRate = NUMBER_AUDIO_PLAYBACK_RATE;
-    audio.preservesPitch = true;
-    const clear = () => {
-      if (activeNumberAudio === audio) activeNumberAudio = null;
-    };
-    audio.onended = clear;
-    audio.onerror = clear;
-    void audio.play().catch(clear);
+    await new Promise<void>((resolve) => {
+      const audio = new Audio(`${import.meta.env.BASE_URL}audio/${recordedFile}`);
+      let settled = false;
+      let timeoutId: number | null = null;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        if (activeNumberAudio === audio) activeNumberAudio = null;
+        resolve();
+      };
+      timeoutId = window.setTimeout(finish, 5000);
+      activeNumberAudio = audio;
+      audio.preload = "auto";
+      audio.playbackRate = NUMBER_AUDIO_PLAYBACK_RATE;
+      audio.preservesPitch = true;
+      audio.onended = finish;
+      audio.onerror = finish;
+      void audio.play().catch(finish);
+    });
     return;
   }
 
   if (!("speechSynthesis" in window)) return;
-  const utterance = new SpeechSynthesisUtterance(cueText[lang][cue]);
-  utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-  utterance.rate = SPEECH_RATE;
-  window.speechSynthesis.speak(utterance);
+  await new Promise<void>((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(cueText[lang][cue]);
+    let settled = false;
+    let timeoutId: number | null = null;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      resolve();
+    };
+    timeoutId = window.setTimeout(finish, 5000);
+    utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
+    utterance.rate = SPEECH_RATE;
+    utterance.onend = finish;
+    utterance.onerror = finish;
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 function speakText(text: string, lang: Lang, options: { requireInteraction?: boolean } = {}) {
