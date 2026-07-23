@@ -5783,58 +5783,71 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
 }
 
 function TapRevealSequence({ lang }: { lang: Lang }) {
-  const [index, setIndex] = useState(0);
-  const [hasCountedCurrent, setHasCountedCurrent] = useState(false);
+  const [marked, setMarked] = useState<number | null>(null);
   const [counting, setCounting] = useState(false);
-  const countTimerRef = useRef<number | null>(null);
-  const marked = hasCountedCurrent ? (NUMBERS[index] ?? 9) : -1;
-  const done = hasCountedCurrent && index >= NUMBERS.length - 1;
+  const [done, setDone] = useState(false);
+  const sequenceRunRef = useRef(0);
 
   useEffect(() => () => {
-    if (countTimerRef.current !== null) window.clearTimeout(countTimerRef.current);
+    sequenceRunRef.current += 1;
     stopNumberAudio();
   }, []);
 
-  const countNextNumber = () => {
-    if (counting || done) return;
-    const nextIndex = hasCountedCurrent ? Math.min(NUMBERS.length - 1, index + 1) : index;
-    const nextNumber = NUMBERS[nextIndex] ?? 9;
-    setIndex(nextIndex);
-    setHasCountedCurrent(true);
+  const showNumbersWithoutAudio = async (runId: number) => {
+    for (const value of NUMBERS) {
+      if (sequenceRunRef.current !== runId) return;
+      setMarked(value);
+      await wait(COUNTING_STEP_MS);
+    }
+  };
+
+  const startCounting = async () => {
+    if (counting) return;
+    const runId = sequenceRunRef.current + 1;
+    sequenceRunRef.current = runId;
     setCounting(true);
-    speakNumber(nextNumber, lang);
-    countTimerRef.current = window.setTimeout(() => {
-      setCounting(false);
-      countTimerRef.current = null;
-    }, audioMuted ? 250 : COUNTING_STEP_MS);
+    setDone(false);
+    setMarked(null);
+
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakNumberValuesSequence(NUMBERS, lang, COUNTING_STEP_MS, (value) => {
+        if (sequenceRunRef.current === runId) setMarked(value);
+      });
+    } else {
+      await showNumbersWithoutAudio(runId);
+    }
+
+    if (sequenceRunRef.current !== runId) return;
+    setCounting(false);
+    setDone(true);
   };
 
   return (
     <div className="space-y-4">
-      <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />
+      <NumberLineSequence nums={NUMBERS} marked={marked ?? -1} arrow="right" />
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
         <button
-          onClick={countNextNumber}
-          disabled={counting || done}
+          onClick={() => void startCounting()}
+          disabled={counting}
           className="relative rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] disabled:opacity-50"
         >
-          {done
-            ? (lang === "en" ? "Done" : "Selesai")
-            : counting
-              ? (lang === "en" ? "Counting..." : "Mengira...")
-              : hasCountedCurrent
-                ? (lang === "en" ? "Count the next number" : "Kira nombor seterusnya")
-                : (lang === "en" ? "Start counting" : "Mula mengira")}
-          {!counting && !done && (
+          {counting
+            ? (lang === "en" ? "Counting..." : "Mengira...")
+            : done
+              ? (lang === "en" ? "Count again" : "Kira lagi")
+              : (lang === "en" ? "Start counting" : "Mula mengira")}
+          {!counting && (
             <span className="absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-sm" aria-hidden="true">
               <PointerIcon />
             </span>
           )}
         </button>
         <p className="text-lg font-black text-emerald-900" aria-live="polite">
-          {!hasCountedCurrent
-            ? (lang === "en" ? "Start at 0." : "Mula dengan 0.")
-            : (lang === "en" ? `You counted ${marked}.` : `Kamu kira ${marked}.`)}
+          {counting && marked !== null
+            ? (lang === "en" ? `Counting ${marked}.` : `Mengira ${marked}.`)
+            : done
+              ? (lang === "en" ? "You counted from 0 to 9." : "Kamu sudah kira dari 0 hingga 9.")
+              : (lang === "en" ? "Count from 0 to 9." : "Kira dari 0 hingga 9.")}
         </p>
       </div>
     </div>
