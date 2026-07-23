@@ -10,6 +10,7 @@ import alyseGuide from "@assets/alyse_guide_new_user_nobg.png";
 import trayPhoto from "@assets/tray_photo.png";
 
 type Lang = "en" | "ms";
+type MathCue = "plus" | "equals" | "minus";
 type ContainerKind = "basket" | "tray";
 type Screen =
   | "home"
@@ -139,6 +140,13 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
     7: "Tujuh.mp3",
     8: "Lapan.mp3",
     9: "Sembilan.mp3",
+  },
+};
+
+const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
+  ms: {
+    plus: "Tambah.mp3",
+    equals: "Sama dengan.mp3",
   },
 };
 
@@ -773,20 +781,20 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   }
   if (visual.kind === "numberWithGroup") {
     return {
-      en: [`This is ${visual.value}.`, `Count ${visual.value} objects.`, `So, there are ${visual.value}.`],
-      ms: [`Ini ${visual.value}.`, `Kira ${visual.value} objek.`, `Jadi, ada ${visual.value}.`],
+      en: [`This is ${visual.value} ${objectName(visual.emoji, visual.value, "en")}.`, `Count the ${objectName(visual.emoji, visual.value, "en")}.`, `So, there are ${visual.value} ${objectName(visual.emoji, visual.value, "en")}.`],
+      ms: [`Ini ${visual.value} ${objectName(visual.emoji, visual.value, "ms")}.`, `Kira ${objectName(visual.emoji, visual.value, "ms")}.`, `Jadi, ada ${visual.value} ${objectName(visual.emoji, visual.value, "ms")}.`],
     };
   }
   if (visual.kind === "sameValue") {
     return {
-      en: [`Both groups have ${visual.count}.`, "Different objects.", "Same number."],
-      ms: [`Kedua-dua kumpulan ada ${visual.count}.`, "Objek berbeza.", "Nombor sama."],
+      en: [`Group 1 has ${visual.count} ${objectName(visual.emojis[0], visual.count, "en")}.`, `Group 2 has ${visual.count} ${objectName(visual.emojis[1], visual.count, "en")}.`, "Different objects. Same number."],
+      ms: [`Kumpulan 1 ada ${visual.count} ${objectName(visual.emojis[0], visual.count, "ms")}.`, `Kumpulan 2 ada ${visual.count} ${objectName(visual.emojis[1], visual.count, "ms")}.`, "Objek berbeza. Nombor sama."],
     };
   }
   if (visual.kind === "layoutValue") {
     return {
-      en: [`Each group has ${visual.count}.`, "They look different.", `They are all ${visual.count}.`],
-      ms: [`Setiap kumpulan ada ${visual.count}.`, "Rupa berbeza.", `Semua ialah ${visual.count}.`],
+      en: [`Each group has ${visual.count} ${objectName(visual.emoji, visual.count, "en")}.`, "They look different.", `They all show ${visual.count} ${objectName(visual.emoji, visual.count, "en")}.`],
+      ms: [`Setiap kumpulan ada ${visual.count} ${objectName(visual.emoji, visual.count, "ms")}.`, "Rupa berbeza.", `Semua tunjuk ${visual.count} ${objectName(visual.emoji, visual.count, "ms")}.`],
     };
   }
   if (visual.kind === "compareGroups") {
@@ -794,58 +802,58 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const fewer = Math.min(visual.a, visual.b);
     return visual.ask === "more"
       ? {
-        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a}. Group B has ${visual.b}.`, `${more} is more.`],
-        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a}. Kumpulan B ada ${visual.b}.`, `${more} lebih banyak.`],
+        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a} ${objectName(visual.emojiA, visual.a, "en")}. Group B has ${visual.b} ${objectName(visual.emojiB, visual.b, "en")}.`, `${more} is more.`],
+        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a} ${objectName(visual.emojiA, visual.a, "ms")}. Kumpulan B ada ${visual.b} ${objectName(visual.emojiB, visual.b, "ms")}.`, `${more} lebih banyak.`],
       }
       : {
-        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a}. Group B has ${visual.b}.`, `${fewer} is less.`],
-        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a}. Kumpulan B ada ${visual.b}.`, `${fewer} lebih sedikit.`],
+        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a} ${objectName(visual.emojiA, visual.a, "en")}. Group B has ${visual.b} ${objectName(visual.emojiB, visual.b, "en")}.`, `${fewer} is less.`],
+        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a} ${objectName(visual.emojiA, visual.a, "ms")}. Kumpulan B ada ${visual.b} ${objectName(visual.emojiB, visual.b, "ms")}.`, `${fewer} lebih sedikit.`],
       };
   }
   if (visual.kind === "groupChoices") {
     return {
-      en: ["Count each group.", `Find the group with ${answer}.`],
-      ms: ["Kira setiap kumpulan.", `Cari kumpulan dengan ${answer}.`],
+      en: ["Count each banana group.", `Find the group with ${answer} ${objectName(visual.emoji, Number(answer), "en")}.`],
+      ms: ["Kira setiap kumpulan pisang.", `Cari kumpulan dengan ${answer} ${objectName(visual.emoji, Number(answer), "ms")}.`],
     };
   }
   if (visual.kind === "groupObserve" || visual.kind === "groupMake") {
     const count = visual.count;
     return {
-      en: ["Count the objects.", `This group has ${count}.`],
-      ms: ["Kira objek.", `Kumpulan ini ada ${count}.`],
+      en: [`Count the ${objectName(visual.emoji, count, "en")}.`, `This group has ${count} ${objectName(visual.emoji, count, "en")}.`],
+      ms: [`Kira ${objectName(visual.emoji, count, "ms")}.`, `Kumpulan ini ada ${count} ${objectName(visual.emoji, count, "ms")}.`],
     };
   }
   if (visual.kind === "groupTwo") {
     return {
-      en: [`Group 1 has ${visual.a}.`, `Group 2 has ${visual.b}.`, "Keep the groups apart."],
-      ms: [`Kumpulan 1 ada ${visual.a}.`, `Kumpulan 2 ada ${visual.b}.`, "Asingkan kumpulan."],
+      en: [`Group 1 has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group 2 has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, "Keep the groups apart."],
+      ms: [`Kumpulan 1 ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, `Kumpulan 2 ada ${visual.b} ${objectName(visual.emoji, visual.b, "ms")}.`, "Asingkan kumpulan."],
     };
   }
   if (visual.kind === "groupCompare") {
     if (visual.ask === "same") {
       const same = visual.a === visual.b;
       return {
-        en: same ? [`Both groups have ${visual.a}.`, "They are the same."] : [`One group has ${visual.a}.`, `One group has ${visual.b}.`, "They are different."],
-        ms: same ? [`Kedua-dua kumpulan ada ${visual.a}.`, "Mereka sama."] : [`Satu kumpulan ada ${visual.a}.`, `Satu kumpulan ada ${visual.b}.`, "Mereka berbeza."],
+        en: same ? [`Both groups have ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, "They are the same."] : [`One group has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `One group has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, "They are different."],
+        ms: same ? [`Kedua-dua kumpulan ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, "Mereka sama."] : [`Satu kumpulan ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, `Satu kumpulan ada ${visual.b} ${objectName(visual.emoji, visual.b, "ms")}.`, "Mereka berbeza."],
       };
     }
     const more = visual.a > visual.b ? "Group A" : "Group B";
     const fewer = visual.a < visual.b ? "Group A" : "Group B";
     return visual.ask === "more"
       ? {
-        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${more} has more.`],
-        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${more} lebih banyak.`],
+        en: [`Group A has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group B has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, `${more} has more.`],
+        ms: [`Kumpulan A ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, `Kumpulan B ada ${visual.b} ${objectName(visual.emoji, visual.b, "ms")}.`, `${more} lebih banyak.`],
       }
       : {
-        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${fewer} has fewer.`],
-        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${fewer} lebih sedikit.`],
+        en: [`Group A has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group B has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, `${fewer} has fewer.`],
+        ms: [`Kumpulan A ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, `Kumpulan B ada ${visual.b} ${objectName(visual.emoji, visual.b, "ms")}.`, `${fewer} lebih sedikit.`],
       };
   }
   if (visual.kind === "groupCombine") {
     const total = visual.a + visual.b;
     return {
-      en: [`Group 1 has ${visual.a}.`, `Group 2 has ${visual.b}.`, "Put them together.", `${visual.a} + ${visual.b} = ${total}.`],
-      ms: [`Kumpulan 1 ada ${visual.a}.`, `Kumpulan 2 ada ${visual.b}.`, "Gabungkan.", `${visual.a} + ${visual.b} = ${total}.`],
+      en: [`Group 1 has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group 2 has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, "Put them together.", `${visual.a} ${objectName(visual.emoji, visual.a, "en")} + ${visual.b} ${objectName(visual.emoji, visual.b, "en")} = ${total} ${objectName(visual.emoji, total, "en")}.`],
+      ms: [`Kumpulan 1 ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, `Kumpulan 2 ada ${visual.b} ${objectName(visual.emoji, visual.b, "ms")}.`, "Gabungkan.", `${visual.a} ${objectName(visual.emoji, visual.a, "ms")} + ${visual.b} ${objectName(visual.emoji, visual.b, "ms")} = ${total} ${objectName(visual.emoji, total, "ms")}.`],
     };
   }
   if (visual.kind === "order") {
@@ -2066,11 +2074,11 @@ const GROUPING_LESSON_STEPS: NewGroupingActivity[] = [
 ];
 
 const fullGroupingPracticeQuestions: Question[] = [
-  q("group-practice-make-2", "numbers", { en: "Make a group of 2.", ms: "Bina kumpulan 2." }, [], 2, { kind: "groupMake", emoji: "🍌", count: 2 }, "makeGroup"),
-  q("group-practice-make-4", "numbers", { en: "Make a group of 4.", ms: "Bina kumpulan 4." }, [], 4, { kind: "groupMake", emoji: "🍌", count: 4 }, "makeGroup"),
-  q("group-practice-2-3", "numbers", { en: "Which total is 2 and 3 together?", ms: "Berapakah jumlah 2 dan 3 bersama?" }, [4, 5, 6], 5, { kind: "groupCombine", emoji: "🍌", a: 2, b: 3 }),
-  q("group-practice-3-4", "numbers", { en: "Which total is 3 and 4 together?", ms: "Berapakah jumlah 3 dan 4 bersama?" }, [6, 7, 8], 7, { kind: "groupCombine", emoji: "🍌", a: 3, b: 4 }),
-  q("group-practice-more", "numbers", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group 1", "Group 2"], "Group 2", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
+  q("group-practice-make-2", "numbers", { en: "Make a group of 2 bananas.", ms: "Bina kumpulan 2 pisang." }, [], 2, { kind: "groupMake", emoji: "🍌", count: 2 }, "makeGroup"),
+  q("group-practice-make-4", "numbers", { en: "Make a group of 4 bananas.", ms: "Bina kumpulan 4 pisang." }, [], 4, { kind: "groupMake", emoji: "🍌", count: 4 }, "makeGroup"),
+  q("group-practice-2-3", "numbers", { en: "What is the total of 2 bananas and 3 bananas?", ms: "Berapakah jumlah 2 pisang dan 3 pisang?" }, [4, 5, 6], 5, { kind: "groupCombine", emoji: "🍌", a: 2, b: 3 }),
+  q("group-practice-3-4", "numbers", { en: "What is the total of 3 bananas and 4 bananas?", ms: "Berapakah jumlah 3 pisang dan 4 pisang?" }, [6, 7, 8], 7, { kind: "groupCombine", emoji: "🍌", a: 3, b: 4 }),
+  q("group-practice-more", "numbers", { en: "Which banana group has more?", ms: "Kumpulan pisang mana lebih banyak?" }, ["Group 1", "Group 2"], "Group 2", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
 ];
 
 function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
@@ -2270,15 +2278,19 @@ function getNewGroupingInstruction(activity: NewGroupingActivity, step: number, 
     return lang === "en" ? `${activity.count} bananas are in this group.` : `${activity.count} pisang dalam kumpulan ini.`;
   }
   if (activity.kind === "makeOne") {
-    if (step === 0) return lang === "en" ? `Make a group of ${activity.target}.` : `Bina kumpulan ${activity.target}.`;
-    return lang === "en" ? `This group has ${activity.target}.` : `Kumpulan ini ada ${activity.target}.`;
+    if (step === 0) return lang === "en" ? `Make a group of ${activity.target} ${objectName(activity.emoji, activity.target, "en")}.` : `Bina kumpulan ${activity.target} ${objectName(activity.emoji, activity.target, "ms")}.`;
+    return lang === "en" ? `This group has ${activity.target} ${objectName(activity.emoji, activity.target, "en")}.` : `Kumpulan ini ada ${activity.target} ${objectName(activity.emoji, activity.target, "ms")}.`;
   }
   if (activity.kind === "makeTwo") {
-    if (step === 0) return lang === "en" ? `Make Group 1 with ${activity.a}.` : `Bina Kumpulan 1 dengan ${activity.a}.`;
-    if (step === 1) return lang === "en" ? "Count Group 1." : "Kira Kumpulan 1.";
-    if (step === 2) return lang === "en" ? `Now make Group 2 with ${activity.b}.` : `Sekarang bina Kumpulan 2 dengan ${activity.b}.`;
-    if (step === 3) return lang === "en" ? "Count Group 2." : "Kira Kumpulan 2.";
-    return lang === "en" ? `Group 1 has ${activity.a}. Group 2 has ${activity.b}.` : `Kumpulan 1 ada ${activity.a}. Kumpulan 2 ada ${activity.b}.`;
+    if (step === 0) return lang === "en"
+      ? `Make Group 1 with ${activity.a} ${objectName(activity.emoji, activity.a, "en")}. Group 2 will have ${activity.b} ${objectName(activity.emoji, activity.b, "en")}.`
+      : `Bina Kumpulan 1 dengan ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}. Kumpulan 2 akan ada ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}.`;
+    if (step === 1) return lang === "en" ? `Count the ${activity.a} ${objectName(activity.emoji, activity.a, "en")} in Group 1.` : `Kira ${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dalam Kumpulan 1.`;
+    if (step === 2) return lang === "en"
+      ? `Group 1 has ${activity.a} ${objectName(activity.emoji, activity.a, "en")}. Now make Group 2 with ${activity.b} ${objectName(activity.emoji, activity.b, "en")}.`
+      : `Kumpulan 1 ada ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}. Sekarang bina Kumpulan 2 dengan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}.`;
+    if (step === 3) return lang === "en" ? `Count the ${activity.b} ${objectName(activity.emoji, activity.b, "en")} in Group 2.` : `Kira ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} dalam Kumpulan 2.`;
+    return lang === "en" ? `Group 1 has ${activity.a} ${objectName(activity.emoji, activity.a, "en")}. Group 2 has ${activity.b} ${objectName(activity.emoji, activity.b, "en")}.` : `Kumpulan 1 ada ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}. Kumpulan 2 ada ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}.`;
   }
   if (activity.kind === "same") {
     if (step === 0) return lang === "en" ? "Look at both groups." : "Lihat dua kumpulan.";
@@ -2294,12 +2306,12 @@ function getNewGroupingInstruction(activity: NewGroupingActivity, step: number, 
       ? (lang === "en" ? "Group A has more." : "Kumpulan A lebih banyak.")
       : (lang === "en" ? "Group B has more." : "Kumpulan B lebih banyak.");
   }
-  if (step === 0) return lang === "en" ? `Group 1 has ${activity.a}.` : `Kumpulan 1 ada ${activity.a}.`;
+  if (step === 0) return lang === "en" ? `Group 1 has ${activity.a} ${objectName(activity.emoji, activity.a, "en")}.` : `Kumpulan 1 ada ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}.`;
   if (step === 1) return lang === "en" ? "Count Group 1." : "Kira Kumpulan 1.";
-  if (step === 2) return lang === "en" ? `Group 2 has ${activity.b}.` : `Kumpulan 2 ada ${activity.b}.`;
+  if (step === 2) return lang === "en" ? `Group 2 has ${activity.b} ${objectName(activity.emoji, activity.b, "en")}.` : `Kumpulan 2 ada ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}.`;
   if (step === 3) return lang === "en" ? "Put the groups together." : "Gabungkan kumpulan.";
   if (step === 4) return lang === "en" ? "Count them all." : "Kira semuanya.";
-  return lang === "en" ? `${activity.a} and ${activity.b} make ${activity.a + activity.b}.` : `${activity.a} dan ${activity.b} menjadi ${activity.a + activity.b}.`;
+  return lang === "en" ? `${activity.a} ${objectName(activity.emoji, activity.a, "en")} and ${activity.b} ${objectName(activity.emoji, activity.b, "en")} make ${activity.a + activity.b} ${objectName(activity.emoji, activity.a + activity.b, "en")}.` : `${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} menjadi ${activity.a + activity.b} ${objectName(activity.emoji, activity.a + activity.b, "ms")}.`;
 }
 
 function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { activity: NewGroupingActivity; step: number; groupA: number; groupB: number; lang: Lang }) {
@@ -2315,16 +2327,22 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { act
     return (
       <div className="space-y-4">
         <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={step >= 1 ? activity.target : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
-        {step >= 1 && <GroupingAnswerLine text={lang === "en" ? `This group has ${activity.target}.` : `Kumpulan ini ada ${activity.target}.`} />}
+        {step >= 1 && <GroupingAnswerLine text={lang === "en" ? `This group has ${activity.target} ${objectName(activity.emoji, activity.target, "en")}.` : `Kumpulan ini ada ${activity.target} ${objectName(activity.emoji, activity.target, "ms")}.`} />}
       </div>
     );
   }
   if (activity.kind === "makeTwo") {
+    const groupOneLabel = lang === "en"
+      ? `Group 1: ${activity.a} ${objectName(activity.emoji, activity.a, "en")}`
+      : `Kumpulan 1: ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}`;
+    const groupTwoLabel = lang === "en"
+      ? `Group 2: ${activity.b} ${objectName(activity.emoji, activity.b, "en")}`
+      : `Kumpulan 2: ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}`;
     return (
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={step >= 1 ? activity.a : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
-          <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={step >= 3 ? activity.b : groupB} emoji={activity.emoji} counted={step >= 3} active={step === 2} lang={lang} />
+          <GroupingTray label={groupOneLabel} count={step >= 1 ? activity.a : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
+          <GroupingTray label={groupTwoLabel} count={step >= 3 ? activity.b : groupB} emoji={activity.emoji} counted={step >= 3} active={step === 2} lang={lang} />
         </div>
         {step >= 4 && <GroupingAnswerLine text={lang === "en" ? `Each group has its own number.` : `Setiap kumpulan ada nombor sendiri.`} />}
       </div>
@@ -2332,7 +2350,7 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { act
   }
   if (activity.kind === "same" || activity.kind === "more") {
     const result = activity.kind === "same"
-      ? (activity.a === activity.b ? (lang === "en" ? "Yes. Both groups have 3." : "Ya. Kedua-dua kumpulan ada 3.") : (lang === "en" ? `${activity.a} and ${activity.b} are different.` : `${activity.a} dan ${activity.b} berbeza.`))
+      ? (activity.a === activity.b ? (lang === "en" ? `Yes. Both groups have ${activity.a} ${objectName(activity.emoji, activity.a, "en")}.` : `Ya. Kedua-dua kumpulan ada ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}.`) : (lang === "en" ? `${activity.a} ${objectName(activity.emoji, activity.a, "en")} and ${activity.b} ${objectName(activity.emoji, activity.b, "en")} are different.` : `${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} berbeza.`))
       : (activity.a > activity.b ? (lang === "en" ? "Group A has more." : "Kumpulan A lebih banyak.") : (lang === "en" ? "Group B has more." : "Kumpulan B lebih banyak."));
     return (
       <div className="space-y-4">
@@ -2358,7 +2376,7 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { act
       {step === 3 && <GroupingAnswerLine text={lang === "en" ? "The groups move into one big group." : "Kumpulan bergerak menjadi satu kumpulan besar."} />}
       {step === 5 && (
         <div className="rounded-3xl border-2 border-emerald-200 bg-white p-4 text-center">
-          <p className="text-2xl font-black text-emerald-900">{lang === "en" ? `${activity.a} and ${activity.b} make ${total}.` : `${activity.a} dan ${activity.b} menjadi ${total}.`}</p>
+          <p className="text-2xl font-black text-emerald-900">{lang === "en" ? `${activity.a} ${objectName(activity.emoji, activity.a, "en")} and ${activity.b} ${objectName(activity.emoji, activity.b, "en")} make ${total} ${objectName(activity.emoji, total, "en")}.` : `${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} menjadi ${total} ${objectName(activity.emoji, total, "ms")}.`}</p>
           <p className="mt-2 text-4xl font-black text-blue-950">{activity.a} + {activity.b} = {total}</p>
         </div>
       )}
@@ -2371,21 +2389,23 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
     <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
       {label && <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>}
       {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} />}
-      {counted && <CountTotalBadge count={count} lang={lang} />}
+      {counted && <CountTotalBadge count={count} lang={lang} unit={objectName(emoji, count, lang)} />}
     </div>
   );
 }
 
-function CountTotalBadge({ count, lang }: { count: number; lang: Lang }) {
+function CountTotalBadge({ count, lang, unit }: { count: number; lang: Lang; unit?: string }) {
+  const totalLabel = `${lang === "en" ? "Total" : "Jumlah"} ${count}${unit ? ` ${unit}` : ""}`;
   return (
     <div
       className="mx-auto mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-blue-200 bg-blue-50 px-4 py-2 text-blue-950 shadow-[0_4px_0_rgba(30,64,175,.14)]"
-      aria-label={lang === "en" ? `Total ${count}` : `Jumlah ${count}`}
+      aria-label={totalLabel}
     >
       <span className="text-sm font-black uppercase tracking-wide text-blue-700">{lang === "en" ? "Total" : "Jumlah"}</span>
       <span className="grid h-10 min-w-10 place-items-center rounded-full bg-white px-3 text-2xl font-black text-blue-950">
         {count}
       </span>
+      {unit && <span className="text-base font-black text-blue-950">{unit}</span>}
     </div>
   );
 }
@@ -3434,43 +3454,208 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
       <p className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center text-xl font-black text-blue-950">
         {lang === "en" ? "Put both baskets together." : "Gabungkan kedua-dua bakul."}
       </p>
-      <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-        <div className="text-center">
-          <div className="mb-2 flex items-center justify-center gap-2">
-            <img src={chrysHappy} alt="Chrys" className="h-16 w-16 object-contain" />
-            <p className="text-xl font-black text-blue-950">Chrys</p>
-          </div>
-          <ContainerScene
-            count={0}
-            emoji="🍌"
-            container="basket"
-            hideEmptyLabel
-            label={lang === "en" ? "Chrys's basket" : "Bakul Chrys"}
-          />
-          <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "0 bananas" : "0 pisang"}</p>
-        </div>
-        <div className="text-center text-5xl font-black text-blue-800">+</div>
-        <div className="text-center">
-          <div className="mb-2 flex items-center justify-center gap-2">
-            <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
-            <p className="text-xl font-black text-blue-950">Alyse</p>
-          </div>
-          <BasketBananaScene
-            count={4}
-            counted={4}
-            label={lang === "en" ? "Alyse's basket" : "Bakul Alyse"}
-          />
-          <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
-        </div>
+      <ZeroAdditionEquation lang={lang} />
+    </div>
+  );
+}
+
+function ZeroAdditionEquation({ lang }: { lang: Lang }) {
+  const banana = String.fromCodePoint(0x1f34c);
+  const groups = [0, 4, 4] as const;
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [visibleCounts, setVisibleCounts] = useState([0, 0, 0]);
+  const [completedGroups, setCompletedGroups] = useState(0);
+  const [activeGroup, setActiveGroup] = useState(-1);
+  const [completedSigns, setCompletedSigns] = useState(0);
+  const [activeSign, setActiveSign] = useState(-1);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isCounting, setIsCounting] = useState(false);
+  const [countRun, setCountRun] = useState(0);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    let cancelled = false;
+
+    const countGroup = async (groupIndex: number, count: number) => {
+      setActiveGroup(groupIndex);
+      if (count === 0) {
+        if (!audioMuted) speakNumber(0, lang);
+        await wait(prefersReducedMotion ? 350 : COUNTING_STEP_MS);
+        return;
+      }
+
+      if (audioMuted) {
+        if (prefersReducedMotion) {
+          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? count : shown));
+          return;
+        }
+        for (let value = 1; value <= count; value += 1) {
+          await wait(COUNTING_STEP_MS);
+          if (cancelled) return;
+          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+        }
+        return;
+      }
+
+      await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+        if (cancelled) return;
+        setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+      });
+    };
+
+    const runSequence = async () => {
+      setIsCounting(true);
+      stopNumberAudio();
+      setVisibleCounts([0, 0, 0]);
+      setCompletedGroups(0);
+      setCompletedSigns(0);
+      setActiveSign(-1);
+
+      for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
+        await countGroup(groupIndex, groups[groupIndex]);
+        if (cancelled) return;
+        setCompletedGroups(groupIndex + 1);
+
+        if (groupIndex < groups.length - 1) {
+          setActiveSign(groupIndex);
+          speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+          await wait(MATH_CUE_AUDIO_ENABLED && !audioMuted ? 1300 : 600);
+          if (cancelled) return;
+          setCompletedSigns(groupIndex + 1);
+          setActiveSign(-1);
+        }
+      }
+
+      setActiveGroup(-1);
+      setIsCounting(false);
+    };
+
+    void runSequence();
+    return () => {
+      cancelled = true;
+      stopNumberAudio();
+    };
+  }, [countRun, hasStarted, lang, prefersReducedMotion]);
+
+  const startCounting = () => {
+    if (isCounting) return;
+    setIsCounting(true);
+    setHasStarted(true);
+    setCountRun((current) => current + 1);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={startCounting}
+          disabled={isCounting}
+          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
+        >
+          {isCounting
+            ? (lang === "en" ? "Counting..." : "Mengira...")
+            : completedGroups === groups.length
+              ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
+              : (lang === "en" ? "Start Counting!" : "Mula Mengira!")}
+          {!isCounting && (
+            <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+              <PointerIcon />
+            </span>
+          )}
+        </button>
       </div>
-      <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-        <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>0 + 4 = 4</p>
-        <p className="mt-2 text-xl font-black text-emerald-900">
-          {lang === "en"
-            ? "0 bananas plus 4 bananas equals 4 bananas."
-            : "0 pisang tambah 4 pisang sama dengan 4 pisang."}
-        </p>
+
+      <div className="grid items-stretch gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+        {groups.map((count, groupIndex) => {
+          const groupComplete = completedGroups > groupIndex;
+          const groupActive = activeGroup === groupIndex;
+          return (
+            <React.Fragment key={`${count}-${groupIndex}`}>
+              {groupIndex > 0 && (
+                <span
+                  className={`grid h-14 w-14 place-items-center self-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow] duration-300 ${
+                    activeSign === groupIndex - 1
+                      ? "border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
+                      : completedSigns >= groupIndex
+                        ? "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_4px_0_#d97706]"
+                        : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {groupIndex === 1 ? "+" : "="}
+                </span>
+              )}
+
+              <div
+                aria-current={groupActive ? "step" : undefined}
+                className={`flex min-h-[23rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
+                  groupActive
+                    ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
+                    : !hasStarted || (groupIndex > activeGroup && completedGroups <= groupIndex)
+                      ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
+                      : "border-emerald-300 bg-white"
+                }`}
+              >
+                <div className="flex flex-1 items-center justify-center">
+                  {count === 0 ? (
+                    <div className="text-center">
+                      <span className="block text-7xl font-black text-blue-950" style={NUMBER_TEXT_STYLE}>0</span>
+                      <span className="mt-3 block text-lg font-black text-slate-500">
+                        {lang === "en" ? "No bananas" : "Tiada pisang"}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 place-items-center gap-3">
+                      {Array.from({ length: count }, (_, objectIndex) => {
+                        const counted = objectIndex < visibleCounts[groupIndex];
+                        const current = groupActive && visibleCounts[groupIndex] === objectIndex + 1 && !groupComplete;
+                        return (
+                          <div
+                            key={objectIndex}
+                            className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+                              groupComplete
+                                ? "border-amber-100 bg-amber-50"
+                                : current
+                                  ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                                  : counted
+                                    ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                                    : "border-transparent bg-amber-50 opacity-55 grayscale"
+                            }`}
+                          >
+                            <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                              {objectIndex + 1}
+                            </span>
+                            <SpriteIcon value={banana} className="h-12 w-12" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                <div className={`mt-3 min-h-14 rounded-full px-4 py-2 text-center text-lg font-black transition-colors sm:text-xl ${
+                  groupComplete ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-transparent"
+                }`} aria-live="polite">
+                  {groupComplete
+                    ? `${lang === "en" ? "Total" : "Jumlah"}: ${count} ${lang === "en" ? "bananas" : "pisang"}`
+                    : <span aria-hidden="true">&nbsp;</span>}
+                </div>
+              </div>
+            </React.Fragment>
+          );
+        })}
       </div>
+
+      {completedGroups === groups.length && completedSigns === 2 && (
+        <div className="text-center text-emerald-900">
+          <p className="text-4xl font-black" style={NUMBER_TEXT_STYLE}>0 + 4 = 4</p>
+          <p className="mt-2 text-xl font-black">
+            {lang === "en"
+              ? "0 bananas plus 4 bananas equals 4 bananas."
+              : "0 pisang tambah 4 pisang sama dengan 4 pisang."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -7032,18 +7217,35 @@ function preloadNumberAudioFiles() {
   });
 }
 
-function speakMathCue(cue: "plus" | "equals" | "minus", lang: Lang) {
+function speakMathCue(cue: MathCue, lang: Lang) {
   if (!MATH_CUE_AUDIO_ENABLED || audioMuted) return;
-  if (!("speechSynthesis" in window)) return;
   if (activeCountingRunId !== null) {
     queuedAudioAfterCounting = () => speakMathCue(cue, lang);
     return;
   }
   stopNumberAudio();
-  const cueText: Record<Lang, Record<typeof cue, string>> = {
+  const cueText: Record<Lang, Record<MathCue, string>> = {
     en: { plus: "plus", equals: "equals to", minus: "minus" },
     ms: { plus: "tambah", equals: "sama dengan", minus: "tolak" },
   };
+
+  const recordedFile = MATH_CUE_AUDIO_FILES[lang]?.[cue];
+  if (recordedFile) {
+    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${recordedFile}`);
+    activeNumberAudio = audio;
+    audio.preload = "auto";
+    audio.playbackRate = NUMBER_AUDIO_PLAYBACK_RATE;
+    audio.preservesPitch = true;
+    const clear = () => {
+      if (activeNumberAudio === audio) activeNumberAudio = null;
+    };
+    audio.onended = clear;
+    audio.onerror = clear;
+    void audio.play().catch(clear);
+    return;
+  }
+
+  if (!("speechSynthesis" in window)) return;
   const utterance = new SpeechSynthesisUtterance(cueText[lang][cue]);
   utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
   utterance.rate = SPEECH_RATE;
