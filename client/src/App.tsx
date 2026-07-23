@@ -2022,7 +2022,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl pb-8">
+    <main className="mx-auto w-full max-w-7xl pb-8">
       <LessonShell lang={lang} title={t.sequencing} helper={lang === "en" ? "Learn one step at a time." : "Belajar satu langkah demi satu langkah."}>
         <div className="rounded-[2rem] border-4 border-white bg-white p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
           <p className="mb-2 text-center text-sm font-black text-blue-700">{current.title}</p>
@@ -4186,7 +4186,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, highlightActiveCount = true, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, fixedColumns, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, highlightActiveCount = true, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -4194,6 +4194,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   countRemainingOnly?: boolean;
   animateCrossOut?: boolean;
   compact?: boolean;
+  fixedColumns?: 1 | 2;
   showCrossCount?: boolean;
   intervalMs?: number;
   speakCrossCount?: boolean;
@@ -4323,9 +4324,14 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   const displayedCount = visibleCount ?? visible;
   const countableTotal = countRemainingOnly ? remaining : count;
   const countComplete = showCount && countableTotal > 0 && displayedCount >= countableTotal;
+  const layoutClass = fixedColumns === 1
+    ? "grid grid-cols-[3rem] place-content-center"
+    : fixedColumns === 2
+      ? "grid grid-cols-[repeat(2,3rem)] place-content-center"
+      : "flex flex-wrap justify-center";
   let leftIndex = 0;
   return (
-    <div className={`flex flex-wrap justify-center rounded-3xl border-2 transition-[border-color,background-color,box-shadow] ${countComplete ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200" : "border-slate-100 bg-white"} ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
+    <div className={`${layoutClass} rounded-3xl border-2 transition-[border-color,background-color,box-shadow] ${countComplete ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200" : "border-slate-100 bg-white"} ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
         const willBeTaken = i < crossed;
@@ -5702,18 +5708,23 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
 
   return (
     <div className="space-y-4">
-      <div className="grid w-full grid-cols-1 items-stretch gap-3 pb-2 sm:grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)_2rem_minmax(0,1fr)_2rem_minmax(0,1fr)] sm:gap-2 lg:gap-3">
+      <div className="flex w-full flex-wrap items-center justify-center gap-3 pb-2 md:flex-nowrap">
         {shown.map((n, index) => {
           const complete = completedIndex >= index;
           const isCurrentCounting = index === activeIndex && counting;
+          const cardWidth = n === 1
+            ? "md:w-[9rem]"
+            : n === 2
+              ? "md:w-[11rem]"
+              : "md:w-[13rem]";
           return (
             <React.Fragment key={`${n}-${index}`}>
               {index > 0 && (
-                <div className="flex items-center justify-center text-emerald-600" aria-hidden="true">
+                <div className="flex shrink-0 items-center justify-center text-emerald-600" aria-hidden="true">
                   <ArrowRight className="h-8 w-8 rotate-90 sm:rotate-0" strokeWidth={3} />
                 </div>
               )}
-              <div className={`w-full min-w-0 max-w-64 justify-self-center rounded-3xl border-2 bg-white p-2 text-center shadow-inner transition-colors sm:max-w-none lg:p-3 ${isCurrentCounting ? "border-blue-400 bg-blue-50" : "border-emerald-100"}`}>
+              <div className={`w-full max-w-64 shrink-0 self-center rounded-3xl border-2 p-2 text-center shadow-inner transition-colors lg:p-3 ${cardWidth} ${complete ? "border-emerald-400 bg-emerald-50" : isCurrentCounting ? "border-blue-400 bg-blue-50" : "border-emerald-100 bg-white"}`}>
                 <p className="mb-2 text-4xl font-black text-blue-950">{n}</p>
                 {isCurrentCounting ? (
                   <CountedObjectRow
@@ -5722,13 +5733,14 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
                     showCount
                     speakCount
                     compact
+                    fixedColumns={n === 1 ? 1 : 2}
                     lang={lang}
                     onCountComplete={finishCurrentCount}
                   />
                 ) : complete ? (
-                  <CountedObjectRow count={n} emoji={banana} showCount compact visibleCount={n} lang={lang} />
+                  <CountedObjectRow count={n} emoji={banana} showCount compact fixedColumns={n === 1 ? 1 : 2} visibleCount={n} highlightActiveCount={false} lang={lang} />
                 ) : (
-                  <CountedObjectRow count={n} emoji={banana} showCount compact visibleCount={0} lang={lang} />
+                  <CountedObjectRow count={n} emoji={banana} showCount compact fixedColumns={n === 1 ? 1 : 2} visibleCount={0} highlightActiveCount={false} lang={lang} />
                 )}
                 <p
                   className={`mt-3 min-h-10 rounded-full px-3 py-2 text-lg font-black transition-opacity ${complete ? "bg-emerald-100 text-emerald-950 opacity-100" : "opacity-0"}`}
@@ -6039,11 +6051,11 @@ function SequencingExample({ nums, arrow }: { nums: number[]; arrow: "left" | "r
   return (
     <div className="space-y-4">
       <NumberLine marked={-1} />
-      <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
+      <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4 md:flex-nowrap md:gap-1 lg:gap-2">
         {nums.map((n, i) => (
           <React.Fragment key={n}>
-            {i > 0 && <span className="text-2xl font-black text-emerald-700">{arrow === "right" ? "\u2192" : "\u2190"}</span>}
-            <span className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-2xl font-black text-blue-950">{n}</span>
+            {i > 0 && <span className="shrink-0 text-xl font-black text-emerald-700 lg:text-2xl">{arrow === "right" ? "\u2192" : "\u2190"}</span>}
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-2xl font-black text-blue-950 md:min-w-0 md:max-w-14 md:flex-1">{n}</span>
           </React.Fragment>
         ))}
       </div>
