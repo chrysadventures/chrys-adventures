@@ -2005,7 +2005,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pb-8">
+    <main className="mx-auto w-full max-w-5xl pb-8">
       <LessonShell lang={lang} title={t.sequencing} helper={lang === "en" ? "Learn one step at a time." : "Belajar satu langkah demi satu langkah."}>
         <div className="rounded-[2rem] border-4 border-white bg-white p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
           <p className="mb-2 text-center text-sm font-black text-blue-700">{current.title}</p>
@@ -5434,7 +5434,7 @@ function NumberLine({ marked }: { marked: number }) {
         <div className="absolute bottom-3 left-3 right-3 h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)] sm:bottom-4 sm:left-6 sm:right-6 sm:h-3" aria-hidden="true" />
         {NUMBERS.map((n) => (
           <div key={n} className="relative z-10 flex flex-col items-center">
-            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-3 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:border-4 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-4 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
             <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
           </div>
         ))}
@@ -5455,7 +5455,7 @@ function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: number[];
                 {arrow === "right" ? "\u2192" : "\u2190"}
               </span>
             )}
-            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-3 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:border-4 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-4 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
             <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
           </div>
         ))}
