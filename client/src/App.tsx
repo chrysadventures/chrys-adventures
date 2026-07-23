@@ -241,7 +241,7 @@ const UI = {
     menuTitle: "Hari ini mahu belajar apa?",
     recognizeNumbers: "Kenal dan Cam Nombor",
     numberValues: "Nilai Nombor",
-    sequencing: "Turutan Nombor",
+    sequencing: "Susunan Nombor",
     learnNumbers: "Nombor 0-9",
     learnOperations: "Operasi",
     learnOperationsShort: "Belajar + dan -",
@@ -255,12 +255,12 @@ const UI = {
     lesson: "Pelajaran",
     practice: "Latihan",
     back: "Kembali",
-    next: "Seterusnya",
+    next: "Lepas ni",
     previous: "Sebelumnya",
     speak: "Dengar",
     clear: "Padam",
-    traced: "Saya sudah surih",
-    trace: "Surih",
+    traced: "Saya sudah ikut garisan",
+    trace: "Ikut garisan",
     chooseAnswer: "Pilih jawapan",
     yourAnswer: "Jawapan kamu",
     correctAnswer: "Jawapan betul",
@@ -269,7 +269,7 @@ const UI = {
     correct: "Betul",
     tryAgain: "Cubaan baik",
     seeMethod: "Lihat cara",
-    nextQuestion: "Soalan seterusnya",
+    nextQuestion: "Soalan lepas ni",
     finish: "Tamat",
     score: "Markah",
     done: "Selesai",
@@ -305,41 +305,41 @@ function glossaryEntry(
 }
 
 const GLOSSARY_ENTRIES: GlossaryEntry[] = [
-  glossaryEntry(1, "Solution", "Penyelesaian", "The way to find the answer.", "Cara untuk mencari jawapan.", "The answer and the steps used to reach it.", "Jawapan dan langkah untuk mendapatkannya."),
+  glossaryEntry(1, "Solution", "Cara jawab", "The way to find the answer.", "Cara untuk mencari jawapan.", "The answer and the steps used to reach it.", "Jawapan dan langkah untuk mendapatkannya."),
   glossaryEntry(1, "Method", "Cara", "The way we do it, step by step.", "Cara kita buat, langkah demi langkah.", "A set of steps used to solve something.", "Langkah-langkah yang digunakan untuk menyelesaikan sesuatu."),
   glossaryEntry(1, "Ascending", "Menaik", "Going up. The numbers get bigger.", "Nombor naik dan menjadi lebih besar.", "Numbers placed from small to big.", "Nombor disusun daripada kecil kepada besar."),
   glossaryEntry(1, "Descending", "Menurun", "Going down. The numbers get smaller.", "Nombor turun dan menjadi lebih kecil.", "Numbers placed from big to small.", "Nombor disusun daripada besar kepada kecil."),
   glossaryEntry(1, "Symbol", "Tanda", "A little sign with a meaning, like + or -.", "Tanda kecil yang ada makna, seperti + atau -.", "A mark that stands for an idea or action.", "Tanda yang mewakili idea atau tindakan."),
-  glossaryEntry(1, "Tracing", "Surih", "Follow the dotted line with your finger or pencil.", "Ikut garisan bertitik dengan jari atau pensel.", "Draw over a shape by following its guide line.", "Lukis di atas bentuk dengan mengikut garis panduan."),
+  glossaryEntry(1, "Tracing", "Ikut garisan", "Follow the dotted line with your finger or pencil.", "Ikut garisan bertitik dengan jari atau pensel.", "Draw over a shape by following its guide line.", "Lukis di atas bentuk dengan mengikut garis panduan."),
 
   glossaryEntry(2, "Addition", "Tambah", "Put groups together to get more.", "Gabungkan kumpulan untuk mendapat lebih banyak.", "Addition uses the plus sign (+).", "Tambah menggunakan tanda tambah (+)."),
   glossaryEntry(2, "Subtraction", "Tolak", "Take some away to find what is still there.", "Ambil sebahagian untuk tahu apa yang masih ada.", "Subtraction uses the minus sign (-).", "Tolak menggunakan tanda tolak (-)."),
-  glossaryEntry(2, "Greater", "Lebih besar", "Bigger. It is a larger number.", "Lebih besar. Nombornya lebih banyak.", "A number that is more than another number.", "Nombor yang lebih banyak daripada nombor lain."),
+  glossaryEntry(2, "Greater", "Lebih besar", "Bigger. It is a larger number.", "Lebih besar. Nombor itu lebih banyak.", "A number that is more than another number.", "Nombor yang lebih banyak daripada nombor lain."),
   glossaryEntry(2, "Total", "Jumlah", "How many there are when everything is together.", "Berapa banyak apabila semuanya digabungkan.", "The whole amount after counting all the parts.", "Jumlah penuh selepas semua bahagian dikira."),
   glossaryEntry(2, "Compare", "Banding", "Look at two things to see which has more or less.", "Lihat dua benda untuk tahu yang mana lebih atau kurang.", "Check how two numbers or groups are alike or different.", "Periksa bagaimana dua nombor atau kumpulan sama atau berbeza."),
   glossaryEntry(2, "Value", "Nilai", "How much a number is worth.", "Berapa banyak yang ditunjukkan oleh nombor.", "The number of things a numeral stands for.", "Bilangan benda yang diwakili oleh satu nombor."),
   glossaryEntry(2, "Amounts", "Bilangan", "How much or how many.", "Berapa banyak.", "The number of things in a group.", "Bilangan benda dalam satu kumpulan."),
   glossaryEntry(2, "Objects", "Objek", "Things you can count, like bananas.", "Benda yang boleh dikira, seperti pisang.", "Items shown in a counting group.", "Benda yang ditunjukkan dalam kumpulan kiraan."),
-  glossaryEntry(2, "Order", "Turutan", "Which comes first, next, and last.", "Yang mana dahulu, seterusnya, dan terakhir.", "The way numbers or things are arranged.", "Cara nombor atau benda disusun."),
+  glossaryEntry(2, "Order", "Susunan", "Which comes first, next, and last.", "Yang mana dahulu, lepas ni, dan terakhir.", "The way numbers or things are arranged.", "Cara nombor atau benda disusun."),
   glossaryEntry(2, "Remove", "Keluarkan", "Take one away.", "Ambil satu.", "Move something out of a group.", "Keluarkan sesuatu daripada kumpulan."),
   glossaryEntry(2, "Spread out", "Jarakkan", "Move things apart with space between them.", "Jarakkan benda supaya ada ruang di antaranya.", "The spaces change, but the count stays the same.", "Ruang berubah, tetapi bilangannya tetap sama."),
 
   glossaryEntry(3, "Together", "Bersama", "Things joined in one place or group.", "Benda yang digabungkan di satu tempat atau kumpulan.", "Put the parts into one group.", "Gabungkan bahagian menjadi satu kumpulan."),
-  glossaryEntry(3, "Different", "Berbeza", "Not the same.", "Tidak sama.", "Two things do not match in some way.", "Dua benda tidak sepadan dalam sesuatu cara."),
+  glossaryEntry(3, "Different", "Berbeza", "Not the same.", "Tidak sama.", "Two things do not match in some way.", "Dua benda tidak sama."),
   glossaryEntry(3, "Missing", "Hilang", "Something that should be there is not shown.", "Sesuatu yang patut ada tidak ditunjukkan.", "Find the number that fills the empty space.", "Cari nombor yang mengisi ruang kosong."),
-  glossaryEntry(3, "Matches", "Padan", "Goes with it because they show the same thing.", "Sesuai dengannya kerana kedua-duanya menunjukkan benda yang sama.", "Two answers, numbers, or groups that fit together.", "Dua jawapan, nombor, atau kumpulan yang sepadan."),
+  glossaryEntry(3, "Matches", "Padan", "Goes with it because they show the same thing.", "Sesuai dengannya kerana kedua-duanya menunjukkan benda yang sama.", "Two answers, numbers, or groups that fit together.", "Dua jawapan, nombor, atau kumpulan yang sama."),
   glossaryEntry(3, "Smaller", "Lebih kecil", "Less big than another number.", "Lebih kecil daripada nombor lain.", "A number with less than another number.", "Nombor yang kurang daripada nombor lain."),
   glossaryEntry(3, "Smallest", "Paling kecil", "The one with the least.", "Yang mempunyai paling sedikit.", "The lowest number in a group.", "Nombor paling rendah dalam kumpulan."),
   glossaryEntry(3, "Biggest", "Paling besar", "The one with the most.", "Yang mempunyai paling banyak.", "The highest number in a group.", "Nombor paling tinggi dalam kumpulan."),
   glossaryEntry(3, "Bigger", "Lebih besar", "More than another number.", "Lebih banyak daripada nombor lain.", "A number farther up the number line.", "Nombor yang lebih tinggi pada garis nombor."),
   glossaryEntry(3, "Plus", "Tambah", "Put more in.", "Masukkan lebih banyak.", "The + sign tells us to add.", "Tanda + menyuruh kita menambah."),
   glossaryEntry(3, "Minus", "Tolak", "Take some away.", "Ambil sebahagian.", "The - sign tells us to take away.", "Tanda - menyuruh kita mengambil."),
-  glossaryEntry(3, "Number line", "Garis nombor", "A row of numbers in order, like a ruler.", "Barisan nombor mengikut turutan, seperti pembaris.", "Move right for bigger numbers and left for smaller numbers.", "Bergerak ke kanan untuk nombor lebih besar dan ke kiri untuk nombor lebih kecil."),
+  glossaryEntry(3, "Number line", "Garis nombor", "A row of numbers in order, like a ruler.", "Barisan nombor mengikut susunan, seperti pembaris.", "Move right for bigger numbers and left for smaller numbers.", "Bergerak ke kanan untuk nombor lebih besar dan ke kiri untuk nombor lebih kecil."),
   glossaryEntry(3, "Count", "Kira", "Say one number for each thing.", "Sebut satu nombor untuk setiap benda.", "Count each thing once. The last number is the total.", "Kira setiap benda sekali. Nombor terakhir ialah jumlah."),
   glossaryEntry(3, "Group", "Kumpulan", "Things kept together.", "Benda yang dikumpulkan bersama.", "A set of things that can be counted.", "Sekumpulan benda yang boleh dikira."),
   glossaryEntry(3, "Empty", "Kosong", "There is nothing inside.", "Tiada apa-apa di dalam.", "An empty group has zero things.", "Kumpulan kosong ada 0 benda."),
   glossaryEntry(3, "Whole", "Keseluruhan", "All the parts together.", "Semua bahagian digabungkan.", "The complete group, with nothing missing.", "Kumpulan lengkap tanpa bahagian yang hilang."),
-  glossaryEntry(3, "Left", "Baki", "How many are still there after some are taken away.", "Berapa banyak yang masih ada selepas sebahagian diambil.", "Here, left means remaining, not the left direction.", "Di sini, baki bermaksud yang tinggal, bukan arah kiri."),
+  glossaryEntry(3, "Left", "Baki", "How many are still there after some are taken away.", "Berapa banyak yang masih ada selepas sebahagian diambil.", "Here, left means remaining, not the left direction.", "Di sini, baki maksudnya yang tinggal, bukan arah kiri."),
 ];
 
 const recognitionPracticeQuestions: Question[] = [
@@ -499,7 +499,7 @@ const additionPracticeQuestions: Question[] = [
 ];
 
 const subtractionPracticeQuestions: Question[] = [
-  q("l-sub-takeaway-7-3", "operations", { en: "Show 7 - 3. Start with 7, take away 3.", ms: "Tunjuk 7 - 3. Mula dengan 7, buang 3." }, [], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }, "takeAway"),
+  q("l-sub-takeaway-7-3", "operations", { en: "Show 7 - 3. Start with 7, take away 3.", ms: "Tunjuk 7 - 3. Mula dengan 7, ambil 3." }, [], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }, "takeAway"),
   q("l-sub-8-5", "operations", { en: "Chrys has 8 bananas. He gives away 5 bananas. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia beri 5 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 8, b: 5, emoji: "🍌" }),
   q("l-sub-6-2", "operations", { en: "Chrys has 6 bananas. He eats 2 bananas. How many bananas are left?", ms: "Chrys ada 6 pisang. Dia makan 2 pisang. Tinggal berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 6, b: 2, emoji: "🍌" }),
   q("l-sub-9-6", "operations", { en: "There are 9 bananas. You take away 6 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 6 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 9, b: 6, emoji: "🍌" }),
@@ -562,7 +562,7 @@ q("rt-add-bananas-0-5", "real", { en: "The basket has 0 bananas. Put in 5 banana
   q("rt-sub-cups-5-5", "real", { en: "There are 5 cups. You put away all 5 cups. How many cups are left?", ms: "Ada 5 cawan. Kamu simpan semua 5 cawan. Tinggal berapa cawan?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🥤" }),
   q("rt-sub-flowers-4-2", "real", { en: "There are 4 flowers. You pick 2 flowers. How many flowers are left?", ms: "Ada 4 bunga. Kamu petik 2 bunga. Tinggal berapa bunga?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 4, b: 2, emoji: "🌸" }),
   q("rt-sub-eggs-3-0", "real", { en: "There are 3 eggs. You take away 0 eggs. How many eggs are left?", ms: "Ada 3 telur. Kamu ambil 0 telur. Tinggal berapa telur?" }, [0, 2, 3, 4], 3, { kind: "subtract", a: 3, b: 0, emoji: "🥚" }),
-  q("rt-sub-toys-2-1", "real", { en: "There are 2 toy cars. You move 1 toy car away. How many toy cars are left?", ms: "Ada 2 kereta mainan. Kamu alihkan 1 kereta mainan. Tinggal berapa kereta mainan?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 2, b: 1, emoji: "🚗" }),
+  q("rt-sub-toys-2-1", "real", { en: "There are 2 toy cars. You move 1 toy car away. How many toy cars are left?", ms: "Ada 2 kereta mainan. Kamu pindah 1 kereta mainan. Tinggal berapa kereta mainan?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 2, b: 1, emoji: "🚗" }),
 ];
 
 function q(
@@ -660,7 +660,7 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const wordMs = WORDS.ms[visual.value];
     return {
       en: [`The word is ${word}.`, `The number is ${visual.value}.`],
-      ms: [`Perkataan ini ${wordMs}.`, `Nombornya ${visual.value}.`],
+      ms: [`Perkataan ini ${wordMs}.`, `Nombor itu ${visual.value}.`],
     };
   }
   if (visual.kind === "audioNumber") {
@@ -672,7 +672,7 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
         : [`You heard ${word}.`, `The number is ${visual.value}.`],
       ms: typeof answer === "string"
         ? [`Kamu dengar ${wordMs}.`, `Perkataannya ${wordMs}.`]
-        : [`Kamu dengar ${wordMs}.`, `Nombornya ${visual.value}.`],
+        : [`Kamu dengar ${wordMs}.`, `Nombor itu ${visual.value}.`],
     };
   }
   if (visual.kind === "numberWithGroup") {
@@ -756,11 +756,11 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     return visual.direction === "asc"
       ? {
         en: ["Ascending is small to big.", "Start with the smallest.", `Answer: ${answer}.`],
-        ms: ["Menaik bermaksud kecil ke besar.", "Letak nombor paling kecil dahulu.", `Jawapan: ${answer}.`],
+        ms: ["Menaik maksudnya nombor naik, kecil ke besar.", "Letak nombor paling kecil dahulu.", `Jawapan: ${answer}.`],
       }
       : {
         en: ["Descending is big to small.", "Start with the biggest.", `Answer: ${answer}.`],
-        ms: ["Menurun bermaksud besar ke kecil.", "Letak nombor paling besar dahulu.", `Jawapan: ${answer}.`],
+        ms: ["Menurun maksudnya nombor turun, besar ke kecil.", "Letak nombor paling besar dahulu.", `Jawapan: ${answer}.`],
       };
   }
   if (visual.kind === "symbol") {
@@ -965,7 +965,7 @@ function App() {
             <p className="text-sm font-bold text-slate-500">
               {lastScore.mastered
                 ? (lang === "en" ? "You did it! You earned a star." : "Kamu berjaya! Kamu dapat bintang.")
-                : (lang === "en" ? "You completed it. Keep practicing with Chrys." : "Kamu sudah lengkapkan. Terus berlatih dengan Chrys.")}
+                : (lang === "en" ? "You completed it. Keep practicing with Chrys." : "Kamu sudah habiskan latihan. Terus berlatih dengan Chrys.")}
             </p>
           </div>
         )}
@@ -1058,7 +1058,7 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
               {lang === "en" ? "Math Glossary" : "Glosari Matematik"}
             </Dialog.Title>
             <Dialog.Description className="sr-only">
-              {lang === "en" ? "Child-friendly meanings for math words." : "Maksud perkataan matematik yang mudah untuk kanak-kanak."}
+              {lang === "en" ? "Child-friendly meanings for math words." : "Maksud perkataan matematik yang mudah untuk budak."}
             </Dialog.Description>
             <Dialog.Close asChild>
               <button
@@ -1118,7 +1118,7 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
             })}
             {filteredEntries.length === 0 && (
               <p className="rounded-2xl bg-slate-50 p-6 text-center text-lg font-black text-slate-500">
-                {lang === "en" ? "No matching word yet." : "Tiada perkataan yang sepadan."}
+                {lang === "en" ? "No matching word yet." : "Tiada perkataan yang sama."}
               </p>
             )}
           </div>
@@ -1215,7 +1215,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
       <div className="grid gap-4 md:grid-cols-2">
         <MenuCard title={t.recognizeNumbers} subtitle="See, spell, trace, write" icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
         <MenuCard title={t.numberValues} subtitle={lang === "en" ? "Numbers show how many" : "Nombor tunjuk berapa banyak"} icon="🍌" color="emerald" onClick={() => go("learnValues")} />
-        <MenuCard title={t.sequencing} subtitle={lang === "en" ? "Numbers in the right order" : "Nombor dalam turutan yang betul"} icon="< >" color="sky" onClick={() => go("learnSequencing")} />
+        <MenuCard title={t.sequencing} subtitle={lang === "en" ? "Numbers in the right order" : "Nombor dalam susunan yang betul"} icon="< >" color="sky" onClick={() => go("learnSequencing")} />
         <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="🧺" color="amber" onClick={() => go("groupingMode")} />
         <MenuCard title={t.addition} subtitle="Adding more" icon="➕" color="emerald" onClick={() => go("learnAddition")} />
         <MenuCard title={t.subtraction} subtitle="Taking away" icon="➖" color="pink" onClick={() => go("learnSubtraction")} />
@@ -1244,15 +1244,15 @@ function MenuCard({ title, subtitle, icon, color, onClick }: { title: string; su
 }
 
 function skipPracticeLabel(lang: Lang) {
-  return lang === "en" ? "Skip to practice questions" : "Langkau ke soalan latihan";
+  return lang === "en" ? "Skip to practice questions" : "Terus ke soalan latihan";
 }
 
 function skipNextNumberLabel(lang: Lang) {
-  return lang === "en" ? "Skip to next number" : "Langkau ke nombor seterusnya";
+  return lang === "en" ? "Skip to next number" : "Terus ke nombor lepas ni";
 }
 
 function backToLearningLabel(lang: Lang) {
-  return lang === "en" ? "Back to learning mode" : "Kembali ke mod pembelajaran";
+  return lang === "en" ? "Back to learning mode" : "Kembali ke mod belajar";
 }
 
 function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
@@ -1304,7 +1304,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
       <LessonShell
         lang={lang}
         title={`${t.learnNumbers}: ${number}`}
-        helper={lang === "en" ? "Chrys teaches each number through seeing, counting, number order, tracing, and drawing." : "Chrys ajar setiap nombor dengan lihat, kira, susun, surih, dan lukis."}
+        helper={lang === "en" ? "Chrys teaches each number through seeing, counting, number order, tracing, and drawing." : "Chrys ajar setiap nombor dengan lihat, kira, susun, ikut garisan, dan lukis."}
       >
         <div className="mb-4 grid grid-cols-5 gap-2">
           {[0, 1, 2, 3, 4].map((s) => (
@@ -1321,7 +1321,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
         )}
         {step === 1 && (
           <div className="space-y-4 text-center">
-            <CharacterTalk lang={lang} text={number === 0 ? (lang === "en" ? "Zero means nothing. The basket is empty." : "Kosong bermaksud tiada apa-apa. Bakul kosong.") : (lang === "en" ? `Count ${number} bananas slowly.` : `Kira ${number} pisang perlahan-lahan.`)} />
+            <CharacterTalk lang={lang} text={number === 0 ? (lang === "en" ? "Zero means nothing. The basket is empty." : "Kosong maksudnya tiada apa-apa. Bakul kosong.") : (lang === "en" ? `Count ${number} bananas slowly.` : `Kira ${number} pisang perlahan.`)} />
             <ObjectGroup count={number} emoji="🍌" numbered />
           </div>
         )}
@@ -1334,7 +1334,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
         )}
         {step === 3 && (
           <div className="space-y-4">
-            <CharacterTalk lang={lang} text={lang === "en" ? "Skip counting means we jump by the same size. Here we jump by 2." : "Kira langkau bermaksud kita lompat dengan saiz yang sama. Di sini kita lompat 2."} />
+            <CharacterTalk lang={lang} text={lang === "en" ? "Skip counting means we jump by the same size. Here we jump by 2." : "Terus ke nombor lepas ni dengan lompatan yang sama. Di sini kita lompat 2."} />
             <SkipCountingPanel marked={number} lang={lang} />
           </div>
         )}
@@ -1397,7 +1397,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
 
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
-      <LessonShell lang={lang} title={t.recognizeNumbers} helper={lang === "en" ? "See it. Spell it. Trace it. Write it." : "Lihat. Eja. Surih. Tulis."}>
+      <LessonShell lang={lang} title={t.recognizeNumbers} helper={lang === "en" ? "See it. Spell it. Trace it. Write it." : "Lihat. Eja. Ikut garisan. Tulis."}>
         <div className="mb-4 grid grid-cols-5 gap-2">
           {[0, 1, 2, 3, 4].map((s) => <div key={s} className={`h-3 rounded-full ${s <= step ? "bg-yellow-400" : "bg-slate-200"}`} />)}
         </div>
@@ -1567,10 +1567,10 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
     if (n === 0) {
       return phase === 0
         ? "Lihat bakul.\nTiada pisang."
-        : "0 bermaksud tiada.\nJadi, ada 0 pisang.";
+        : "0 maksudnya tiada.\nJadi, ada 0 pisang.";
     }
     if (phase === 0) return `Ini ${n}.`;
-    if (phase === 1) return `${n} bermaksud ${n} objek.`;
+    if (phase === 1) return `${n} maksudnya ${n} objek.`;
     if (phase === 2) return `Kira setiap objek. Nombor terakhir ialah ${n}.`;
     if (phase === 3) return `Objek berbeza. Masih ${n}.`;
     return `Susunan berbeza. Masih ${n}.`;
@@ -1662,7 +1662,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
         <div className="grid gap-4 md:grid-cols-3">
           <ValueLayoutCard label={lang === "en" ? "Row" : "Baris"} count={n} emoji={emoji} layout="row" />
           <ValueLayoutCard label={lang === "en" ? "Groups" : "Kumpulan"} count={n} emoji={emoji} layout="groups" />
-          <ValueLayoutCard label={lang === "en" ? "Spread out" : "Bersepah"} count={n} emoji={emoji} layout="spread" />
+          <ValueLayoutCard label={lang === "en" ? "Spread out" : "Berselerak"} count={n} emoji={emoji} layout="spread" />
         </div>
         <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
           {lang === "en" ? `They look different. They are all ${n}.` : `Rupa berbeza. Semua ialah ${n}.`}
@@ -1701,7 +1701,7 @@ function ZeroContainerCard({ label, container, lang }: { label: string; containe
       <p className="mb-3 text-xl font-black text-blue-950">{label}</p>
       <ContainerScene count={0} emoji="🍌" container={container} numbered />
       <p className="mt-3 rounded-2xl bg-white px-3 py-2 font-black text-slate-600">
-        {lang === "en" ? "0 means none." : "0 bermaksud tiada."}
+        {lang === "en" ? "0 means none." : "0 maksudnya tiada."}
       </p>
     </div>
   );
@@ -1788,7 +1788,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
     },
     {
       title: lang === "en" ? "Ascending: Going Up" : "Menaik: Nombor Naik",
-      text: lang === "en" ? "Ascending means numbers go up." : "Menaik bermaksud nombor naik.",
+      text: lang === "en" ? "Ascending means numbers go up." : "Menaik maksudnya nombor naik.",
       visual: <SequencingExample nums={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} arrow="right" />,
     },
     {
@@ -1798,7 +1798,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
     },
     {
       title: lang === "en" ? "Descending: Going Down" : "Menurun: Nombor Turun",
-      text: lang === "en" ? "Descending means numbers go down." : "Menurun bermaksud nombor turun.",
+      text: lang === "en" ? "Descending means numbers go down." : "Menurun maksudnya nombor turun.",
       visual: <NumberLineSequence nums={[9, 8, 7, 6, 5, 4, 3, 2, 1, 0]} marked={-1} arrow="right" />,
     },
     {
@@ -1807,8 +1807,8 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
       visual: <TapRevealOrder nums={[4, 3, 2, 1]} lang={lang} mode="down" />,
     },
     {
-      title: lang === "en" ? "Number Order" : "Turutan Nombor",
-      text: lang === "en" ? "Numbers follow an order." : "Nombor ada turutan.",
+      title: lang === "en" ? "Number Order" : "Susunan Nombor",
+      text: lang === "en" ? "Numbers follow an order." : "Nombor ada susunan.",
       visual: <TapRevealSequence lang={lang} />,
     },
     {
@@ -1988,7 +1988,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
                 <SpriteIcon value={activity.emoji} className="h-14 w-14" />
               </button>
               <button onClick={removeObject} className="rounded-2xl border-2 border-blue-200 bg-blue-50 px-5 py-3 font-black text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1">
-                {lang === "en" ? "Remove one" : "Buang satu"}
+                {lang === "en" ? "Remove one" : "Ambil satu"}
               </button>
               <button onClick={checkGroup} className="rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1">
                 {lang === "en" ? "Check group" : "Semak kumpulan"}
@@ -2119,7 +2119,7 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { act
           <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={step >= 1 ? activity.a : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
           <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={step >= 3 ? activity.b : groupB} emoji={activity.emoji} counted={step >= 3} active={step === 2} lang={lang} />
         </div>
-        {step >= 4 && <GroupingAnswerLine text={lang === "en" ? `Each group has its own number.` : `Setiap kumpulan ada nombornya sendiri.`} />}
+        {step >= 4 && <GroupingAnswerLine text={lang === "en" ? `Each group has its own number.` : `Setiap kumpulan ada nombor sendiri.`} />}
       </div>
     );
   }
@@ -2216,7 +2216,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
           <SymbolIntro
             title={lang === "en" ? "The plus sign" : "Tanda tambah"}
             symbol="+"
-            text={lang === "en" ? "The + sign means add more." : "Tanda + bermaksud tambah lagi."}
+            text={lang === "en" ? "The + sign means add more." : "Tanda + maksudnya tambah lagi."}
             onPrevious={() => setPhase("intro")}
             onNext={() => setPhase("equals")}
             onSkip={() => setPhase("practice")}
@@ -2230,7 +2230,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             symbol="="
             text={lang === "en"
               ? "The = sign means the same amount on both sides."
-              : "Tanda = bermaksud jumlah yang sama pada kedua-dua belah."}
+              : "Tanda = maksudnya jumlah yang sama pada kedua-dua belah."}
             onPrevious={() => setPhase("sign")}
             onNext={() => setPhase("story")}
             onSkip={() => setPhase("practice")}
@@ -2265,7 +2265,7 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
         {phase === "intro" && (
           <AdditionIntroStep
             title={t.subtraction}
-            text={lang === "en" ? "Subtraction takes away from one group." : "Tolak ambil daripada satu kumpulan."}
+            text={lang === "en" ? "Subtraction takes away from one group." : "Tolak maksudnya ambil daripada satu kumpulan."}
             onPrevious={undefined}
             onNext={() => setPhase("sign")}
             onSkip={() => setPhase("practice")}
@@ -2277,7 +2277,7 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
           <SymbolIntro
             title={lang === "en" ? "The minus sign" : "Tanda tolak"}
             symbol="-"
-            text={lang === "en" ? "The - sign means take away." : "Tanda - bermaksud ambil."}
+            text={lang === "en" ? "The - sign means take away." : "Tanda - maksudnya tolak."}
             onPrevious={() => setPhase("intro")}
             onNext={() => setPhase("story")}
             onSkip={() => setPhase("practice")}
@@ -2360,14 +2360,14 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
   const banana = String.fromCodePoint(0x1f34c);
   const title = [
     lang === "en" ? "Find the numbers" : "Cari nombor",
-    lang === "en" ? "Find the action" : "Cari perbuatan",
+    lang === "en" ? "Find the action" : "Cari apa yang berlaku",
     lang === "en" ? "Choose: add" : "Pilih: tambah",
     lang === "en" ? "Choose: take away" : "Pilih: tolak",
   ][phase];
   const talk = [
     lang === "en"
       ? "Look for how many. The numbers are 3 and 2."
-      : "Cari berapa banyak. Nombornya 3 dan 2.",
+      : "Cari berapa banyak. Nombor itu 3 dan 2.",
     lang === "en"
       ? "Clue words help us choose. They are hints."
       : "Kata petunjuk bantu kita pilih. Ia cuma petunjuk.",
@@ -2422,7 +2422,7 @@ function FindNumbersExample({ lang, banana }: { lang: Lang; banana: string }) {
       <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 3 bananas and 2 more bananas." : "Chrys ada 3 pisang dan 2 pisang lagi."} />
       <div className="rounded-[2rem] border-2 border-yellow-100 bg-yellow-50 p-4">
         <p className="mb-3 text-center text-xl font-black text-yellow-900">
-          {lang === "en" ? "The numbers are 3 and 2." : "Nombornya 3 dan 2."}
+          {lang === "en" ? "The numbers are 3 and 2." : "Nombor itu 3 dan 2."}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <RealWorldNumberGroup count={3} label="3" emoji={banana} />
@@ -2945,7 +2945,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
               </div>
             </div>
 
-            <div className="grid gap-3 text-center sm:grid-cols-3" aria-label={lang === "en" ? "Subtraction number labels" : "Label nombor penolakan"}>
+            <div className="grid gap-3 text-center sm:grid-cols-3" aria-label={lang === "en" ? "Subtraction number labels" : "Label nombor tolak"}>
               <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-3">
                 <p className="text-sm font-black text-amber-800">{lang === "en" ? "Start" : "Mula"}</p>
                 <p className="text-3xl font-black text-amber-950" style={NUMBER_TEXT_STYLE}>7</p>
@@ -3203,7 +3203,7 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
                   ? (lang === "en" ? "Counting..." : "Mengira...")
                   : alyseCounted === 4
                     ? (lang === "en" ? "Count again" : "Kira lagi")
-                    : (lang === "en" ? "Tap to count" : "Ketik untuk mengira")}
+                    : (lang === "en" ? "Tap to count" : "Tekan untuk mengira")}
                 <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
                   <PointerIcon />
                 </span>
@@ -3457,7 +3457,7 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
         >
           {isCounting
-            ? (lang === "en" ? "Counting..." : "Sedang mengira...")
+            ? (lang === "en" ? "Counting..." : "Mengira...")
             : completedGroups === ADDITION_EQUATION_GROUPS.length
               ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
               : (lang === "en" ? "Start Counting!" : "Mula Mengira!")}
@@ -4714,7 +4714,7 @@ function ActiveAnswerPanel({
         <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} lang={lang} />
         {answered && <CountTotalBadge count={selectedNumber} lang={lang} />}
         <p className="mt-4 text-lg font-black text-blue-800">
-          {lang === "en" ? "Tap to take away." : "Ketik untuk buang."}
+          {lang === "en" ? "Tap to take away." : "Tekan untuk ambil."}
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <button
@@ -4730,7 +4730,7 @@ function ActiveAnswerPanel({
             onClick={() => setRemovedCount((count) => Math.min(startCount, count + 1))}
             className="rounded-2xl border-2 border-blue-200 bg-blue-50 px-6 py-3 font-black text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1 disabled:opacity-40"
           >
-            {lang === "en" ? "Remove one" : "Buang satu"}
+            {lang === "en" ? "Remove one" : "Ambil satu"}
           </button>
           <button
             disabled={answered}
@@ -4748,7 +4748,7 @@ function ActiveAnswerPanel({
                 <p className="font-black text-blue-900">
                   {lang === "en"
                     ? `Take away ${takeAwayTarget}. ${answer} are left.`
-                    : `Buang ${takeAwayTarget}. Tinggal ${answer}.`}
+                    : `Ambil ${takeAwayTarget}. Tinggal ${answer}.`}
                 </p>
                 <div>
                   <CountedObjectRow count={startCount} emoji={emoji} crossed={takeAwayTarget} showCount countRemainingOnly showCrossCount compact lang={lang} />
@@ -5013,8 +5013,8 @@ function LessonShell({ lang, title, helper, children }: { lang: Lang; title: str
             className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
           >
             {narrating
-              ? (lang === "en" ? "Playing lesson..." : "Pelajaran dimainkan...")
-              : (lang === "en" ? "Tap to start lesson" : "Ketik untuk mula belajar")}
+              ? (lang === "en" ? "Playing lesson..." : "Sedang main...")
+              : (lang === "en" ? "Tap to start lesson" : "Tekan untuk mula belajar")}
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
               <PointerIcon />
             </span>
@@ -5037,7 +5037,7 @@ function CharacterTalk({ lang, text }: { lang: Lang; text: string }) {
         <button
           type="button"
           onClick={() => speakText(text, lang)}
-          aria-label={audioMuted ? (lang === "en" ? "Sound is muted" : "Bunyi disenyapkan") : (lang === "en" ? "Hear this teaching text" : "Dengar teks pengajaran ini")}
+          aria-label={audioMuted ? (lang === "en" ? "Sound is muted" : "Bunyi ditutup") : (lang === "en" ? "Hear this teaching text" : "Dengar teks pelajaran ini")}
           className={`ml-auto grid h-12 w-12 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-white text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1 ${audioMuted ? "opacity-45" : ""}`}
         >
           <SpeakerIcon />
@@ -5636,13 +5636,13 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
 
   return (
     <div className="mx-auto w-full max-w-[27rem] rounded-3xl border-2 border-blue-100 bg-white p-4">
-      <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Trace ${value}` : `Surih ${value}`}</h3>
+      <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Trace ${value}` : `Ikut garisan ${value}`}</h3>
       <p className="mb-3 text-center text-sm font-bold text-slate-500">
         {lang === "en" ? "Follow the big number guide on the screen." : "Ikut panduan nombor besar pada skrin."}
       </p>
       {confirmed && (
         <p className="mb-2 rounded-2xl bg-emerald-50 px-3 py-2 text-center text-sm font-black text-emerald-800">
-          {lang === "en" ? "Watch the correct number shape slowly." : "Lihat bentuk nombor yang betul perlahan-lahan."}
+          {lang === "en" ? "Watch the correct number shape slowly." : "Lihat bentuk nombor yang betul perlahan."}
         </p>
       )}
       <div className="relative h-72 rounded-3xl border-2 border-sky-100 bg-sky-50">
@@ -5752,7 +5752,7 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
     <div className="mx-auto w-full max-w-2xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Write ${value} yourself` : `Tulis ${value} sendiri`}</h3>
       <p className="mb-3 text-center text-sm font-bold text-slate-500">
-        {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan surih."}
+        {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan garisan."}
       </p>
       <div className={`grid gap-4 ${showModel ? "md:grid-cols-[1fr_auto]" : ""}`}>
         <div>
@@ -5805,14 +5805,14 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
             <div className="flex items-center gap-3">
               <img src={chrysExcited} alt="Chrys excited" className="h-20 w-20 object-contain" />
               <p className="text-lg font-black text-emerald-800">
-                {lang === "en" ? "Nice checking. You matched it!" : "Bagus semak. Awak padankan!"}
+                {lang === "en" ? "Nice checking. You matched it!" : "Bagus semak. Nombor awak sama!"}
               </p>
             </div>
           ) : (
             <>
               <div className="flex items-center gap-3">
                 <p className="text-lg font-black text-emerald-900">
-                  {lang === "en" ? "Compare your number with the model." : "Bandingkan nombor awak dengan contoh."}
+                  {lang === "en" ? "Compare your number with the model." : "Banding nombor awak dengan contoh."}
                 </p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -6013,7 +6013,7 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
           <button
             type="button"
             onClick={() => speakText(spokenSteps, lang)}
-            aria-label={lang === "en" ? "Hear the solution steps" : "Dengar langkah penyelesaian"}
+            aria-label={lang === "en" ? "Hear the solution steps" : "Dengar cara jawab"}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-emerald-700 shadow-[0_4px_0_rgba(4,120,87,.14)] active:translate-y-1"
           >
             <SpeakerIcon />
