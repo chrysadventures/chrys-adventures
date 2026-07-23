@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowLeftRight, BookOpen, Check, Eraser, Search, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, ArrowRight, BookOpen, Check, Eraser, Search, X } from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
 import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
 import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
@@ -457,22 +457,22 @@ const valuePracticeQuestions = valuePracticeQuestionBank.filter((question) =>
 );
 
 const sequencingPracticeQuestions: Question[] = [
-  q("seq-keypad-3", "numbers", { en: "Type the missing number.", ms: "Taip nombor yang hilang." }, [], 3, { kind: "sequence", nums: [0, 1, 2, "?", 4] }, "keypad"),
-  q("seq-full-3", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [2, 3, 4, 5], 3, { kind: "sequence", nums: [0, 1, 2, "?", 4, 5, 6, 7, 8, 9] }),
-  q("seq-full-6", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [4, 5, 6, 7], 6, { kind: "sequence", nums: [0, 1, 2, 3, 4, 5, "?", 7, 8, 9] }),
-  q("seq-full-1", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [0, 1, 2, 3], 1, { kind: "sequence", nums: [0, "?", 2, 3, 4, 5, 6, 7, 8, 9] }),
-  q("seq-full-8", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [6, 7, 8, 9], 8, { kind: "sequence", nums: [0, 1, 2, 3, 4, 5, 6, 7, "?", 9] }),
-  q("seq-short-5", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [4, 5, 6, 7], 5, { kind: "sequence", nums: [2, 3, 4, "?", 6, 7, 8] }),
-  q("seq-short-2", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [1, 2, 3, 4], 2, { kind: "sequence", nums: [0, 1, "?", 3, 4, 5, 6] }),
-  q("seq-five-6", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 6, { kind: "sequence", nums: [4, 5, "?", 7, 8] }),
-  q("seq-five-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 7, { kind: "sequence", nums: [5, 6, "?", 8, 9] }),
-  q("seq-four-6", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 8], 6, { kind: "sequence", nums: [5, "?", 7, 8] }),
-  q("seq-skip-7", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [5, 6, 7, 9], 7, { kind: "sequence", nums: [1, 3, 5, "?", 9] }),
-  q("seq-asc-1", "numbers", { en: "Choose smallest to biggest.", ms: "Pilih kecil ke besar." }, ["1, 2, 4", "4, 2, 1", "2, 1, 4"], "1, 2, 4", { kind: "order", nums: [2, 4, 1], direction: "asc" }),
-  q("seq-desc-1", "numbers", { en: "Choose biggest to smallest.", ms: "Pilih besar ke kecil." }, ["8, 5, 3", "3, 5, 8", "5, 8, 3"], "8, 5, 3", { kind: "order", nums: [3, 8, 5], direction: "desc" }),
-  q("seq-more-3-6", "numbers", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, [3, 4, 5, 6], 6, { kind: "compare", a: 3, b: 6 }),
-  q("seq-symbol-3-6", "numbers", { en: "3 __ 6. Choose the symbol.", ms: "3 __ 6. Pilih simbol." }, [">", "<"], "<", { kind: "symbol", a: 3, b: 6 }),
-  q("seq-symbol-7-4", "numbers", { en: "7 __ 4. Choose the symbol.", ms: "7 __ 4. Pilih simbol." }, [">", "<"], ">", { kind: "symbol", a: 7, b: 4, showObjects: false }),
+  q("seq-full-up-0", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 0, { kind: "sequence", nums: ["?", 1, 2, 3, 4, 5, 6, 7, 8, 9] }, "keypad"),
+  q("seq-full-up-2", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 2, { kind: "sequence", nums: [0, 1, "?", 3, 4, 5, 6, 7, 8, 9] }, "keypad"),
+  q("seq-full-up-5", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 5, { kind: "sequence", nums: [0, 1, 2, 3, 4, "?", 6, 7, 8, 9] }, "keypad"),
+  q("seq-full-up-8", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 8, { kind: "sequence", nums: [0, 1, 2, 3, 4, 5, 6, 7, "?", 9] }, "keypad"),
+  q("seq-full-down-0", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 0, { kind: "sequence", nums: [9, 8, 7, 6, 5, 4, 3, 2, 1, "?"] }, "keypad"),
+  q("seq-full-down-7", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 7, { kind: "sequence", nums: [9, 8, "?", 6, 5, 4, 3, 2, 1, 0] }, "keypad"),
+  q("seq-full-down-4", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 4, { kind: "sequence", nums: [9, 8, 7, 6, 5, "?", 3, 2, 1, 0] }, "keypad"),
+  q("seq-full-down-8", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 8, { kind: "sequence", nums: [9, "?", 7, 6, 5, 4, 3, 2, 1, 0] }, "keypad"),
+  q("seq-part-up-2", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 2, { kind: "sequence", nums: [0, 1, "?", 3, 4] }, "keypad"),
+  q("seq-part-up-5", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 5, { kind: "sequence", nums: [2, 3, 4, "?", 6] }, "keypad"),
+  q("seq-part-up-6", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 6, { kind: "sequence", nums: [4, 5, "?", 7, 8] }, "keypad"),
+  q("seq-part-up-9", "numbers", { en: "Count up. Find the missing number.", ms: "Kira naik. Cari nombor yang hilang." }, [], 9, { kind: "sequence", nums: [5, 6, 7, 8, "?"] }, "keypad"),
+  q("seq-part-down-7", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 7, { kind: "sequence", nums: [9, 8, "?", 6, 5] }, "keypad"),
+  q("seq-part-down-4", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 4, { kind: "sequence", nums: [7, 6, 5, "?", 3] }, "keypad"),
+  q("seq-part-down-3", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 3, { kind: "sequence", nums: [5, 4, "?", 2, 1] }, "keypad"),
+  q("seq-part-down-0", "numbers", { en: "Count down. Find the missing number.", ms: "Kira turun. Cari nombor yang hilang." }, [], 0, { kind: "sequence", nums: [4, 3, 2, 1, "?"] }, "keypad"),
 ];
 
 const numberPracticeQuestions: Question[] = [
@@ -703,21 +703,38 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const before = visual.nums[missingIndex - 1];
     const after = visual.nums[missingIndex + 1];
     const filledAnswer = Number(answer);
-    const nums = visual.nums.map((n) => n === "?" ? filledAnswer : n);
-    const numeric = nums.filter((n): n is number => typeof n === "number");
-    const gaps = numeric.slice(1).map((n, i) => n - numeric[i]);
-    const skipByTwo = gaps.some((gap) => Math.abs(gap) === 2);
-    const beforeEn = typeof before === "number" ? `${answer} comes after ${before}.` : "Look at the blank.";
-    const afterEn = typeof after === "number" ? `${answer} comes before ${after}.` : "Look at the blank.";
-    const beforeMs = typeof before === "number" ? `${answer} selepas ${before}.` : "Lihat ruang kosong.";
-    const afterMs = typeof after === "number" ? `${answer} sebelum ${after}.` : "Lihat ruang kosong.";
+    const knownAdjacentGaps = visual.nums.slice(1).flatMap((value, index) => {
+      const previous = visual.nums[index];
+      return typeof previous === "number" && typeof value === "number" ? [value - previous] : [];
+    });
+    const sequenceStep = knownAdjacentGaps.find((gap) => gap !== 0) ?? 1;
+    const descending = sequenceStep < 0;
+    const skipByTwo = Math.abs(sequenceStep) === 2;
+    const countedValues = visual.nums.slice(0, missingIndex).filter((value): value is number => typeof value === "number");
+    const countStart = countedValues[0] ?? filledAnswer;
+    const countedWordsEn = countedValues.map((value) => WORDS.en[value]).join(", ");
+    const countedWordsMs = countedValues.map((value) => WORDS.ms[value]).join(", ");
+    const countUpEn = countedValues.length > 0
+      ? `${descending ? "Count down" : "Count up"} from ${countStart}: ${countedWordsEn}. The next number is ${answer}.`
+      : `The number line starts at ${answer}.`;
+    const countUpMs = countedValues.length > 0
+      ? `${descending ? "Kira turun" : "Kira naik"} dari ${countStart}: ${countedWordsMs}. Nombor lepas ni ialah ${answer}.`
+      : `Garis nombor bermula dengan ${answer}.`;
+    const orderEn = [
+      typeof before === "number" ? `${answer} comes after ${before}.` : "",
+      typeof after === "number" ? `${answer} comes before ${after}.` : "",
+    ].filter(Boolean).join(" ");
+    const orderMs = [
+      typeof before === "number" ? `${answer} selepas ${before}.` : "",
+      typeof after === "number" ? `${answer} sebelum ${after}.` : "",
+    ].filter(Boolean).join(" ");
     return {
       en: skipByTwo
-        ? ["Look at the jumps.", "It jumps by 2.", `So, ? is ${answer}.`]
-        : ["Look at the blank.", beforeEn, afterEn, `So, ? is ${answer}.`],
+        ? ["Look at the jumps.", `It jumps ${descending ? "back" : "forward"} by 2.`, `So, ? is ${answer}.`]
+        : [countUpEn, orderEn].filter(Boolean),
       ms: skipByTwo
-        ? ["Lihat lompatan nombor.", "Ia lompat 2.", `Jadi, ? ialah ${answer}.`]
-        : ["Lihat ruang kosong.", beforeMs, afterMs, `Jadi, ? ialah ${answer}.`],
+        ? ["Lihat lompatan nombor.", `Ia lompat ${descending ? "ke belakang" : "ke depan"} sebanyak 2.`, `Jadi, ? ialah ${answer}.`]
+        : [countUpMs, orderMs].filter(Boolean),
     };
   }
   if (visual.kind === "number") {
@@ -1989,7 +2006,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
     },
     {
       title: lang === "en" ? "Missing numbers" : "Nombor hilang",
-      text: lang === "en" ? "What number is missing?" : "Nombor apa yang hilang?",
+      text: lang === "en" ? "Count from 0. What comes next?" : "Kira dari 0. Apa nombor lepas ni?",
       visual: <MissingNumberTeaching lang={lang} nums={[0, 1, 2, "?", 4, 5, 6, 7, 8, 9]} answer={3} />,
     },
     {
@@ -2005,7 +2022,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl pb-8">
+    <main className="mx-auto w-full max-w-6xl pb-8">
       <LessonShell lang={lang} title={t.sequencing} helper={lang === "en" ? "Learn one step at a time." : "Belajar satu langkah demi satu langkah."}>
         <div className="rounded-[2rem] border-4 border-white bg-white p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
           <p className="mb-2 text-center text-sm font-black text-blue-700">{current.title}</p>
@@ -2142,7 +2159,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
       {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} />}
       <LessonShell
         lang={lang}
-        title={lang === "en" ? "Grouping: Jungle Groups" : "Kumpulan: Kumpulan Rimba"}
+        title={t.groupingMode}
         helper={lang === "en" ? "Make groups. Count groups. Then put groups together." : "Bina kumpulan. Kira kumpulan. Kemudian gabungkan."}
       >
         <div className="mb-4 grid gap-3 md:grid-cols-[auto_1fr] md:items-center">
@@ -2170,9 +2187,12 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
               <button
                 onClick={addObject}
                 aria-label={lang === "en" ? "Add one banana" : "Tambah satu pisang"}
-                className="grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1"
+                className="relative grid h-20 w-20 place-items-center rounded-3xl border-2 border-yellow-300 bg-yellow-50 shadow-[0_5px_0_rgba(180,83,9,.25)] active:translate-y-1"
               >
                 <SpriteIcon value={activity.emoji} className="h-14 w-14" />
+                <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
+                  <PointerIcon />
+                </span>
               </button>
               <button onClick={removeObject} className="rounded-2xl border-2 border-blue-200 bg-blue-50 px-5 py-3 font-black text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1">
                 {lang === "en" ? "Remove one" : "Ambil satu"}
@@ -2286,7 +2306,7 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { act
   if (activity.kind === "observe") {
     return (
       <div className="space-y-4">
-        <GroupingTray label={lang === "en" ? "Basket group" : "Kumpulan bakul"} count={activity.count} emoji={activity.emoji} counted={step >= 1} lang={lang} />
+        <GroupingTray count={activity.count} emoji={activity.emoji} counted={step >= 1} lang={lang} />
         {step === 2 && <GroupingAnswerLine text={lang === "en" ? `${activity.count} bananas are in this group.` : `${activity.count} pisang dalam kumpulan ini.`} />}
       </div>
     );
@@ -2346,10 +2366,10 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { act
   );
 }
 
-function GroupingTray({ label, count, emoji, counted, active = false, lang }: { label: string; count: number; emoji: string; counted: boolean; active?: boolean; lang: Lang }) {
+function GroupingTray({ label, count, emoji, counted, active = false, lang }: { label?: string; count: number; emoji: string; counted: boolean; active?: boolean; lang: Lang }) {
   return (
     <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
-      <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>
+      {label && <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>}
       {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} />}
       {counted && <CountTotalBadge count={count} lang={lang} />}
     </div>
@@ -3457,6 +3477,7 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
 
 function BasketBananaScene({ count, counted, label }: { count: number; counted: number; label: string }) {
   const banana = String.fromCodePoint(0x1f34c);
+  const countComplete = count > 0 && counted >= count;
   const positions = [
     ["left-[29%]", "top-[35%]", "-rotate-12"],
     ["left-[63%]", "top-[30%]", "rotate-12"],
@@ -3465,17 +3486,18 @@ function BasketBananaScene({ count, counted, label }: { count: number; counted: 
   ];
 
   return (
-    <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-200 bg-white p-4">
+    <div className={`mx-auto max-w-xl rounded-3xl border-4 p-4 transition-[border-color,background-color,box-shadow] ${countComplete ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200" : "border-amber-200 bg-white"}`}>
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={BASKET_SPRITE} alt="basket" className="absolute inset-0 h-full w-full object-contain" />
         {Array.from({ length: count }, (_, index) => {
           const [x, y, rotation] = positions[index];
           const isCounted = index < counted;
+          const isActiveCount = !countComplete && counted > 0 && index === counted - 1;
           return (
             <div
               key={index}
               className={`absolute ${x} ${y} ${rotation} grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,transform] duration-300 ${
-                isCounted
+                isActiveCount
                   ? "border-blue-500 bg-transparent"
                   : "border-transparent bg-transparent"
               }`}
@@ -3614,12 +3636,15 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
 
   const renderBanana = (groupIndex: number, countIndex: number, layoutCount: number, layoutIndex: number) => {
     const counted = countIndex < visibleCounts[groupIndex];
-    const currentBanana = activeGroup === groupIndex && visibleCounts[groupIndex] === countIndex + 1;
+    const groupComplete = visibleCounts[groupIndex] >= ADDITION_EQUATION_GROUPS[groupIndex];
+    const currentBanana = !groupComplete && activeGroup === groupIndex && visibleCounts[groupIndex] === countIndex + 1;
     return (
       <div
         key={`${groupIndex}-${countIndex}`}
         className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
-          currentBanana
+          groupComplete
+            ? "border-amber-100 bg-amber-50"
+            : currentBanana
             ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
             : counted
               ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
@@ -4296,16 +4321,18 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   useEffect(() => () => stopNumberAudio(), []);
 
   const displayedCount = visibleCount ?? visible;
+  const countableTotal = countRemainingOnly ? remaining : count;
+  const countComplete = showCount && countableTotal > 0 && displayedCount >= countableTotal;
   let leftIndex = 0;
   return (
-    <div className={`flex flex-wrap justify-center rounded-3xl border-2 border-slate-100 bg-white ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
+    <div className={`flex flex-wrap justify-center rounded-3xl border-2 transition-[border-color,background-color,box-shadow] ${countComplete ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200" : "border-slate-100 bg-white"} ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
         const willBeTaken = i < crossed;
         const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
         const label = shouldCount ? ++leftIndex : 0;
         const labelVisible = shouldCount && label <= displayedCount;
-        const isActiveCount = highlightActiveCount && (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
+        const isActiveCount = highlightActiveCount && !countComplete && (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
         const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
         return (
           <div
@@ -4752,17 +4779,38 @@ function ActiveAnswerPanel({
           {answered ? selected : "?"}
         </div>
         <div className="grid grid-cols-5 gap-2">
-          {NUMBERS.map((n) => (
-            <button
-              key={n}
-              disabled={answered}
-              onClick={() => onAnswer(n)}
-              className="min-h-16 rounded-2xl border-2 border-blue-100 bg-blue-50 text-3xl font-black text-blue-900 shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1 disabled:opacity-60"
-              style={getNumberTextStyle(n)}
-            >
-              {n}
-            </button>
-          ))}
+          {NUMBERS.map((n) => {
+            const picked = answered && n === selectedNumber;
+            const correctChoice = picked && n === answer;
+            const stateClass = !answered
+              ? "border-blue-100 bg-blue-50 text-blue-900"
+              : correctChoice
+                ? "border-emerald-700 bg-emerald-500 text-white"
+                : picked
+                  ? "border-orange-600 bg-orange-400 text-white"
+                  : "border-slate-100 bg-slate-50 text-slate-300";
+
+            return (
+              <button
+                key={n}
+                disabled={answered}
+                onClick={() => onAnswer(n)}
+                aria-label={`${lang === "en" ? "Answer" : "Jawapan"} ${n}${correctChoice ? (lang === "en" ? ", correct answer" : ", jawapan betul") : picked ? (lang === "en" ? ", your answer, try again" : ", jawapan awak, cuba lagi") : ""}`}
+                className={`relative min-h-16 rounded-2xl border-2 text-3xl font-black shadow-[0_4px_0_rgba(30,64,175,.16)] active:translate-y-1 ${stateClass}`}
+                style={getNumberTextStyle(n)}
+              >
+                <span className={picked ? "pr-6" : ""}>{n}</span>
+                {picked && (
+                  <span
+                    aria-hidden="true"
+                    className={`absolute right-2 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full border-2 bg-white shadow-sm ${correctChoice ? "border-emerald-700 text-emerald-700" : "border-orange-700 text-orange-700"}`}
+                  >
+                    {correctChoice ? <Check className="h-5 w-5" strokeWidth={4} /> : <X className="h-5 w-5" strokeWidth={4} />}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
     );
@@ -5428,37 +5476,34 @@ function ContainerScene({
 }
 
 function NumberLine({ marked }: { marked: number }) {
-  return (
-    <div className="overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-4 sm:pb-3">
-      <div className="relative mx-auto grid min-w-0 gap-1 px-1 pb-3 sm:gap-2 sm:px-3 md:gap-3 md:px-5" style={{ gridTemplateColumns: `repeat(${NUMBERS.length}, minmax(0, 1fr))` }}>
-        <div className="absolute bottom-3 left-3 right-3 h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)] sm:bottom-4 sm:left-6 sm:right-6 sm:h-3" aria-hidden="true" />
-        {NUMBERS.map((n) => (
-          <div key={n} className="relative z-10 flex flex-col items-center">
-            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-4 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
-            <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />;
 }
 
-function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: number[]; marked: number; arrow?: "left" | "right" }) {
+function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<number | "?">; marked: number; arrow?: "left" | "right" }) {
+  const compact = nums.length <= 5;
+
   return (
     <div className="overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-4 sm:pb-3">
-      <div className="relative mx-auto grid min-w-0 gap-1 px-1 pb-3 sm:gap-2 sm:px-3 md:gap-3 md:px-5" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }}>
+      <div
+        className={`relative mx-auto grid min-w-0 gap-1 px-0 pb-3 sm:gap-3 sm:px-1 md:gap-7 lg:gap-8 ${compact ? "max-w-3xl" : "max-w-6xl"}`}
+        style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }}
+      >
         <div className="absolute bottom-3 left-3 right-3 h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)] sm:bottom-4 sm:left-6 sm:right-6 sm:h-3" aria-hidden="true" />
-        {nums.map((n, i) => (
+        {nums.map((n, i) => {
+          const missing = n === "?";
+          const selected = !missing && n === marked;
+          return (
           <div key={`${n}-${i}`} className="relative z-10 flex flex-col items-center">
-            {i < nums.length - 1 && (
-              <span className="absolute -right-2 top-1 z-20 text-sm font-black text-emerald-700 sm:-right-3 sm:top-2 sm:text-lg md:-right-4 md:text-xl lg:-right-5 lg:top-3 lg:text-2xl" aria-hidden="true">
-                {arrow === "right" ? "\u2192" : "\u2190"}
-              </span>
-            )}
-            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-4 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
-            <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
+            {i < nums.length - 1 && (arrow === "right" ? (
+              <ArrowRight className="absolute -right-2 top-2 z-20 h-3 w-3 text-emerald-700 sm:-right-3 sm:top-3 sm:h-4 sm:w-4 md:-right-6 md:h-6 md:w-6 lg:top-4" strokeWidth={3} aria-hidden="true" />
+            ) : (
+              <ArrowLeft className="absolute -right-2 top-2 z-20 h-3 w-3 text-emerald-700 sm:-right-3 sm:top-3 sm:h-4 sm:w-4 md:-right-6 md:h-6 md:w-6 lg:top-4" strokeWidth={3} aria-hidden="true" />
+            ))}
+            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-4 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl ${missing ? "border-amber-500 bg-yellow-50 text-yellow-900" : selected ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${missing || selected ? "bg-amber-500" : "bg-sky-500"}`} />
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -5657,18 +5702,18 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center justify-center gap-3 overflow-x-auto pb-2 sm:flex-row sm:items-stretch">
+      <div className="grid w-full grid-cols-1 items-stretch gap-3 pb-2 sm:grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)_2rem_minmax(0,1fr)_2rem_minmax(0,1fr)] sm:gap-2 lg:gap-3">
         {shown.map((n, index) => {
           const complete = completedIndex >= index;
           const isCurrentCounting = index === activeIndex && counting;
           return (
             <React.Fragment key={`${n}-${index}`}>
               {index > 0 && (
-                <div className="flex shrink-0 items-center justify-center text-4xl font-black text-emerald-600" aria-hidden="true">
-                  <span className="rotate-90 sm:rotate-0">{"\u2192"}</span>
+                <div className="flex items-center justify-center text-emerald-600" aria-hidden="true">
+                  <ArrowRight className="h-8 w-8 rotate-90 sm:rotate-0" strokeWidth={3} />
                 </div>
               )}
-              <div className={`w-full max-w-40 shrink-0 rounded-3xl border-2 bg-white p-3 text-center shadow-inner transition-colors ${isCurrentCounting ? "border-blue-400 bg-blue-50" : "border-emerald-100"}`}>
+              <div className={`w-full min-w-0 max-w-64 justify-self-center rounded-3xl border-2 bg-white p-2 text-center shadow-inner transition-colors sm:max-w-none lg:p-3 ${isCurrentCounting ? "border-blue-400 bg-blue-50" : "border-emerald-100"}`}>
                 <p className="mb-2 text-4xl font-black text-blue-950">{n}</p>
                 {isCurrentCounting ? (
                   <CountedObjectRow
@@ -5683,7 +5728,7 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
                 ) : complete ? (
                   <CountedObjectRow count={n} emoji={banana} showCount compact visibleCount={n} lang={lang} />
                 ) : (
-                  <ObjectGroup count={n} emoji={banana} />
+                  <CountedObjectRow count={n} emoji={banana} showCount compact visibleCount={0} lang={lang} />
                 )}
                 <p
                   className={`mt-3 min-h-10 rounded-full px-3 py-2 text-lg font-black transition-opacity ${complete ? "bg-emerald-100 text-emerald-950 opacity-100" : "opacity-0"}`}
@@ -5727,57 +5772,161 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
 
 function TapRevealSequence({ lang }: { lang: Lang }) {
   const [index, setIndex] = useState(0);
-  const marked = NUMBERS[index] ?? 9;
-  const done = index >= NUMBERS.length - 1;
+  const [hasCountedCurrent, setHasCountedCurrent] = useState(false);
+  const [counting, setCounting] = useState(false);
+  const countTimerRef = useRef<number | null>(null);
+  const marked = hasCountedCurrent ? (NUMBERS[index] ?? 9) : -1;
+  const done = hasCountedCurrent && index >= NUMBERS.length - 1;
+
+  useEffect(() => () => {
+    if (countTimerRef.current !== null) window.clearTimeout(countTimerRef.current);
+    stopNumberAudio();
+  }, []);
+
+  const countNextNumber = () => {
+    if (counting || done) return;
+    const nextIndex = hasCountedCurrent ? Math.min(NUMBERS.length - 1, index + 1) : index;
+    const nextNumber = NUMBERS[nextIndex] ?? 9;
+    setIndex(nextIndex);
+    setHasCountedCurrent(true);
+    setCounting(true);
+    speakNumber(nextNumber, lang);
+    countTimerRef.current = window.setTimeout(() => {
+      setCounting(false);
+      countTimerRef.current = null;
+    }, audioMuted ? 250 : COUNTING_STEP_MS);
+  };
+
   return (
     <div className="space-y-4">
       <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
         <button
-          onClick={() => setIndex((value) => Math.min(NUMBERS.length - 1, value + 1))}
-          disabled={done}
-          className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] disabled:opacity-50"
+          onClick={countNextNumber}
+          disabled={counting || done}
+          className="relative rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] disabled:opacity-50"
         >
-          {done ? (lang === "en" ? "Done" : "Selesai") : (lang === "en" ? "Tap to continue" : "Tekan untuk terus")}
+          {done
+            ? (lang === "en" ? "Done" : "Selesai")
+            : counting
+              ? (lang === "en" ? "Counting..." : "Mengira...")
+              : hasCountedCurrent
+                ? (lang === "en" ? "Count the next number" : "Kira nombor seterusnya")
+                : (lang === "en" ? "Start counting" : "Mula mengira")}
+          {!counting && !done && (
+            <span className="absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-sm" aria-hidden="true">
+              <PointerIcon />
+            </span>
+          )}
         </button>
-        <p className="text-lg font-black text-emerald-900">{lang === "en" ? `Now look at ${marked}.` : `Sekarang lihat ${marked}.`}</p>
+        <p className="text-lg font-black text-emerald-900" aria-live="polite">
+          {!hasCountedCurrent
+            ? (lang === "en" ? "Start at 0." : "Mula dengan 0.")
+            : (lang === "en" ? `You counted ${marked}.` : `Kamu kira ${marked}.`)}
+        </p>
       </div>
     </div>
   );
 }
 
 function MissingNumberTeaching({ nums, answer, lang }: { nums: Array<number | "?">; answer: number; lang: Lang }) {
-  const [step, setStep] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [activeValue, setActiveValue] = useState<number | null>(null);
+  const teachingRunRef = useRef(0);
   const missingIndex = nums.findIndex((n) => n === "?");
   const before = nums[missingIndex - 1];
   const after = nums[missingIndex + 1];
-  const visibleNums = step >= 3 ? nums.map((n) => n === "?" ? answer : n) : nums;
-  const messages = lang === "en"
-    ? [
-      "Look at the blank.",
-      typeof before === "number" ? `${answer} comes after ${before}.` : `The answer is ${answer}.`,
-      typeof after === "number" ? `${answer} comes before ${after}.` : `The answer is ${answer}.`,
-      `So, ? is ${answer}.`,
-    ]
-    : [
-      "Lihat ruang kosong.",
-      typeof before === "number" ? `${answer} selepas ${before}.` : `Jawapan ialah ${answer}.`,
-      typeof after === "number" ? `${answer} sebelum ${after}.` : `Jawapan ialah ${answer}.`,
-      `Jadi, ? ialah ${answer}.`,
-    ];
-  const done = step >= messages.length - 1;
+  const visibleNums = revealed ? nums.map((n) => n === "?" ? answer : n) : nums;
+  const countValues = nums.slice(0, missingIndex).filter((value): value is number => typeof value === "number");
+  const countWords = countValues.map((value) => WORDS[lang][value]).join(", ");
+  const resultText = countValues.length === 0
+    ? (lang === "en"
+      ? `Counting starts at zero. The missing number is ${answer}.`
+      : `Kiraan bermula dengan kosong. Nombor yang hilang ialah ${answer}.`)
+    : (lang === "en"
+      ? `Count from 0: ${countWords}... the next number is ${answer}.`
+      : `Kira dari 0: ${countWords}... nombor lepas ni ialah ${answer}.`);
+  const orderParts = [
+    typeof before === "number" ? (lang === "en" ? `${answer} comes after ${before}.` : `${answer} selepas ${before}.`) : "",
+    typeof after === "number" ? (lang === "en" ? `${answer} comes before ${after}.` : `${answer} sebelum ${after}.`) : "",
+  ].filter(Boolean);
+  const orderText = orderParts.join(" ");
+
+  useEffect(() => () => {
+    teachingRunRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const showValuesWithoutAudio = async (values: number[], runId: number) => {
+    for (const value of values) {
+      if (teachingRunRef.current !== runId) return;
+      setActiveValue(value);
+      await wait(COUNTING_STEP_MS);
+    }
+  };
+
+  const startCountUp = async () => {
+    if (running || finished) return;
+    const runId = teachingRunRef.current + 1;
+    teachingRunRef.current = runId;
+    setRunning(true);
+    setRevealed(false);
+    setFinished(false);
+    setActiveValue(null);
+
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakNumberValuesSequence(countValues, lang, COUNTING_STEP_MS, (value) => {
+        if (teachingRunRef.current === runId) setActiveValue(value);
+      });
+    } else {
+      await showValuesWithoutAudio(countValues, runId);
+    }
+    if (teachingRunRef.current !== runId) return;
+
+    await wait(700);
+    if (teachingRunRef.current !== runId) return;
+    setRevealed(true);
+
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakNumberValuesSequence([answer], lang, COUNTING_STEP_MS, (value) => {
+        if (teachingRunRef.current === runId) setActiveValue(value);
+      });
+    } else {
+      await showValuesWithoutAudio([answer], runId);
+    }
+    if (teachingRunRef.current !== runId) return;
+    setRunning(false);
+    setFinished(true);
+  };
+
   return (
     <div className="space-y-4">
-      <MissingNumberLine nums={visibleNums} />
+      <MissingNumberLine nums={visibleNums} marked={activeValue ?? -1} />
       <div className="rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center">
-        <p className="text-2xl font-black text-yellow-950">{messages[step]}</p>
-        <button
-          onClick={() => setStep((value) => Math.min(messages.length - 1, value + 1))}
-          disabled={done}
-          className="mt-3 rounded-2xl border-2 border-yellow-600 bg-yellow-400 px-6 py-3 font-black text-yellow-950 shadow-[0_5px_0_#a86000] disabled:opacity-50"
-        >
-          {done ? (lang === "en" ? "Done" : "Selesai") : (lang === "en" ? "Tap to find it" : "Tekan untuk cari")}
-        </button>
+        {!finished && (
+          <button
+            onClick={() => void startCountUp()}
+            disabled={running}
+            className="relative rounded-2xl border-2 border-yellow-600 bg-yellow-400 px-6 py-3 font-black text-yellow-950 shadow-[0_5px_0_#a86000] disabled:opacity-60"
+          >
+            {running
+              ? (lang === "en" ? "Counting..." : "Mengira...")
+              : (lang === "en" ? "Count with me" : "Kira dengan saya")}
+            {!running && (
+              <span className="absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-500 bg-yellow-100 shadow-sm" aria-hidden="true">
+                <PointerIcon />
+              </span>
+            )}
+          </button>
+        )}
+        {revealed && (
+          <p className="mt-3 text-xl font-black text-yellow-950" aria-live="polite">{resultText}</p>
+        )}
+        {finished && orderText && (
+          <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-lg font-black text-emerald-900" aria-live="polite">{orderText}</p>
+        )}
       </div>
     </div>
   );
@@ -5882,31 +6031,8 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
   );
 }
 
-function MissingNumberLine({ nums }: { nums: Array<number | "?"> }) {
-  return (
-    <div className="rounded-3xl border-2 border-blue-100 bg-white p-4">
-      <div className="mx-auto flex max-w-2xl items-end justify-center">
-        {nums.map((n, i) => {
-          const missing = n === "?";
-          return (
-            <div key={`${n}-${i}`} className="flex min-w-14 flex-1 flex-col items-center sm:min-w-20">
-              <div
-                className={`mb-3 grid h-16 w-16 place-items-center rounded-3xl border-2 text-3xl font-black shadow-inner sm:h-20 sm:w-20 sm:text-4xl ${
-                  missing
-                    ? "border-yellow-500 bg-yellow-50 text-yellow-800"
-                    : "border-blue-100 bg-blue-50 text-blue-900"
-                }`}
-              >
-                {n}
-              </div>
-              <div className={`h-6 w-1 rounded-t-full ${missing ? "bg-yellow-500" : "bg-blue-200"}`} />
-              <div className={`h-2 w-full ${missing ? "bg-yellow-400" : "bg-blue-200"}`} />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+function MissingNumberLine({ nums, marked = -1 }: { nums: Array<number | "?">; marked?: number }) {
+  return <NumberLineSequence nums={nums} marked={marked} arrow="right" />;
 }
 
 function SequencingExample({ nums, arrow }: { nums: number[]; arrow: "left" | "right" }) {
@@ -6737,6 +6863,32 @@ function speakNumber(value: number, lang: Lang) {
   const file = NUMBER_AUDIO_FILES[lang][value];
   if (!file) return;
   void playNumberFile(value, lang, runId);
+}
+
+async function speakNumberValuesSequence(
+  values: number[],
+  lang: Lang,
+  intervalMs: number,
+  onCount?: (value: number) => void,
+) {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted || values.length === 0) return;
+  stopNumberAudio();
+  const runId = audioRunId;
+  activeCountingRunId = runId;
+  const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
+  try {
+    for (const value of values) {
+      if (runId !== audioRunId) return;
+      onCount?.(value);
+      const startedAt = performance.now();
+      await playNumberFile(value, lang, runId);
+      if (runId !== audioRunId) return;
+      const elapsed = performance.now() - startedAt;
+      await wait(Math.max(180, stepMs - elapsed));
+    }
+  } finally {
+    if (activeCountingRunId === runId) activeCountingRunId = null;
+  }
 }
 
 async function speakCountingSequence(
