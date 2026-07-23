@@ -686,13 +686,13 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   if (visual.kind === "audioNumber") {
     const word = WORDS.en[visual.value];
     const wordMs = WORDS.ms[visual.value];
+    const spelledWord = word.split("").join(" ");
+    const spelledWordMs = wordMs.split("").join(" ");
+    const namedWord = word.charAt(0).toUpperCase() + word.slice(1);
+    const namedWordMs = wordMs.charAt(0).toUpperCase() + wordMs.slice(1);
     return {
-      en: typeof answer === "string"
-        ? [`You heard ${word}.`, `The word is ${word}.`]
-        : [`You heard ${word}.`, `The number is ${visual.value}.`],
-      ms: typeof answer === "string"
-        ? [`Kamu dengar ${wordMs}.`, `Perkataannya ${wordMs}.`]
-        : [`Kamu dengar ${wordMs}.`, `Nombor itu ${visual.value}.`],
+      en: [`The audio said "${spelledWord}".`, `${namedWord} is the number ${visual.value}.`],
+      ms: [`Audio menyebut "${spelledWordMs}".`, `${namedWordMs} ialah nombor ${visual.value}.`],
     };
   }
   if (visual.kind === "numberWithGroup") {
