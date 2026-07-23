@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowLeft, ArrowLeftRight, ArrowRight, BookOpen, Check, Eraser, Search, X } from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
-import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
+import chrysExcited from "@assets/chrys_waving_new_user_nobg-removebg-preview.png";
 import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
 import chrysRunning from "@assets/chrys_running_new_user_nobg.png";
 import chrysRestingWithAlyse from "@assets/chrys_resting_with_alyse_new_user_nobg.png";
