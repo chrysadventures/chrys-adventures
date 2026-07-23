@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowLeftRight, BookOpen, Search, X } from "lucide-react";
+import { ArrowLeftRight, BookOpen, Check, Eraser, Search, X } from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
 import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
 import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
@@ -83,13 +83,7 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontWeight: 700,
   fontVariantNumeric: "tabular-nums",
 };
-const WAKNAN_NINE_TEXT_STYLE: React.CSSProperties = {
-  ...NUMBER_TEXT_STYLE,
-  fontFamily: '"WakNan", var(--app-font-number)',
-  fontWeight: 400,
-};
-const getNumberTextStyle = (value: number | string): React.CSSProperties =>
-  String(value) === "9" ? WAKNAN_NINE_TEXT_STYLE : NUMBER_TEXT_STYLE;
+const getNumberTextStyle = (_value: number | string): React.CSSProperties => NUMBER_TEXT_STYLE;
 const SPEECH_RATE = 0.68;
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
 const COUNTING_STEP_MS = 1400;
@@ -1363,7 +1357,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
         )}
         {step === 4 && (
           <div className="grid gap-4 md:grid-cols-2">
-            <TracePad value={number} t={t} lang={lang} />
+            <TracePad value={number} t={t} lang={lang} onComplete={next} />
             <DrawQuantity count={number} lang={lang} />
           </div>
         )}
@@ -1402,7 +1396,14 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
   };
 
   const previous = () => {
-    if (step > 0) setStep((s) => s - 1);
+    if (step > 0) {
+      setStep((s) => s - 1);
+      return;
+    }
+    if (number > 0) {
+      setNumber((n) => n - 1);
+      setStep(0);
+    }
   };
 
   const skipNextNumber = () => {
@@ -1451,15 +1452,15 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
           </div>
         )}
         {step === 2 && (
-          <div className="grid gap-4 md:grid-cols-[auto_1fr]">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
             <CharacterTalk lang={lang} text={lang === "en" ? `This word says ${WORDS.en[number]}.` : `Perkataan ini ${WORDS.ms[number]}.`} />
             <SpellWordCard value={number} lang={lang} />
           </div>
         )}
-        {step === 3 && <TracePad value={number} t={t} lang={lang} />}
-        {step === 4 && <WriteNumberPad value={number} t={t} lang={lang} />}
+        {step === 3 && <TracePad value={number} t={t} lang={lang} onComplete={next} />}
+        {step === 4 && <WriteNumberPad value={number} t={t} lang={lang} onComplete={next} />}
         <div className="mt-5 flex flex-wrap justify-between gap-3">
-          <button disabled={step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
+          <button disabled={number === 0 && step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
             <SecondaryLessonButton label={number < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)} onClick={skipNextNumber} />
@@ -1475,7 +1476,6 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState(0);
   const [practice, setPractice] = useState(false);
-  const [showSkipOptions, setShowSkipOptions] = useState(false);
   const examples = NUMBERS.map((n) => ({
     n,
     emoji: "🍌",
@@ -1554,32 +1554,17 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
             {inConcept ? concept.visual : <NumberValueStepVisual n={currentNumber} emoji={currentEmoji} phase={phase} lang={lang} />}
           </div>
         </div>
-        <div className="mt-5 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <button disabled={step === 0 && phase === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <button disabled={step === 0 && phase === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
+          <div className="flex flex-wrap justify-end gap-3">
+            <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
+            <SecondaryLessonButton
+              label={!inConcept && currentNumber < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)}
+              onClick={skipNextNumber}
+            />
             <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < maxPhase) ? t.next : t.practice}</button>
           </div>
-          <div className="text-center">
-            <button
-              onClick={() => setShowSkipOptions((shown) => !shown)}
-              className="rounded-xl border border-slate-200 bg-white/70 px-3 py-1.5 text-xs font-black text-slate-500 shadow-sm"
-            >
-              {showSkipOptions
-                ? (lang === "en" ? "Hide choices" : "Sembunyi pilihan")
-                : (lang === "en" ? "More choices" : "Pilihan lain")}
-            </button>
-          </div>
-          {showSkipOptions && (
-            <div className="flex flex-wrap justify-center gap-2 rounded-2xl border border-slate-100 bg-slate-50/80 p-2">
-              <button onClick={() => setPractice(true)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-500">
-                {skipPracticeLabel(lang)}
-              </button>
-              <button onClick={skipNextNumber} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-500">
-                {!inConcept && currentNumber < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)}
-              </button>
-            </div>
-          )}
-          </div>
+        </div>
       </LessonShell>
     </main>
   );
@@ -5064,9 +5049,17 @@ function SpellWordCard({ value, lang }: { value: number; lang: Lang }) {
   return (
     <div className="rounded-[2rem] border-4 border-yellow-200 bg-yellow-50 p-6 text-center">
       <p className="text-6xl font-black text-blue-950">{word}</p>
-      <div className="mt-5 flex flex-wrap justify-center gap-2">
+      <div
+        className="mt-5 grid gap-2"
+        style={{ gridTemplateColumns: `repeat(${word.length}, minmax(0, 1fr))` }}
+      >
         {word.split("").map((letter, index) => (
-          <span key={`${letter}-${index}`} className="grid h-14 w-14 place-items-center rounded-2xl border-2 border-blue-100 bg-white text-3xl font-black text-blue-900 shadow-inner">
+          <span
+            key={`${letter}-${index}`}
+            className={`grid aspect-square w-full max-w-14 place-items-center justify-self-center rounded-2xl border-2 border-blue-100 bg-white font-black text-blue-900 shadow-inner ${
+              word.length > 6 ? "text-xl" : "text-3xl"
+            }`}
+          >
             {letter}
           </span>
         ))}
@@ -5548,10 +5541,70 @@ function SkipCountingPanel({ marked, lang }: { marked: number; lang: Lang }) {
   );
 }
 
-function TracePad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang }) {
+type DrawingTool = "pen" | "eraser";
+
+const DRAWING_COLORS = [
+  { value: "#2563eb", en: "Blue", ms: "Biru" },
+  { value: "#16a34a", en: "Green", ms: "Hijau" },
+  { value: "#dc2626", en: "Red", ms: "Merah" },
+  { value: "#7c3aed", en: "Purple", ms: "Ungu" },
+] as const;
+
+function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange }: {
+  lang: Lang;
+  color: string;
+  tool: DrawingTool;
+  onColorChange: (color: string) => void;
+  onToolChange: (tool: DrawingTool) => void;
+}) {
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-center gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-3">
+      <span className="font-black text-slate-700">{lang === "en" ? "Pen colour" : "Warna pen"}</span>
+      <div className="flex flex-wrap justify-center gap-2">
+        {DRAWING_COLORS.map((option) => {
+          const selected = tool === "pen" && color === option.value;
+          const name = lang === "en" ? option.en : option.ms;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onColorChange(option.value)}
+              aria-label={lang === "en" ? `${name} pen` : `Pen ${name.toLowerCase()}`}
+              aria-pressed={selected}
+              title={name}
+              className={`grid h-11 w-11 place-items-center rounded-xl border-4 text-white shadow-sm transition active:scale-95 ${
+                selected ? "border-yellow-400 ring-2 ring-blue-700 ring-offset-2" : "border-white"
+              }`}
+              style={{ backgroundColor: option.value }}
+            >
+              {selected && <Check className="h-6 w-6" strokeWidth={4} aria-hidden="true" />}
+            </button>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={() => onToolChange("eraser")}
+        aria-pressed={tool === "eraser"}
+        className={`flex min-h-11 items-center gap-2 rounded-xl border-2 px-4 py-2 font-black shadow-sm active:translate-y-0.5 ${
+          tool === "eraser"
+            ? "border-blue-700 bg-blue-100 text-blue-900 ring-2 ring-yellow-300"
+            : "border-slate-300 bg-white text-slate-700"
+        }`}
+      >
+        <Eraser className="h-5 w-5" aria-hidden="true" />
+        {lang === "en" ? "Eraser" : "Pemadam"}
+      </button>
+    </div>
+  );
+}
+
+function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings; lang: Lang; onComplete: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [penColor, setPenColor] = useState<string>(DRAWING_COLORS[0].value);
+  const [tool, setTool] = useState<DrawingTool>("pen");
 
   useEffect(() => {
     setConfirmed(false);
@@ -5577,7 +5630,13 @@ function TracePad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang 
   };
   const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
     drawing.current = true;
+    setConfirmed(false);
     const ctx = canvasRef.current?.getContext("2d");
+    if (ctx) {
+      ctx.globalCompositeOperation = tool === "eraser" ? "destination-out" : "source-over";
+      ctx.strokeStyle = penColor;
+      ctx.lineWidth = tool === "eraser" ? 28 : 12;
+    }
     const p = point(event);
     ctx?.beginPath();
     ctx?.moveTo(p.x, p.y);
@@ -5636,9 +5695,21 @@ function TracePad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang 
           className="relative h-full w-full touch-none rounded-3xl"
         />
       </div>
+      <DrawingToolPanel
+        lang={lang}
+        color={penColor}
+        tool={tool}
+        onColorChange={(color) => {
+          setPenColor(color);
+          setTool("pen");
+        }}
+        onToolChange={setTool}
+      />
       <div className="mt-3 flex gap-2">
-        <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">{t.clear}</button>
-        <button onClick={confirmTrace} className={`flex-1 rounded-2xl border-2 py-2 font-black text-white ${confirmed ? "border-emerald-700 bg-emerald-600" : "border-emerald-600 bg-emerald-500"}`}>
+        <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">
+          {lang === "en" ? "Clear all" : "Padamkan semua"}
+        </button>
+        <button onClick={confirmed ? onComplete : confirmTrace} className={`flex-1 rounded-2xl border-2 py-2 font-black text-white ${confirmed ? "border-emerald-700 bg-emerald-600" : "border-emerald-600 bg-emerald-500"}`}>
           {confirmed ? (lang === "en" ? "Done!" : "Selesai!") : t.traced}
         </button>
       </div>
@@ -5646,12 +5717,14 @@ function TracePad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang 
   );
 }
 
-function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang }) {
+function WriteNumberPad({ value, t, lang, onComplete }: { value: number; t: UIStrings; lang: Lang; onComplete: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [showModel, setShowModel] = useState(false);
   const [matched, setMatched] = useState(false);
+  const [penColor, setPenColor] = useState<string>(DRAWING_COLORS[0].value);
+  const [tool, setTool] = useState<DrawingTool>("pen");
 
   useEffect(() => {
     setHasDrawn(false);
@@ -5672,6 +5745,12 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
     ctx.lineWidth = 12;
   }, [value]);
 
+  useEffect(() => {
+    if (!matched) return;
+    const timer = window.setTimeout(onComplete, 3000);
+    return () => window.clearTimeout(timer);
+  }, [matched, onComplete]);
+
   const point = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
@@ -5679,16 +5758,21 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
   };
   const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
     drawing.current = true;
-    setHasDrawn(true);
+    if (tool === "pen") setHasDrawn(true);
     setMatched(false);
     const ctx = canvasRef.current?.getContext("2d");
+    if (ctx) {
+      ctx.globalCompositeOperation = tool === "eraser" ? "destination-out" : "source-over";
+      ctx.strokeStyle = penColor;
+      ctx.lineWidth = tool === "eraser" ? 28 : 12;
+    }
     const p = point(event);
     ctx?.beginPath();
     ctx?.moveTo(p.x, p.y);
   };
   const move = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!drawing.current) return;
-    setHasDrawn(true);
+    if (tool === "pen") setHasDrawn(true);
     const ctx = canvasRef.current?.getContext("2d");
     const p = point(event);
     ctx?.lineTo(p.x, p.y);
@@ -5715,15 +5799,18 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl rounded-3xl border-2 border-amber-100 bg-white p-4">
+    <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border-2 border-amber-100 bg-white p-4">
+      {matched && <CorrectCelebration />}
       <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Write ${value} yourself` : `Tulis ${value} sendiri`}</h3>
       <p className="mb-3 text-center text-sm font-bold text-slate-500">
         {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan garisan."}
       </p>
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem]">
-        <div className="min-w-0">
-          <p className="mb-2 text-center text-sm font-black text-amber-900">{lang === "en" ? "Your number" : "Nombor awak"}</p>
-          <div className="relative h-72 rounded-3xl border-2 border-amber-100 bg-amber-50">
+      <div className={showModel ? "grid gap-4 md:grid-cols-[minmax(0,25rem)_14rem] md:justify-center" : "flex justify-center"}>
+        <div className="w-full max-w-[25rem] min-w-0">
+          <p className="mb-3 text-center text-lg font-black text-amber-900">
+            {lang === "en" ? `Drawing of number ${WORDS.en[value]}` : `Lukisan nombor ${WORDS.ms[value]}`}
+          </p>
+          <div className="relative h-80 rounded-3xl border-4 border-amber-300 bg-amber-50 shadow-[inset_0_0_0_3px_rgba(255,255,255,.7),0_5px_0_rgba(180,83,9,.16)]">
             <canvas
               ref={canvasRef}
               onPointerDown={start}
@@ -5735,7 +5822,7 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
           </div>
         </div>
         {showModel && (
-          <div className="rounded-3xl border-4 border-blue-100 bg-blue-50 p-4 text-center md:w-56">
+          <div className="w-full rounded-3xl border-4 border-blue-100 bg-blue-50 p-4 text-center md:w-56">
             <p className="mb-2 text-sm font-black text-blue-900">{lang === "en" ? "Look at this model" : "Lihat contoh ini"}</p>
             <div className="mx-auto grid h-40 w-40 place-items-center rounded-[2rem] border-4 border-blue-200 bg-white text-8xl font-black leading-none text-blue-950 shadow-inner" style={getNumberTextStyle(value)}>
               {value}
@@ -5745,12 +5832,25 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
             </p>
           </div>
         )}
-        {!showModel && <div className="hidden w-56 md:block" aria-hidden="true" />}
       </div>
+      {!showModel && (
+        <DrawingToolPanel
+          lang={lang}
+          color={penColor}
+          tool={tool}
+          onColorChange={(color) => {
+            setPenColor(color);
+            setTool("pen");
+          }}
+          onToolChange={setTool}
+        />
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
         {!showModel && (
           <>
-            <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">{t.clear}</button>
+            <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">
+              {lang === "en" ? "Clear all" : "Padamkan semua"}
+            </button>
             <button
               onClick={checkAnswer}
               disabled={!hasDrawn}
@@ -5760,15 +5860,6 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
             </button>
           </>
         )}
-        {NUMBER_AUDIO_ENABLED && (
-          <button
-            onClick={() => speakNumber(value, lang)}
-            aria-label={lang === "en" ? `Hear ${WORDS.en[value]}` : `Dengar ${WORDS.ms[value]}`}
-            className="grid flex-1 place-items-center rounded-2xl border-2 border-blue-700 bg-blue-600 py-2 font-black text-white"
-          >
-            <SpeakerIcon />
-          </button>
-        )}
       </div>
       {showModel && (
         <div className="mt-4 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
@@ -5776,7 +5867,7 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
             <div className="flex items-center gap-3">
               <img src={chrysExcited} alt="Chrys excited" className="h-20 w-20 object-contain" />
               <p className="text-lg font-black text-emerald-800">
-                {lang === "en" ? "Nice checking. You matched it!" : "Bagus semak. Nombor awak sama!"}
+                {lang === "en" ? "Good job! Your number matches." : "Bagus! Nombor awak sama."}
               </p>
             </div>
           ) : (
