@@ -240,12 +240,12 @@ const UI = {
     continue: "Teruskan",
     menuTitle: "Hari ini mahu belajar apa?",
     recognizeNumbers: "Kenal Nombor",
-    numberValues: "Kumpulan nombor",
+    numberValues: "Nilai Nombor",
     sequencing: "Susunan Nombor",
     learnNumbers: "Nombor 0-9",
     learnOperations: "Operasi",
     learnOperationsShort: "Belajar + dan -",
-    groupingMode: "Mod Kumpulan",
+    groupingMode: "Kumpulan Nombor",
     groupingModeShort: "Gabungkan kumpulan",
     addition: "Tambah",
     subtraction: "Tolak",
@@ -255,11 +255,11 @@ const UI = {
     lesson: "Pelajaran",
     practice: "Latihan",
     back: "Kembali",
-    next: "Lepas ni",
+    next: "Seterusnya",
     previous: "Sebelumnya",
     speak: "Dengar",
     clear: "Padam",
-    traced: "Saya sudah ikut garisan",
+    traced: "Saya sudah lukis",
     trace: "Ikut garisan",
     chooseAnswer: "Pilih jawapan",
     yourAnswer: "Jawapan kamu",
@@ -269,7 +269,7 @@ const UI = {
     correct: "Betul",
     tryAgain: "Cubaan baik",
     seeMethod: "Lihat cara",
-    nextQuestion: "Soalan lepas ni",
+    nextQuestion: "Soalan seterusnya",
     finish: "Tamat",
     score: "Markah",
     done: "Selesai",
@@ -320,7 +320,7 @@ const GLOSSARY_ENTRIES: GlossaryEntry[] = [
   glossaryEntry(2, "Value", "Nilai", "How much a number is worth.", "Berapa banyak yang ditunjukkan oleh nombor.", "The number of things a numeral stands for.", "Bilangan benda yang diwakili oleh satu nombor."),
   glossaryEntry(2, "Amounts", "Bilangan", "How much or how many.", "Berapa banyak.", "The number of things in a group.", "Bilangan benda dalam satu kumpulan."),
   glossaryEntry(2, "Objects", "Objek", "Things you can count, like bananas.", "Benda yang boleh dikira, seperti pisang.", "Items shown in a counting group.", "Benda yang ditunjukkan dalam kumpulan kiraan."),
-  glossaryEntry(2, "Order", "Susunan", "Which comes first, next, and last.", "Yang mana dahulu, lepas ni, dan terakhir.", "The way numbers or things are arranged.", "Cara nombor atau benda disusun."),
+  glossaryEntry(2, "Order", "Susunan", "Which comes first, next, and last.", "Yang mana dahulu, seterusnya, dan terakhir.", "The way numbers or things are arranged.", "Cara nombor atau benda disusun."),
   glossaryEntry(2, "Remove", "Keluarkan", "Take one away.", "Ambil satu.", "Move something out of a group.", "Keluarkan sesuatu daripada kumpulan."),
   glossaryEntry(2, "Spread out", "Jarakkan", "Move things apart with space between them.", "Jarakkan benda supaya ada ruang di antaranya.", "The spaces change, but the count stays the same.", "Ruang berubah, tetapi bilangannya tetap sama."),
 
@@ -1213,7 +1213,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
         <p className="text-lg font-bold text-blue-900/70">{t.menuTitle}</p>
       </section>
       <div className="grid gap-4 md:grid-cols-2">
-        <MenuCard title={t.recognizeNumbers} subtitle={lang === "en" ? "See, spell, trace, write numbers" : "Lihat, eja, ikut garisan, tulis nombor"} icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
+        <MenuCard title={t.recognizeNumbers} subtitle={lang === "en" ? "See, spell, trace, write numbers" : "Lihat, eja dan lukis nombor"} icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
         <MenuCard title={t.numberValues} subtitle={lang === "en" ? "Numbers show how many" : "Nombor tunjuk berapa banyak"} icon="🍌" color="emerald" onClick={() => go("learnValues")} />
         <MenuCard title={t.sequencing} subtitle={lang === "en" ? "Numbers in the right order" : "Nombor dalam susunan yang betul"} icon="< >" color="sky" onClick={() => go("learnSequencing")} />
         <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="🧺" color="amber" onClick={() => go("groupingMode")} />
@@ -1248,7 +1248,7 @@ function skipPracticeLabel(lang: Lang) {
 }
 
 function skipNextNumberLabel(lang: Lang) {
-  return lang === "en" ? "Skip to next number" : "Terus ke nombor lepas ni";
+  return lang === "en" ? "Skip to next number" : "Terus ke nombor seterusnya";
 }
 
 function backToLearningLabel(lang: Lang) {
@@ -1334,13 +1334,13 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
         )}
         {step === 3 && (
           <div className="space-y-4">
-            <CharacterTalk lang={lang} text={lang === "en" ? "Skip counting means we jump by the same size. Here we jump by 2." : "Terus ke nombor lepas ni dengan lompatan yang sama. Di sini kita lompat 2."} />
+            <CharacterTalk lang={lang} text={lang === "en" ? "Skip counting means we jump by the same size. Here we jump by 2." : "Bergerak ke nombor seterusnya dengan lompatan yang sama. Di sini kita lompat 2."} />
             <SkipCountingPanel marked={number} lang={lang} />
           </div>
         )}
         {step === 4 && (
           <div className="grid gap-4 md:grid-cols-2">
-            <TracePad value={number} t={t} lang={lang} onTraced={next} />
+            <TracePad value={number} t={t} lang={lang} />
             <DrawQuantity count={number} lang={lang} />
           </div>
         )}
@@ -1433,7 +1433,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
             <SpellWordCard value={number} lang={lang} />
           </div>
         )}
-        {step === 3 && <TracePad value={number} t={t} lang={lang} onTraced={next} />}
+        {step === 3 && <TracePad value={number} t={t} lang={lang} />}
         {step === 4 && <WriteNumberPad value={number} t={t} lang={lang} />}
         <div className="mt-5 flex flex-wrap justify-between gap-3">
           <button disabled={step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
@@ -5525,17 +5525,12 @@ function SkipCountingPanel({ marked, lang }: { marked: number; lang: Lang }) {
   );
 }
 
-function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; lang: Lang; onTraced: () => void }) {
+function TracePad({ value, t, lang }: { value: number; t: UIStrings; lang: Lang }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
-  const finishTimerRef = useRef<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
   useEffect(() => {
-    if (finishTimerRef.current !== null) {
-      window.clearTimeout(finishTimerRef.current);
-      finishTimerRef.current = null;
-    }
     setConfirmed(false);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -5550,12 +5545,6 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#2563eb";
     ctx.lineWidth = 12;
-    return () => {
-      if (finishTimerRef.current !== null) {
-        window.clearTimeout(finishTimerRef.current);
-        finishTimerRef.current = null;
-      }
-    };
   }, [value]);
 
   const point = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -5586,11 +5575,6 @@ function TracePad({ value, t, lang, onTraced }: { value: number; t: UIStrings; l
   };
   const confirmTrace = () => {
     setConfirmed(true);
-    if (finishTimerRef.current !== null) window.clearTimeout(finishTimerRef.current);
-    finishTimerRef.current = window.setTimeout(() => {
-      finishTimerRef.current = null;
-      onTraced();
-    }, 4200);
   };
 
   return (
@@ -5713,8 +5697,8 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
       <p className="mb-3 text-center text-sm font-bold text-slate-500">
         {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan garisan."}
       </p>
-      <div className={`grid gap-4 ${showModel ? "md:grid-cols-[1fr_auto]" : ""}`}>
-        <div>
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_14rem]">
+        <div className="min-w-0">
           <p className="mb-2 text-center text-sm font-black text-amber-900">{lang === "en" ? "Your number" : "Nombor awak"}</p>
           <div className="relative h-72 rounded-3xl border-2 border-amber-100 bg-amber-50">
             <canvas
@@ -5738,16 +5722,21 @@ function WriteNumberPad({ value, t, lang }: { value: number; t: UIStrings; lang:
             </p>
           </div>
         )}
+        {!showModel && <div className="hidden w-56 md:block" aria-hidden="true" />}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">{t.clear}</button>
-        <button
-          onClick={checkAnswer}
-          disabled={!hasDrawn}
-          className="flex-[1.4] rounded-2xl border-2 border-blue-700 bg-blue-600 px-4 py-2 font-black text-white shadow-[0_4px_0_#1e3a8a] active:translate-y-1 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
-        >
-          {lang === "en" ? "Check my answer" : "Semak jawapan saya"}
-        </button>
+        {!showModel && (
+          <>
+            <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">{t.clear}</button>
+            <button
+              onClick={checkAnswer}
+              disabled={!hasDrawn}
+              className="flex-[1.4] rounded-2xl border-2 border-blue-700 bg-blue-600 px-4 py-2 font-black text-white shadow-[0_4px_0_#1e3a8a] active:translate-y-1 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+            >
+              {lang === "en" ? "Check my answer" : "Semak jawapan saya"}
+            </button>
+          </>
+        )}
         {NUMBER_AUDIO_ENABLED && (
           <button
             onClick={() => speakNumber(value, lang)}
@@ -6016,7 +6005,7 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
           onClick={() => setStepIndex((current) => Math.min(q.method[lang].length - 1, current + 1))}
           className="mt-3 w-full rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] active:translate-y-1"
         >
-          {lang === "en" ? "Next step" : "Langkah lepas ni"}
+          {lang === "en" ? "Next step" : "Langkah seterusnya"}
         </button>
       )}
     </div>
