@@ -3468,6 +3468,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
   const [activeGroup, setActiveGroup] = useState(-1);
   const [completedSigns, setCompletedSigns] = useState(0);
   const [activeSign, setActiveSign] = useState(-1);
+  const [activeBanana, setActiveBanana] = useState<{ groupIndex: number; objectIndex: number } | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [isCounting, setIsCounting] = useState(false);
   const [countRun, setCountRun] = useState(0);
@@ -3490,17 +3491,29 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
           return;
         }
         for (let value = 1; value <= count; value += 1) {
+          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+          setActiveBanana({ groupIndex, objectIndex: value - 1 });
           await wait(COUNTING_STEP_MS);
           if (cancelled) return;
-          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+          setActiveBanana(null);
         }
         return;
       }
 
-      await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
-        if (cancelled) return;
-        setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-      });
+      await speakCountingSequence(
+        count,
+        lang,
+        COUNTING_STEP_MS,
+        (value) => {
+          if (cancelled) return;
+          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+          setActiveBanana({ groupIndex, objectIndex: value - 1 });
+        },
+        (value) => {
+          if (cancelled) return;
+          setActiveBanana((current) => current?.groupIndex === groupIndex && current.objectIndex === value - 1 ? null : current);
+        },
+      );
     };
 
     const runSequence = async () => {
@@ -3510,10 +3523,12 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
       setCompletedGroups(0);
       setCompletedSigns(0);
       setActiveSign(-1);
+      setActiveBanana(null);
 
       for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
         await countGroup(groupIndex, groups[groupIndex]);
         if (cancelled) return;
+        setActiveBanana(null);
         setCompletedGroups(groupIndex + 1);
 
         if (groupIndex < groups.length - 1) {
@@ -3609,15 +3624,15 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
                     <div className="grid grid-cols-2 place-items-center gap-3">
                       {Array.from({ length: count }, (_, objectIndex) => {
                         const counted = objectIndex < visibleCounts[groupIndex];
-                        const current = groupActive && visibleCounts[groupIndex] === objectIndex + 1 && !groupComplete;
+                        const current = activeBanana?.groupIndex === groupIndex && activeBanana.objectIndex === objectIndex;
                         return (
                           <div
                             key={objectIndex}
                             className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
-                              groupComplete
-                                ? "border-amber-100 bg-amber-50"
-                                : current
+                              current
                                   ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                                  : groupComplete
+                                    ? "border-amber-100 bg-amber-50"
                                   : counted
                                     ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                                     : "border-transparent bg-amber-50 opacity-55 grayscale"
@@ -3681,9 +3696,11 @@ function BasketBananaScene({ count, counted, label }: { count: number; counted: 
           return (
             <div
               key={index}
-              className={`absolute ${x} ${y} ${rotation} grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,transform] duration-300 ${
+              className={`absolute ${x} ${y} ${rotation} grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,box-shadow,transform] duration-300 ${
                 isActiveCount
-                  ? "border-blue-500 bg-transparent"
+                  ? "border-yellow-400 bg-yellow-100/70 ring-4 ring-yellow-200"
+                  : isCounted
+                    ? "border-blue-500 bg-blue-50/40"
                   : "border-transparent bg-transparent"
               }`}
             >
