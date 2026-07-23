@@ -1437,7 +1437,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pb-8">
+    <main className="mx-auto w-full max-w-5xl pb-8">
       <LessonShell
         lang={lang}
         title={`${t.learnNumbers}: ${number}`}
@@ -5429,13 +5429,13 @@ function ContainerScene({
 
 function NumberLine({ marked }: { marked: number }) {
   return (
-    <div className="overflow-x-auto rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-5 pb-3 [scrollbar-color:#38bdf8_#e0f2fe]">
-      <div className="relative mx-auto grid min-w-[760px] gap-3 px-5 pb-3" style={{ gridTemplateColumns: `repeat(${NUMBERS.length}, minmax(0, 1fr))` }}>
-        <div className="absolute bottom-4 left-8 right-8 h-3 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)]" aria-hidden="true" />
+    <div className="overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-4 sm:pb-3">
+      <div className="relative mx-auto grid min-w-0 gap-1 px-1 pb-3 sm:gap-2 sm:px-3 md:gap-3 md:px-5" style={{ gridTemplateColumns: `repeat(${NUMBERS.length}, minmax(0, 1fr))` }}>
+        <div className="absolute bottom-3 left-3 right-3 h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)] sm:bottom-4 sm:left-6 sm:right-6 sm:h-3" aria-hidden="true" />
         {NUMBERS.map((n) => (
           <div key={n} className="relative z-10 flex flex-col items-center">
-            <div className={`mb-3 grid h-14 w-14 place-items-center rounded-full border-4 text-xl font-black shadow-[0_4px_0_rgba(15,23,42,.12)] ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
-            <div className={`h-9 w-2.5 rounded-full ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
+            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-3 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:border-4 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
           </div>
         ))}
       </div>
@@ -5445,18 +5445,18 @@ function NumberLine({ marked }: { marked: number }) {
 
 function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: number[]; marked: number; arrow?: "left" | "right" }) {
   return (
-    <div className="overflow-x-auto rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-5 pb-3 [scrollbar-color:#38bdf8_#e0f2fe]">
-      <div className="relative mx-auto grid min-w-[760px] gap-3 px-5 pb-3" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }}>
-        <div className="absolute bottom-4 left-8 right-8 h-3 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)]" aria-hidden="true" />
+    <div className="overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-4 sm:pb-3">
+      <div className="relative mx-auto grid min-w-0 gap-1 px-1 pb-3 sm:gap-2 sm:px-3 md:gap-3 md:px-5" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }}>
+        <div className="absolute bottom-3 left-3 right-3 h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)] sm:bottom-4 sm:left-6 sm:right-6 sm:h-3" aria-hidden="true" />
         {nums.map((n, i) => (
           <div key={`${n}-${i}`} className="relative z-10 flex flex-col items-center">
             {i < nums.length - 1 && (
-              <span className="absolute -right-5 top-3 z-20 text-2xl font-black text-emerald-700" aria-hidden="true">
+              <span className="absolute -right-2 top-1 z-20 text-sm font-black text-emerald-700 sm:-right-3 sm:top-2 sm:text-lg md:-right-4 md:text-xl lg:-right-5 lg:top-3 lg:text-2xl" aria-hidden="true">
                 {arrow === "right" ? "\u2192" : "\u2190"}
               </span>
             )}
-            <div className={`mb-3 grid h-14 w-14 place-items-center rounded-full border-4 text-xl font-black shadow-[0_4px_0_rgba(15,23,42,.12)] ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
-            <div className={`h-9 w-2.5 rounded-full ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
+            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-3 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:border-4 lg:text-xl ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
           </div>
         ))}
       </div>
