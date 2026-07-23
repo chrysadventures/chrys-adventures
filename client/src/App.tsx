@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { BookOpen, Search, X } from "lucide-react";
+import { ArrowLeftRight, BookOpen, Search, X } from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
 import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
 import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
@@ -103,18 +103,32 @@ const WORDS: Record<Lang, string[]> = {
   ms: ["kosong", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "lapan", "sembilan"],
 };
 
-const NUMBER_AUDIO_FILES: Record<number, string> = {
-  0: "floraphonic-adult-man-raspy-voice-says-0-184064.mp3",
-  1: "floraphonic-casual-voice-man-says-1-186552.mp3",
-  2: "floraphonic-casual-voice-man-says-2-186553.mp3",
-  3: "floraphonic-casual-voice-man-says-3-186554.mp3",
-  4: "floraphonic-casual-voice-man-says-4-186555.mp3",
-  5: "floraphonic-casual-voice-man-says-5-186556.mp3",
-  6: "floraphonic-casual-voice-man-says-6-209711.mp3",
-  7: "floraphonic-casual-voice-man-says-7-209713.mp3",
-  8: "floraphonic-casual-voice-man-says-8-209710.mp3",
-  9: "floraphonic-casual-voice-man-says-9-209709.mp3",
-  10: "floraphonic-casual-voice-man-says-10-209712.mp3",
+const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
+  en: {
+    0: "floraphonic-adult-man-raspy-voice-says-0-184064.mp3",
+    1: "floraphonic-casual-voice-man-says-1-186552.mp3",
+    2: "floraphonic-casual-voice-man-says-2-186553.mp3",
+    3: "floraphonic-casual-voice-man-says-3-186554.mp3",
+    4: "floraphonic-casual-voice-man-says-4-186555.mp3",
+    5: "floraphonic-casual-voice-man-says-5-186556.mp3",
+    6: "floraphonic-casual-voice-man-says-6-209711.mp3",
+    7: "floraphonic-casual-voice-man-says-7-209713.mp3",
+    8: "floraphonic-casual-voice-man-says-8-209710.mp3",
+    9: "floraphonic-casual-voice-man-says-9-209709.mp3",
+    10: "floraphonic-casual-voice-man-says-10-209712.mp3",
+  },
+  ms: {
+    0: "Kosong.mp3",
+    1: "Satu.mp3",
+    2: "Dua.mp3",
+    3: "Tiga.mp3",
+    4: "Empat.mp3",
+    5: "Lima.mp3",
+    6: "Enam.mp3",
+    7: "Tujuh.mp3",
+    8: "Lapan.mp3",
+    9: "Sembilan.mp3",
+  },
 };
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
@@ -157,7 +171,7 @@ let activeCountingRunId: number | null = null;
 let queuedAudioAfterCounting: (() => void) | null = null;
 let audioMuted = !NUMBER_AUDIO_ENABLED;
 let audioUserInteracted = false;
-const numberAudioCache = new Map<number, HTMLAudioElement>();
+const numberAudioCache = new Map<string, HTMLAudioElement>();
 const AudioEnabledContext = React.createContext(NUMBER_AUDIO_ENABLED);
 
 function markAudioInteraction() {
@@ -1021,8 +1035,17 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
           <BookOpen className="h-5 w-5" aria-hidden="true" />
           <span className="hidden md:inline">{lang === "en" ? "Glossary" : "Glosari"}</span>
         </button>
-        <button onClick={onToggleLang} className="rounded-2xl border-2 border-white/80 bg-white/90 px-3 py-2 text-sm font-black text-blue-800 shadow-[0_4px_0_rgba(0,0,0,.12)]">
-          {lang === "en" ? "BM" : "EN"}
+        <button
+          type="button"
+          onClick={onToggleLang}
+          aria-label={lang === "en" ? "Switch to Bahasa Melayu" : "Tukar kepada bahasa Inggeris"}
+          title={lang === "en" ? "Switch to Bahasa Melayu" : "Tukar kepada bahasa Inggeris"}
+          className="flex min-h-12 items-center gap-2 rounded-2xl border-2 border-sky-200 bg-white/95 px-4 py-2.5 text-base font-black text-blue-900 shadow-[0_5px_0_rgba(14,116,144,.2)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300 active:translate-y-1 active:shadow-[0_2px_0_rgba(14,116,144,.2)]"
+        >
+          <span>{lang === "en" ? "BM" : "EN"}</span>
+          <span className="grid h-7 w-7 place-items-center rounded-xl bg-sky-100 text-sky-700" aria-hidden="true">
+            <ArrowLeftRight className="h-4 w-4" strokeWidth={3} />
+          </span>
         </button>
         <div className="flex items-center gap-2 rounded-2xl border-2 border-yellow-300 bg-white px-3 py-2 font-black text-yellow-700 shadow-[0_4px_0_rgba(0,0,0,.14)]" aria-label={`${stars} stars`}>
           <StarBadgeIcon />
@@ -6113,12 +6136,12 @@ function speakNumber(value: number, lang: Lang) {
   }
   stopNumberAudio();
   const runId = audioRunId;
-  const file = NUMBER_AUDIO_FILES[value];
+  const file = NUMBER_AUDIO_FILES[lang][value];
   if (!file) {
     speakNumberWithTts(value, lang);
     return;
   }
-  playNumberFile(value, runId).then((played) => {
+  playNumberFile(value, lang, runId).then((played) => {
     if (!played && runId === audioRunId) speakNumberWithTts(value, lang);
   });
 }
@@ -6141,7 +6164,7 @@ async function speakCountingSequence(
       if (runId !== audioRunId) return;
       onCount?.(value);
       const startedAt = performance.now();
-      const played = await playNumberFile(value, runId);
+      const played = await playNumberFile(value, lang, runId);
       if (!played && runId === audioRunId) {
         speakNumberWithTts(value, lang);
         await wait(Math.min(stepMs, 900));
@@ -6169,12 +6192,12 @@ function stopNumberAudio() {
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 
-function playNumberFile(value: number, runId: number) {
-  const file = NUMBER_AUDIO_FILES[value];
+function playNumberFile(value: number, lang: Lang, runId: number) {
+  const file = NUMBER_AUDIO_FILES[lang][value];
   if (!file) return Promise.resolve(false);
   return new Promise<boolean>((resolve) => {
     activeNumberAudio?.pause();
-    const audio = getNumberAudio(value);
+    const audio = getNumberAudio(value, lang);
     let settled = false;
     let timeoutId: number | null = null;
     const finish = (played: boolean) => {
@@ -6200,19 +6223,22 @@ function playNumberFile(value: number, runId: number) {
   });
 }
 
-function getNumberAudio(value: number) {
-  const cached = numberAudioCache.get(value);
+function getNumberAudio(value: number, lang: Lang) {
+  const cacheKey = `${lang}-${value}`;
+  const cached = numberAudioCache.get(cacheKey);
   if (cached) return cached;
-  const file = NUMBER_AUDIO_FILES[value];
+  const file = NUMBER_AUDIO_FILES[lang][value];
   const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
   audio.preload = "auto";
-  numberAudioCache.set(value, audio);
+  numberAudioCache.set(cacheKey, audio);
   return audio;
 }
 
 function preloadNumberAudioFiles() {
-  Object.keys(NUMBER_AUDIO_FILES).forEach((value) => {
-    getNumberAudio(Number(value)).load();
+  (Object.keys(NUMBER_AUDIO_FILES) as Lang[]).forEach((lang) => {
+    Object.keys(NUMBER_AUDIO_FILES[lang]).forEach((value) => {
+      getNumberAudio(Number(value), lang).load();
+    });
   });
 }
 
