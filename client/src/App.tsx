@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowLeft, ArrowLeftRight, ArrowRight, BookOpen, Check, Eraser, Search, X } from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
-import chrysExcited from "@assets/chrys_waving_new_user_nobg-removebg-preview.png";
+import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
 import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
 import chrysRunning from "@assets/chrys_running_new_user_nobg.png";
 import chrysRestingWithAlyse from "@assets/chrys_resting_with_alyse_new_user_nobg.png";
@@ -1484,7 +1484,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
         {step === 1 && (
           <div className="space-y-4 text-center">
             <CharacterTalk lang={lang} text={number === 0 ? (lang === "en" ? "Zero means nothing. The basket is empty." : "Kosong maksudnya tiada apa-apa. Bakul kosong.") : (lang === "en" ? `Count ${number} bananas slowly.` : `Kira ${number} pisang perlahan.`)} />
-            <ObjectGroup count={number} emoji="🍌" numbered />
+            <ObjectGroup count={number} emoji="🍌" numbered lang={lang} />
           </div>
         )}
         {step === 2 && (
@@ -1818,7 +1818,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     return (
       <div className="space-y-4">
         <NumberTile value={n} lang={lang} showWord={false} />
-        <ObjectGroup count={n} emoji={emoji} />
+        <ObjectGroup count={n} emoji={emoji} lang={lang} />
       </div>
     );
   }
@@ -1843,7 +1843,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
         </button>
         {counting
           ? <CountedObjectRow key={`${n}-${emoji}-count-on`} count={n} emoji={emoji} showCount speakCount lang={lang} intervalMs={650} />
-          : <ObjectGroup count={n} emoji={emoji} />}
+          : <ObjectGroup count={n} emoji={emoji} lang={lang} />}
         <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
           {totalText}
         </p>
@@ -1962,7 +1962,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
           highlightActiveCount={!complete}
           lang={lang}
         />
-      ) : <ObjectGroup count={count} emoji={emoji} />}
+      ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
       <p
         className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black text-emerald-950 transition-opacity ${showLabel ? "bg-white opacity-100" : "opacity-0"}`}
         aria-live="polite"
@@ -2388,7 +2388,7 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
   return (
     <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
       {label && <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>}
-      {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} />}
+      {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
       {counted && <CountTotalBadge count={count} lang={lang} unit={objectName(emoji, count, lang)} />}
     </div>
   );
@@ -3301,7 +3301,7 @@ function SubtractionStoryGroup({ title, count, lang }: { title: string; count: n
   return (
     <div className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-3 text-center">
       <p className="mb-2 text-lg font-black text-blue-950">{title}</p>
-      <ObjectGroup count={count} emoji="🍌" numbered />
+      <ObjectGroup count={count} emoji="🍌" numbered lang={lang} />
       <p className="mt-2 text-xl font-black text-blue-900">{count} {lang === "en" ? "bananas" : "pisang"}</p>
     </div>
   );
@@ -3700,7 +3700,7 @@ function BasketBananaScene({ count, counted, label }: { count: number; counted: 
                 isActiveCount
                   ? "border-yellow-400 bg-yellow-100/70 ring-4 ring-yellow-200"
                   : isCounted
-                    ? "border-blue-500 bg-blue-50/40"
+                    ? "border-blue-600 bg-blue-100/60 ring-4 ring-blue-200 shadow-md"
                   : "border-transparent bg-transparent"
               }`}
             >
@@ -3731,8 +3731,6 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
   const [hasStarted, setHasStarted] = useState(false);
   const [isCounting, setIsCounting] = useState(false);
   const [countRun, setCountRun] = useState(0);
-  const [joiningResult, setJoiningResult] = useState(false);
-  const [resultJoined, setResultJoined] = useState(false);
   const labels = lang === "en"
     ? ["2 bananas", "3 bananas", "5 bananas"]
     : ["2 pisang", "3 pisang", "5 pisang"];
@@ -3751,8 +3749,6 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
       setCompletedSigns(0);
       setActiveSign(-1);
       setActiveBanana(null);
-      setJoiningResult(false);
-      setResultJoined(false);
 
       for (let groupIndex = 0; groupIndex < ADDITION_EQUATION_GROUPS.length; groupIndex += 1) {
         if (cancelled) return;
@@ -3791,15 +3787,6 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
 
         if (cancelled) return;
         setActiveBanana(null);
-        if (groupIndex === ADDITION_EQUATION_GROUPS.length - 1) {
-          setJoiningResult(true);
-          await wait(prefersReducedMotion ? 0 : 1100);
-          if (cancelled) return;
-          setResultJoined(true);
-          setJoiningResult(false);
-          await wait(prefersReducedMotion ? 0 : 250);
-        }
-
         setCompletedGroups(groupIndex + 1);
         speakText(
           lang === "en" ? `Total ${count} bananas.` : `Jumlah ${count} pisang.`,
@@ -3927,40 +3914,11 @@ function AdditionBananaEquation({ lang }: { lang: Lang }) {
               }`}
             >
               <div className="flex flex-1 items-center justify-center">
-                {index === 2 ? (
-                  <div
-                    className={`flex w-full max-w-56 flex-col items-center transition-[gap,transform] duration-1000 ${
-                      joiningResult || resultJoined ? "gap-0 scale-95" : "gap-4"
-                    }`}
-                    aria-label={lang === "en" ? "A group of 2 bananas and a group of 3 bananas" : "Satu kumpulan 2 pisang dan satu kumpulan 3 pisang"}
-                  >
-                    {[2, 3].map((subgroupCount, subgroupIndex) => {
-                      const countOffset = subgroupIndex === 0 ? 0 : 2;
-                      return (
-                        <div
-                          key={subgroupCount}
-                          className={`grid w-full grid-cols-2 place-items-center gap-3 rounded-2xl border-2 p-3 transition-[transform,border-color,background-color,box-shadow] duration-1000 ${
-                            joiningResult
-                              ? `${subgroupIndex === 0 ? "translate-y-7" : "-translate-y-7"} border-blue-400 bg-blue-50 shadow-lg`
-                              : resultJoined
-                                ? "border-blue-400 bg-blue-50 shadow-sm"
-                              : "border-emerald-300 bg-emerald-50/60 shadow-sm"
-                          }`}
-                        >
-                          {Array.from({ length: subgroupCount }, (_, objectIndex) => (
-                            renderBanana(index, countOffset + objectIndex, subgroupCount, objectIndex)
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 place-items-center gap-3">
-                    {Array.from({ length: count }, (_, objectIndex) => (
-                      renderBanana(index, objectIndex, count, objectIndex)
-                    ))}
-                  </div>
-                )}
+                <div className="grid grid-cols-2 place-items-center gap-3">
+                  {Array.from({ length: count }, (_, objectIndex) => (
+                    renderBanana(index, objectIndex, count, objectIndex)
+                  ))}
+                </div>
               </div>
               <div className={`mt-3 min-h-12 rounded-full px-4 py-2 text-center text-base font-black transition-colors sm:text-xl ${
                 completedGroups > index ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-transparent"
@@ -4958,7 +4916,7 @@ function GroupChoiceAnswerPanel({
             aria-label={`${lang === "en" ? "Group answer with" : "Jawapan kumpulan dengan"} ${count}${status}`}
             className={`rounded-3xl border-4 p-3 text-center shadow-[0_6px_0_rgba(0,0,0,.12)] transition active:translate-y-1 ${stateClass}`}
           >
-            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealCorrect} />
+            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealCorrect} lang={lang} />
             {answered && (picked || (right && revealCorrect)) && (
               <span className={`mt-3 inline-grid h-10 w-10 place-items-center rounded-full border-2 bg-white text-2xl font-black ${right ? "border-emerald-700 text-emerald-700" : picked ? "border-orange-700 text-orange-700" : "border-slate-200 text-slate-300"}`} aria-hidden="true">
                 {right ? "✓" : picked ? "×" : ""}
@@ -5267,7 +5225,7 @@ function ActiveAnswerPanel({
   return (
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
       <p className="mb-3 text-lg font-black text-slate-700">{instruction}</p>
-      <ObjectGroup count={shownCount} emoji={emoji} numbered={answered} />
+      <ObjectGroup count={shownCount} emoji={emoji} numbered={answered} lang={lang} />
       {answered && <CountTotalBadge count={shownCount} lang={lang} />}
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <button
@@ -5636,9 +5594,9 @@ function SpellWordCard({ value, lang }: { value: number; lang: Lang }) {
   );
 }
 
-function ObjectGroup({ count, emoji, numbered = false, crossed = 0 }: { count: number; emoji: string; numbered?: boolean; crossed?: number }) {
+function ObjectGroup({ count, emoji, numbered = false, crossed = 0, lang = "en" }: { count: number; emoji: string; numbered?: boolean; crossed?: number; lang?: Lang }) {
   if (count === 0) {
-    return <div className="mx-auto rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">{numbered ? "0" : "empty"}</div>;
+    return <div className="mx-auto rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">{numbered ? "0" : lang === "en" ? "empty" : "kosong"}</div>;
   }
   return (
     <div className="flex flex-wrap justify-center gap-3 rounded-3xl border-2 border-slate-100 bg-white p-4">
@@ -5665,6 +5623,7 @@ function ContainerScene({
   numbered = false,
   hideEmptyLabel = false,
   label,
+  lang = "en",
 }: {
   count: number;
   emoji: string;
@@ -5672,6 +5631,7 @@ function ContainerScene({
   numbered?: boolean;
   hideEmptyLabel?: boolean;
   label?: string;
+  lang?: Lang;
 }) {
   const image = container === "basket" ? BASKET_SPRITE : trayPhoto;
   const alt = container === "basket" ? "basket" : "tray";
@@ -5695,7 +5655,7 @@ function ContainerScene({
       {label && <p className="mt-3 text-center text-xl font-black text-amber-900">{label}</p>}
       {count === 0 && !hideEmptyLabel && (
         <div className="mx-auto mt-3 max-w-xs rounded-2xl border-2 border-dashed border-slate-200 bg-white/85 px-4 py-3 text-center text-2xl font-black text-slate-400">
-          {numbered ? "0" : "empty"}
+          {numbered ? "0" : lang === "en" ? "empty" : "kosong"}
         </div>
       )}
     </div>
@@ -5760,7 +5720,7 @@ function SameValueVisual({ count, emojis, lang, showSummary = true }: { count: n
       <div className="grid gap-3 md:grid-cols-3">
         {emojis.map((emoji, index) => (
           <div key={`${emoji}-${index}`} className="rounded-3xl border-2 border-emerald-100 bg-white p-3 text-center shadow-inner">
-            <ObjectGroup count={count} emoji={emoji} />
+            <ObjectGroup count={count} emoji={emoji} lang={lang} />
             <p className="mt-2 text-lg font-black text-emerald-900">{lang === "en" ? `Group ${index + 1}` : `Kumpulan ${index + 1}`}</p>
           </div>
         ))}
@@ -5817,11 +5777,11 @@ function CompareGroupsVisual({ a, b, emojiA, emojiB, lang, showReason = false }:
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center shadow-inner">
-          <ObjectGroup count={a} emoji={emojiA} />
+          <ObjectGroup count={a} emoji={emojiA} lang={lang} />
           <p className="mt-2 text-xl font-black text-blue-900">{lang === "en" ? "Group A" : "Kumpulan A"}</p>
         </div>
         <div className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center shadow-inner">
-          <ObjectGroup count={b} emoji={emojiB} />
+          <ObjectGroup count={b} emoji={emojiB} lang={lang} />
           <p className="mt-2 text-xl font-black text-blue-900">{lang === "en" ? "Group B" : "Kumpulan B"}</p>
         </div>
       </div>
@@ -5878,7 +5838,7 @@ function CountedCompareGroupsSolution({ visual, lang }: {
               onCountComplete={finishSecondGroup}
             />
           ) : (
-            <ObjectGroup count={visual.b} emoji={visual.emojiB} />
+            <ObjectGroup count={visual.b} emoji={visual.emojiB} lang={lang} />
           )}
           {stage >= 2 && (
             <p className="mt-3 rounded-full bg-emerald-100 px-4 py-2 text-xl font-black text-emerald-900">
@@ -6735,7 +6695,7 @@ function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
     <div className="rounded-3xl border-2 border-amber-100 bg-white p-4 text-center">
       <h3 className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Draw how many objects" : "Lukis berapa banyak objek"}</h3>
       <p className="mb-3 text-sm font-bold text-slate-500">{count === 0 ? (lang === "en" ? "For zero, draw nothing in the box." : "Untuk nombor kosong, jangan lukis apa-apa dalam kotak.") : (lang === "en" ? `Draw ${count} dots or bananas on paper.` : `Lukis ${count} titik atau pisang di kertas.`)}</p>
-      <ObjectGroup count={count} emoji="●" numbered />
+      <ObjectGroup count={count} emoji="●" numbered lang={lang} />
     </div>
   );
 }
@@ -6743,9 +6703,9 @@ function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
 function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: Visual; lang?: Lang; revealNumbers?: boolean }) {
   if (visual.kind === "count") {
     if (visual.container) {
-      return <ContainerScene count={visual.count} emoji={visual.emoji} container={visual.container} numbered={revealNumbers} />;
+      return <ContainerScene count={visual.count} emoji={visual.emoji} container={visual.container} numbered={revealNumbers} lang={lang} />;
     }
-    return <ObjectGroup count={visual.count} emoji={visual.emoji} numbered={revealNumbers} />;
+    return <ObjectGroup count={visual.count} emoji={visual.emoji} numbered={revealNumbers} lang={lang} />;
   }
   if (visual.kind === "number") return <NumberTile value={visual.value} lang={lang} showWord={false} />;
   if (visual.kind === "word") {
@@ -6769,7 +6729,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
       <div className="grid gap-3 md:grid-cols-3">
         {visual.groups.map((count) => (
           <div key={count} className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center">
-            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealNumbers} />
+            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealNumbers} lang={lang} />
           </div>
         ))}
       </div>
@@ -6807,7 +6767,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
     return (
       <div className="space-y-4">
         {revealNumbers && <NumberTile value={visual.value} lang={lang} showWord={false} />}
-        <ObjectGroup count={visual.value} emoji={visual.emoji} numbered={revealNumbers} />
+        <ObjectGroup count={visual.value} emoji={visual.emoji} numbered={revealNumbers} lang={lang} />
       </div>
     );
   }
@@ -6862,8 +6822,8 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
       <div className="space-y-3">
         <NumberLine marked={Math.max(visual.a, visual.b)} />
         <div className="grid grid-cols-2 gap-3">
-          <ObjectGroup count={visual.a} emoji="🍌" />
-          <ObjectGroup count={visual.b} emoji="🍌" />
+          <ObjectGroup count={visual.a} emoji="🍌" lang={lang} />
+          <ObjectGroup count={visual.b} emoji="🍌" lang={lang} />
         </div>
       </div>
     );
@@ -6874,9 +6834,9 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
       return (
         <div className="space-y-3">
           <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <ContainerScene count={visual.a} emoji={emoji} container={visual.container} numbered={revealNumbers} />
+            <ContainerScene count={visual.a} emoji={emoji} container={visual.container} numbered={revealNumbers} lang={lang} />
             <span className="text-center text-4xl font-black text-blue-700">+</span>
-            <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} />
+            <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} />
           </div>
           <p className="text-center text-3xl font-black text-slate-400">= ?</p>
         </div>
@@ -6885,9 +6845,9 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
     return (
       <div className="space-y-3">
         <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <ObjectGroup count={visual.a} emoji={emoji} numbered={revealNumbers} />
+          <ObjectGroup count={visual.a} emoji={emoji} numbered={revealNumbers} lang={lang} />
           <span className="text-center text-4xl font-black text-blue-700">+</span>
-          <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} />
+          <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} />
         </div>
         <p className="text-center text-3xl font-black text-slate-400">= ?</p>
       </div>
@@ -6896,7 +6856,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true }: { visual: 
   const emoji = visual.emoji ?? "🍌";
   return (
     <div className="space-y-3">
-      <ObjectGroup count={visual.a} emoji={emoji} crossed={visual.b} />
+      <ObjectGroup count={visual.a} emoji={emoji} crossed={visual.b} lang={lang} />
       {revealNumbers && <p className="text-center text-2xl font-black text-slate-500">{visual.a} - {visual.b} = ?</p>}
     </div>
   );
@@ -6994,8 +6954,8 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
     const emoji = visual.emoji ?? "🍌";
     if (visual.count === 0) {
       return visual.container
-        ? <ContainerScene count={0} emoji={emoji} container={visual.container} numbered />
-        : <ObjectGroup count={0} emoji={emoji} numbered />;
+        ? <ContainerScene count={0} emoji={emoji} container={visual.container} numbered lang={lang} />
+        : <ObjectGroup count={0} emoji={emoji} numbered lang={lang} />;
     }
     return (
       <div className="space-y-3">
@@ -7013,12 +6973,12 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
       return (
         <div className="space-y-4">
           <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <ContainerScene count={visual.a} emoji={emoji} container={visual.container} numbered />
+            <ContainerScene count={visual.a} emoji={emoji} container={visual.container} numbered lang={lang} />
             <span className="text-center text-4xl font-black text-blue-700">+</span>
             <LabeledGroup count={visual.b} label={String(visual.b)} emoji={emoji} />
           </div>
           <p className="text-center text-lg font-black text-emerald-800">{lang === "en" ? "Put both groups together. Count all." : "Gabungkan dua kumpulan. Kira semua."}</p>
-          <ContainerScene count={visual.a + visual.b} emoji={emoji} container={visual.container} numbered />
+          <ContainerScene count={visual.a + visual.b} emoji={emoji} container={visual.container} numbered lang={lang} />
           <div className="rounded-3xl border-2 border-emerald-200 bg-white p-3 text-center text-3xl font-black text-emerald-800">
             {visual.a} + {visual.b} = {visual.a + visual.b}
           </div>
