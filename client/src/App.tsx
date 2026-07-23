@@ -376,7 +376,6 @@ const recognitionPracticeQuestions: Question[] = [
   q("rec-audio-symbol-6", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 6, { kind: "audioNumber", value: 6 }),
   q("rec-audio-symbol-0", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 0, { kind: "audioNumber", value: 0 }),
   q("rec-audio-symbol-2", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 2, { kind: "audioNumber", value: 2 }),
-  q("rec-audio-symbol-5-review", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 5, { kind: "audioNumber", value: 5 }),
   q("rec-audio-symbol-8", "numbers", { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." }, NUMBERS, 8, { kind: "audioNumber", value: 8 }),
   q("rec-symbol-word-1", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["zero", "one", "two", "three"], "one", { kind: "number", value: 1 }),
   q("rec-symbol-word-3", "numbers", { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" }, ["one", "two", "three", "four"], "three", { kind: "number", value: 3 }),
@@ -387,22 +386,50 @@ const recognitionPracticeQuestions: Question[] = [
   q("rec-word-symbol-7", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [5, 6, 7, 8], 7, { kind: "word", value: 7 }),
   q("rec-word-symbol-9", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [6, 7, 8, 9], 9, { kind: "word", value: 9 }),
   q("rec-audio-word-2", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["zero", "one", "two", "three"], "two", { kind: "audioNumber", value: 2 }),
-  q("rec-audio-word-5", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["three", "four", "five", "six"], "five", { kind: "audioNumber", value: 5 }),
   q("rec-audio-word-8", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "eight", { kind: "audioNumber", value: 8 }),
-  q("rec-audio-word-9", "numbers", { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" }, ["six", "seven", "eight", "nine"], "nine", { kind: "audioNumber", value: 9 }),
 ].filter((question) => NUMBER_AUDIO_ENABLED || question.visual.kind !== "audioNumber");
 
-const valuePracticeQuestions: Question[] = [
-  q("val-audio-group-0", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 0, { kind: "audioNumber", value: 0 }, "tapObjects"),
-  q("val-symbol-group-1", "numbers", { en: "Look at the number. Build the group.", ms: "Lihat nombor. Bina kumpulan." }, [], 1, { kind: "number", value: 1 }, "tapObjects"),
-  q("val-word-group-2", "numbers", { en: "Read the word. Build the group.", ms: "Baca perkataan. Bina kumpulan." }, [], 2, { kind: "word", value: 2 }, "tapObjects"),
-  q("val-audio-group-3", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 3, { kind: "audioNumber", value: 3 }, "tapObjects"),
-  q("val-symbol-group-4", "numbers", { en: "Look at the number. Build the group.", ms: "Lihat nombor. Bina kumpulan." }, [], 4, { kind: "number", value: 4 }, "tapObjects"),
-  q("val-word-group-5", "numbers", { en: "Read the word. Build the group.", ms: "Baca perkataan. Bina kumpulan." }, [], 5, { kind: "word", value: 5 }, "tapObjects"),
-  q("val-audio-group-6", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
-  q("val-symbol-group-7", "numbers", { en: "Look at the number. Build the group.", ms: "Lihat nombor. Bina kumpulan." }, [], 7, { kind: "number", value: 7 }, "tapObjects"),
-  q("val-word-group-8", "numbers", { en: "Read the word. Build the group.", ms: "Baca perkataan. Bina kumpulan." }, [], 8, { kind: "word", value: 8 }, "tapObjects"),
-  q("val-audio-group-9", "numbers", { en: "Listen. Build the group.", ms: "Dengar. Bina kumpulan." }, [], 9, { kind: "audioNumber", value: 9 }, "tapObjects"),
+const VALUE_PRACTICE_QUESTION_IDS = new Set([
+  "val-audio-group-0",
+  "val-symbol-group-1",
+  "val-word-group-2",
+  "val-audio-group-3",
+  "val-symbol-group-4",
+  "val-word-group-5",
+  "val-audio-group-6",
+  "val-symbol-group-7",
+  "val-word-group-8",
+  "val-audio-group-9",
+  "val-make-group-3",
+  "val-group-number-5",
+  "val-same-3",
+  "val-more-4-6",
+  "val-fewer-2-5",
+]);
+
+const valuePracticeQuestionBank: Question[] = [
+  q(
+    "val-audio-group-0",
+    "numbers",
+    { en: "Listen. Choose the right number of objects.", ms: "Dengar. Pilih bilangan objek yang betul." },
+    [],
+    0,
+    { kind: "audioNumber", value: 0 },
+    "tapObjects",
+    {
+      en: ['The audio said "z e r o".', "Zero means nothing.", "So, choose No objects."],
+      ms: ['Audio menyebut "k o s o n g".', "Kosong maksudnya tiada apa-apa.", "Jadi, pilih Tiada objek."],
+    },
+  ),
+  q("val-symbol-group-1", "numbers", { en: "Look at the number. Choose the right number of objects.", ms: "Lihat nombor. Pilih bilangan objek yang betul." }, [], 1, { kind: "number", value: 1 }, "tapObjects"),
+  q("val-word-group-2", "numbers", { en: "Read the word. Choose the right number of objects.", ms: "Baca perkataan. Pilih bilangan objek yang betul." }, [], 2, { kind: "word", value: 2 }, "tapObjects"),
+  q("val-audio-group-3", "numbers", { en: "Listen. Choose the right number of objects.", ms: "Dengar. Pilih bilangan objek yang betul." }, [], 3, { kind: "audioNumber", value: 3 }, "tapObjects"),
+  q("val-symbol-group-4", "numbers", { en: "Look at the number. Choose the right number of objects.", ms: "Lihat nombor. Pilih bilangan objek yang betul." }, [], 4, { kind: "number", value: 4 }, "tapObjects"),
+  q("val-word-group-5", "numbers", { en: "Read the word. Choose the right number of objects.", ms: "Baca perkataan. Pilih bilangan objek yang betul." }, [], 5, { kind: "word", value: 5 }, "tapObjects"),
+  q("val-audio-group-6", "numbers", { en: "Listen. Choose the right number of objects.", ms: "Dengar. Pilih bilangan objek yang betul." }, [], 6, { kind: "audioNumber", value: 6 }, "tapObjects"),
+  q("val-symbol-group-7", "numbers", { en: "Look at the number. Choose the right number of objects.", ms: "Lihat nombor. Pilih bilangan objek yang betul." }, [], 7, { kind: "number", value: 7 }, "tapObjects"),
+  q("val-word-group-8", "numbers", { en: "Read the word. Choose the right number of objects.", ms: "Baca perkataan. Pilih bilangan objek yang betul." }, [], 8, { kind: "word", value: 8 }, "tapObjects"),
+  q("val-audio-group-9", "numbers", { en: "Listen. Choose the right number of objects.", ms: "Dengar. Pilih bilangan objek yang betul." }, [], 9, { kind: "audioNumber", value: 9 }, "tapObjects"),
   q("val-make-group-3", "numbers", { en: "Copy this group.", ms: "Salin kumpulan ini." }, [], 3, { kind: "groupMake", emoji: "🍌", count: 3 }, "makeGroup"),
   q("val-support-3", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [2, 3, 4], 3, { kind: "numberWithGroup", value: 3, emoji: "🍌" }),
   q("val-support-6", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [5, 6, 7], 6, { kind: "numberWithGroup", value: 6, emoji: "🍄" }),
@@ -421,9 +448,14 @@ const valuePracticeQuestions: Question[] = [
   q("val-group-number-5", "numbers", { en: "Which number matches this group?", ms: "Nombor mana padan dengan kumpulan ini?" }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🥭", count: 5 }),
   q("val-same-3", "numbers", { en: "Are these the same number?", ms: "Adakah ini nombor yang sama?" }, ["Yes", "No"], "Yes", { kind: "sameValue", count: 3, emojis: ["🍌", "🍃"] }),
   q("val-layout-6", "numbers", { en: "Do they show the same number?", ms: "Adakah semua tunjuk nombor sama?" }, ["Yes", "No"], "Yes", { kind: "layoutValue", count: 6, emoji: "🍌" }),
-  q("val-more-4-6", "numbers", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "compareGroups", a: 4, b: 6, emojiA: "🍃", emojiB: "🍌", ask: "more" }),
-  q("val-fewer-2-5", "numbers", { en: "Which group has fewer?", ms: "Kumpulan mana lebih sedikit?" }, ["Group A", "Group B"], "Group A", { kind: "compareGroups", a: 2, b: 5, emojiA: "🪨", emojiB: "🥭", ask: "fewer" }),
+  q("val-more-4-6", "numbers", { en: "Which group has more?", ms: "Kumpulan mana lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "compareGroups", a: 4, b: 6, emojiA: "🍌", emojiB: "🍌", ask: "more" }),
+  q("val-fewer-2-5", "numbers", { en: "Which group has fewer?", ms: "Kumpulan mana lebih sedikit?" }, ["Group A", "Group B"], "Group A", { kind: "compareGroups", a: 2, b: 5, emojiA: "🍌", emojiB: "🍌", ask: "fewer" }),
 ];
+
+const valuePracticeQuestions = valuePracticeQuestionBank.filter((question) =>
+  VALUE_PRACTICE_QUESTION_IDS.has(question.id),
+);
+
 const sequencingPracticeQuestions: Question[] = [
   q("seq-keypad-3", "numbers", { en: "Type the missing number.", ms: "Taip nombor yang hilang." }, [], 3, { kind: "sequence", nums: [0, 1, 2, "?", 4] }, "keypad"),
   q("seq-full-3", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [2, 3, 4, 5], 3, { kind: "sequence", nums: [0, 1, 2, "?", 4, 5, 6, 7, 8, 9] }),
@@ -602,7 +634,23 @@ function q(
   answer: number | string,
   visual: Visual,
   inputMode: Question["inputMode"] = "choice",
+  method?: Record<Lang, string[]>,
 ): Question {
+  const objectValueMethod =
+    inputMode === "tapObjects" && typeof answer === "number" && answer > 0
+      ? {
+        en: [
+          `The number ${answer} shows how many.`,
+          `Count the bananas: ${Array.from({ length: answer }, (_, index) => index + 1).join(", ")}.`,
+          answer === 1 ? "So, there is 1 banana." : `So, there are ${answer} bananas.`,
+        ],
+        ms: [
+          `Nombor ${answer} tunjuk berapa banyak.`,
+          `Kira pisang: ${Array.from({ length: answer }, (_, index) => index + 1).join(", ")}.`,
+          `Jadi, ada ${answer} pisang.`,
+        ],
+      }
+      : null;
   return {
     id,
     area,
@@ -611,7 +659,7 @@ function q(
     answer,
     visual,
     inputMode,
-    method: buildMethod(visual, answer),
+    method: method ?? objectValueMethod ?? buildMethod(visual, answer),
   };
 }
 
@@ -687,9 +735,11 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   if (visual.kind === "word") {
     const word = WORDS.en[visual.value];
     const wordMs = WORDS.ms[visual.value];
+    const spelledWord = word.split("").join(" - ");
+    const spelledWordMs = wordMs.split("").join(" - ");
     return {
-      en: [`This word is ${word}.`, `The symbol for ${word} is ${visual.value}.`],
-      ms: [`Perkataan ini ialah ${wordMs}.`, `Simbol bagi ${wordMs} ialah ${visual.value}.`],
+      en: [`Read the letters: ${spelledWord}.`, `This word says ${word}.`, `The number symbol for ${word} is ${visual.value}.`],
+      ms: [`Baca huruf: ${spelledWordMs}.`, `Perkataan ini dibaca ${wordMs}.`, `Simbol nombor ${wordMs} ialah ${visual.value}.`],
     };
   }
   if (visual.kind === "audioNumber") {
@@ -727,12 +777,12 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const fewer = Math.min(visual.a, visual.b);
     return visual.ask === "more"
       ? {
-        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${fewer} is less. ${more} is more.`],
-        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${more} lebih banyak daripada ${fewer}.`],
+        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a}. Group B has ${visual.b}.`, `${more} is more.`],
+        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a}. Kumpulan B ada ${visual.b}.`, `${more} lebih banyak.`],
       }
       : {
-        en: [`Group A has ${visual.a}.`, `Group B has ${visual.b}.`, `${fewer} is less. ${more} is more.`],
-        ms: [`Kumpulan A ada ${visual.a}.`, `Kumpulan B ada ${visual.b}.`, `${fewer} lebih sedikit daripada ${more}.`],
+        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a}. Group B has ${visual.b}.`, `${fewer} is less.`],
+        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a}. Kumpulan B ada ${visual.b}.`, `${fewer} lebih sedikit.`],
       };
   }
   if (visual.kind === "groupChoices") {
@@ -5379,13 +5429,13 @@ function ContainerScene({
 
 function NumberLine({ marked }: { marked: number }) {
   return (
-    <div className="overflow-x-auto rounded-3xl border-2 border-blue-100 bg-white p-4">
-      <div className="mx-auto flex min-w-[560px] items-end justify-center">
+    <div className="overflow-x-auto rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-5 pb-3 [scrollbar-color:#38bdf8_#e0f2fe]">
+      <div className="relative mx-auto grid min-w-[760px] gap-3 px-5 pb-3" style={{ gridTemplateColumns: `repeat(${NUMBERS.length}, minmax(0, 1fr))` }}>
+        <div className="absolute bottom-4 left-8 right-8 h-3 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)]" aria-hidden="true" />
         {NUMBERS.map((n) => (
-          <div key={n} className="flex flex-1 flex-col items-center">
-            <div className={`mb-2 grid h-10 w-10 place-items-center rounded-full border-2 font-black ${n === marked ? "border-yellow-600 bg-yellow-400 text-yellow-950" : "border-slate-200 bg-slate-50 text-slate-500"}`}>{n}</div>
-            <div className={`h-5 w-1 ${n === marked ? "bg-yellow-500" : "bg-slate-300"}`} />
-            <div className="h-2 w-full bg-slate-300" />
+          <div key={n} className="relative z-10 flex flex-col items-center">
+            <div className={`mb-3 grid h-14 w-14 place-items-center rounded-full border-4 text-xl font-black shadow-[0_4px_0_rgba(15,23,42,.12)] ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`h-9 w-2.5 rounded-full ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
           </div>
         ))}
       </div>
@@ -5395,17 +5445,19 @@ function NumberLine({ marked }: { marked: number }) {
 
 function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: number[]; marked: number; arrow?: "left" | "right" }) {
   return (
-    <div className="overflow-x-auto rounded-3xl border-2 border-blue-100 bg-white p-4">
-      <div className="mx-auto flex min-w-[560px] items-center justify-center gap-2">
+    <div className="overflow-x-auto rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-5 pb-3 [scrollbar-color:#38bdf8_#e0f2fe]">
+      <div className="relative mx-auto grid min-w-[760px] gap-3 px-5 pb-3" style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }}>
+        <div className="absolute bottom-4 left-8 right-8 h-3 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)]" aria-hidden="true" />
         {nums.map((n, i) => (
-          <React.Fragment key={`${n}-${i}`}>
-            {i > 0 && <span className="text-2xl font-black text-emerald-700">{arrow === "right" ? "\u2192" : "\u2190"}</span>}
-            <div className="flex flex-1 flex-col items-center">
-              <div className={`mb-2 grid h-10 w-10 place-items-center rounded-full border-2 font-black ${n === marked ? "border-yellow-600 bg-yellow-400 text-yellow-950" : "border-slate-200 bg-slate-50 text-slate-500"}`}>{n}</div>
-              <div className={`h-5 w-1 ${n === marked ? "bg-yellow-500" : "bg-slate-300"}`} />
-              <div className={`h-2 w-full ${n === marked ? "bg-yellow-400" : "bg-slate-300"}`} />
-            </div>
-          </React.Fragment>
+          <div key={`${n}-${i}`} className="relative z-10 flex flex-col items-center">
+            {i < nums.length - 1 && (
+              <span className="absolute -right-5 top-3 z-20 text-2xl font-black text-emerald-700" aria-hidden="true">
+                {arrow === "right" ? "\u2192" : "\u2190"}
+              </span>
+            )}
+            <div className={`mb-3 grid h-14 w-14 place-items-center rounded-full border-4 text-xl font-black shadow-[0_4px_0_rgba(15,23,42,.12)] ${n === marked ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`h-9 w-2.5 rounded-full ${n === marked ? "bg-amber-500" : "bg-sky-500"}`} />
+          </div>
         ))}
       </div>
     </div>
@@ -5510,28 +5562,158 @@ function CompareGroupsVisual({ a, b, emojiA, emojiB, lang, showReason = false }:
   );
 }
 
-function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode: "up" | "down" }) {
-  const [visible, setVisible] = useState(1);
-  const banana = "🍌";
-  const done = visible >= nums.length;
-  const shown = nums.slice(0, visible);
+function CountedCompareGroupsSolution({ visual, lang }: {
+  visual: Extract<Visual, { kind: "compareGroups" }>;
+  lang: Lang;
+}) {
+  const [stage, setStage] = useState(0);
+  const finishFirstGroup = useCallback(() => setStage((current) => Math.max(current, 1)), []);
+  const finishSecondGroup = useCallback(() => setStage(2), []);
+  const smaller = Math.min(visual.a, visual.b);
+  const larger = Math.max(visual.a, visual.b);
+
+  useEffect(() => setStage(0), [visual.a, visual.b]);
+
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {shown.map((n) => (
-          <div key={n} className="rounded-3xl border-2 border-emerald-100 bg-white p-3 text-center shadow-inner">
-            <p className="mb-2 text-4xl font-black text-blue-950">{n}</p>
-            <ObjectGroup count={n} emoji={banana} />
-          </div>
-        ))}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 0 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"}`}>
+          <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group A" : "Kumpulan A"}</p>
+          <CountedObjectRow
+            count={visual.a}
+            emoji={visual.emojiA}
+            showCount
+            speakCount
+            lang={lang}
+            onCountComplete={finishFirstGroup}
+          />
+          {stage >= 1 && (
+            <p className="mt-3 rounded-full bg-emerald-100 px-4 py-2 text-xl font-black text-emerald-900">
+              {lang === "en" ? `Total: ${visual.a} bananas` : `Jumlah: ${visual.a} pisang`}
+            </p>
+          )}
+        </div>
+
+        <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 1 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage === 0 ? "opacity-35 grayscale" : ""}`}>
+          <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group B" : "Kumpulan B"}</p>
+          {stage >= 1 ? (
+            <CountedObjectRow
+              count={visual.b}
+              emoji={visual.emojiB}
+              showCount
+              speakCount
+              lang={lang}
+              onCountComplete={finishSecondGroup}
+            />
+          ) : (
+            <ObjectGroup count={visual.b} emoji={visual.emojiB} />
+          )}
+          {stage >= 2 && (
+            <p className="mt-3 rounded-full bg-emerald-100 px-4 py-2 text-xl font-black text-emerald-900">
+              {lang === "en" ? `Total: ${visual.b} bananas` : `Jumlah: ${visual.b} pisang`}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-center text-lg font-black text-emerald-900" aria-live="polite">
+        {stage === 0
+          ? (lang === "en" ? "Count Group A first." : "Kira Kumpulan A dahulu.")
+          : stage === 1
+            ? (lang === "en" ? "Now count Group B." : "Sekarang kira Kumpulan B.")
+            : visual.ask === "more"
+              ? (lang === "en" ? `${larger} is more.` : `${larger} lebih banyak.`)
+              : (lang === "en" ? `${smaller} is less.` : `${smaller} lebih sedikit.`)}
+      </p>
+    </div>
+  );
+}
+
+function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode: "up" | "down" }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [completedIndex, setCompletedIndex] = useState(-1);
+  const [counting, setCounting] = useState(false);
+  const banana = "🍌";
+  const done = completedIndex >= nums.length - 1;
+  const currentComplete = completedIndex >= activeIndex;
+  const shown = nums.slice(0, activeIndex + 1);
+
+  const finishCurrentCount = useCallback(() => {
+    setCompletedIndex(activeIndex);
+    setCounting(false);
+  }, [activeIndex]);
+
+  const handleCountAction = () => {
+    if (counting || done) return;
+    if (currentComplete) {
+      setActiveIndex((index) => Math.min(nums.length - 1, index + 1));
+    }
+    setCounting(true);
+  };
+
+  const quantityLabel = (count: number) => lang === "en"
+    ? `${count} ${count === 1 ? "banana" : "bananas"}`
+    : `${count} pisang`;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col items-center justify-center gap-3 overflow-x-auto pb-2 sm:flex-row sm:items-stretch">
+        {shown.map((n, index) => {
+          const complete = completedIndex >= index;
+          const isCurrentCounting = index === activeIndex && counting;
+          return (
+            <React.Fragment key={`${n}-${index}`}>
+              {index > 0 && (
+                <div className="flex shrink-0 items-center justify-center text-4xl font-black text-emerald-600" aria-hidden="true">
+                  <span className="rotate-90 sm:rotate-0">{"\u2192"}</span>
+                </div>
+              )}
+              <div className={`w-full max-w-40 shrink-0 rounded-3xl border-2 bg-white p-3 text-center shadow-inner transition-colors ${isCurrentCounting ? "border-blue-400 bg-blue-50" : "border-emerald-100"}`}>
+                <p className="mb-2 text-4xl font-black text-blue-950">{n}</p>
+                {isCurrentCounting ? (
+                  <CountedObjectRow
+                    count={n}
+                    emoji={banana}
+                    showCount
+                    speakCount
+                    compact
+                    lang={lang}
+                    onCountComplete={finishCurrentCount}
+                  />
+                ) : complete ? (
+                  <CountedObjectRow count={n} emoji={banana} showCount compact visibleCount={n} lang={lang} />
+                ) : (
+                  <ObjectGroup count={n} emoji={banana} />
+                )}
+                <p
+                  className={`mt-3 min-h-10 rounded-full px-3 py-2 text-lg font-black transition-opacity ${complete ? "bg-emerald-100 text-emerald-950 opacity-100" : "opacity-0"}`}
+                  aria-live="polite"
+                >
+                  {complete ? quantityLabel(n) : "\u00a0"}
+                </p>
+              </div>
+            </React.Fragment>
+          );
+        })}
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <button
-          onClick={() => setVisible((v) => Math.min(nums.length, v + 1))}
-          disabled={done}
-          className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-6 py-3 font-black text-white shadow-[0_5px_0_#047857] disabled:opacity-50"
+          onClick={handleCountAction}
+          disabled={counting || done}
+          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] disabled:opacity-50"
         >
-          {done ? (lang === "en" ? "Done" : "Selesai") : (lang === "en" ? "Tap me" : "Tekan saya")}
+          {done
+            ? (lang === "en" ? "Done" : "Selesai")
+            : counting
+              ? (lang === "en" ? "Counting..." : "Mengira...")
+              : currentComplete
+                ? (lang === "en" ? "Show the next number" : "Lihat nombor seterusnya")
+                : (lang === "en" ? "Start counting" : "Mula mengira")}
+          {!counting && !done && (
+            <span className="absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-sm">
+              <PointerIcon />
+            </span>
+          )}
         </button>
         <p className="text-lg font-black text-slate-700">
           {mode === "up"
@@ -6352,22 +6534,28 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
   const [started, setStarted] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const spokenSteps = q.method[lang].join(". ");
+  const solutionVisual: Visual =
+    q.inputMode === "tapObjects" && typeof q.answer === "number" && q.answer > 0
+      ? { kind: "count", count: q.answer, emoji: "🍌" }
+      : q.visual;
   const startsWithCounting =
-    (q.visual.kind === "count" && q.visual.count > 0) ||
-    (q.visual.kind === "add" && !q.visual.container) ||
-    q.visual.kind === "groupObserve" ||
-    q.visual.kind === "groupMake" ||
-    q.visual.kind === "groupTwo" ||
-    q.visual.kind === "groupCompare" ||
-    q.visual.kind === "groupCombine";
-  const startPrompt = startsWithCounting
-    ? (lang === "en" ? "Ready to count?" : "Sedia untuk mengira?")
-    : (lang === "en" ? "Ready to see how?" : "Sedia lihat caranya?");
-  const startLabel = startsWithCounting
-    ? (lang === "en" ? "Tap to start counting" : "Tekan untuk mula mengira")
-    : (lang === "en" ? "Tap to start the solution" : "Tekan untuk mula cara jawab");
+    (solutionVisual.kind === "count" && solutionVisual.count > 0) ||
+    (solutionVisual.kind === "add" && !solutionVisual.container) ||
+    solutionVisual.kind === "groupObserve" ||
+    solutionVisual.kind === "groupMake" ||
+    solutionVisual.kind === "groupTwo" ||
+    solutionVisual.kind === "groupCompare" ||
+    solutionVisual.kind === "groupCombine" ||
+    solutionVisual.kind === "compareGroups";
+  const startPrompt = lang === "en" ? "Ready to count?" : "Sedia untuk mengira?";
+  const startLabel = lang === "en" ? "Tap to start counting" : "Tekan untuk mula mengira";
 
-  if (!started) {
+  useEffect(() => {
+    setStarted(false);
+    setStepIndex(0);
+  }, [q.id]);
+
+  if (startsWithCounting && !started) {
     return (
       <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-5 text-center">
         <h4 className="text-xl font-black text-emerald-900">
@@ -6408,7 +6596,7 @@ function WorkedMethod({ q, lang }: { q: Question; lang: Lang }) {
         )}
       </div>
       <div className="mb-3">
-        <SolutionVisual visual={q.visual} lang={lang} />
+        <SolutionVisual visual={solutionVisual} lang={lang} />
       </div>
       <div className="rounded-3xl border-2 border-emerald-200 bg-white px-5 py-4 text-center">
         <p className="text-sm font-black uppercase text-emerald-600">
@@ -6509,6 +6697,22 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
         </div>
         <GroupingTray label={lang === "en" ? "One big group" : "Satu kumpulan besar"} count={visual.a + visual.b} emoji={visual.emoji} counted lang={lang} />
         <GroupingAnswerLine text={`${visual.a} + ${visual.b} = ${visual.a + visual.b}`} />
+      </div>
+    );
+  }
+  if (visual.kind === "compareGroups") {
+    return <CountedCompareGroupsSolution visual={visual} lang={lang} />;
+  }
+  if (visual.kind === "word") {
+    const word = WORDS[lang][visual.value];
+    return (
+      <div className="grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+        <div className="rounded-3xl border-4 border-yellow-300 bg-yellow-50 p-5 text-center">
+          <p className="text-4xl font-black text-blue-950">{word}</p>
+          <p className="mt-2 text-lg font-black text-slate-600">{word.split("").join(" - ")}</p>
+        </div>
+        <span className="text-center text-4xl font-black text-amber-500" aria-hidden="true">=</span>
+        <NumberTile value={visual.value} lang={lang} showWord={false} />
       </div>
     );
   }
