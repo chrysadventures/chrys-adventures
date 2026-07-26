@@ -1137,28 +1137,28 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
   onBack?: () => void;
 }) {
   return (
-    <header className="soft-panel mb-4 flex items-center justify-between gap-3 rounded-[1.75rem] px-3 py-2">
+    <header className="soft-panel mb-4 flex items-center justify-between gap-2 rounded-[1.75rem] px-3 py-2 sm:gap-3">
       <div className="flex min-w-0 items-center gap-2">
         {onBack && (
-          <button onClick={onBack} aria-label={t.back} className="grid h-11 w-11 place-items-center rounded-2xl border-2 border-sky-100 bg-white text-blue-800 shadow-[0_5px_0_rgba(14,116,144,.18)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 active:translate-y-1">
+          <button onClick={onBack} aria-label={t.back} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-sky-100 bg-white text-blue-800 shadow-[0_5px_0_rgba(14,116,144,.18)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 active:translate-y-1">
             <BackArrowIcon />
           </button>
         )}
         <h1 className="hidden truncate text-xl font-black leading-tight text-blue-950 sm:block md:text-2xl">{title}</h1>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
         {NUMBER_AUDIO_ENABLED && (
           <button
             type="button"
             onClick={onToggleSound}
             aria-pressed={soundEnabled}
             aria-label={soundEnabled ? (lang === "en" ? "Sound is on" : "Bunyi dibuka") : (lang === "en" ? "Sound is off" : "Bunyi ditutup")}
-            className={`flex items-center gap-1 rounded-2xl border-2 px-3 py-2 text-sm font-black shadow-[0_4px_0_rgba(0,0,0,.12)] ${
+            className={`flex shrink-0 items-center gap-1 rounded-2xl border-2 px-2 py-2 text-sm font-black shadow-[0_4px_0_rgba(0,0,0,.12)] sm:px-3 ${
               soundEnabled ? "border-blue-200 bg-white/90 text-blue-800" : "border-slate-200 bg-slate-100 text-slate-500"
             }`}
           >
             <SpeakerIcon />
-            <span>{soundEnabled ? (lang === "en" ? "Sound" : "Bunyi") : (lang === "en" ? "Muted" : "Senyap")}</span>
+            <span className="hidden sm:inline">{soundEnabled ? (lang === "en" ? "Sound" : "Bunyi") : (lang === "en" ? "Muted" : "Senyap")}</span>
           </button>
         )}
         <button
@@ -1166,7 +1166,7 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
           onClick={onOpenGlossary}
           aria-label={lang === "en" ? "Open glossary" : "Buka glosari"}
           title={lang === "en" ? "Glossary" : "Glosari"}
-          className="flex items-center gap-1 rounded-2xl border-2 border-emerald-200 bg-white/90 px-3 py-2 text-sm font-black text-emerald-800 shadow-[0_4px_0_rgba(0,0,0,.12)]"
+          className="flex shrink-0 items-center gap-1 rounded-2xl border-2 border-emerald-200 bg-white/90 px-2 py-2 text-sm font-black text-emerald-800 shadow-[0_4px_0_rgba(0,0,0,.12)] sm:px-3"
         >
           <BookOpen className="h-5 w-5" aria-hidden="true" />
           <span className="hidden md:inline">{lang === "en" ? "Glossary" : "Glosari"}</span>
@@ -1176,14 +1176,14 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
           onClick={onToggleLang}
           aria-label={lang === "en" ? "Switch to Bahasa Melayu" : "Tukar kepada bahasa Inggeris"}
           title={lang === "en" ? "Switch to Bahasa Melayu" : "Tukar kepada bahasa Inggeris"}
-          className="flex min-h-12 items-center gap-2 rounded-2xl border-2 border-sky-200 bg-white/95 px-4 py-2.5 text-base font-black text-blue-900 shadow-[0_5px_0_rgba(14,116,144,.2)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300 active:translate-y-1 active:shadow-[0_2px_0_rgba(14,116,144,.2)]"
+          className="flex min-h-12 shrink-0 items-center gap-1 rounded-2xl border-2 border-sky-200 bg-white/95 px-2 py-2.5 text-base font-black text-blue-900 shadow-[0_5px_0_rgba(14,116,144,.2)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300 active:translate-y-1 active:shadow-[0_2px_0_rgba(14,116,144,.2)] sm:gap-2 sm:px-4"
         >
           <span>{lang === "en" ? "BM" : "EN"}</span>
           <span className="grid h-7 w-7 place-items-center rounded-xl bg-sky-100 text-sky-700" aria-hidden="true">
             <ArrowLeftRight className="h-4 w-4" strokeWidth={3} />
           </span>
         </button>
-        <div className="flex items-center gap-2 rounded-2xl border-2 border-yellow-300 bg-white px-3 py-2 font-black text-yellow-700 shadow-[0_4px_0_rgba(0,0,0,.14)]" aria-label={`${stars} stars`}>
+        <div className="flex shrink-0 items-center gap-1 rounded-2xl border-2 border-yellow-300 bg-white px-2 py-2 font-black text-yellow-700 shadow-[0_4px_0_rgba(0,0,0,.14)] sm:gap-2 sm:px-3" aria-label={`${stars} stars`}>
           <StarBadgeIcon />
           <span className="text-base">{stars}</span>
         </div>
@@ -5120,7 +5120,7 @@ function ActiveAnswerPanel({
     return (
       <div className="rounded-3xl border-2 border-blue-100 bg-white p-4">
         <div className="mx-auto mb-4 grid h-16 w-24 place-items-center rounded-3xl border-4 border-yellow-200 bg-yellow-50 text-4xl font-black text-blue-950">
-          {answered ? selected : "?"}
+          {answered && Number.isFinite(selectedNumber) ? selectedNumber : "?"}
         </div>
         <div className="grid grid-cols-5 gap-2">
           {NUMBERS.map((n) => {
@@ -5334,7 +5334,8 @@ function ActiveAnswerPanel({
 
   if (question.inputMode === "takeAway" && question.visual.kind === "subtract") {
     const startCount = question.visual.a;
-    const shownRemoved = answered ? startCount - selectedNumber : removedCount;
+    const hasNumericAnswer = Number.isFinite(selectedNumber);
+    const shownRemoved = answered && hasNumericAnswer ? startCount - selectedNumber : removedCount;
     const leftCount = startCount - shownRemoved;
 
     return (
@@ -5345,7 +5346,7 @@ function ActiveAnswerPanel({
             : `Mula dengan ${startCount} pisang.`}
         </p>
         <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} lang={lang} />
-        {answered && <CountTotalBadge count={selectedNumber} lang={lang} />}
+        {answered && hasNumericAnswer && <CountTotalBadge count={selectedNumber} lang={lang} />}
         <p className="mt-4 text-lg font-black text-blue-800">
           {lang === "en" ? "Tap to take away." : "Tekan untuk ambil."}
         </p>
