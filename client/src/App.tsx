@@ -485,8 +485,8 @@ const sequencingPracticeQuestions: Question[] = [
 ];
 
 const numberPracticeQuestions: Question[] = [
-  q("lp-n-word-1", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [1, 6, 7, 9], 1, { kind: "number", value: 1 }),
-  q("lp-n-word-8", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [3, 5, 8, 0], 8, { kind: "number", value: 8 }),
+  q("lp-n-word-1", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [1, 6, 7, 9], 1, { kind: "word", value: 1 }),
+  q("lp-n-word-8", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [3, 5, 8, 0], 8, { kind: "word", value: 8 }),
   q("lp-n-count-3", "numbers", { en: "Count the bananas.", ms: "Kira pisang." }, [1, 2, 3, 4], 3, { kind: "count", emoji: "🍌", count: 3 }),
 q("lp-n-count-0", "numbers", { en: "How many bananas are in the basket?", ms: "Ada berapa pisang dalam bakul?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🍌", count: 0, container: "basket" }),
   q("lp-n-after-4", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [3, 4, 5, 6], 5, { kind: "sequence", nums: [2, 3, 4, "?"] }),
@@ -503,11 +503,11 @@ const numberQuestions: Question[] = [
   q("n-count-shells-9", "numbers", { en: "Count the shells.", ms: "Kira cangkerang." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🐚", count: 9 }),
   q("n-count-apples-2", "numbers", { en: "Count the apples.", ms: "Kira epal." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🍎", count: 2 }),
   q("n-count-empty", "numbers", { en: "How many flowers are there?", ms: "Ada berapa bunga?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🌸", count: 0 }),
-  q("n-word-0", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [0, 2, 4, 6], 0, { kind: "number", value: 0 }),
-  q("n-word-3", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [3, 5, 7, 9], 3, { kind: "number", value: 3 }),
-  q("n-word-5", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [2, 5, 6, 8], 5, { kind: "number", value: 5 }),
-  q("n-word-7", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [1, 4, 7, 9], 7, { kind: "number", value: 7 }),
-  q("n-word-9", "numbers", { en: "What number is this?", ms: "Ini nombor apa?" }, [0, 6, 8, 9], 9, { kind: "number", value: 9 }),
+  q("n-word-0", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [0, 2, 4, 6], 0, { kind: "word", value: 0 }),
+  q("n-word-3", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [3, 5, 7, 9], 3, { kind: "word", value: 3 }),
+  q("n-word-5", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [2, 5, 6, 8], 5, { kind: "word", value: 5 }),
+  q("n-word-7", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [1, 4, 7, 9], 7, { kind: "word", value: 7 }),
+  q("n-word-9", "numbers", { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" }, [0, 6, 8, 9], 9, { kind: "word", value: 9 }),
   q("n-after-1", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [0, 1, 2, 3], 2, { kind: "sequence", nums: [0, 1, "?"] }),
   q("n-after-5", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [4, 5, 6, 7], 6, { kind: "sequence", nums: [3, 4, 5, "?"] }),
   q("n-after-8", "numbers", { en: "What number is missing?", ms: "Nombor apa yang hilang?" }, [6, 7, 8, 9], 9, { kind: "sequence", nums: [6, 7, 8, "?"] }),
@@ -5802,14 +5802,14 @@ function ContainerScene({
   return (
     <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
-        <img src={image} alt={alt} className="absolute inset-0 h-full w-full object-contain" />
-        <div className={`absolute inset-[12%] ${count === 1 ? "grid place-items-center" : "flex flex-wrap content-center items-center justify-center gap-1.5"}`}>
+        <img src={image} alt={alt} className="absolute inset-0 z-0 h-full w-full object-contain" />
+        <div className="absolute inset-[12%] z-10 flex flex-wrap content-center items-center justify-center gap-2">
           {Array.from({ length: count }, (_, i) => (
             <div
               key={i}
-              className={`relative grid place-items-center rounded-2xl bg-white/85 shadow-md ${count === 1 ? "h-14 w-14" : "aspect-square min-w-8 max-w-14 basis-[28%]"}`}
+              className="relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/90 shadow-md"
             >
-              <SpriteIcon value={emoji} className="h-[78%] w-[78%]" />
+              <SpriteIcon value={emoji} className="h-11 w-11" />
               {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             </div>
           ))}
