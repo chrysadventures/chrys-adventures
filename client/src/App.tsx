@@ -888,6 +888,10 @@ function countForwardSteps(start: number, amount: number) {
 
 function objectName(emoji: string | undefined, count: number, lang: Lang) {
   const names: Record<string, { en: [string, string]; ms: string }> = {
+    "\u{1F353}": { en: ["strawberry", "strawberries"], ms: "strawberi" },
+    "\u{1F34B}": { en: ["lemon", "lemons"], ms: "lemon" },
+    "\u{1F34D}": { en: ["pineapple", "pineapples"], ms: "nanas" },
+    "\u{1F95D}": { en: ["kiwi slice", "kiwi slices"], ms: "potong kiwi" },
     "🍌": { en: ["banana", "bananas"], ms: "pisang" },
     "🍎": { en: ["apple", "apples"], ms: "epal" },
     "🍊": { en: ["orange", "oranges"], ms: "oren" },
@@ -2481,7 +2485,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 }
 
 function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "practice">("intro");
+  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "hungryStory" | "alyseStory" | "practice">("intro");
 
   if (phase === "practice") {
     return <Quiz lang={lang} t={t} title={`${t.subtraction}: ${t.practice}`} questions={subtractionPracticeQuestions} randomize={false} visualOnlyOperationSolutions onFinish={() => onDone()} onBackToLearning={() => setPhase("intro")} />;
@@ -2518,6 +2522,40 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             lang={lang}
             t={t}
             onPrev={() => setPhase("sign")}
+            onDone={() => setPhase("hungryStory")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+          />
+        )}
+        {phase === "hungryStory" && (
+          <WorkedSubtractionStory
+            lang={lang}
+            t={t}
+            title={lang === "en" ? "Chrys is hungry" : "Chrys lapar"}
+            story={lang === "en"
+              ? "Chrys has 9 bananas. He is hungry. He wants to eat 5 bananas."
+              : "Chrys ada 9 pisang. Dia lapar. Dia mahu makan 5 pisang."}
+            processText={lang === "en" ? "Chrys eats 5 bananas." : "Chrys makan 5 pisang."}
+            start={9}
+            takeAway={5}
+            character="chrys"
+            onPrev={() => setPhase("story")}
+            onDone={() => setPhase("alyseStory")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+          />
+        )}
+        {phase === "alyseStory" && (
+          <WorkedSubtractionStory
+            lang={lang}
+            t={t}
+            title={lang === "en" ? "Chrys takes bananas" : "Chrys mengambil pisang"}
+            story={lang === "en"
+              ? "Alyse has 8 bananas. Chrys takes 5 bananas from her."
+              : "Alyse ada 8 pisang. Chrys mengambil 5 pisang daripadanya."}
+            processText={lang === "en" ? "Chrys takes away 5 bananas." : "Chrys mengambil 5 pisang."}
+            start={8}
+            takeAway={5}
+            character="alyse"
+            onPrev={() => setPhase("hungryStory")}
             onDone={() => setPhase("practice")}
             actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
@@ -3382,6 +3420,100 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
           <p className="mt-2 text-xl font-black text-emerald-900">{lang === "en" ? "7 bananas. Cross out 3. 4 are left." : "7 pisang. Pangkah 3. Tinggal 4."}</p>
         </div>
       )}
+    </div>
+  );
+}
+
+type WorkedSubtractionStage = "initial" | "process" | "end";
+
+function WorkedSubtractionStory({ lang, t, title, story, processText, start, takeAway, character, onPrev, onDone, actions = [] }: {
+  lang: Lang;
+  t: UIStrings;
+  title: string;
+  story: string;
+  processText: string;
+  start: number;
+  takeAway: number;
+  character: "chrys" | "alyse";
+  onPrev: () => void;
+  onDone: () => void;
+  actions?: LessonAction[];
+}) {
+  const [stage, setStage] = useState<WorkedSubtractionStage>("initial");
+  const left = start - takeAway;
+  const characterImage = character === "alyse" ? alyseGuide : chrysHappy;
+  const characterAlt = character === "alyse" ? "Alyse" : "Chrys";
+  const stages: WorkedSubtractionStage[] = ["initial", "process", "end"];
+  const stageIndex = stages.indexOf(stage);
+  const stageLabel = stage === "initial"
+    ? (lang === "en" ? "Initial" : "Mula")
+    : stage === "process"
+      ? (lang === "en" ? "Take away" : "Ambil")
+      : (lang === "en" ? "End" : "Akhir");
+  const instruction = stage === "initial"
+    ? (lang === "en" ? `Start with ${start} bananas.` : `Mula dengan ${start} pisang.`)
+    : stage === "process"
+      ? processText
+      : (lang === "en" ? `${left} bananas are left.` : `${left} pisang tinggal.`);
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:text-left">
+          <img src={characterImage} alt={characterAlt} className="h-24 w-24 shrink-0 object-contain" />
+          <div>
+            <h3 className="text-center text-3xl font-black text-blue-950 sm:text-left">{title}</h3>
+            <p className="mt-2 text-center text-lg font-black leading-snug text-slate-700 sm:text-left">{story}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
+        <div className="mb-4 grid grid-cols-3 gap-2" aria-label={lang === "en" ? "Subtraction sequence" : "Urutan penolakan"}>
+          {stages.map((item, index) => (
+            <div
+              key={item}
+              className={`rounded-2xl border-2 px-2 py-3 text-center text-sm font-black sm:text-base ${index === stageIndex ? "border-blue-500 bg-blue-500 text-white" : index < stageIndex ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-500"}`}
+            >
+              <span className="mr-1">{index + 1}.</span>
+              {item === "initial" ? (lang === "en" ? "Initial" : "Mula") : item === "process" ? (lang === "en" ? "Process" : "Proses") : (lang === "en" ? "End" : "Akhir")}
+            </div>
+          ))}
+        </div>
+
+        <div className={`space-y-4 rounded-3xl border-2 p-4 text-center ${stage === "process" ? "border-red-200 bg-red-50" : stage === "end" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+          <p className="text-sm font-black uppercase tracking-wide text-slate-500">{stageLabel}</p>
+          <p className="text-2xl font-black text-blue-950">{instruction}</p>
+          {stage === "initial" && <ObjectGroup count={start} emoji="ðŸŒ" numbered />}
+          {stage === "process" && <ObjectGroup count={start} emoji="ðŸŒ" numbered crossed={takeAway} />}
+          {stage === "end" && <ObjectGroup count={left} emoji="ðŸŒ" numbered />}
+          <p className={`text-3xl font-black ${stage === "process" ? "text-red-800" : stage === "end" ? "text-emerald-800" : "text-blue-800"}`} style={NUMBER_TEXT_STYLE}>
+            {stage === "initial" ? `${start} - ${takeAway} = ?` : stage === "process" ? `${start} - ${takeAway}` : `${start} - ${takeAway} = ${left}`}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => stage === "initial" ? onPrev() : setStage(stages[stageIndex - 1])}
+          className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500"
+        >
+          {t.previous}
+        </button>
+        <div className="flex flex-wrap justify-end gap-3">
+          {actions.map((action) => (
+            <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
+          ))}
+          <button
+            type="button"
+            onClick={() => stage === "end" ? onDone() : setStage(stages[stageIndex + 1])}
+            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+          >
+            {stage === "end" ? (character === "alyse" ? t.practice : t.next) : t.next}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -4698,7 +4830,12 @@ function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Scre
 }
 
 function localizedQuestionOption(question: Question, option: number | string, lang: Lang) {
-  if (lang === "en" || typeof option !== "string" || !question.id.startsWith("rec-")) return option;
+  if (lang === "en" || typeof option !== "string") return option;
+  if (option === "Adding") return "Tambah";
+  if (option === "Taking away") return "Tolak";
+  if (option === "Yes") return "Ya";
+  if (option === "No") return "Tidak";
+  if (!question.id.startsWith("rec-")) return option;
   const numberWordIndex = WORDS.en.indexOf(option);
   return numberWordIndex >= 0 ? WORDS.ms[numberWordIndex] : option;
 }
@@ -6998,9 +7135,25 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
       return (
         <div className="space-y-3">
           <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-            <ContainerScene count={visual.a} emoji={emoji} container={visual.container} numbered={revealNumbers} lang={lang} />
+            <ContainerScene
+              count={visual.a}
+              emoji={emoji}
+              container={visual.container}
+              numbered={revealNumbers}
+              label={lang === "en"
+                ? `${visual.a} ${objectName(emoji, visual.a, lang)} in the basket`
+                : `${visual.a} ${objectName(emoji, visual.a, lang)} di dalam bakul`}
+              lang={lang}
+            />
             <span className="text-center text-4xl font-black text-blue-700">+</span>
-            <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} />
+            <div className="rounded-3xl border-2 border-amber-100 bg-white p-3 text-center">
+              <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} />
+              <p className="mt-3 text-xl font-black text-amber-900">
+                {lang === "en"
+                  ? `${visual.b} more ${objectName(emoji, visual.b, lang)}`
+                  : `${visual.b} ${objectName(emoji, visual.b, lang)} lagi`}
+              </p>
+            </div>
           </div>
           <p className="text-center text-3xl font-black text-slate-400">= ?</p>
         </div>
