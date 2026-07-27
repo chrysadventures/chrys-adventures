@@ -1964,7 +1964,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
           speakCount={speakCount}
           visibleCount={visibleCount}
           onCountProgress={onCountProgress}
-          highlightActiveCount={!complete}
+          highlightActiveCount
           lang={lang}
         />
       ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
@@ -3888,7 +3888,6 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
 
 function BasketBananaScene({ count, counted, label }: { count: number; counted: number; label: string }) {
   const banana = String.fromCodePoint(0x1f34c);
-  const countComplete = count > 0 && counted >= count;
   const positions = [
     ["left-[29%]", "top-[35%]", "-rotate-12"],
     ["left-[63%]", "top-[30%]", "rotate-12"],
@@ -3897,13 +3896,13 @@ function BasketBananaScene({ count, counted, label }: { count: number; counted: 
   ];
 
   return (
-    <div className={`mx-auto max-w-xl rounded-3xl border-4 p-4 transition-[border-color,background-color,box-shadow] ${countComplete ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200" : "border-amber-200 bg-white"}`}>
+    <div className="mx-auto max-w-xl rounded-3xl border-4 border-amber-200 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={BASKET_SPRITE} alt="basket" className="absolute inset-0 h-full w-full object-contain" />
         {Array.from({ length: count }, (_, index) => {
           const [x, y, rotation] = positions[index];
           const isCounted = index < counted;
-          const isActiveCount = !countComplete && counted > 0 && index === counted - 1;
+          const isActiveCount = counted > 0 && index === counted - 1;
           return (
             <div
               key={index}
@@ -4760,8 +4759,6 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   useEffect(() => () => stopNumberAudio(), []);
 
   const displayedCount = visibleCount ?? visible;
-  const countableTotal = countRemainingOnly ? remaining : count;
-  const countComplete = showCount && countableTotal > 0 && displayedCount >= countableTotal;
   const layoutClass = fixedColumns === 1
     ? "grid grid-cols-[3rem] place-content-center"
     : fixedColumns === 2
@@ -4769,14 +4766,14 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       : "flex flex-wrap justify-center";
   let leftIndex = 0;
   return (
-    <div className={`${layoutClass} rounded-3xl border-2 transition-[border-color,background-color,box-shadow] ${countComplete ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200" : "border-slate-100 bg-white"} ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
+    <div className={`${layoutClass} rounded-3xl border-2 border-slate-100 bg-white ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
         const willBeTaken = i < crossed;
         const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
         const label = shouldCount ? ++leftIndex : 0;
         const labelVisible = shouldCount && label <= displayedCount;
-        const isActiveCount = highlightActiveCount && !countComplete && (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
+        const isActiveCount = highlightActiveCount && (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
         const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
         return (
           <div
