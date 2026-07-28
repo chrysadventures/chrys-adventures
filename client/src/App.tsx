@@ -4008,10 +4008,12 @@ function AdditionBananaEquation({
 
           await revealResultValues(Array.from({ length: a }, (_, value) => value + 1));
           if (cancelled) return;
-          await wait(prefersReducedMotion ? 0 : 250);
           setResultMergeStage("cue");
+          // Show the highlighted plus before its audio, then wait for "tambah"
+          // to finish before counting the second group from 3.
+          await wait(prefersReducedMotion ? 0 : 180);
           await speakMathCue("plus", lang);
-          await wait(prefersReducedMotion ? 0 : 300);
+          await wait(prefersReducedMotion ? 0 : 450);
           if (cancelled) return;
           setResultMergeStage("split");
           await revealResultValues(Array.from({ length: b }, (_, value) => a + value + 1));
@@ -4219,14 +4221,14 @@ function AdditionBananaEquation({
                       return (
                         <React.Fragment key={`total-subgroup-${subgroupIndex}`}>
                           {subgroupIndex === 1 && (
-                            <div
-                              aria-hidden="true"
-                              className={`relative z-20 grid justify-self-center overflow-hidden transition-[max-height,opacity,transform] ease-out ${
-                                resultMergeStage === "joining" || resultMergeStage === "joined"
-                                  ? "max-h-0 scale-50 opacity-0 duration-200"
-                                  : "max-h-16 scale-100 opacity-100 duration-300"
-                              }`}
-                            >
+                             <div
+                               aria-hidden="true"
+                               className={`relative z-20 grid justify-self-center overflow-hidden transition-[max-height,opacity,transform,padding] ease-out ${
+                                 resultMergeStage === "joining" || resultMergeStage === "joined"
+                                   ? "max-h-0 scale-50 p-0 opacity-0 duration-200"
+                                   : "max-h-20 scale-100 p-2 opacity-100 duration-300"
+                               }`}
+                             >
                               <span
                                 className={`grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,box-shadow,transform] duration-300 ${
                                   resultMergeStage === "cue"
