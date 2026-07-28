@@ -3953,7 +3953,7 @@ function AdditionBananaEquation({
   const [hasStarted, setHasStarted] = useState(autoStart);
   const [isCounting, setIsCounting] = useState(autoStart);
   const [countRun, setCountRun] = useState(0);
-  const [resultMergeStage, setResultMergeStage] = useState<"split" | "joining" | "joined">("split");
+  const [resultMergeStage, setResultMergeStage] = useState<"split" | "cue" | "joining" | "joined">("split");
   const labels = groups.map((count) => `${count} ${objectName(emoji, count, lang)}`);
 
   useEffect(() => {
@@ -4011,7 +4011,11 @@ function AdditionBananaEquation({
         setActiveBanana(null);
 
         if (groupIndex === 2) {
-          await wait(prefersReducedMotion ? 0 : 550);
+          await wait(prefersReducedMotion ? 0 : 350);
+          if (cancelled) return;
+          setResultMergeStage("cue");
+          await speakMathCue("plus", lang);
+          await wait(prefersReducedMotion ? 0 : 300);
           if (cancelled) return;
           setResultMergeStage("joining");
           await wait(prefersReducedMotion ? 0 : 1100);
@@ -4155,7 +4159,9 @@ function AdditionBananaEquation({
                 {index === 2 ? (
                   <div
                     className={`relative grid w-full transition-[gap] duration-1000 ease-in-out ${
-                      resultMergeStage === "split" ? "gap-4" : "gap-0"
+                      resultMergeStage === "split" || resultMergeStage === "cue"
+                        ? "gap-6 sm:gap-8"
+                        : "gap-0"
                     }`}
                   >
                     {resultMergeStage === "joining" && (
@@ -4172,42 +4178,64 @@ function AdditionBananaEquation({
                         && activeBanana.objectIndex < countOffset + subgroupCount;
                       const subgroupHighlighted = subgroupFinished
                         && (
-                          (subgroupIndex === 0 && visibleCounts[index] === a)
+                          resultMergeStage === "cue"
+                          || (subgroupIndex === 0 && visibleCounts[index] === a)
                           || (subgroupIndex === 1 && resultMergeStage === "split")
                         );
                       return (
-                        <div
-                          key={`total-subgroup-${subgroupIndex}`}
-                          className={`relative z-10 grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[transform,border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
-                            resultMergeStage === "joined"
-                              ? "border-transparent bg-transparent shadow-none"
-                              : subgroupHighlighted
-                                ? "border-yellow-500 bg-yellow-50 ring-4 ring-yellow-200 shadow-lg"
-                                : subgroupIsCurrent
-                                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
-                                  : "border-blue-400 bg-blue-50/60"
-                          } ${
-                            resultMergeStage === "joining"
-                              ? subgroupIndex === 0
-                                ? "translate-y-6 scale-[1.04] rounded-b-none border-b-transparent shadow-[0_10px_24px_rgba(59,130,246,.25)]"
-                                : "-translate-y-6 scale-[1.04] rounded-t-none border-t-transparent shadow-[0_-10px_24px_rgba(59,130,246,.25)]"
-                              : ""
-                          }`}
-                        >
-                          {Array.from({ length: subgroupCount }, (_, subgroupObjectIndex) => (
-                            renderBanana(
-                              index,
-                              countOffset + subgroupObjectIndex,
-                              subgroupCount,
-                              subgroupObjectIndex,
-                            )
-                          ))}
-                          {subgroupCount === 0 && (
-                            <span className="col-span-2 py-5 text-base font-black text-slate-500">
-                              {lang === "en" ? "No objects" : "Tiada objek"}
-                            </span>
+                        <React.Fragment key={`total-subgroup-${subgroupIndex}`}>
+                          {subgroupIndex === 1 && (
+                            <div
+                              aria-hidden="true"
+                              className={`relative z-20 grid justify-self-center overflow-hidden transition-[max-height,opacity,transform] ease-out ${
+                                resultMergeStage === "joining" || resultMergeStage === "joined"
+                                  ? "max-h-0 scale-50 opacity-0 duration-200"
+                                  : "max-h-16 scale-100 opacity-100 duration-300"
+                              }`}
+                            >
+                              <span
+                                className={`grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,box-shadow,transform] duration-300 ${
+                                  resultMergeStage === "cue"
+                                    ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_5px_0_#d97706]"
+                                    : "border-yellow-400 bg-yellow-100 text-blue-950 shadow-[0_4px_0_#d97706]"
+                                }`}
+                              >
+                                +
+                              </span>
+                            </div>
                           )}
-                        </div>
+                          <div
+                            className={`relative z-10 grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
+                              resultMergeStage === "joined"
+                                ? "border-transparent bg-transparent shadow-none"
+                                : subgroupHighlighted
+                                  ? "border-yellow-500 bg-yellow-50 ring-4 ring-yellow-200 shadow-lg"
+                                  : subgroupIsCurrent
+                                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                                    : "border-blue-400 bg-blue-50/60"
+                            } ${
+                              resultMergeStage === "joining"
+                                ? subgroupIndex === 0
+                                  ? "rounded-b-none border-b-blue-400 shadow-[0_8px_20px_rgba(59,130,246,.2)]"
+                                  : "rounded-t-none border-t-transparent shadow-[0_8px_20px_rgba(59,130,246,.2)]"
+                                : ""
+                            }`}
+                          >
+                            {Array.from({ length: subgroupCount }, (_, subgroupObjectIndex) => (
+                              renderBanana(
+                                index,
+                                countOffset + subgroupObjectIndex,
+                                subgroupCount,
+                                subgroupObjectIndex,
+                              )
+                            ))}
+                            {subgroupCount === 0 && (
+                              <span className="col-span-2 py-5 text-base font-black text-slate-500">
+                                {lang === "en" ? "No objects" : "Tiada objek"}
+                              </span>
+                            )}
+                          </div>
+                        </React.Fragment>
                       );
                     })}
                   </div>
