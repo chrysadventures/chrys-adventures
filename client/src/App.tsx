@@ -3953,6 +3953,7 @@ function AdditionBananaEquation({
   const [hasStarted, setHasStarted] = useState(autoStart);
   const [isCounting, setIsCounting] = useState(autoStart);
   const [countRun, setCountRun] = useState(0);
+  const [resultMergeStage, setResultMergeStage] = useState<"split" | "joining" | "joined">("split");
   const labels = groups.map((count) => `${count} ${objectName(emoji, count, lang)}`);
 
   useEffect(() => {
@@ -3969,6 +3970,7 @@ function AdditionBananaEquation({
       setCompletedSigns(0);
       setActiveSign(-1);
       setActiveBanana(null);
+      setResultMergeStage("split");
 
       for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
         if (cancelled) return;
@@ -4007,6 +4009,18 @@ function AdditionBananaEquation({
 
         if (cancelled) return;
         setActiveBanana(null);
+
+        if (groupIndex === 2) {
+          await wait(prefersReducedMotion ? 0 : 450);
+          if (cancelled) return;
+          setResultMergeStage("joining");
+          await wait(prefersReducedMotion ? 0 : 850);
+          if (cancelled) return;
+          setResultMergeStage("joined");
+          await wait(prefersReducedMotion ? 0 : 350);
+          if (cancelled) return;
+        }
+
         setCompletedGroups(groupIndex + 1);
         speakText(
           lang === "en" ? `Total ${count} ${objectName(emoji, count, lang)}.` : `Jumlah ${count} ${objectName(emoji, count, lang)}.`,
@@ -4135,13 +4149,40 @@ function AdditionBananaEquation({
             >
               <div className="flex flex-1 items-center justify-center">
                 {index === 2 ? (
-                  <div className="grid w-full gap-2">
+                  <div
+                    className={`grid w-full transition-[gap] duration-700 ease-in-out ${
+                      resultMergeStage === "split" ? "gap-4" : "gap-0"
+                    }`}
+                  >
                     {[a, b].map((subgroupCount, subgroupIndex) => {
                       const countOffset = subgroupIndex === 0 ? 0 : a;
+                      const subgroupFinished = visibleCounts[index] >= countOffset + subgroupCount;
+                      const subgroupIsCurrent = activeBanana?.groupIndex === index
+                        && activeBanana.objectIndex >= countOffset
+                        && activeBanana.objectIndex < countOffset + subgroupCount;
+                      const subgroupHighlighted = subgroupFinished
+                        && (
+                          (subgroupIndex === 0 && visibleCounts[index] === a)
+                          || (subgroupIndex === 1 && resultMergeStage === "split")
+                        );
                       return (
                         <div
                           key={`total-subgroup-${subgroupIndex}`}
-                          className="grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 border-blue-400 bg-blue-50/60 p-2"
+                          className={`grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[transform,border-color,background-color,box-shadow,border-radius] duration-700 ease-in-out ${
+                            resultMergeStage === "joined"
+                              ? "border-transparent bg-transparent shadow-none"
+                              : subgroupHighlighted
+                                ? "border-yellow-500 bg-yellow-50 ring-4 ring-yellow-200 shadow-lg"
+                                : subgroupIsCurrent
+                                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                                  : "border-blue-400 bg-blue-50/60"
+                          } ${
+                            resultMergeStage === "joining"
+                              ? subgroupIndex === 0
+                                ? "translate-y-2 rounded-b-none border-b-transparent"
+                                : "-translate-y-2 rounded-t-none border-t-transparent"
+                              : ""
+                          }`}
                         >
                           {Array.from({ length: subgroupCount }, (_, subgroupObjectIndex) => (
                             renderBanana(
