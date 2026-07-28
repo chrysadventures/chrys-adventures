@@ -3977,7 +3977,45 @@ function AdditionBananaEquation({
         const count = groups[groupIndex];
         setActiveGroup(groupIndex);
 
-        if (audioMuted) {
+        if (groupIndex === 2) {
+          const revealResultValues = async (values: number[]) => {
+            if (audioMuted) {
+              if (prefersReducedMotion) {
+                const lastValue = values.at(-1);
+                if (lastValue !== undefined) {
+                  setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? lastValue : shown));
+                }
+                return;
+              }
+              for (const value of values) {
+                if (cancelled) return;
+                setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+                setActiveBanana({ groupIndex, objectIndex: value - 1 });
+                await wait(intervalMs);
+                if (cancelled) return;
+                setActiveBanana(null);
+              }
+              return;
+            }
+
+            await speakNumberValuesSequence(values, lang, intervalMs, (value) => {
+              if (cancelled) return;
+              setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
+              setActiveBanana({ groupIndex, objectIndex: value - 1 });
+            });
+            setActiveBanana(null);
+          };
+
+          await revealResultValues(Array.from({ length: a }, (_, value) => value + 1));
+          if (cancelled) return;
+          await wait(prefersReducedMotion ? 0 : 250);
+          setResultMergeStage("cue");
+          await speakMathCue("plus", lang);
+          await wait(prefersReducedMotion ? 0 : 300);
+          if (cancelled) return;
+          setResultMergeStage("split");
+          await revealResultValues(Array.from({ length: b }, (_, value) => a + value + 1));
+        } else if (audioMuted) {
           if (prefersReducedMotion) {
             setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? count : value));
           } else {
@@ -4012,10 +4050,6 @@ function AdditionBananaEquation({
 
         if (groupIndex === 2) {
           await wait(prefersReducedMotion ? 0 : 350);
-          if (cancelled) return;
-          setResultMergeStage("cue");
-          await speakMathCue("plus", lang);
-          await wait(prefersReducedMotion ? 0 : 300);
           if (cancelled) return;
           setResultMergeStage("joining");
           await wait(prefersReducedMotion ? 0 : 1100);
