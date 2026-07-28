@@ -4011,13 +4011,13 @@ function AdditionBananaEquation({
         setActiveBanana(null);
 
         if (groupIndex === 2) {
-          await wait(prefersReducedMotion ? 0 : 450);
+          await wait(prefersReducedMotion ? 0 : 550);
           if (cancelled) return;
           setResultMergeStage("joining");
-          await wait(prefersReducedMotion ? 0 : 850);
+          await wait(prefersReducedMotion ? 0 : 1100);
           if (cancelled) return;
           setResultMergeStage("joined");
-          await wait(prefersReducedMotion ? 0 : 350);
+          await wait(prefersReducedMotion ? 0 : 450);
           if (cancelled) return;
         }
 
@@ -4139,8 +4139,12 @@ function AdditionBananaEquation({
             )}
             <div
               aria-current={activeGroup === index ? "step" : undefined}
-              className={`flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
-                  activeGroup === index
+              className={`relative flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow,transform] duration-700 ease-out ${
+                  index === 2 && resultMergeStage === "joining"
+                    ? "scale-[1.025] border-yellow-400 bg-yellow-50 ring-8 ring-yellow-200 shadow-[0_0_36px_rgba(250,204,21,.55)]"
+                    : index === 2 && resultMergeStage === "joined"
+                      ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 shadow-[0_8px_24px_rgba(16,185,129,.24)]"
+                      : activeGroup === index
                     ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
                     : !hasStarted || (index > activeGroup && completedGroups <= index)
                       ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
@@ -4150,10 +4154,16 @@ function AdditionBananaEquation({
               <div className="flex flex-1 items-center justify-center">
                 {index === 2 ? (
                   <div
-                    className={`grid w-full transition-[gap] duration-700 ease-in-out ${
+                    className={`relative grid w-full transition-[gap] duration-1000 ease-in-out ${
                       resultMergeStage === "split" ? "gap-4" : "gap-0"
                     }`}
                   >
+                    {resultMergeStage === "joining" && (
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/70 ring-8 ring-yellow-200/70 motion-safe:animate-ping"
+                      />
+                    )}
                     {[a, b].map((subgroupCount, subgroupIndex) => {
                       const countOffset = subgroupIndex === 0 ? 0 : a;
                       const subgroupFinished = visibleCounts[index] >= countOffset + subgroupCount;
@@ -4168,7 +4178,7 @@ function AdditionBananaEquation({
                       return (
                         <div
                           key={`total-subgroup-${subgroupIndex}`}
-                          className={`grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[transform,border-color,background-color,box-shadow,border-radius] duration-700 ease-in-out ${
+                          className={`relative z-10 grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[transform,border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
                             resultMergeStage === "joined"
                               ? "border-transparent bg-transparent shadow-none"
                               : subgroupHighlighted
@@ -4179,8 +4189,8 @@ function AdditionBananaEquation({
                           } ${
                             resultMergeStage === "joining"
                               ? subgroupIndex === 0
-                                ? "translate-y-2 rounded-b-none border-b-transparent"
-                                : "-translate-y-2 rounded-t-none border-t-transparent"
+                                ? "translate-y-6 scale-[1.04] rounded-b-none border-b-transparent shadow-[0_10px_24px_rgba(59,130,246,.25)]"
+                                : "-translate-y-6 scale-[1.04] rounded-t-none border-t-transparent shadow-[0_-10px_24px_rgba(59,130,246,.25)]"
                               : ""
                           }`}
                         >
