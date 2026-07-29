@@ -2431,7 +2431,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl pb-8">
+    <main className="mx-auto w-full max-w-5xl pb-8">
       <LessonShell lang={lang} title={t.addition}>
         {phase === "intro" && (
           <AdditionIntroStep
@@ -5569,6 +5569,7 @@ function ActiveAnswerPanel({
   const [selectedObjects, setSelectedObjects] = useState<number[]>([]);
   const [selectedNone, setSelectedNone] = useState(false);
   const [removedCount, setRemovedCount] = useState(0);
+  const [buildMessage, setBuildMessage] = useState<string | null>(null);
   const answer = Number(question.answer);
   const emoji =
     question.visual.kind === "groupMake" ? question.visual.emoji :
@@ -5715,69 +5716,102 @@ function ActiveAnswerPanel({
 
   if (question.inputMode === "buildTotal" && question.visual.kind === "add") {
     const groupCounts = [question.visual.a, question.visual.b];
-    const countedTotal = answered && Number.isFinite(selectedNumber) ? selectedNumber : selectedObjects.length;
-    const countExistingObject = (objectIndex: number) => {
-      if (answered || selectedObjects.includes(objectIndex)) return;
-      const nextObjects = [...selectedObjects, objectIndex];
+    const targetTotal = question.visual.a + question.visual.b;
+    const builtTotal = answered && Number.isFinite(selectedNumber) ? selectedNumber : selectedObjects.length;
+    const addToBasket = () => {
+      if (answered || selectedObjects.length >= targetTotal) return;
+      const nextObjects = [...selectedObjects, selectedObjects.length];
       setSelectedObjects(nextObjects);
+      setBuildMessage(null);
       speakNumber(nextObjects.length, lang);
     };
-    let objectOffset = 0;
+    const checkBasket = () => {
+      if (selectedObjects.length === 0) return;
+      if (selectedObjects.length === targetTotal) {
+        onAnswer(selectedObjects.length);
+        return;
+      }
+      setBuildMessage(
+        lang === "en"
+          ? "Keep adding bananas, or clear the basket and try again."
+          : "Tambah lagi pisang, atau padam bakul dan cuba lagi.",
+      );
+    };
 
     return (
       <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
-        <p className="mb-4 text-lg font-black text-slate-700">
-          {lang === "en" ? "Tap each banana to count." : "Tekan setiap pisang untuk mengira."}
+        <p className="mb-4 text-xl font-black text-slate-800">
+          {lang === "en"
+            ? "Put both groups together. Build the total."
+            : "Gabungkan kedua-dua kumpulan. Bina jumlah."}
         </p>
         <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr]">
-          {groupCounts.map((groupCount, groupIndex) => {
-            const groupStart = objectOffset;
-            objectOffset += groupCount;
-            return (
-              <React.Fragment key={groupIndex}>
-                {groupIndex > 0 && <span className="text-4xl font-black text-blue-900" aria-hidden="true">+</span>}
-                <div className="rounded-3xl border-2 border-amber-100 bg-amber-50 p-4">
-                  <div className="flex flex-wrap justify-center gap-3">
-                    {Array.from({ length: groupCount }, (_, localIndex) => {
-                      const objectIndex = groupStart + localIndex;
-                      const countOrder = selectedObjects.indexOf(objectIndex) + 1;
-                      const counted = countOrder > 0;
-                      return (
-                        <button
-                          key={objectIndex}
-                          type="button"
-                          disabled={answered || counted}
-                          onClick={() => countExistingObject(objectIndex)}
-                          aria-pressed={counted}
-                          aria-label={lang === "en"
-                            ? `Banana ${objectIndex + 1}${counted ? `, counted ${countOrder}` : ""}`
-                            : `Pisang ${objectIndex + 1}${counted ? `, dikira ${countOrder}` : ""}`}
-                          className={`relative grid h-24 w-16 place-items-center rounded-2xl border-2 pt-4 shadow-inner active:translate-y-1 disabled:opacity-100 ${counted ? "border-blue-600 bg-blue-50" : "border-amber-100 bg-white"}`}
-                        >
-                          {counted && (
-                            <span className="absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white">
-                              {countOrder}
-                            </span>
-                          )}
-                          <SpriteIcon value={emoji} className="h-12 w-12" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-3 text-xl font-black text-amber-900">
-                    {lang === "en" ? `Group ${groupIndex + 1}` : `Kumpulan ${groupIndex + 1}`}
-                  </p>
-                </div>
-              </React.Fragment>
-            );
-          })}
+          {groupCounts.map((groupCount, groupIndex) => (
+            <React.Fragment key={groupIndex}>
+              {groupIndex > 0 && <span className="text-4xl font-black text-blue-900" aria-hidden="true">+</span>}
+              <div className="rounded-3xl border-2 border-amber-200 bg-amber-50 p-4">
+                <ObjectGroup count={groupCount} emoji={emoji} lang={lang} />
+                <p className="mt-3 text-xl font-black text-amber-900">
+                  {lang === "en"
+                    ? `Group ${groupIndex + 1}: ${groupCount} ${objectName(emoji, groupCount, lang)}`
+                    : `Kumpulan ${groupIndex + 1}: ${groupCount} ${objectName(emoji, groupCount, lang)}`}
+                </p>
+              </div>
+            </React.Fragment>
+          ))}
         </div>
-        {answered && <CountTotalBadge count={countedTotal} lang={lang} />}
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
+
+        <div className="mx-auto mt-6 max-w-xl rounded-3xl border-4 border-emerald-300 bg-emerald-50 p-4">
+          <ContainerScene
+            count={builtTotal}
+            emoji={emoji}
+            container="basket"
+            numbered
+            hideEmptyLabel
+            label={lang === "en" ? "Your basket" : "Bakul awak"}
+            lang={lang}
+          />
+          <CountTotalBadge count={builtTotal} lang={lang} unit={objectName(emoji, builtTotal, lang)} />
+        </div>
+
+        {!answered && (
+          <button
+            type="button"
+            disabled={selectedObjects.length >= targetTotal}
+            onClick={addToBasket}
+            className="relative mx-auto mt-5 inline-flex min-h-20 items-center justify-center gap-3 rounded-3xl border-2 border-yellow-500 bg-yellow-100 px-8 py-4 text-xl font-black text-amber-950 shadow-[0_6px_0_#d97706] active:translate-y-1 disabled:opacity-40"
+          >
+            <SpriteIcon value={emoji} className="h-12 w-12" />
+            {lang === "en" ? "Add one banana" : "Tambah satu pisang"}
+            <span
+              className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
+              aria-hidden="true"
+            >
+              <PointerIcon />
+            </span>
+          </button>
+        )}
+
+        {buildMessage && (
+          <p className="mx-auto mt-4 max-w-xl rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 font-black text-amber-900" role="status">
+            {buildMessage}
+          </p>
+        )}
+
+        {answered && (
+          <p className="mt-5 text-3xl font-black text-emerald-800">
+            {question.visual.a} + {question.visual.b} = {targetTotal}
+          </p>
+        )}
+
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
           <button
             type="button"
             disabled={answered || selectedObjects.length === 0}
-            onClick={() => setSelectedObjects([])}
+            onClick={() => {
+              setSelectedObjects([]);
+              setBuildMessage(null);
+            }}
             className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
           >
             {lang === "en" ? "Clear" : "Padam"}
@@ -5785,7 +5819,7 @@ function ActiveAnswerPanel({
           <button
             type="button"
             disabled={answered || selectedObjects.length === 0}
-            onClick={() => onAnswer(selectedObjects.length)}
+            onClick={checkBasket}
             className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
           >
             {lang === "en" ? "Check" : "Semak"}
