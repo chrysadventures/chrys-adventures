@@ -3625,11 +3625,12 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
             <img src={alyseGuide} alt="Alyse" className="h-32 w-32 object-contain" />
           </div>
           <div>
-            <BasketBananaScene
-              count={4}
-              counted={alyseCounted}
-              label={lang === "en" ? "Alyse's basket" : "Bakul Alyse"}
-            />
+             <BasketBananaScene
+               count={4}
+               counted={alyseCounted}
+               isCounting={alyseCounting}
+               label={lang === "en" ? "Alyse's basket" : "Bakul Alyse"}
+             />
             <div className="mt-4 flex justify-center">
               <button
                 type="button"
@@ -3672,14 +3673,12 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
 
 function ZeroAdditionEquation({ lang }: { lang: Lang }) {
   const banana = String.fromCodePoint(0x1f34c);
-  const groups = [0, 4, 4] as const;
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [visibleCounts, setVisibleCounts] = useState([0, 0, 0]);
-  const [completedGroups, setCompletedGroups] = useState(0);
-  const [activeGroup, setActiveGroup] = useState(-1);
-  const [completedSigns, setCompletedSigns] = useState(0);
-  const [activeSign, setActiveSign] = useState(-1);
-  const [activeBanana, setActiveBanana] = useState<{ groupIndex: number; objectIndex: number } | null>(null);
+  const [zeroVisible, setZeroVisible] = useState(false);
+  const [visibleBananas, setVisibleBananas] = useState(0);
+  const [activePart, setActivePart] = useState<"zero" | "plus" | "bananas" | "merge" | null>(null);
+  const [activeBanana, setActiveBanana] = useState<number | null>(null);
+  const [mergeStage, setMergeStage] = useState<"split" | "cue" | "joining" | "joined">("split");
   const [hasStarted, setHasStarted] = useState(false);
   const [isCounting, setIsCounting] = useState(false);
   const [countRun, setCountRun] = useState(0);
@@ -3687,72 +3686,74 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
   useEffect(() => {
     if (!hasStarted) return;
     let cancelled = false;
-
-    const countGroup = async (groupIndex: number, count: number) => {
-      setActiveGroup(groupIndex);
-      if (count === 0) {
-        if (!audioMuted) speakNumber(0, lang);
-        await wait(prefersReducedMotion ? 350 : COUNTING_STEP_MS);
-        return;
-      }
-
-      if (audioMuted) {
-        if (prefersReducedMotion) {
-          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? count : shown));
-          return;
-        }
-        for (let value = 1; value <= count; value += 1) {
-          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-          setActiveBanana({ groupIndex, objectIndex: value - 1 });
-          await wait(COUNTING_STEP_MS);
-          if (cancelled) return;
-          setActiveBanana(null);
-        }
-        return;
-      }
-
-      await speakCountingSequence(
-        count,
-        lang,
-        COUNTING_STEP_MS,
-        (value) => {
-          if (cancelled) return;
-          setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-          setActiveBanana({ groupIndex, objectIndex: value - 1 });
-        },
-        (value) => {
-          if (cancelled) return;
-          setActiveBanana((current) => current?.groupIndex === groupIndex && current.objectIndex === value - 1 ? null : current);
-        },
-      );
-    };
+    const intervalMs = 1400;
 
     const runSequence = async () => {
       setIsCounting(true);
       stopNumberAudio();
-      setVisibleCounts([0, 0, 0]);
-      setCompletedGroups(0);
-      setCompletedSigns(0);
-      setActiveSign(-1);
+      setZeroVisible(false);
+      setVisibleBananas(0);
+      setActivePart("zero");
       setActiveBanana(null);
+      setMergeStage("split");
 
-      for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
-        await countGroup(groupIndex, groups[groupIndex]);
-        if (cancelled) return;
-        setActiveBanana(null);
-        setCompletedGroups(groupIndex + 1);
-
-        if (groupIndex < groups.length - 1) {
-          setActiveSign(groupIndex);
-          await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
-          await wait(300);
-          if (cancelled) return;
-          setCompletedSigns(groupIndex + 1);
-          setActiveSign(-1);
-        }
+      if (audioMuted) {
+        setZeroVisible(true);
+        await wait(prefersReducedMotion ? 0 : intervalMs);
+      } else {
+        await speakNumberValuesSequence([0], lang, intervalMs, () => {
+          if (!cancelled) setZeroVisible(true);
+        });
       }
+      if (cancelled) return;
 
-      setActiveGroup(-1);
+      setActivePart("plus");
+      setMergeStage("cue");
+      await wait(prefersReducedMotion ? 0 : 180);
+      await speakMathCue("plus", lang);
+      await wait(prefersReducedMotion ? 0 : 450);
+      if (cancelled) return;
+
+      setMergeStage("split");
+      setActivePart("bananas");
+      if (audioMuted) {
+        if (prefersReducedMotion) {
+          setVisibleBananas(4);
+        } else {
+          for (let value = 1; value <= 4; value += 1) {
+            if (cancelled) return;
+            setVisibleBananas(value);
+            setActiveBanana(value - 1);
+            await wait(intervalMs);
+            setActiveBanana(null);
+          }
+        }
+      } else {
+        await speakCountingSequence(
+          4,
+          lang,
+          intervalMs,
+          (value) => {
+            if (cancelled) return;
+            setVisibleBananas(value);
+            setActiveBanana(value - 1);
+          },
+          (value) => {
+            if (cancelled) return;
+            setActiveBanana((current) => current === value - 1 ? null : current);
+          },
+        );
+      }
+      if (cancelled) return;
+
+      setActiveBanana(null);
+      setActivePart("merge");
+      await wait(prefersReducedMotion ? 0 : 350);
+      setMergeStage("joining");
+      await wait(prefersReducedMotion ? 0 : 1100);
+      if (cancelled) return;
+      setMergeStage("joined");
+      setActivePart(null);
       setIsCounting(false);
     };
 
@@ -3781,7 +3782,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
         >
           {isCounting
             ? (lang === "en" ? "Counting..." : "Mengira...")
-            : completedGroups === groups.length
+            : mergeStage === "joined"
               ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
               : (lang === "en" ? "Start Counting!" : "Mula Mengira!")}
           {!isCounting && (
@@ -3792,87 +3793,116 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
         </button>
       </div>
 
-      <div className="grid items-stretch gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
-        {groups.map((count, groupIndex) => {
-          const groupComplete = completedGroups > groupIndex;
-          const groupActive = activeGroup === groupIndex;
-          return (
-            <React.Fragment key={`${count}-${groupIndex}`}>
-              {groupIndex > 0 && (
-                <span
-                  className={`grid h-14 w-14 place-items-center self-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow] duration-300 ${
-                    activeSign === groupIndex - 1
-                      ? "border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
-                      : completedSigns >= groupIndex
-                        ? "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_4px_0_#d97706]"
-                        : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
-                  }`}
-                  aria-hidden="true"
-                >
-                  {groupIndex === 1 ? "+" : "="}
-                </span>
-              )}
-
-              <div
-                aria-current={groupActive ? "step" : undefined}
-                className={`flex min-h-[23rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
-                  groupActive
+      <div
+        className={`mx-auto flex min-h-[35rem] w-full max-w-sm flex-col rounded-3xl border-2 p-4 shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,box-shadow,transform] duration-700 ease-out ${
+          mergeStage === "joining"
+            ? "scale-[1.025] border-yellow-400 bg-yellow-50 ring-8 ring-yellow-200 shadow-[0_0_36px_rgba(250,204,21,.55)]"
+            : mergeStage === "joined"
+              ? "border-emerald-400 bg-white ring-4 ring-emerald-200 shadow-[0_8px_24px_rgba(16,185,129,.24)]"
+              : "border-emerald-300 bg-white"
+        }`}
+      >
+        <div
+          aria-current={activePart === "zero" ? "step" : undefined}
+          className={`grid overflow-hidden rounded-2xl border-2 transition-[max-height,min-height,opacity,transform,padding,border-color,background-color,box-shadow] ease-out ${
+            mergeStage === "joining" || mergeStage === "joined"
+              ? "max-h-0 min-h-0 scale-95 border-transparent p-0 opacity-0 duration-500"
+              : `max-h-44 min-h-36 p-4 opacity-100 duration-700 ${
+                  activePart === "zero"
                     ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
-                    : !hasStarted || (groupIndex > activeGroup && completedGroups <= groupIndex)
-                      ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
-                      : "border-emerald-300 bg-white"
-                }`}
-              >
-                <div className="flex flex-1 items-center justify-center">
-                  {count === 0 ? (
-                    <div className="text-center">
-                      <span className="block text-7xl font-black text-blue-950" style={NUMBER_TEXT_STYLE}>0</span>
-                      <span className="mt-3 block text-lg font-black text-slate-500">
-                        {lang === "en" ? "No bananas" : "Tiada pisang"}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 place-items-center gap-3">
-                      {Array.from({ length: count }, (_, objectIndex) => {
-                        const counted = objectIndex < visibleCounts[groupIndex];
-                        const current = activeBanana?.groupIndex === groupIndex && activeBanana.objectIndex === objectIndex;
-                        return (
-                          <div
-                            key={objectIndex}
-                            className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
-                              current
-                                  ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
-                                  : groupComplete
-                                    ? "border-amber-100 bg-amber-50"
-                                  : counted
-                                    ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
-                                    : "border-transparent bg-amber-50 opacity-55 grayscale"
-                            }`}
-                          >
-                            <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
-                              {objectIndex + 1}
-                            </span>
-                            <SpriteIcon value={banana} className="h-12 w-12" />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                    : "border-emerald-200 bg-emerald-50"
+                }`
+          }`}
+        >
+          <div className="place-self-center text-center">
+            <span
+              className={`mx-auto grid h-14 w-14 place-items-center rounded-full text-4xl font-black transition-[background-color,color,opacity,transform] duration-300 ${
+                zeroVisible ? "scale-100 bg-blue-600 text-white opacity-100" : "scale-75 bg-slate-200 text-slate-400 opacity-45"
+              }`}
+              style={NUMBER_TEXT_STYLE}
+            >
+              0
+            </span>
+            <span className={`mt-3 block text-xl font-black transition-colors ${zeroVisible ? "text-blue-950" : "text-slate-400"}`}>
+              {lang === "en" ? "No Bananas" : "Tiada Pisang"}
+            </span>
+          </div>
+        </div>
+
+        <div
+          className={`grid place-items-center overflow-hidden transition-[max-height,opacity,transform,padding] ${
+            mergeStage === "joining" || mergeStage === "joined"
+              ? "max-h-0 scale-50 p-0 opacity-0 duration-200"
+              : "max-h-24 scale-100 py-5 opacity-100 duration-300"
+          }`}
+        >
+          <span
+            className={`grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow,transform] duration-300 ${
+              activePart === "plus" || mergeStage === "cue"
+                ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
+                : zeroVisible
+                  ? "border-yellow-400 bg-yellow-100 text-blue-950 shadow-[0_4px_0_#d97706]"
+                  : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
+            }`}
+            aria-label={lang === "en" ? "plus" : "tambah"}
+          >
+            +
+          </span>
+        </div>
+
+        <div
+          aria-current={activePart === "bananas" ? "step" : undefined}
+          className={`flex flex-1 flex-col justify-center rounded-2xl border-2 p-4 transition-[border-color,background-color,box-shadow,transform,border-radius] duration-700 ease-out ${
+            activePart === "bananas"
+              ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
+              : mergeStage === "joined"
+                ? "border-transparent bg-white"
+                : "border-emerald-200 bg-white"
+          }`}
+        >
+          <div className="grid grid-cols-2 place-items-center gap-3">
+            {Array.from({ length: 4 }, (_, objectIndex) => {
+              const counted = objectIndex < visibleBananas;
+              const current = activeBanana === objectIndex;
+              const groupComplete = visibleBananas === 4 && activeBanana === null;
+              return (
+                <div
+                  key={objectIndex}
+                  className={`relative flex h-24 w-20 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+                    current
+                      ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                      : groupComplete
+                        ? "border-amber-100 bg-amber-50"
+                        : counted
+                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                          : "border-transparent bg-amber-50 opacity-55 grayscale"
+                  }`}
+                >
+                  <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                    {objectIndex + 1}
+                  </span>
+                  <SpriteIcon value={banana} className={`h-12 w-12 transition-transform duration-300 ${current ? "scale-110" : ""}`} />
                 </div>
-                <div className={`mt-3 min-h-14 rounded-full px-4 py-2 text-center text-lg font-black transition-colors sm:text-xl ${
-                  groupComplete ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-transparent"
-                }`} aria-live="polite">
-                  {groupComplete
-                    ? `${lang === "en" ? "Total" : "Jumlah"}: ${count} ${lang === "en" ? "bananas" : "pisang"}`
-                    : <span aria-hidden="true">&nbsp;</span>}
-                </div>
-              </div>
-            </React.Fragment>
-          );
-        })}
+              );
+            })}
+          </div>
+
+          <div
+            className={`mx-auto mt-5 min-h-16 min-w-52 rounded-full px-5 py-2 text-center text-xl font-black transition-[background-color,color,opacity,transform] duration-500 ${
+              mergeStage === "joined"
+                ? "scale-100 bg-emerald-100 text-emerald-950 opacity-100"
+                : "scale-95 bg-slate-200 text-transparent opacity-55"
+            }`}
+            aria-live="polite"
+          >
+            {mergeStage === "joined"
+              ? `${lang === "en" ? "Total" : "Jumlah"}: 4 ${lang === "en" ? "bananas" : "pisang"}`
+              : <span aria-hidden="true">&nbsp;</span>}
+          </div>
+        </div>
       </div>
 
-      {completedGroups === groups.length && completedSigns === 2 && (
+      {mergeStage === "joined" && (
         <div className="text-center text-emerald-900">
           <p className="text-4xl font-black" style={NUMBER_TEXT_STYLE}>0 + 4 = 4</p>
           <p className="mt-2 text-xl font-black">
@@ -3886,7 +3916,12 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
   );
 }
 
-function BasketBananaScene({ count, counted, label }: { count: number; counted: number; label: string }) {
+function BasketBananaScene({ count, counted, isCounting, label }: {
+  count: number;
+  counted: number;
+  isCounting: boolean;
+  label: string;
+}) {
   const banana = String.fromCodePoint(0x1f34c);
   const positions = [
     ["left-[29%]", "top-[35%]", "-rotate-12"],
@@ -3902,7 +3937,7 @@ function BasketBananaScene({ count, counted, label }: { count: number; counted: 
         {Array.from({ length: count }, (_, index) => {
           const [x, y, rotation] = positions[index];
           const isCounted = index < counted;
-          const isActiveCount = counted > 0 && index === counted - 1;
+          const isActiveCount = isCounting && counted > 0 && index === counted - 1;
           return (
             <div
               key={index}
