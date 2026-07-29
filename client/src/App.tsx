@@ -174,16 +174,16 @@ const TEEN_WORDS: Record<Lang, Record<number, string>> = {
 
 const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
   en: {
-    0: "floraphonic-adult-man-raspy-voice-says-0-184064.mp3",
-    1: "floraphonic-casual-voice-man-says-1-186552.mp3",
-    2: "floraphonic-casual-voice-man-says-2-186553.mp3",
-    3: "floraphonic-casual-voice-man-says-3-186554.mp3",
-    4: "floraphonic-casual-voice-man-says-4-186555.mp3",
-    5: "floraphonic-casual-voice-man-says-5-186556.mp3",
-    6: "floraphonic-casual-voice-man-says-6-209711.mp3",
-    7: "floraphonic-casual-voice-man-says-7-209713.mp3",
-    8: "floraphonic-casual-voice-man-says-8-209710.mp3",
-    9: "floraphonic-casual-voice-man-says-9-209709.mp3",
+    0: "zero.mp3",
+    1: "one.mp3",
+    2: "two.mp3",
+    3: "three.mp3",
+    4: "four.mp3",
+    5: "five.mp3",
+    6: "six.mp3",
+    7: "seven.mp3",
+    8: "eight.mp3",
+    9: "nine.mp3",
     10: "floraphonic-casual-voice-man-says-10-209712.mp3",
   },
   ms: {
@@ -198,6 +198,11 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
     8: "Lapan.mp3",
     9: "Sembilan.mp3",
   },
+};
+
+const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Record<number, string>> = {
+  en: Object.fromEntries(NUMBERS.map((value) => [value, `total ${value} banana.mp3`])) as Record<number, string>,
+  ms: Object.fromEntries(NUMBERS.map((value) => [value, `jumlah ${value} pisang.mp3`])) as Record<number, string>,
 };
 
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
@@ -5624,11 +5629,17 @@ function AdditionBananaEquation({
         }
 
         setCompletedGroups(groupIndex + 1);
-        speakText(
-          lang === "en" ? `Total ${count} ${objectName(emoji, count, lang)}.` : `Jumlah ${count} ${objectName(emoji, count, lang)}.`,
-          lang,
-        );
-        await wait(WORD_AUDIO_ENABLED && !audioMuted ? 2000 : 800);
+        const countedBananas = emoji === String.fromCodePoint(0x1f34c);
+        if (countedBananas) {
+          await speakBananaTotal(count, lang);
+        } else {
+          speakText(
+            lang === "en" ? `Total ${count} ${objectName(emoji, count, lang)}.` : `Jumlah ${count} ${objectName(emoji, count, lang)}.`,
+            lang,
+          );
+        }
+        if (cancelled) return;
+        await wait(countedBananas && !audioMuted ? 300 : WORD_AUDIO_ENABLED && !audioMuted ? 2000 : 800);
 
         if (groupIndex < groups.length - 1) {
           if (cancelled) return;
@@ -9364,6 +9375,39 @@ function speakNumber(value: number, lang: Lang, onStart?: (value: number) => voi
   const runId = audioRunId;
   onStart?.(value);
   void playNumberFile(value, lang, runId);
+}
+
+async function speakBananaTotal(value: number, lang: Lang) {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
+  const file = BANANA_TOTAL_AUDIO_FILES[lang][value];
+  if (!file) return false;
+  if (activeCountingRunId !== null) {
+    queuedAudioAfterCounting = () => { void speakBananaTotal(value, lang); };
+    return false;
+  }
+
+  stopNumberAudio();
+  return new Promise<boolean>((resolve) => {
+    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
+    let settled = false;
+    let timeoutId: number | null = null;
+    const finish = (played: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (activeNumberAudio === audio) activeNumberAudio = null;
+      resolve(played);
+    };
+
+    activeNumberAudio = audio;
+    audio.preload = "auto";
+    audio.playbackRate = NUMBER_AUDIO_PLAYBACK_RATE;
+    audio.preservesPitch = true;
+    audio.onended = () => finish(true);
+    audio.onerror = () => finish(false);
+    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 5000);
+    void audio.play().catch(() => finish(false));
+  });
 }
 
 async function speakNumberValuesSequence(
