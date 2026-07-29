@@ -3193,6 +3193,47 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
 }
 
 function FindNumbersExample({ lang, banana }: { lang: Lang; banana: string }) {
+  const [countingGroup, setCountingGroup] = useState<0 | 1 | 2 | 3>(0);
+  const [firstVisibleCount, setFirstVisibleCount] = useState(0);
+  const [secondVisibleCount, setSecondVisibleCount] = useState(0);
+  const countRunRef = useRef(0);
+
+  useEffect(() => () => {
+    countRunRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const startCounting = async () => {
+    const runId = countRunRef.current + 1;
+    countRunRef.current = runId;
+    stopNumberAudio();
+    setFirstVisibleCount(0);
+    setSecondVisibleCount(0);
+    setCountingGroup(1);
+
+    const countGroup = async (count: number, onCount: (value: number) => void) => {
+      if (!audioMuted) {
+        await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+          if (countRunRef.current === runId) onCount(value);
+        });
+        return;
+      }
+      for (let value = 1; value <= count; value += 1) {
+        await wait(COUNTING_STEP_MS);
+        if (countRunRef.current !== runId) return;
+        onCount(value);
+      }
+    };
+
+    await countGroup(3, setFirstVisibleCount);
+    if (countRunRef.current !== runId) return;
+    setCountingGroup(2);
+    await wait(350);
+    if (countRunRef.current !== runId) return;
+    await countGroup(2, setSecondVisibleCount);
+    if (countRunRef.current === runId) setCountingGroup(3);
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
       <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 3 bananas and 2 more bananas." : "Chrys ada 3 pisang dan 2 pisang lagi."} />
@@ -3201,8 +3242,41 @@ function FindNumbersExample({ lang, banana }: { lang: Lang; banana: string }) {
           {lang === "en" ? "The numbers are 3 and 2." : "Nombor itu 3 dan 2."}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <RealWorldNumberGroup count={3} label="3" emoji={banana} />
-          <RealWorldNumberGroup count={2} label="2" emoji={banana} />
+          <RealWorldNumberGroup
+            count={3}
+            label="3"
+            emoji={banana}
+            visibleCount={firstVisibleCount}
+            active={countingGroup === 1}
+            complete={countingGroup > 1}
+          />
+          <RealWorldNumberGroup
+            count={2}
+            label="2"
+            emoji={banana}
+            visibleCount={secondVisibleCount}
+            active={countingGroup === 2}
+            complete={countingGroup === 3}
+          />
+        </div>
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => void startCounting()}
+            disabled={countingGroup === 1 || countingGroup === 2}
+            className="relative min-h-14 rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-lg font-black text-white shadow-[0_6px_0_#1e3a8a] transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:border-blue-400 disabled:bg-blue-400 disabled:shadow-[0_4px_0_#64748b]"
+          >
+            {countingGroup === 1 || countingGroup === 2
+              ? (lang === "en" ? "Counting..." : "Mengira...")
+              : countingGroup === 3
+                ? (lang === "en" ? "Count again" : "Kira lagi")
+                : (lang === "en" ? "Start counting" : "Mula mengira")}
+            {countingGroup !== 1 && countingGroup !== 2 && (
+              <span className="pointer-events-none absolute -right-3 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 shadow-md" aria-hidden="true">
+                <PointerIcon />
+              </span>
+            )}
+          </button>
         </div>
       </div>
     </div>
@@ -3275,10 +3349,31 @@ function ChooseTakeAwayExample({ lang, banana }: { lang: Lang; banana: string })
   );
 }
 
-function RealWorldNumberGroup({ count, label, emoji }: { count: number; label: string; emoji: string }) {
+function RealWorldNumberGroup({ count, label, emoji, visibleCount, active, complete }: {
+  count: number;
+  label: string;
+  emoji: string;
+  visibleCount: number;
+  active: boolean;
+  complete: boolean;
+}) {
   return (
-    <div className="rounded-3xl border-2 border-white bg-white p-3 text-center shadow-[0_4px_0_rgba(0,0,0,.08)]">
-      <ObjectGroup count={count} emoji={emoji} />
+    <div className={`rounded-3xl border-4 bg-white p-3 text-center shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,box-shadow] duration-300 ${
+      active
+        ? "border-blue-400 shadow-[0_5px_0_#93c5fd]"
+        : complete
+          ? "border-emerald-300 shadow-[0_5px_0_#a7f3d0]"
+          : "border-white"
+    }`}>
+      <CountedObjectRow
+        count={count}
+        emoji={emoji}
+        showCount
+        visibleCount={visibleCount}
+        fixedColumns={1}
+        compact
+        highlightActiveCount={active}
+      />
       <p className="mt-2 text-4xl font-black text-blue-950" style={getNumberTextStyle(label)}>{label}</p>
     </div>
   );
