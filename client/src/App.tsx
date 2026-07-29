@@ -3674,9 +3674,15 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
 function ZeroAdditionEquation({ lang }: { lang: Lang }) {
   const banana = String.fromCodePoint(0x1f34c);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const [sourceZeroVisible, setSourceZeroVisible] = useState(false);
+  const [sourceVisibleBananas, setSourceVisibleBananas] = useState(0);
+  const [sourceActiveBanana, setSourceActiveBanana] = useState<number | null>(null);
   const [zeroVisible, setZeroVisible] = useState(false);
   const [visibleBananas, setVisibleBananas] = useState(0);
-  const [activePart, setActivePart] = useState<"zero" | "plus" | "bananas" | "merge" | null>(null);
+  const [activePart, setActivePart] = useState<
+    "source-zero" | "source-plus" | "source-bananas" | "source-equals" |
+    "zero" | "plus" | "bananas" | "merge" | null
+  >(null);
   const [activeBanana, setActiveBanana] = useState<number | null>(null);
   const [mergeStage, setMergeStage] = useState<"split" | "cue" | "joining" | "joined">("split");
   const [hasStarted, setHasStarted] = useState(false);
@@ -3691,12 +3697,70 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
     const runSequence = async () => {
       setIsCounting(true);
       stopNumberAudio();
+      setSourceZeroVisible(false);
+      setSourceVisibleBananas(0);
+      setSourceActiveBanana(null);
       setZeroVisible(false);
       setVisibleBananas(0);
-      setActivePart("zero");
+      setActivePart("source-zero");
       setActiveBanana(null);
       setMergeStage("split");
 
+      if (audioMuted) {
+        setSourceZeroVisible(true);
+        await wait(prefersReducedMotion ? 0 : intervalMs);
+      } else {
+        await speakNumberValuesSequence([0], lang, intervalMs, () => {
+          if (!cancelled) setSourceZeroVisible(true);
+        });
+      }
+      if (cancelled) return;
+
+      setActivePart("source-plus");
+      await wait(prefersReducedMotion ? 0 : 180);
+      await speakMathCue("plus", lang);
+      await wait(prefersReducedMotion ? 0 : 450);
+      if (cancelled) return;
+
+      setActivePart("source-bananas");
+      if (audioMuted) {
+        if (prefersReducedMotion) {
+          setSourceVisibleBananas(4);
+        } else {
+          for (let value = 1; value <= 4; value += 1) {
+            if (cancelled) return;
+            setSourceVisibleBananas(value);
+            setSourceActiveBanana(value - 1);
+            await wait(intervalMs);
+            setSourceActiveBanana(null);
+          }
+        }
+      } else {
+        await speakCountingSequence(
+          4,
+          lang,
+          intervalMs,
+          (value) => {
+            if (cancelled) return;
+            setSourceVisibleBananas(value);
+            setSourceActiveBanana(value - 1);
+          },
+          (value) => {
+            if (cancelled) return;
+            setSourceActiveBanana((current) => current === value - 1 ? null : current);
+          },
+        );
+      }
+      if (cancelled) return;
+      setSourceActiveBanana(null);
+
+      setActivePart("source-equals");
+      await wait(prefersReducedMotion ? 0 : 180);
+      await speakMathCue("equals", lang);
+      await wait(prefersReducedMotion ? 0 : 450);
+      if (cancelled) return;
+
+      setActivePart("zero");
       if (audioMuted) {
         setZeroVisible(true);
         await wait(prefersReducedMotion ? 0 : intervalMs);
@@ -3793,8 +3857,117 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
         </button>
       </div>
 
-      <div
-        className={`mx-auto flex min-h-[35rem] w-full max-w-sm flex-col rounded-3xl border-2 p-4 shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,box-shadow,transform] duration-700 ease-out ${
+      <div className="grid items-stretch gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div
+          aria-current={activePart === "source-zero" ? "step" : undefined}
+          className={`flex min-h-[35rem] min-w-0 flex-col rounded-3xl border-2 p-4 shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
+            activePart === "source-zero"
+              ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
+              : !hasStarted
+                ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
+                : "border-emerald-300 bg-white"
+          }`}
+        >
+          <div className="grid flex-1 place-items-center">
+            <div className="text-center">
+              <span
+                className={`mx-auto grid h-16 w-16 place-items-center rounded-full text-4xl font-black transition-[background-color,color,opacity,transform] duration-300 ${
+                  sourceZeroVisible
+                    ? "scale-100 bg-blue-600 text-white opacity-100"
+                    : "scale-75 bg-slate-200 text-slate-400 opacity-45"
+                }`}
+                style={NUMBER_TEXT_STYLE}
+              >
+                0
+              </span>
+            </div>
+          </div>
+          <div
+            className={`mx-auto mt-4 min-h-16 w-full rounded-full px-4 py-3 text-center text-xl font-black transition-colors ${
+              sourceZeroVisible ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-slate-400"
+            }`}
+            aria-live="polite"
+          >
+            {lang === "en" ? "No Bananas" : "Tiada Pisang"}
+          </div>
+        </div>
+
+        <span
+          className={`grid h-14 w-14 place-items-center self-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow,transform] duration-300 ${
+            activePart === "source-plus"
+              ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
+              : sourceZeroVisible
+                ? "border-yellow-400 bg-yellow-100 text-blue-950 shadow-[0_4px_0_#d97706]"
+                : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
+          }`}
+          aria-label={lang === "en" ? "plus" : "tambah"}
+        >
+          +
+        </span>
+
+        <div
+          aria-current={activePart === "source-bananas" ? "step" : undefined}
+          className={`flex min-h-[35rem] min-w-0 flex-col rounded-3xl border-2 p-4 shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow] duration-300 ${
+            activePart === "source-bananas"
+              ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
+              : sourceVisibleBananas === 4
+                ? "border-emerald-300 bg-white"
+                : "border-slate-200 bg-slate-100 opacity-50 grayscale"
+          }`}
+        >
+          <div className="grid flex-1 grid-cols-2 place-items-center gap-3">
+            {Array.from({ length: 4 }, (_, objectIndex) => {
+              const counted = objectIndex < sourceVisibleBananas;
+              const current = sourceActiveBanana === objectIndex;
+              const groupComplete = sourceVisibleBananas === 4 && sourceActiveBanana === null;
+              return (
+                <div
+                  key={objectIndex}
+                  className={`relative flex h-24 w-20 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+                    current
+                      ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                      : groupComplete
+                        ? "border-amber-100 bg-amber-50"
+                        : counted
+                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                          : "border-transparent bg-amber-50 opacity-55 grayscale"
+                  }`}
+                >
+                  <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                    {objectIndex + 1}
+                  </span>
+                  <SpriteIcon value={banana} className={`h-12 w-12 transition-transform duration-300 ${current ? "scale-110" : ""}`} />
+                </div>
+              );
+            })}
+          </div>
+          <div
+            className={`mx-auto mt-4 min-h-16 w-full rounded-full px-4 py-3 text-center text-xl font-black transition-colors ${
+              sourceVisibleBananas === 4 ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-transparent"
+            }`}
+            aria-live="polite"
+          >
+            {sourceVisibleBananas === 4
+              ? `${lang === "en" ? "Total" : "Jumlah"}: 4 ${lang === "en" ? "bananas" : "pisang"}`
+              : <span aria-hidden="true">&nbsp;</span>}
+          </div>
+        </div>
+
+        <span
+          className={`grid h-14 w-14 place-items-center self-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow,transform] duration-300 ${
+            activePart === "source-equals"
+              ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
+              : sourceVisibleBananas === 4
+                ? "border-yellow-400 bg-yellow-100 text-blue-950 shadow-[0_4px_0_#d97706]"
+                : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
+          }`}
+          aria-label={lang === "en" ? "equals" : "sama dengan"}
+        >
+          =
+        </span>
+
+        <div
+        className={`flex min-h-[35rem] min-w-0 flex-col rounded-3xl border-2 p-4 shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,box-shadow,transform] duration-700 ease-out ${
           mergeStage === "joining"
             ? "scale-[1.025] border-yellow-400 bg-yellow-50 ring-8 ring-yellow-200 shadow-[0_0_36px_rgba(250,204,21,.55)]"
             : mergeStage === "joined"
@@ -3888,7 +4061,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
           </div>
 
           <div
-            className={`mx-auto mt-5 min-h-16 min-w-52 rounded-full px-5 py-2 text-center text-xl font-black transition-[background-color,color,opacity,transform] duration-500 ${
+            className={`mx-auto mt-5 min-h-16 w-full rounded-full px-3 py-2 text-center text-lg font-black transition-[background-color,color,opacity,transform] duration-500 sm:text-xl ${
               mergeStage === "joined"
                 ? "scale-100 bg-emerald-100 text-emerald-950 opacity-100"
                 : "scale-95 bg-slate-200 text-transparent opacity-55"
@@ -3900,6 +4073,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
               : <span aria-hidden="true">&nbsp;</span>}
           </div>
         </div>
+      </div>
       </div>
 
       {mergeStage === "joined" && (
