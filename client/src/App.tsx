@@ -3915,31 +3915,33 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
                 : "border-slate-200 bg-slate-100 opacity-50 grayscale"
           }`}
         >
-          <div className="grid flex-1 grid-cols-2 place-items-center gap-3">
-            {Array.from({ length: 4 }, (_, objectIndex) => {
-              const counted = objectIndex < sourceVisibleBananas;
-              const current = sourceActiveBanana === objectIndex;
-              const groupComplete = sourceVisibleBananas === 4 && sourceActiveBanana === null;
-              return (
-                <div
-                  key={objectIndex}
-                  className={`relative flex h-24 w-20 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
-                    current
-                      ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
-                      : groupComplete
-                        ? "border-amber-100 bg-amber-50"
-                        : counted
-                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
-                          : "border-transparent bg-amber-50 opacity-55 grayscale"
-                  }`}
-                >
-                  <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
-                    {objectIndex + 1}
-                  </span>
-                  <SpriteIcon value={banana} className={`h-12 w-12 transition-transform duration-300 ${current ? "scale-110" : ""}`} />
-                </div>
-              );
-            })}
+          <div className="flex flex-1 items-center justify-center">
+            <div className="grid grid-cols-2 place-items-center gap-4">
+              {Array.from({ length: 4 }, (_, objectIndex) => {
+                const counted = objectIndex < sourceVisibleBananas;
+                const current = sourceActiveBanana === objectIndex;
+                const groupComplete = sourceVisibleBananas === 4 && sourceActiveBanana === null;
+                return (
+                  <div
+                    key={objectIndex}
+                    className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+                      current
+                        ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                        : groupComplete
+                          ? "border-amber-100 bg-amber-50"
+                          : counted
+                            ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                            : "border-transparent bg-amber-50 opacity-55 grayscale"
+                    }`}
+                  >
+                    <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                      {objectIndex + 1}
+                    </span>
+                    <SpriteIcon value={banana} className={`h-12 w-12 transition-transform duration-300 ${current ? "scale-110" : ""}`} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <div
             className={`mx-auto mt-4 min-h-16 w-full rounded-full px-4 py-3 text-center text-xl font-black transition-colors ${
@@ -4033,7 +4035,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
                 : "border-emerald-200 bg-white"
           }`}
         >
-          <div className="grid grid-cols-2 place-items-center gap-3">
+          <div className="grid grid-cols-2 place-items-center gap-4">
             {Array.from({ length: 4 }, (_, objectIndex) => {
               const counted = objectIndex < visibleBananas;
               const current = activeBanana === objectIndex;
@@ -4041,7 +4043,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
               return (
                 <div
                   key={objectIndex}
-                  className={`relative flex h-24 w-20 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+                  className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
                     current
                       ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
                       : groupComplete
