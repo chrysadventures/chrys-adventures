@@ -15,6 +15,8 @@ type ContainerKind = "basket" | "tray";
 type Screen =
   | "home"
   | "menu"
+  | "advancedMenu"
+  | "advancedTeenNumbers"
   | "learnRecognize"
   | "learnValues"
   | "learnSequencing"
@@ -36,7 +38,8 @@ type LearningSectionKey =
   | "groupingMode"
   | "addition"
   | "subtraction"
-  | "learnReal";
+  | "learnReal"
+  | "advancedTeenNumbers";
 
 type Visual =
   | { kind: "count"; emoji: string; count: number; container?: ContainerKind }
@@ -58,17 +61,18 @@ type Visual =
   | { kind: "sequence"; nums: Array<number | "?"> }
   | { kind: "compare"; a: number; b: number }
   | { kind: "add"; a: number; b: number; emoji?: string; container?: ContainerKind }
-  | { kind: "subtract"; a: number; b: number; emoji?: string; container?: ContainerKind };
+  | { kind: "subtract"; a: number; b: number; emoji?: string; container?: ContainerKind }
+  | { kind: "teenBundle"; tens: 1 | 2; ones: number };
 
 type Question = {
   id: string;
-  area: "numbers" | "operations" | "real";
+  area: "numbers" | "operations" | "real" | "advanced";
   text: Record<Lang, string>;
   options: Array<number | string>;
   answer: number | string;
   visual: Visual;
   method: Record<Lang, string[]>;
-  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects" | "takeAway";
+  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects" | "takeAway" | "buildTeen";
 };
 
 const DONT_KNOW_ANSWER = "__dont_know__";
@@ -91,6 +95,7 @@ const WORD_AUDIO_ENABLED = false;
 const MATH_CUE_AUDIO_ENABLED = true;
 const SUCCESS_FANFARE_FILE = "tada-fanfare.mp3";
 const NUMBERS = Array.from({ length: 10 }, (_, n) => n);
+const BANANA = "\u{1F34C}";
 const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontFamily: "var(--app-font-number)",
   fontWeight: 700,
@@ -113,6 +118,34 @@ const VALUE_COMPARISON_PAIRS = [
 const WORDS: Record<Lang, string[]> = {
   en: ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
   ms: ["kosong", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "lapan", "sembilan"],
+};
+const TEEN_WORDS: Record<Lang, Record<number, string>> = {
+  en: {
+    10: "ten",
+    11: "eleven",
+    12: "twelve",
+    13: "thirteen",
+    14: "fourteen",
+    15: "fifteen",
+    16: "sixteen",
+    17: "seventeen",
+    18: "eighteen",
+    19: "nineteen",
+    20: "twenty",
+  },
+  ms: {
+    10: "sepuluh",
+    11: "sebelas",
+    12: "dua belas",
+    13: "tiga belas",
+    14: "empat belas",
+    15: "lima belas",
+    16: "enam belas",
+    17: "tujuh belas",
+    18: "lapan belas",
+    19: "sembilan belas",
+    20: "dua puluh",
+  },
 };
 
 const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
@@ -232,6 +265,12 @@ const UI = {
     start: "Start",
     continue: "Continue",
     menuTitle: "Where shall we learn today?",
+    advancedAdventure: "Advanced Adventure",
+    advancedAdventureShort: "The next step: numbers 10-20",
+    advancedMenuTitle: "Advanced Expedition",
+    advancedMenuHelp: "Explore bigger numbers with Chrys.",
+    advancedTeenNumbers: "Teen Numbers",
+    advancedTeenNumbersShort: "Ten and some more",
     recognizeNumbers: "Recognize and Identify Numbers",
     numberValues: "Number Values",
     sequencing: "Number Order",
@@ -277,6 +316,12 @@ const UI = {
     start: "Mula",
     continue: "Teruskan",
     menuTitle: "Hari ini mahu belajar apa?",
+    advancedAdventure: "Pengembaraan Lanjutan",
+    advancedAdventureShort: "Langkah seterusnya: nombor 10-20",
+    advancedMenuTitle: "Ekspedisi Lanjutan",
+    advancedMenuHelp: "Teroka nombor lebih besar bersama Chrys.",
+    advancedTeenNumbers: "Nombor Belasan",
+    advancedTeenNumbersShort: "Sepuluh dan beberapa lagi",
     recognizeNumbers: "Kenal Nombor",
     numberValues: "Nilai Nombor",
     sequencing: "Susunan Nombor",
@@ -876,6 +921,9 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
       ms: [greater ? `${visual.a} lebih banyak daripada ${visual.b}.` : `${visual.a} lebih sedikit daripada ${visual.b}.`, `Jadi, ${visual.a} ${symbol} ${visual.b}.`],
     };
   }
+  if (visual.kind === "teenBundle") {
+    return teenNumberMethod((visual.tens * 10) + visual.ones);
+  }
   return {
     en: ["Count the objects one by one.", `The last number you say is ${visual.count}.`, `Answer: ${answer}.`],
     ms: ["Kira objek satu demi satu.", `Nombor terakhir yang disebut ialah ${visual.count}.`, `Jawapan: ${answer}.`],
@@ -916,6 +964,101 @@ function objectName(emoji: string | undefined, count: number, lang: Lang) {
   const name = names[emoji ?? ""] ?? fallback;
   return lang === "ms" ? name.ms : count === 1 ? name.en[0] : name.en[1];
 }
+
+function teenNumberMethod(value: number): Record<Lang, string[]> {
+  if (value === 20) {
+    return {
+      en: ["One group has 10 bananas.", "Two groups of ten make 20.", "So, the number is 20."],
+      ms: ["Satu kumpulan ada 10 pisang.", "Dua kumpulan sepuluh jadi 20.", "Jadi, nombor itu ialah 20."],
+    };
+  }
+  const ones = value - 10;
+  return {
+    en: [
+      "Start with one group of ten.",
+      ones === 0 ? "There are no loose bananas." : `Count on ${ones} more banana${ones === 1 ? "" : "s"}.`,
+      `Ten and ${ones} more makes ${value}.`,
+    ],
+    ms: [
+      "Mula dengan satu kumpulan sepuluh.",
+      ones === 0 ? "Tiada pisang berasingan." : `Kira ${ones} pisang lagi.`,
+      `Sepuluh dan ${ones} lagi jadi ${value}.`,
+    ],
+  };
+}
+
+const teenPracticeQuestions: Question[] = [
+  q(
+    "adv-teen-show-14",
+    "advanced",
+    { en: "Which number does this show?", ms: "Ini menunjukkan nombor apa?" },
+    [12, 14, 16, 18],
+    14,
+    { kind: "teenBundle", tens: 1, ones: 4 },
+    "choice",
+    teenNumberMethod(14),
+  ),
+  q(
+    "adv-teen-ten-plus-3",
+    "advanced",
+    { en: "Ten and 3 more is...", ms: "Sepuluh dan 3 lagi ialah..." },
+    [11, 12, 13, 14],
+    13,
+    { kind: "teenBundle", tens: 1, ones: 3 },
+    "choice",
+    teenNumberMethod(13),
+  ),
+  q(
+    "adv-teen-show-18",
+    "advanced",
+    { en: "What number is this?", ms: "Apakah nombor ini?" },
+    [15, 16, 17, 18],
+    18,
+    { kind: "teenBundle", tens: 1, ones: 8 },
+    "choice",
+    teenNumberMethod(18),
+  ),
+  q(
+    "adv-teen-two-tens",
+    "advanced",
+    { en: "Two groups of ten make...", ms: "Dua kumpulan sepuluh jadi..." },
+    [17, 18, 19, 20],
+    20,
+    { kind: "teenBundle", tens: 2, ones: 0 },
+    "choice",
+    teenNumberMethod(20),
+  ),
+  q(
+    "adv-teen-show-11",
+    "advanced",
+    { en: "One ten and 1 more makes...", ms: "Satu sepuluh dan 1 lagi jadi..." },
+    [10, 11, 12, 13],
+    11,
+    { kind: "teenBundle", tens: 1, ones: 1 },
+    "choice",
+    teenNumberMethod(11),
+  ),
+  q(
+    "adv-teen-show-16",
+    "advanced",
+    { en: "Which number does this show?", ms: "Ini menunjukkan nombor apa?" },
+    [14, 15, 16, 17],
+    16,
+    { kind: "teenBundle", tens: 1, ones: 6 },
+    "choice",
+    teenNumberMethod(16),
+  ),
+  q(
+    "adv-teen-build-17",
+    "advanced",
+    { en: "Build 17. Start with ten, then add loose bananas.", ms: "Bina 17. Mula dengan sepuluh, kemudian tambah pisang berasingan." },
+    [],
+    17,
+    { kind: "teenBundle", tens: 1, ones: 0 },
+    "buildTeen",
+    teenNumberMethod(17),
+  ),
+];
 
 function shuffled<T>(items: T[]): T[] {
   const copy = [...items];
@@ -1031,7 +1174,17 @@ function App() {
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled((current) => !current)}
           onOpenGlossary={() => setGlossaryOpen(true)}
-          onBack={screen === "home" ? undefined : () => go(screen.startsWith("test") && screen !== "testMenu" ? "testMenu" : screen === "menu" ? "home" : "menu")}
+          onBack={screen === "home" ? undefined : () => go(
+            screen === "advancedTeenNumbers"
+              ? "advancedMenu"
+              : screen === "advancedMenu"
+                ? "menu"
+                : screen.startsWith("test") && screen !== "testMenu"
+                  ? "testMenu"
+                  : screen === "menu"
+                    ? "home"
+                    : "menu",
+          )}
         />
         <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} />
 
@@ -1041,11 +1194,21 @@ function App() {
         {screen === "menu" && player && (
           <MenuScreen lang={lang} t={t} player={player} go={go} />
         )}
+        {screen === "advancedMenu" && player && (
+          <AdvancedMenuScreen lang={lang} t={t} player={player} go={go} />
+        )}
         {completedLesson && (
           <LessonCompletionScreen
             lang={lang}
             sectionName={t[completedLesson]}
-            onContinue={() => go("menu")}
+            onContinue={() => go(completedLesson === "advancedTeenNumbers" ? "advancedMenu" : "menu")}
+          />
+        )}
+        {!completedLesson && screen === "advancedTeenNumbers" && (
+          <TeenNumbersLesson
+            lang={lang}
+            t={t}
+            onDone={() => finishLesson("advancedTeenNumbers", "advancedTeenNumbers")}
           />
         )}
         {!completedLesson && screen === "learnRecognize" && (
@@ -1385,9 +1548,355 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
         <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Counting objects in simple stories" : "Kira objek dalam cerita mudah"} icon="🍎" color="pink" onClick={() => go("learnReal")} />
         <MenuCard title={t.testMode} subtitle={t.testHelp} icon="⭐" color="amber" onClick={() => go("testMenu")} />
       </div>
+      <button
+        type="button"
+        onClick={() => go("advancedMenu")}
+        className="group relative overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-left text-white shadow-[0_9px_0_#064e3b] transition hover:-translate-y-1 active:translate-y-1 md:p-8"
+      >
+        <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
+        <div className="relative z-10 grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
+          <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-300/70 bg-emerald-800 shadow-inner">
+            <SpriteIcon value={BANANA} className="h-16 w-16" />
+          </span>
+          <span>
+            <span className="mb-2 inline-block rounded-full border border-yellow-300/60 bg-yellow-300/15 px-3 py-1 text-sm font-black uppercase text-yellow-200">
+              {lang === "en" ? "Next step" : "Langkah seterusnya"}
+            </span>
+            <span className="block text-3xl font-black leading-tight md:text-4xl">{t.advancedAdventure}</span>
+            <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedAdventureShort}</span>
+          </span>
+          <ArrowRight className="hidden h-12 w-12 text-yellow-300 transition group-hover:translate-x-1 sm:block" strokeWidth={3} />
+        </div>
+      </button>
     </main>
   );
 }
+
+function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 pb-8">
+      <section className="relative overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-center text-white shadow-[0_10px_0_#064e3b]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,204,21,.18),transparent_48%)]" aria-hidden="true" />
+        <img src={chrysRunning} alt="Chrys ready for an expedition" className="relative mx-auto h-36 w-36 object-contain drop-shadow-xl" />
+        <h2 className="relative text-4xl font-black text-yellow-200">{t.advancedMenuTitle}</h2>
+        <p className="relative mt-2 text-lg font-bold text-emerald-100">
+          {player.name}, {t.advancedMenuHelp}
+        </p>
+      </section>
+      <button
+        type="button"
+        onClick={() => go("advancedTeenNumbers")}
+        className="group rounded-[2rem] border-4 border-yellow-300 bg-emerald-900 p-6 text-left text-white shadow-[0_8px_0_#064e3b] transition hover:-translate-y-1 active:translate-y-1 md:p-8"
+      >
+        <div className="grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
+          <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-4 border-yellow-300 bg-emerald-800 text-3xl font-black text-yellow-200 shadow-inner" style={getNumberTextStyle(14)}>
+            10-20
+          </span>
+          <span>
+            <span className="block text-3xl font-black text-yellow-200">{t.advancedTeenNumbers}</span>
+            <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedTeenNumbersShort}</span>
+          </span>
+          <ArrowRight className="hidden h-12 w-12 text-yellow-300 transition group-hover:translate-x-1 sm:block" strokeWidth={3} />
+        </div>
+      </button>
+    </main>
+  );
+}
+
+function TenBananaBundle({ lang, active = false, compact = false }: { lang: Lang; active?: boolean; compact?: boolean }) {
+  return (
+    <div className={`relative rounded-[1.75rem] border-4 p-3 transition ${
+      active
+        ? "border-yellow-300 bg-yellow-100 shadow-[0_0_0_6px_rgba(250,204,21,.24)]"
+        : "border-emerald-400 bg-emerald-50"
+    }`}>
+      <div className="grid grid-cols-5 gap-1.5 rounded-2xl border-2 border-emerald-200 bg-white/95 p-2">
+        {Array.from({ length: 10 }, (_, index) => (
+          <span
+            key={index}
+            className={`grid place-items-center rounded-xl bg-amber-50 shadow-inner ${compact ? "h-10 w-10" : "h-12 w-12 sm:h-14 sm:w-14"}`}
+          >
+            <SpriteIcon value={BANANA} className={compact ? "h-8 w-8" : "h-10 w-10 sm:h-11 sm:w-11"} />
+          </span>
+        ))}
+      </div>
+      <div className="mx-auto mt-3 flex w-fit items-center gap-2 rounded-full bg-emerald-800 px-4 py-2 text-white">
+        <span className="text-2xl font-black" style={getNumberTextStyle(10)}>10</span>
+        <span className="text-sm font-black">{lang === "en" ? "one ten" : "satu sepuluh"}</span>
+      </div>
+    </div>
+  );
+}
+
+function TeenQuantityVisual({
+  lang,
+  tens,
+  ones,
+  activeTotal,
+  showCountLabels = false,
+  dimFuture = false,
+}: {
+  lang: Lang;
+  tens: 1 | 2;
+  ones: number;
+  activeTotal?: number | null;
+  showCountLabels?: boolean;
+  dimFuture?: boolean;
+}) {
+  return (
+    <div className={`grid items-center gap-4 ${tens === 2 ? "sm:grid-cols-2" : ones > 0 ? "md:grid-cols-[minmax(0,1.35fr)_auto_minmax(0,.8fr)]" : ""}`}>
+      {Array.from({ length: tens }, (_, index) => (
+        <TenBananaBundle
+          key={index}
+          lang={lang}
+          compact={tens === 2}
+          active={activeTotal === ((index + 1) * 10)}
+        />
+      ))}
+      {tens === 1 && ones > 0 && (
+        <>
+          <span className="text-center text-5xl font-black text-yellow-300" aria-hidden="true">+</span>
+          <div className="rounded-[1.75rem] border-4 border-yellow-300 bg-amber-50 p-4">
+            <p className="mb-3 text-center text-lg font-black text-amber-900">
+              {lang === "en" ? `${ones} more` : `${ones} lagi`}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: ones }, (_, index) => {
+                const value = 11 + index;
+                const reached = activeTotal == null || value <= activeTotal;
+                const active = activeTotal === value;
+                return (
+                  <span
+                    key={index}
+                    className={`relative grid h-16 w-16 place-items-center rounded-2xl border-2 shadow-inner transition ${
+                      active
+                        ? "border-yellow-400 bg-yellow-100 ring-4 ring-yellow-300"
+                        : reached
+                          ? "border-blue-200 bg-amber-50"
+                          : "border-slate-200 bg-slate-100 grayscale"
+                    } ${dimFuture && !reached ? "opacity-35" : ""}`}
+                  >
+                    <SpriteIcon value={BANANA} className="h-12 w-12" />
+                    {showCountLabels && reached && (
+                      <span className={`absolute -top-3 rounded-full px-2 text-xs font-black text-white ${active ? "bg-yellow-500" : "bg-blue-600"}`}>
+                        {value}
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+  const [phase, setPhase] = useState<0 | 1 | 2 | 3>(0);
+  const [showPractice, setShowPractice] = useState(false);
+  const [exampleCount, setExampleCount] = useState<number | null>(null);
+  const [exampleCounting, setExampleCounting] = useState(false);
+  const [looseCount, setLooseCount] = useState(0);
+  const soundEnabled = React.useContext(AudioEnabledContext);
+  const phaseCopy = [
+    {
+      title: lang === "en" ? "Meet one group of ten" : "Kenal satu kumpulan sepuluh",
+      text: lang === "en" ? "Ten bananas make one group of ten." : "Sepuluh pisang jadi satu kumpulan sepuluh.",
+    },
+    {
+      title: lang === "en" ? "Ten and some more" : "Sepuluh dan beberapa lagi",
+      text: lang === "en" ? "Ten and 4 more makes 14." : "Sepuluh dan 4 lagi jadi 14.",
+    },
+    {
+      title: lang === "en" ? "Count on from ten" : "Kira terus daripada sepuluh",
+      text: lang === "en" ? "Keep the ten. Add loose bananas one at a time." : "Kekalkan sepuluh. Tambah pisang berasingan satu demi satu.",
+    },
+    {
+      title: lang === "en" ? "Twenty is two tens" : "Dua puluh ialah dua sepuluh",
+      text: lang === "en" ? "Two groups of ten make 20." : "Dua kumpulan sepuluh jadi 20.",
+    },
+  ] as const;
+
+  useEffect(() => () => stopNumberAudio(), []);
+
+  const countFourteen = async () => {
+    if (exampleCounting) return;
+    setExampleCounting(true);
+    setExampleCount(9);
+    if (!soundEnabled) {
+      for (const value of [10, 11, 12, 13, 14]) {
+        setExampleCount(value);
+        await wait(500);
+      }
+      setExampleCounting(false);
+      return;
+    }
+    await speakNumberValuesSequence([10, 11, 12, 13, 14], lang, 1200, setExampleCount);
+    setExampleCounting(false);
+  };
+
+  const addLooseBanana = () => {
+    if (looseCount >= 10) return;
+    const nextOnes = looseCount + 1;
+    const nextValue = 10 + nextOnes;
+    speakNumber(nextValue, lang, () => setLooseCount(nextOnes));
+  };
+
+  if (showPractice) {
+    return (
+      <Quiz
+        lang={lang}
+        t={t}
+        title={lang === "en" ? "Teen Numbers: Practice" : "Nombor Belasan: Latihan"}
+        questions={teenPracticeQuestions}
+        randomize={false}
+        onBackToLearning={() => {
+          setShowPractice(false);
+          setPhase(3);
+        }}
+        onFinish={() => onDone()}
+      />
+    );
+  }
+
+  return (
+    <main className="mx-auto w-full max-w-5xl pb-8">
+      <div className="rounded-[2.25rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-2 shadow-[0_10px_0_#064e3b] sm:p-3">
+        <LessonShell
+          lang={lang}
+          title={t.advancedTeenNumbers}
+          helper={lang === "en" ? "Advanced Expedition: numbers 10-20" : "Ekspedisi Lanjutan: nombor 10-20"}
+        >
+          <div className="mb-5 grid grid-cols-4 gap-2">
+            {[0, 1, 2, 3].map((item) => (
+              <div key={item} className={`h-3 rounded-full ${item <= phase ? "bg-yellow-400" : "bg-emerald-100"}`} />
+            ))}
+          </div>
+          <div className="mb-5 grid items-center gap-4 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 sm:grid-cols-[auto_1fr]">
+            <img src={chrysThinking} alt="Chrys teaching" className="mx-auto h-24 w-24 object-contain" />
+            <div>
+              <h2 className="text-2xl font-black text-emerald-950">{phaseCopy[phase].title}</h2>
+              <p data-narration-read="true" className="mt-1 text-xl font-black text-slate-700">{phaseCopy[phase].text}</p>
+            </div>
+          </div>
+
+          {phase === 0 && (
+            <div className="mx-auto max-w-2xl rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
+              <TenBananaBundle lang={lang} />
+              <p className="mt-4 text-center text-2xl font-black text-emerald-900">
+                {lang === "en" ? "Count this as ten." : "Kira ini sebagai sepuluh."}
+              </p>
+            </div>
+          )}
+
+          {phase === 1 && (
+            <div className="rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
+              <TeenQuantityVisual lang={lang} tens={1} ones={4} activeTotal={exampleCount} showCountLabels dimFuture />
+              <div className="mt-5 text-center">
+                <button
+                  type="button"
+                  disabled={exampleCounting}
+                  onClick={countFourteen}
+                  className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:opacity-60"
+                >
+                  {exampleCounting
+                    ? (lang === "en" ? "Counting..." : "Mengira...")
+                    : (lang === "en" ? "Count from ten" : "Kira daripada sepuluh")}
+                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
+                    <PointerIcon />
+                  </span>
+                </button>
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-4xl font-black text-emerald-900">
+                  <span className="rounded-2xl bg-emerald-100 px-4 py-2">10</span>
+                  <span>+</span>
+                  <span className="rounded-2xl bg-yellow-100 px-4 py-2">4</span>
+                  <span>=</span>
+                  <span className="rounded-2xl bg-blue-100 px-4 py-2" style={getNumberTextStyle(14)}>14</span>
+                </div>
+                <p className="mt-3 text-lg font-black text-slate-600">
+                  {lang === "en" ? "Ten... eleven, twelve, thirteen, fourteen." : "Sepuluh... sebelas, dua belas, tiga belas, empat belas."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {phase === 2 && (
+            <div className="rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
+              <TeenQuantityVisual lang={lang} tens={1} ones={looseCount} activeTotal={10 + looseCount} showCountLabels />
+              <div className="mt-5 text-center">
+                <div className="mx-auto grid h-24 w-32 place-items-center rounded-3xl border-4 border-yellow-400 bg-yellow-100 text-5xl font-black text-emerald-950 shadow-[0_6px_0_#d97706]" style={getNumberTextStyle(10 + looseCount)}>
+                  {10 + looseCount}
+                </div>
+                <p className="mt-3 text-lg font-black text-slate-600">
+                  {looseCount === 0
+                    ? (lang === "en" ? "Start with ten." : "Mula dengan sepuluh.")
+                    : `${TEEN_WORDS[lang][10 + looseCount]}`}
+                </p>
+                <button
+                  type="button"
+                  disabled={looseCount >= 10}
+                  onClick={addLooseBanana}
+                  className="relative mt-4 inline-flex items-center gap-3 rounded-2xl border-2 border-yellow-500 bg-yellow-300 px-7 py-4 text-xl font-black text-emerald-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-50"
+                >
+                  <SpriteIcon value={BANANA} className="h-10 w-10" />
+                  {looseCount >= 10
+                    ? (lang === "en" ? "You made 20!" : "Kamu sudah bina 20!")
+                    : (lang === "en" ? "Add one loose banana" : "Tambah satu pisang berasingan")}
+                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
+                    <PointerIcon />
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {phase === 3 && (
+            <div className="rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
+              <TeenQuantityVisual lang={lang} tens={2} ones={0} />
+              <div className="mt-5 flex items-center justify-center gap-4 text-4xl font-black text-emerald-900">
+                <span>10</span>
+                <span>+</span>
+                <span>10</span>
+                <span>=</span>
+                <span className="rounded-2xl bg-yellow-200 px-5 py-2" style={getNumberTextStyle(20)}>20</span>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <button
+              type="button"
+              disabled={phase === 0}
+              onClick={() => setPhase((current) => Math.max(0, current - 1) as 0 | 1 | 2 | 3)}
+              className="rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 font-black text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
+            >
+              {t.previous}
+            </button>
+            {phase === 0 && (
+              <button
+                type="button"
+                onClick={() => setShowPractice(true)}
+                className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-800 shadow-[0_4px_0_rgba(4,120,87,.14)] active:translate-y-1"
+              >
+                {lang === "en" ? "Already know this? Go to exercises." : "Dah tahu? Terus ke latihan."}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => phase < 3 ? setPhase((current) => Math.min(3, current + 1) as 0 | 1 | 2 | 3) : setShowPractice(true)}
+              className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 text-xl font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
+            >
+              {phase < 3 ? t.next : (lang === "en" ? "Start practice" : "Mula latihan")}
+            </button>
+          </div>
+        </LessonShell>
+      </div>
+    </main>
+  );
+}
+
 function MenuCard({ title, subtitle, icon, color, onClick }: { title: string; subtitle: string; icon: string; color: "sky" | "emerald" | "pink" | "amber"; onClick: () => void }) {
   const colors = {
     sky: "border-sky-400 shadow-sky-700/35",
@@ -5194,7 +5703,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
-  const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway";
+  const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen";
   const additionCountingQuestionIndex = additionPracticeQuestions
     .filter((question) => question.inputMode !== "buildTotal")
     .findIndex((question) => question.id === qn.id);
@@ -5820,6 +6329,74 @@ function ActiveAnswerPanel({
             type="button"
             disabled={answered || selectedObjects.length === 0}
             onClick={checkBasket}
+            className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Check" : "Semak"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (question.inputMode === "buildTeen" && question.visual.kind === "teenBundle") {
+    const shownOnes = answered && Number.isFinite(selectedNumber)
+      ? Math.max(0, Math.min(10, selectedNumber - 10))
+      : builtCount;
+    const shownValue = 10 + shownOnes;
+    const addLooseBanana = () => {
+      if (answered || builtCount >= 10) return;
+      const nextOnes = builtCount + 1;
+      speakNumber(10 + nextOnes, lang, () => {
+        setBuiltCount(nextOnes);
+        setBuildMessage(null);
+      });
+    };
+    const checkTeenNumber = () => {
+      if (builtCount === 0) return;
+      onAnswer(10 + builtCount);
+    };
+
+    return (
+      <div className="rounded-[2rem] border-4 border-emerald-300 bg-emerald-950 p-4 text-center text-white shadow-[0_7px_0_#064e3b]">
+        <p className="mb-4 text-xl font-black text-yellow-200">
+          {lang === "en" ? "Keep the ten. Add loose bananas to build the number." : "Kekalkan sepuluh. Tambah pisang berasingan untuk bina nombor."}
+        </p>
+        <div className="rounded-[1.75rem] bg-white p-4 text-slate-800">
+          <TeenQuantityVisual lang={lang} tens={1} ones={shownOnes} activeTotal={shownValue} showCountLabels />
+          <div className="mx-auto mt-4 grid h-20 w-28 place-items-center rounded-3xl border-4 border-yellow-400 bg-yellow-100 text-4xl font-black text-emerald-950" style={getNumberTextStyle(shownValue)}>
+            {shownValue}
+          </div>
+        </div>
+        {!answered && (
+          <button
+            type="button"
+            disabled={builtCount >= 10}
+            onClick={addLooseBanana}
+            className="relative mt-5 inline-flex items-center gap-3 rounded-2xl border-2 border-yellow-500 bg-yellow-300 px-7 py-4 text-xl font-black text-emerald-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-50"
+          >
+            <SpriteIcon value={BANANA} className="h-10 w-10" />
+            {lang === "en" ? "Add one loose banana" : "Tambah satu pisang berasingan"}
+            <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
+              <PointerIcon />
+            </span>
+          </button>
+        )}
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            disabled={answered || builtCount === 0}
+            onClick={() => {
+              setBuiltCount(0);
+              setBuildMessage(null);
+            }}
+            className="rounded-2xl border-2 border-emerald-200 bg-white px-5 py-3 font-black text-emerald-800 shadow-[0_4px_0_rgba(0,0,0,.16)] active:translate-y-1 disabled:opacity-40"
+          >
+            {lang === "en" ? "Clear" : "Padam"}
+          </button>
+          <button
+            type="button"
+            disabled={answered || builtCount === 0}
+            onClick={checkTeenNumber}
             className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
           >
             {lang === "en" ? "Check" : "Semak"}
@@ -7362,6 +7939,18 @@ function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
 }
 
 function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrossedLabels = false }: { visual: Visual; lang?: Lang; revealNumbers?: boolean; revealCrossedLabels?: boolean }) {
+  if (visual.kind === "teenBundle") {
+    return (
+      <div className="space-y-4">
+        <TeenQuantityVisual lang={lang} tens={visual.tens} ones={visual.ones} />
+        {revealNumbers && (
+          <div className="mx-auto grid h-20 w-28 place-items-center rounded-3xl border-4 border-yellow-400 bg-yellow-100 text-4xl font-black text-emerald-950" style={getNumberTextStyle((visual.tens * 10) + visual.ones)}>
+            {(visual.tens * 10) + visual.ones}
+          </div>
+        )}
+      </div>
+    );
+  }
   if (visual.kind === "count") {
     if (visual.container) {
       return <ContainerScene count={visual.count} emoji={visual.emoji} container={visual.container} numbered={revealNumbers} lang={lang} />;
@@ -7660,6 +8249,9 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false }: {
 }
 
 function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
+  if (visual.kind === "teenBundle") {
+    return <VisualDisplay visual={visual} lang={lang} revealNumbers />;
+  }
   if (visual.kind === "count") {
     const emoji = visual.emoji ?? "🍌";
     if (visual.count === 0) {
@@ -7737,16 +8329,18 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
   return <VisualDisplay visual={visual} lang={lang} />;
 }
 
-function speakNumber(value: number, lang: Lang) {
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+function speakNumber(value: number, lang: Lang, onStart?: (value: number) => void) {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) {
+    onStart?.(value);
+    return;
+  }
   if (activeCountingRunId !== null) {
-    queuedAudioAfterCounting = () => speakNumber(value, lang);
+    queuedAudioAfterCounting = () => speakNumber(value, lang, onStart);
     return;
   }
   stopNumberAudio();
   const runId = audioRunId;
-  const file = NUMBER_AUDIO_FILES[lang][value];
-  if (!file) return;
+  onStart?.(value);
   void playNumberFile(value, lang, runId);
 }
 
@@ -7843,7 +8437,7 @@ function playSuccessFanfare() {
 
 function playNumberFile(value: number, lang: Lang, runId: number) {
   const file = NUMBER_AUDIO_FILES[lang][value];
-  if (!file) return Promise.resolve(false);
+  if (!file) return playNumberWithTts(value, lang, runId);
   return new Promise<boolean>((resolve) => {
     activeNumberAudio?.pause();
     const audio = getNumberAudio(value, lang);
@@ -7872,6 +8466,26 @@ function playNumberFile(value: number, lang: Lang, runId: number) {
       audio.pause();
       finish(false);
     }
+  });
+}
+
+function playNumberWithTts(value: number, lang: Lang, runId: number) {
+  if (!("speechSynthesis" in window) || runId !== audioRunId) return Promise.resolve(false);
+  return new Promise<boolean>((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(String(value));
+    let settled = false;
+    const finish = (played: boolean) => {
+      if (settled) return;
+      settled = true;
+      resolve(played);
+    };
+    utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
+    utterance.rate = SPEECH_RATE;
+    utterance.onend = () => finish(true);
+    utterance.onerror = () => finish(false);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    window.setTimeout(() => finish(false), 3200);
   });
 }
 
