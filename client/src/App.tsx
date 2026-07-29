@@ -2940,7 +2940,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl pb-8">
+    <main className="mx-auto w-full max-w-4xl pb-8">
       <LessonShell lang={lang} title={t.addition}>
         {phase === "intro" && (
           <AdditionIntroStep
@@ -3001,7 +3001,7 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pb-8">
+    <main className="mx-auto w-full max-w-4xl pb-8">
       <LessonShell lang={lang} title={t.subtraction} helper={lang === "en" ? "Take away. Count what is left." : "Ambil. Kira yang tinggal."}>
         {phase === "intro" && (
           <AdditionIntroStep
