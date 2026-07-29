@@ -2431,7 +2431,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pb-8">
+    <main className="mx-auto w-full max-w-6xl pb-8">
       <LessonShell lang={lang} title={t.addition}>
         {phase === "intro" && (
           <AdditionIntroStep
@@ -3916,7 +3916,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
           }`}
         >
           <div className="flex flex-1 items-center justify-center">
-            <div className="grid grid-cols-2 place-items-center gap-4">
+            <div className="grid w-40 grid-cols-2 place-items-center gap-x-6 gap-y-4">
               {Array.from({ length: 4 }, (_, objectIndex) => {
                 const counted = objectIndex < sourceVisibleBananas;
                 const current = sourceActiveBanana === objectIndex;
@@ -4036,7 +4036,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
           }`}
         >
           <div className="flex flex-1 items-center justify-center">
-            <div className="grid grid-cols-2 place-items-center gap-4">
+            <div className="grid w-40 grid-cols-2 place-items-center gap-x-6 gap-y-4">
               {Array.from({ length: 4 }, (_, objectIndex) => {
                 const counted = objectIndex < visibleBananas;
                 const current = activeBanana === objectIndex;
@@ -4064,18 +4064,19 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
             </div>
           </div>
 
-          <div
-            className={`mx-auto mt-5 min-h-16 w-full rounded-full px-3 py-2 text-center text-lg font-black transition-[background-color,color,opacity,transform] duration-500 sm:text-xl ${
-              mergeStage === "joined"
-                ? "scale-100 bg-emerald-100 text-emerald-950 opacity-100"
-                : "scale-95 bg-slate-200 text-transparent opacity-55"
-            }`}
-            aria-live="polite"
-          >
-            {mergeStage === "joined"
-              ? `${lang === "en" ? "Total" : "Jumlah"}: 4 ${lang === "en" ? "bananas" : "pisang"}`
-              : <span aria-hidden="true">&nbsp;</span>}
-          </div>
+        </div>
+
+        <div
+          className={`mx-auto mt-4 min-h-16 w-full rounded-full px-3 py-2 text-center text-lg font-black transition-[background-color,color,opacity,transform] duration-500 sm:text-xl ${
+            mergeStage === "joined"
+              ? "scale-100 bg-emerald-100 text-emerald-950 opacity-100"
+              : "scale-95 bg-slate-200 text-transparent opacity-55"
+          }`}
+          aria-live="polite"
+        >
+          {mergeStage === "joined"
+            ? `${lang === "en" ? "Total" : "Jumlah"}: 4 ${lang === "en" ? "bananas" : "pisang"}`
+            : <span aria-hidden="true">&nbsp;</span>}
         </div>
       </div>
       </div>
