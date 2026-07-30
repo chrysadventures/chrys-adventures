@@ -3426,26 +3426,25 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
   onNext: () => void;
   onSkip: () => void;
 }) {
-  const banana = String.fromCodePoint(0x1f34c);
   const title = [
+    lang === "en" ? "Maths is everywhere" : "Matematik di mana-mana",
     lang === "en" ? "Find the numbers" : "Cari nombor",
-    lang === "en" ? "Find the action" : "Cari apa yang berlaku",
-    lang === "en" ? "Choose: add" : "Pilih: tambah",
-    lang === "en" ? "Choose: take away" : "Pilih: tolak",
+    lang === "en" ? "Find the clue word" : "Cari kata petunjuk",
+    lang === "en" ? "Solve the story" : "Selesaikan cerita",
   ][phase];
   const talk = [
     lang === "en"
-      ? "Look for how many. The numbers are 3 and 2."
-      : "Cari berapa banyak. Nombor itu 3 dan 2.",
+      ? "We use numbers everywhere. Let's count real things!"
+      : "Kita guna nombor di mana-mana. Jom kira benda betul!",
+    lang === "en"
+      ? "Find the numbers inside the story."
+      : "Cari nombor di dalam cerita.",
     lang === "en"
       ? "Clue words help us choose. They are hints."
       : "Kata petunjuk bantu kita pilih. Ia cuma petunjuk.",
     lang === "en"
-      ? "More bananas come together. We add."
-      : "Pisang lagi bergabung. Kita tambah.",
-    lang === "en"
-      ? "Some bananas go away. We take away."
-      : "Ada pisang pergi. Kita tolak.",
+      ? "Read it. Find the numbers. Find the clue. Add or take away. Count!"
+      : "Baca. Cari nombor. Cari petunjuk. Tambah atau tolak. Kira!",
   ][phase];
   const nextLabel = phase === 3 ? t.practice : t.next;
 
@@ -3463,15 +3462,15 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
         </div>
       </div>
 
-      {phase === 0 && <FindNumbersExample lang={lang} banana={banana} />}
-      {phase === 1 && <FindActionExample lang={lang} banana={banana} />}
-      {phase === 2 && <ChooseAddExample lang={lang} banana={banana} />}
-      {phase === 3 && <ChooseTakeAwayExample lang={lang} banana={banana} />}
+      {phase === 0 && <RealWorldEverywhereExample lang={lang} />}
+      {phase === 1 && <FindStoryNumbersExample lang={lang} />}
+      {phase === 2 && <FindClueWordExample lang={lang} />}
+      {phase === 3 && <SolveRealStoryExample lang={lang} />}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PreviousLessonButton label={t.previous} onClick={onPrevious} />
         <div className="flex flex-wrap justify-end gap-3">
-          <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkip} variant="green" />
+          {phase === 0 && <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkip} variant="green" />}
           <button
             type="button"
             onClick={onNext}
@@ -3485,205 +3484,218 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
   );
 }
 
-function FindNumbersExample({ lang, banana }: { lang: Lang; banana: string }) {
-  const [countingGroup, setCountingGroup] = useState<0 | 1 | 2 | 3>(0);
-  const [firstVisibleCount, setFirstVisibleCount] = useState(0);
-  const [secondVisibleCount, setSecondVisibleCount] = useState(0);
-  const countRunRef = useRef(0);
-
-  useEffect(() => () => {
-    countRunRef.current += 1;
-    stopNumberAudio();
-  }, []);
-
-  const startCounting = async () => {
-    const runId = countRunRef.current + 1;
-    countRunRef.current = runId;
-    stopNumberAudio();
-    setFirstVisibleCount(0);
-    setSecondVisibleCount(0);
-    setCountingGroup(1);
-
-    const countGroup = async (count: number, onCount: (value: number) => void) => {
-      if (!audioMuted) {
-        await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
-          if (countRunRef.current === runId) onCount(value);
-        });
-        return;
-      }
-      for (let value = 1; value <= count; value += 1) {
-        await wait(COUNTING_STEP_MS);
-        if (countRunRef.current !== runId) return;
-        onCount(value);
-      }
-    };
-
-    await countGroup(3, setFirstVisibleCount);
-    if (countRunRef.current !== runId) return;
-    setCountingGroup(2);
-    await wait(350);
-    if (countRunRef.current !== runId) return;
-    await countGroup(2, setSecondVisibleCount);
-    if (countRunRef.current === runId) setCountingGroup(3);
-  };
-
+function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
   return (
-    <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
-      <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 3 bananas and 2 more bananas." : "Chrys ada 3 pisang dan 2 pisang lagi."} />
-      <div className="rounded-[2rem] border-2 border-yellow-100 bg-yellow-50 p-4">
-        <p className="mb-3 text-center text-xl font-black text-yellow-900">
-          {lang === "en" ? "The numbers are 3 and 2." : "Nombor itu 3 dan 2."}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <RealWorldNumberGroup
-            count={3}
-            emoji={banana}
-            visibleCount={firstVisibleCount}
-            active={countingGroup === 1}
-            complete={countingGroup > 1}
-            lang={lang}
-          />
-          <RealWorldNumberGroup
-            count={2}
-            emoji={banana}
-            visibleCount={secondVisibleCount}
-            active={countingGroup === 2}
-            complete={countingGroup === 3}
-            lang={lang}
-          />
-        </div>
-        <div className="mt-4 flex justify-center">
-          <button
-            type="button"
-            onClick={() => void startCounting()}
-            disabled={countingGroup === 1 || countingGroup === 2}
-            className="relative min-h-14 rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-lg font-black text-white shadow-[0_6px_0_#1e3a8a] transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:border-blue-400 disabled:bg-blue-400 disabled:shadow-[0_4px_0_#64748b]"
-          >
-            {countingGroup === 1 || countingGroup === 2
-              ? (lang === "en" ? "Counting..." : "Mengira...")
-              : countingGroup === 3
-                ? (lang === "en" ? "Count again" : "Kira lagi")
-                : (lang === "en" ? "Start counting" : "Mula mengira")}
-            {countingGroup !== 1 && countingGroup !== 2 && (
-              <span className="pointer-events-none absolute -right-3 -top-4 rotate-45 rounded-full border-2 border-yellow-300 bg-yellow-100 px-3 py-2 shadow-md" aria-hidden="true">
-                <PointerIcon />
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FindActionExample({ lang, banana }: { lang: Lang; banana: string }) {
-  return (
-    <div className="space-y-4">
-      <CharacterTalk lang={lang} text={lang === "en" ? "A clue word tells what happens." : "Kata petunjuk beritahu apa berlaku."} />
-      <div className="grid gap-4 md:grid-cols-2">
-        <RealWorldStoryCard
-          lang={lang}
-          story={lang === "en" ? "Chrys gets more bananas." : "Chrys dapat lagi pisang."}
-          clue={lang === "en" ? "gets more" : "dapat lagi"}
-          note={lang === "en" ? "This is an ADDITION (+) clue." : "Ini petunjuk TAMBAH (+)."}
+    <div className="rounded-[2rem] border-2 border-sky-100 bg-sky-50 p-4 shadow-[0_6px_0_rgba(14,116,144,.12)]">
+      <div className="grid gap-4 md:grid-cols-3">
+        <RealWorldSituationCard
+          title={lang === "en" ? "Apples in a basket" : "Epal di dalam bakul"}
+          prompt={lang === "en" ? "We count apples." : "Kita kira epal."}
         >
-          <div className="flex items-center justify-center gap-2">
-            <ObjectGroup count={2} emoji={banana} />
-            <span className="text-4xl font-black text-blue-800">+</span>
-            <ObjectGroup count={1} emoji={banana} />
+          <MiniAppleBasket count={3} />
+        </RealWorldSituationCard>
+        <RealWorldSituationCard
+          title={lang === "en" ? "Fish in a pond" : "Ikan di dalam kolam"}
+          prompt={lang === "en" ? "We count fish." : "Kita kira ikan."}
+        >
+          <div className="relative mx-auto flex h-28 max-w-52 items-center justify-center gap-4 overflow-hidden rounded-[50%] border-4 border-sky-300 bg-sky-200 shadow-inner">
+            <span className="absolute left-5 top-3 text-3xl" aria-hidden="true">🐟</span>
+            <span className="mt-7 text-4xl" aria-hidden="true">🐠</span>
+            <span className="absolute right-5 top-5 text-3xl" aria-hidden="true">🐟</span>
+            <span className="absolute bottom-1 left-8 text-2xl" aria-hidden="true">🌿</span>
           </div>
-        </RealWorldStoryCard>
-        <RealWorldStoryCard
-          lang={lang}
-          story={lang === "en" ? "Chrys gives away bananas." : "Chrys beri pisang."}
-          clue={lang === "en" ? "gives away" : "beri"}
-          note={lang === "en" ? "This is a SUBTRACTION (-) clue." : "Ini petunjuk TOLAK (-)."}
+        </RealWorldSituationCard>
+        <RealWorldSituationCard
+          title={lang === "en" ? "Cars in a car park" : "Kereta di tempat letak kereta"}
+          prompt={lang === "en" ? "We count cars." : "Kita kira kereta."}
         >
-          <CountedObjectRow count={4} emoji={banana} crossed={1} showCount={false} compact />
-        </RealWorldStoryCard>
+          <div className="mx-auto grid h-28 max-w-52 grid-cols-3 items-center gap-2 rounded-2xl border-4 border-slate-400 bg-slate-600 p-3 shadow-inner">
+            {["🚗", "🚙", "🚕"].map((car) => (
+              <span key={car} className="flex h-20 items-center justify-center border-x-2 border-white/80 text-4xl" aria-hidden="true">{car}</span>
+            ))}
+          </div>
+        </RealWorldSituationCard>
       </div>
-    </div>
-  );
-}
-
-function ChooseAddExample({ lang, banana }: { lang: Lang; banana: string }) {
-  return (
-    <div className="space-y-4 rounded-[2rem] border-2 border-blue-100 bg-blue-50 p-4">
-      <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 3 bananas. He gets 2 more." : "Chrys ada 3 pisang. Dia dapat 2 lagi."} />
-      <RealWorldStepGrid
-        steps={[
-          { label: lang === "en" ? "Numbers" : "Nombor", value: "3, 2" },
-          { label: lang === "en" ? "Clue" : "Petunjuk", value: lang === "en" ? "more" : "lagi" },
-          { label: lang === "en" ? "Choose" : "Pilih", value: "+" },
-          { label: lang === "en" ? "Answer" : "Jawapan", value: "5" },
-        ]}
-      />
-      <CountedObjectRow count={5} emoji={banana} showCount compact />
-      <CountTotalBadge count={5} lang={lang} unit={objectName(banana, 5, lang)} />
-      <p className="text-center text-2xl font-black text-blue-950">3 + 2 = 5</p>
-    </div>
-  );
-}
-
-function ChooseTakeAwayExample({ lang, banana }: { lang: Lang; banana: string }) {
-  return (
-    <div className="space-y-4 rounded-[2rem] border-2 border-red-100 bg-red-50 p-4">
-      <CharacterTalk lang={lang} text={lang === "en" ? "Chrys has 5 bananas. He gives away 2." : "Chrys ada 5 pisang. Dia beri 2."} />
-      <RealWorldStepGrid
-        steps={[
-          { label: lang === "en" ? "Numbers" : "Nombor", value: "5, 2" },
-          { label: lang === "en" ? "Clue" : "Petunjuk", value: lang === "en" ? "gives away" : "beri" },
-          { label: lang === "en" ? "Choose" : "Pilih", value: "-" },
-          { label: lang === "en" ? "Answer" : "Jawapan", value: "3" },
-        ]}
-      />
-      <CountedObjectRow count={5} emoji={banana} crossed={2} showCount countRemainingOnly showCrossCount compact />
-      <CountTotalBadge count={3} lang={lang} unit={objectName(banana, 3, lang)} />
-      <p className="text-center text-2xl font-black text-red-950">5 - 2 = 3</p>
-    </div>
-  );
-}
-
-function RealWorldNumberGroup({ count, emoji, visibleCount, active, complete, lang }: {
-  count: number;
-  emoji: string;
-  visibleCount: number;
-  active: boolean;
-  complete: boolean;
-  lang: Lang;
-}) {
-  return (
-    <div className={`rounded-3xl border-4 bg-white p-3 text-center shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,box-shadow] duration-300 ${
-      active
-        ? "border-blue-400 shadow-[0_5px_0_#93c5fd]"
-        : complete
-          ? "border-emerald-300 shadow-[0_5px_0_#a7f3d0]"
-          : "border-white"
-    }`}>
-      <CountedObjectRow
-        count={count}
-        emoji={emoji}
-        showCount
-        visibleCount={visibleCount}
-        fixedColumns={1}
-        compact
-        highlightActiveCount={active}
-      />
-      <p
-        className={`mx-auto mt-3 min-h-12 rounded-full px-4 py-2 text-xl font-black transition-opacity ${
-          complete ? "bg-emerald-100 text-emerald-950 opacity-100" : "opacity-0"
-        }`}
-        aria-live="polite"
-      >
-        {complete
-          ? `${lang === "en" ? "Total" : "Jumlah"}: ${count} ${objectName(emoji, count, lang)}`
-          : "\u00a0"}
+      <p className="mt-5 rounded-2xl bg-white p-4 text-center text-xl font-black text-blue-950">
+        {lang === "en" ? "Numbers are not just bananas!" : "Nombor bukan untuk pisang sahaja!"}
       </p>
     </div>
   );
 }
 
-function RealWorldStoryCard({ story, clue, note, children }: { lang: Lang; story: string; clue: string; note: string; children: React.ReactNode }) {
+function RealWorldSituationCard({ title, prompt, children }: {
+  title: string;
+  prompt: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-3xl border-2 border-white bg-white p-4 shadow-[0_5px_0_rgba(0,0,0,.10)]">
+      <h4 className="min-h-14 text-center text-xl font-black leading-tight text-blue-950">{title}</h4>
+      <div className="mt-3">{children}</div>
+      <p className="mt-3 text-center text-base font-black text-slate-600">{prompt}</p>
+    </div>
+  );
+}
+
+function MiniAppleBasket({ count }: { count: number }) {
+  const positions = [
+    "left-[31%] top-[31%]",
+    "right-[31%] top-[31%]",
+    "left-1/2 top-[51%] -translate-x-1/2",
+  ];
+  return (
+    <div className="relative mx-auto h-28 max-w-52">
+      <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" />
+      {Array.from({ length: count }, (_, index) => (
+        <SpriteIcon
+          key={index}
+          value="🍎"
+          className={`absolute ${positions[index]} h-10 w-10 drop-shadow-md`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FindStoryNumbersExample({ lang }: { lang: Lang }) {
+  return (
+    <div className="space-y-4 rounded-[2rem] border-2 border-amber-100 bg-amber-50 p-4 shadow-[0_6px_0_rgba(146,64,14,.12)]">
+      <p className="rounded-3xl bg-white p-5 text-center text-xl font-black leading-relaxed text-blue-950 md:text-2xl">
+        {lang === "en" ? "Ali has " : "Ali ada "}
+        <StoryNumber value={3} />
+        {lang === "en" ? " apples. His friend gives him " : " epal. Kawannya beri "}
+        <StoryNumber value={2} />
+        {lang === "en" ? " more apples." : " lagi epal."}
+      </p>
+      <div className="grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+        <div className="rounded-3xl border-2 border-amber-200 bg-white p-4 text-center">
+          <p className="mb-2 text-lg font-black text-amber-900">{lang === "en" ? "Ali's basket" : "Bakul Ali"}</p>
+          <MiniAppleBasket count={3} />
+          <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "3 apples" : "3 epal"}</p>
+        </div>
+        <div className="text-center">
+          <span className="block text-5xl" aria-hidden="true">🤲</span>
+          <span className="mt-1 block text-3xl font-black text-emerald-700">→</span>
+        </div>
+        <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+          <p className="mb-4 text-lg font-black text-emerald-900">{lang === "en" ? "A friend gives more" : "Kawan beri lagi"}</p>
+          <div className="flex min-h-28 items-center justify-center gap-4">
+            <SpriteIcon value="🍎" className="h-16 w-16 drop-shadow-md" />
+            <SpriteIcon value="🍎" className="h-16 w-16 drop-shadow-md" />
+          </div>
+          <p className="mt-2 text-xl font-black text-blue-950">{lang === "en" ? "2 more apples" : "2 epal lagi"}</p>
+        </div>
+      </div>
+      <p className="rounded-2xl bg-yellow-200 p-4 text-center text-xl font-black text-yellow-950">
+        {lang === "en" ? "We found the numbers 3 and 2." : "Kita jumpa nombor 3 dan 2."}
+      </p>
+    </div>
+  );
+}
+
+function StoryNumber({ value }: { value: number }) {
+  return (
+    <span className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-xl border-2 border-yellow-500 bg-yellow-300 px-3 text-2xl font-black text-yellow-950 shadow-[0_3px_0_#d97706]">
+      {value}
+    </span>
+  );
+}
+
+function FindClueWordExample({ lang }: { lang: Lang }) {
+  return (
+    <div className="space-y-4">
+      <CharacterTalk
+        lang={lang}
+        text={lang === "en" ? "A clue word tells us what happens." : "Kata petunjuk beritahu apa yang berlaku."}
+      />
+      <div className="grid gap-4 md:grid-cols-2">
+        <RealWorldStoryCard
+          story={lang === "en" ? "Sara finds 2 more shells." : "Sara jumpa 2 lagi cangkerang."}
+          clue={lang === "en" ? "finds" : "jumpa"}
+          note={lang === "en" ? "FINDS MORE is an ADDITION (+) clue." : "JUMPA LAGI ialah petunjuk TAMBAH (+)."}
+        >
+          <div className="flex min-h-32 items-center justify-center gap-3 rounded-3xl bg-sky-50 p-4">
+            <span className="text-5xl drop-shadow-md" aria-hidden="true">🐚</span>
+            <span className="text-4xl font-black text-blue-800">+</span>
+            <span className="text-5xl drop-shadow-md" aria-hidden="true">🐚</span>
+            <span className="text-5xl drop-shadow-md" aria-hidden="true">🐚</span>
+          </div>
+        </RealWorldStoryCard>
+        <RealWorldStoryCard
+          story={lang === "en" ? "Tom eats 2 cookies." : "Tom makan 2 biskut."}
+          clue={lang === "en" ? "eats" : "makan"}
+          note={lang === "en" ? "EATS is a SUBTRACTION (-) clue." : "MAKAN ialah petunjuk TOLAK (-)."}
+        >
+          <div className="flex min-h-32 flex-wrap items-center justify-center gap-3 rounded-3xl bg-orange-50 p-4">
+            {[0, 1, 2, 3].map((index) => (
+              <span key={index} className="relative text-5xl drop-shadow-md" aria-hidden="true">
+                🍪
+                {index < 2 && <span className="absolute inset-0 flex items-center justify-center text-4xl font-black text-red-500">×</span>}
+              </span>
+            ))}
+          </div>
+        </RealWorldStoryCard>
+      </div>
+      <p className="rounded-2xl border-2 border-yellow-200 bg-yellow-50 p-4 text-center text-lg font-black text-yellow-950">
+        {lang === "en" ? "Clue words help us choose. They do not decide every story." : "Kata petunjuk bantu kita pilih. Ia tidak menentukan setiap cerita."}
+      </p>
+    </div>
+  );
+}
+
+function SolveRealStoryExample({ lang }: { lang: Lang }) {
+  return (
+    <div className="space-y-4 rounded-[2rem] border-2 border-sky-100 bg-sky-50 p-4 shadow-[0_6px_0_rgba(14,116,144,.12)]">
+      <p className="rounded-3xl bg-white p-5 text-center text-xl font-black leading-relaxed text-blue-950 md:text-2xl">
+        {lang === "en" ? "There are " : "Ada "}
+        <StoryNumber value={5} />
+        {lang === "en" ? " birds. " : " ekor burung. "}
+        <StoryNumber value={2} />
+        {" "}
+        <span className="rounded-xl bg-yellow-200 px-2 py-1 text-yellow-950">
+          {lang === "en" ? "fly away" : "terbang pergi"}
+        </span>
+        {lang === "en" ? ". How many are left?" : ". Berapa yang tinggal?"}
+      </p>
+
+      <div className="relative overflow-hidden rounded-[2rem] border-2 border-sky-200 bg-gradient-to-b from-sky-200 to-emerald-100 p-5">
+        <SpriteIcon value="🌳" className="absolute bottom-2 left-3 h-36 w-36 opacity-90" />
+        <div className="relative z-10 grid min-h-44 grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {[0, 1, 2].map((index) => <span key={index} className="text-5xl drop-shadow-md" aria-hidden="true">🐦</span>)}
+          </div>
+          <div className="text-center">
+            <span className="block text-4xl font-black text-red-600">←</span>
+            <span className="mt-1 block rounded-full bg-red-100 px-3 py-1 text-sm font-black text-red-800">
+              {lang === "en" ? "2 fly away" : "2 terbang pergi"}
+            </span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <span className="-translate-y-6 text-5xl drop-shadow-md" aria-hidden="true">🐦</span>
+            <span className="translate-y-6 text-5xl drop-shadow-md" aria-hidden="true">🐦</span>
+          </div>
+        </div>
+        <p className="relative z-10 mt-2 text-center text-xl font-black text-emerald-950">
+          {lang === "en" ? "3 birds stay. 2 birds fly away." : "3 burung tinggal. 2 burung terbang pergi."}
+        </p>
+      </div>
+
+      <RealWorldStepGrid
+        steps={[
+          { label: lang === "en" ? "Find the numbers" : "Cari nombor", value: "5, 2" },
+          { label: lang === "en" ? "Find the clue" : "Cari petunjuk", value: lang === "en" ? "fly away" : "terbang pergi" },
+          { label: lang === "en" ? "Choose" : "Pilih", value: lang === "en" ? "take away (-)" : "tolak (-)" },
+          { label: lang === "en" ? "Count what is left" : "Kira yang tinggal", value: "3" },
+        ]}
+      />
+      <p className="rounded-2xl bg-emerald-100 p-4 text-center text-3xl font-black text-emerald-950">
+        5 - 2 = 3
+      </p>
+    </div>
+  );
+}
+
+function RealWorldStoryCard({ story, clue, note, children }: { story: string; clue: string; note: string; children: React.ReactNode }) {
   const parts = story.split(clue);
   return (
     <div className="space-y-3 rounded-[2rem] border-2 border-white bg-white p-4 shadow-[0_5px_0_rgba(0,0,0,.10)]">
