@@ -14,6 +14,7 @@ type MathCue = "plus" | "equals" | "minus";
 type ContainerKind = "basket" | "tray";
 type Screen =
   | "home"
+  | "modeSelect"
   | "menu"
   | "advancedMenu"
   | "advancedTeenNumbers"
@@ -1178,11 +1179,13 @@ function App() {
             screen === "advancedTeenNumbers"
               ? "advancedMenu"
               : screen === "advancedMenu"
-                ? "menu"
+                ? "modeSelect"
                 : screen.startsWith("test") && screen !== "testMenu"
                   ? "testMenu"
                   : screen === "menu"
-                    ? "home"
+                    ? "modeSelect"
+                    : screen === "modeSelect"
+                      ? "home"
                     : "menu",
           )}
         />
@@ -1190,6 +1193,9 @@ function App() {
 
         {screen === "home" && (
           <HomeScreen lang={lang} t={t} player={player} setPlayer={setPlayer} go={go} />
+        )}
+        {screen === "modeSelect" && player && (
+          <ModeSelectScreen lang={lang} t={t} player={player} go={go} />
         )}
         {screen === "menu" && player && (
           <MenuScreen lang={lang} t={t} player={player} go={go} />
@@ -1489,7 +1495,7 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
     const clean = name.trim() || "Explorer";
     setPlayer(player ?? { name: clean, stars: 0, progress: {} });
     if (player && player.name !== clean) setPlayer({ ...player, name: clean });
-    go("menu");
+    go("modeSelect");
   };
   return (
     <main className="mx-auto grid w-full max-w-5xl flex-1 items-center gap-6 py-4 md:grid-cols-[1fr_1.1fr]">
@@ -1530,6 +1536,65 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
   );
 }
 
+function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-6">
+      <section className="text-center">
+        <img src={chrysExcited} alt="Chrys" className="mx-auto h-36 w-36 object-contain drop-shadow-xl" />
+        <h2 className="text-4xl font-black text-blue-950">
+          {lang === "en" ? `Hi, ${player.name}! Choose your adventure.` : `Hai, ${player.name}! Pilih pengembaraan kamu.`}
+        </h2>
+      </section>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => go("menu")}
+          aria-label={lang === "en" ? "Open Learning Mode" : "Buka Mod Belajar"}
+          className="group rounded-[2rem] border-4 border-sky-300 bg-white/95 p-6 text-left shadow-[0_9px_0_#60a5fa] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-400 active:translate-y-1 md:p-8"
+        >
+          <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-sky-200 bg-sky-50 shadow-inner">
+            <img src={chrysThinking} alt="" className="h-20 w-20 object-contain" />
+          </span>
+          <span className="mt-6 block text-3xl font-black text-blue-950">
+            {lang === "en" ? "Learning Mode" : "Mod Belajar"}
+          </span>
+          <span className="mt-2 block text-lg font-bold text-slate-600">
+            {lang === "en" ? "Learn numbers 0-9 with Chrys" : "Belajar nombor 0-9 bersama Chrys"}
+          </span>
+          <span className="mt-6 flex items-center justify-end gap-2 font-black text-blue-700">
+            {lang === "en" ? "Start learning" : "Mula belajar"}
+            <ArrowRight className="h-7 w-7 transition group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => go("advancedMenu")}
+          aria-label={lang === "en" ? "Open Advanced Adventure" : "Buka Pengembaraan Lanjutan"}
+          className="group relative overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-left text-white shadow-[0_9px_0_#064e3b] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-300 active:translate-y-1 md:p-8"
+        >
+          <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
+          <div className="relative z-10">
+            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-300/70 bg-emerald-800 shadow-inner">
+              <SpriteIcon value={BANANA} className="h-16 w-16" />
+            </span>
+            <span className="mt-6 inline-block rounded-full border border-yellow-300/60 bg-yellow-300/15 px-3 py-1 text-sm font-black uppercase text-yellow-200">
+              {lang === "en" ? "Next step" : "Langkah seterusnya"}
+            </span>
+            <span className="mt-3 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
+            <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedAdventureShort}</span>
+            <span className="mt-6 flex items-center justify-end gap-2 font-black text-yellow-200">
+              {lang === "en" ? "Start expedition" : "Mula ekspedisi"}
+              <ArrowRight className="h-7 w-7 transition group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+            </span>
+          </div>
+        </button>
+      </div>
+    </main>
+  );
+}
+
 function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 pb-8">
@@ -1548,26 +1613,6 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
         <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Counting objects in simple stories" : "Kira objek dalam cerita mudah"} icon="🍎" color="pink" onClick={() => go("learnReal")} />
         <MenuCard title={t.testMode} subtitle={t.testHelp} icon="⭐" color="amber" onClick={() => go("testMenu")} />
       </div>
-      <button
-        type="button"
-        onClick={() => go("advancedMenu")}
-        className="group relative overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-left text-white shadow-[0_9px_0_#064e3b] transition hover:-translate-y-1 active:translate-y-1 md:p-8"
-      >
-        <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
-        <div className="relative z-10 grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-          <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-300/70 bg-emerald-800 shadow-inner">
-            <SpriteIcon value={BANANA} className="h-16 w-16" />
-          </span>
-          <span>
-            <span className="mb-2 inline-block rounded-full border border-yellow-300/60 bg-yellow-300/15 px-3 py-1 text-sm font-black uppercase text-yellow-200">
-              {lang === "en" ? "Next step" : "Langkah seterusnya"}
-            </span>
-            <span className="block text-3xl font-black leading-tight md:text-4xl">{t.advancedAdventure}</span>
-            <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedAdventureShort}</span>
-          </span>
-          <ArrowRight className="hidden h-12 w-12 text-yellow-300 transition group-hover:translate-x-1 sm:block" strokeWidth={3} />
-        </div>
-      </button>
     </main>
   );
 }
