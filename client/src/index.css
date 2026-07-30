@@ -232,6 +232,98 @@
     box-shadow: 0 13px 0 rgba(31, 78, 49, 0.18), 0 20px 36px rgba(26, 86, 92, 0.15);
   }
 
+  .learning-menu-stage {
+    --learning-ink: #172554;
+  }
+
+  .learning-menu-hero {
+    background:
+      linear-gradient(122deg, rgba(7, 89, 133, 0.98), rgba(8, 145, 178, 0.96) 54%, rgba(5, 150, 105, 0.96)),
+      var(--app-bg-desktop);
+    background-position: center;
+    background-size: cover;
+  }
+
+  .learning-menu-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%),
+      linear-gradient(315deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%);
+    background-position: 0 0, 18px 18px;
+    background-size: 36px 36px;
+    opacity: 0.42;
+  }
+
+  .learning-trail-strip {
+    overflow-x: auto;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    border-radius: 1.5rem;
+    background: rgba(240, 253, 250, 0.94);
+    box-shadow: 0 7px 0 rgba(6, 95, 70, 0.18), 0 12px 24px rgba(15, 118, 110, 0.12);
+    scrollbar-width: thin;
+    scrollbar-color: #0ea5e9 rgba(224, 242, 254, 0.8);
+  }
+
+  .learning-stage-band {
+    position: relative;
+    padding: 1.5rem;
+    border-top: 4px solid rgba(255, 255, 255, 0.92);
+    border-bottom: 4px solid rgba(255, 255, 255, 0.92);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(240, 253, 250, 0.86));
+    box-shadow: 0 8px 0 rgba(15, 118, 110, 0.14);
+  }
+
+  .learning-stage-band::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 0;
+    width: 8rem;
+    height: 4px;
+    border-radius: 999px;
+  }
+
+  .learning-stage-sky::before {
+    background: #38bdf8;
+  }
+
+  .learning-stage-emerald::before {
+    background: #34d399;
+  }
+
+  .learning-stage-amber::before {
+    background: #fbbf24;
+  }
+
+  .learning-menu-card {
+    min-height: 16.5rem;
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.97));
+  }
+
+  .learning-menu-card:hover {
+    border-color: #2563eb;
+  }
+
+  @media (max-width: 640px) {
+    .learning-menu-hero {
+      background-image:
+        linear-gradient(150deg, rgba(7, 89, 133, 0.98), rgba(8, 145, 178, 0.96) 58%, rgba(5, 150, 105, 0.96)),
+        var(--app-bg-mobile);
+    }
+
+    .learning-menu-card {
+      min-height: 14rem;
+    }
+
+    .learning-stage-band {
+      margin-inline: -1rem;
+      padding: 1.25rem 1rem;
+    }
+  }
+
   .icon-badge {
     background: linear-gradient(180deg, #f8fafc, #eef2f7);
     border: 2px solid rgba(226, 232, 240, 0.9);

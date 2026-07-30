@@ -1,6 +1,26 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowLeft, ArrowLeftRight, ArrowRight, BookOpen, Check, Eraser, Search, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  ArrowRight,
+  BookOpen,
+  Boxes,
+  Check,
+  Compass,
+  Eraser,
+  Flag,
+  Hash,
+  Layers3,
+  ListOrdered,
+  Map as MapIcon,
+  Minus,
+  Plus,
+  Search,
+  Sparkles,
+  Star,
+  X,
+} from "lucide-react";
 import chrysHappy from "@assets/chrys_sitting_new_user_nobg.png";
 import chrysExcited from "@assets/chrys_waving_new_user_nobg.png";
 import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
@@ -1625,23 +1645,167 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
 }
 
 function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  const stages = [
+    {
+      number: 1,
+      title: lang === "en" ? "Discover numbers" : "Kenali nombor",
+      help: lang === "en" ? "Meet numbers, their values, and their order." : "Kenali nombor, nilai, dan susunannya.",
+      accent: "sky" as const,
+      sections: [
+        {
+          title: t.recognizeNumbers,
+          subtitle: lang === "en" ? "See, spell, trace, and write" : "Lihat, eja, ikut garisan, dan tulis",
+          icon: <Hash className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
+          color: "sky" as const,
+          onClick: () => go("learnRecognize"),
+        },
+        {
+          title: t.numberValues,
+          subtitle: lang === "en" ? "Find how many objects there are" : "Cari berapa banyak objek",
+          icon: <SpriteIcon value={BANANA} className="h-12 w-12" />,
+          color: "emerald" as const,
+          onClick: () => go("learnValues"),
+        },
+        {
+          title: t.sequencing,
+          subtitle: lang === "en" ? "Put numbers in the right order" : "Susun nombor dengan betul",
+          icon: <ListOrdered className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
+          color: "sky" as const,
+          onClick: () => go("learnSequencing"),
+        },
+      ],
+    },
+    {
+      number: 2,
+      title: lang === "en" ? "Build maths skills" : "Bina kemahiran matematik",
+      help: lang === "en" ? "Make groups, add more, and take away." : "Bina kumpulan, tambah, dan ambil.",
+      accent: "emerald" as const,
+      sections: [
+        {
+          title: t.groupingMode,
+          subtitle: t.groupingModeShort,
+          icon: <Boxes className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
+          color: "amber" as const,
+          onClick: () => go("groupingMode"),
+        },
+        {
+          title: t.addition,
+          subtitle: lang === "en" ? "Put groups together" : "Gabungkan kumpulan",
+          icon: <Plus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
+          color: "emerald" as const,
+          onClick: () => go("learnAddition"),
+        },
+        {
+          title: t.subtraction,
+          subtitle: lang === "en" ? "Take bananas away" : "Ambil pisang",
+          icon: <Minus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
+          color: "pink" as const,
+          onClick: () => go("learnSubtraction"),
+        },
+      ],
+    },
+    {
+      number: 3,
+      title: lang === "en" ? "Use what you know" : "Guna apa yang dipelajari",
+      help: lang === "en" ? "Solve stories, then celebrate what you learned." : "Selesaikan cerita, kemudian raikan apa yang dipelajari.",
+      accent: "amber" as const,
+      sections: [
+        {
+          title: t.learnReal,
+          subtitle: lang === "en" ? "Solve simple everyday stories" : "Selesaikan cerita harian mudah",
+          icon: <MapIcon className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
+          color: "pink" as const,
+          onClick: () => go("learnReal"),
+        },
+        {
+          title: t.testMode,
+          subtitle: t.testHelp,
+          icon: <Star className="h-11 w-11" fill="currentColor" strokeWidth={2.5} aria-hidden="true" />,
+          color: "amber" as const,
+          onClick: () => go("testMenu"),
+        },
+      ],
+    },
+  ];
+
+  let destinationNumber = 0;
+
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 pb-8">
-      <section className="flex flex-col items-center text-center">
-        <img src={chrysHappy} alt="Chrys" className="h-36 w-36 object-contain drop-shadow-xl" />
-        <h2 className="text-3xl font-black text-blue-950">Hi, {player.name}!</h2>
-        <p className="text-lg font-bold text-blue-900/70">{t.menuTitle}</p>
+    <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
+      <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-200 p-5 text-white shadow-[0_10px_0_#075985] sm:p-7 md:p-8">
+        <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
+          <div className="mx-auto grid h-32 w-32 place-items-center rounded-[1.75rem] border-4 border-white/70 bg-white/90 shadow-[0_7px_0_rgba(8,47,73,.28)] md:h-36 md:w-36">
+            <img src={chrysHappy} alt="Chrys" className="h-28 w-28 object-contain drop-shadow-xl md:h-32 md:w-32" />
+          </div>
+          <div className="text-center md:text-left">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-cyan-100/80 bg-blue-950/35 px-4 py-2 text-sm font-black uppercase text-cyan-50">
+              <Compass className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
+              {lang === "en" ? "Chrys's learning trail" : "Laluan belajar Chrys"}
+            </span>
+            <h2 className="mt-3 text-3xl font-black leading-tight text-white sm:text-4xl">
+              {lang === "en" ? `Ready to explore, ${player.name}?` : `Sedia meneroka, ${player.name}?`}
+            </h2>
+            <p className="mt-2 max-w-2xl text-base font-bold text-cyan-50/95 sm:text-lg">{t.menuTitle}</p>
+          </div>
+          <div className="mx-auto flex gap-2 md:flex-col">
+            <span className="flex items-center gap-2 rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-4 py-3 font-black text-blue-950 shadow-[0_5px_0_#ca8a04]">
+              <Flag className="h-5 w-5" fill="currentColor" aria-hidden="true" />
+              {lang === "en" ? "8 adventures" : "8 pengembaraan"}
+            </span>
+            <span className="flex items-center gap-2 rounded-2xl border-2 border-emerald-100 bg-emerald-700/90 px-4 py-3 font-black text-white shadow-[0_5px_0_#065f46]">
+              <Sparkles className="h-5 w-5" aria-hidden="true" />
+              {lang === "en" ? "Numbers 0-9" : "Nombor 0-9"}
+            </span>
+          </div>
+        </div>
       </section>
-      <div className="grid gap-4 md:grid-cols-2">
-        <MenuCard title={t.recognizeNumbers} subtitle={lang === "en" ? "See, spell, trace, write numbers" : "Lihat, eja dan lukis nombor"} icon="🔢" color="sky" onClick={() => go("learnRecognize")} />
-        <MenuCard title={t.numberValues} subtitle={lang === "en" ? "Numbers show how many" : "Nombor tunjuk berapa banyak"} icon="🍌" color="emerald" onClick={() => go("learnValues")} />
-        <MenuCard title={t.sequencing} subtitle={lang === "en" ? "Numbers in the right order" : "Nombor dalam susunan yang betul"} icon="< >" color="sky" onClick={() => go("learnSequencing")} />
-        <MenuCard title={t.groupingMode} subtitle={t.groupingModeShort} icon="🧺" color="amber" onClick={() => go("groupingMode")} />
-        <MenuCard title={t.addition} subtitle={lang === "en" ? "Adding more" : "Tambah lagi"} icon="➕" color="emerald" onClick={() => go("learnAddition")} />
-        <MenuCard title={t.subtraction} subtitle={lang === "en" ? "Taking away" : "Ambil"} icon="➖" color="pink" onClick={() => go("learnSubtraction")} />
-        <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Counting objects in simple stories" : "Kira objek dalam cerita mudah"} icon="🍎" color="pink" onClick={() => go("learnReal")} />
-        <MenuCard title={t.testMode} subtitle={t.testHelp} icon="⭐" color="amber" onClick={() => go("testMenu")} />
-      </div>
+
+      <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning trail with 8 destinations" : "Laluan belajar dengan 8 destinasi"}>
+        <div className="flex min-w-[44rem] items-center justify-between gap-2 px-3 py-4">
+          {Array.from({ length: 8 }, (_, index) => (
+            <React.Fragment key={index}>
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-4 border-white bg-blue-600 text-lg font-black text-white shadow-[0_4px_0_#1e3a8a]">
+                {index + 1}
+              </span>
+              {index < 7 && <ArrowRight className="h-6 w-6 shrink-0 text-emerald-700" strokeWidth={3} aria-hidden="true" />}
+            </React.Fragment>
+          ))}
+        </div>
+      </section>
+
+      {stages.map((stage) => (
+        <section key={stage.number} className={`learning-stage-band learning-stage-${stage.accent}`}>
+          <div className="mb-4 flex items-start gap-4">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-blue-950 text-2xl font-black text-white shadow-[0_5px_0_#0c4a6e]">
+              {stage.number}
+            </span>
+            <div>
+              <p className="text-sm font-black uppercase text-emerald-700">
+                {lang === "en" ? `Trail stage ${stage.number}` : `Peringkat laluan ${stage.number}`}
+              </p>
+              <h3 className="text-2xl font-black leading-tight text-blue-950 sm:text-3xl">{stage.title}</h3>
+              <p className="mt-1 font-bold text-slate-600">{stage.help}</p>
+            </div>
+          </div>
+          <div className={`grid gap-4 ${stage.sections.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+            {stage.sections.map((section) => {
+              destinationNumber += 1;
+              return (
+                <MenuCard
+                  key={section.title}
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  icon={section.icon}
+                  color={section.color}
+                  step={destinationNumber}
+                  actionLabel={lang === "en" ? "Start" : "Mula"}
+                  onClick={section.onClick}
+                />
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </main>
   );
 }
@@ -1971,20 +2135,76 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
   );
 }
 
-function MenuCard({ title, subtitle, icon, color, onClick }: { title: string; subtitle: string; icon: string; color: "sky" | "emerald" | "pink" | "amber"; onClick: () => void }) {
+function MenuCard({
+  title,
+  subtitle,
+  icon,
+  color,
+  step,
+  actionLabel,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  icon: string | React.ReactNode;
+  color: "sky" | "emerald" | "pink" | "amber";
+  step?: number;
+  actionLabel?: string;
+  onClick: () => void;
+}) {
   const colors = {
-    sky: "border-sky-400 shadow-sky-700/35",
-    emerald: "border-emerald-400 shadow-emerald-700/35",
-    pink: "border-pink-300 shadow-pink-700/30",
-    amber: "border-amber-400 shadow-amber-700/35",
+    sky: {
+      border: "border-sky-400",
+      accent: "bg-sky-500",
+      badge: "border-sky-200 bg-sky-50 text-sky-700",
+      step: "bg-sky-600",
+    },
+    emerald: {
+      border: "border-emerald-400",
+      accent: "bg-emerald-500",
+      badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      step: "bg-emerald-600",
+    },
+    pink: {
+      border: "border-pink-300",
+      accent: "bg-pink-400",
+      badge: "border-pink-200 bg-pink-50 text-pink-700",
+      step: "bg-pink-600",
+    },
+    amber: {
+      border: "border-amber-400",
+      accent: "bg-amber-400",
+      badge: "border-amber-200 bg-amber-50 text-amber-800",
+      step: "bg-amber-500",
+    },
   };
+  const theme = colors[color];
   return (
-    <button onClick={onClick} className={`menu-card min-h-48 rounded-[2rem] border-4 p-6 text-left transition active:translate-y-1 md:p-7 ${colors[color]}`}>
-      <span className="icon-badge relative z-10 mb-5 grid h-20 w-20 place-items-center rounded-[1.6rem] text-4xl font-black text-blue-950">
-        <SpriteIcon value={icon} className="h-14 w-14" />
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${title}. ${subtitle}`}
+      className={`menu-card group relative min-h-48 overflow-hidden rounded-[2rem] border-4 p-5 text-left transition active:translate-y-1 md:p-6 ${theme.border} ${step ? "learning-menu-card" : ""}`}
+    >
+      <span className={`absolute inset-x-0 top-0 h-3 ${theme.accent}`} aria-hidden="true" />
+      <span className="relative z-10 flex items-start justify-between gap-3 pt-2">
+        <span className={`grid h-20 w-20 shrink-0 place-items-center rounded-[1.4rem] border-2 shadow-inner ${theme.badge}`}>
+          {typeof icon === "string" ? <SpriteIcon value={icon} className="h-14 w-14" /> : icon}
+        </span>
+        {step !== undefined && (
+          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border-4 border-white text-lg font-black text-white shadow-md ${theme.step}`}>
+            {step}
+          </span>
+        )}
       </span>
-      <h3 className="relative z-10 text-2xl font-black leading-tight text-blue-950 md:text-3xl">{title}</h3>
-      <p className="relative z-10 mt-3 text-base font-black leading-snug text-slate-500">{subtitle}</p>
+      <h3 className="relative z-10 mt-5 text-2xl font-black leading-tight text-blue-950 md:text-[1.7rem]">{title}</h3>
+      <p className="relative z-10 mt-2 max-w-[28rem] text-base font-black leading-snug text-slate-600">{subtitle}</p>
+      {step !== undefined && (
+        <span className="relative z-10 mt-5 flex items-center justify-end gap-2 font-black text-blue-700">
+          {actionLabel}
+          <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+        </span>
+      )}
     </button>
   );
 }
