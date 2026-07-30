@@ -267,7 +267,7 @@ const UI = {
     continue: "Continue",
     menuTitle: "Where shall we learn today?",
     advancedAdventure: "Advanced Adventure",
-    advancedAdventureShort: "The next step: numbers 10-20",
+    advancedAdventureShort: "Explore numbers 10-20 with Chrys",
     advancedMenuTitle: "Advanced Expedition",
     advancedMenuHelp: "Explore bigger numbers with Chrys.",
     advancedTeenNumbers: "Teen Numbers",
@@ -318,7 +318,7 @@ const UI = {
     continue: "Teruskan",
     menuTitle: "Hari ini mahu belajar apa?",
     advancedAdventure: "Pengembaraan Lanjutan",
-    advancedAdventureShort: "Langkah seterusnya: nombor 10-20",
+    advancedAdventureShort: "Teroka nombor 10-20 bersama Chrys",
     advancedMenuTitle: "Ekspedisi Lanjutan",
     advancedMenuHelp: "Teroka nombor lebih besar bersama Chrys.",
     advancedTeenNumbers: "Nombor Belasan",
@@ -1537,6 +1537,13 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
 }
 
 function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  const learningTopics = lang === "en"
+    ? ["Recognize numbers", "Number values", "Number order", "Grouping", "Addition", "Subtraction", "Real-world maths", "Practice tests"]
+    : ["Kenal nombor", "Nilai nombor", "Susunan nombor", "Kumpulan nombor", "Tambah", "Tolak", "Aplikasi konsep", "Soalan latihan"];
+  const advancedTopics = lang === "en"
+    ? ["One group of ten", "Ten and some more", "Build numbers 10-20", "Two tens make 20"]
+    : ["Satu kumpulan sepuluh", "Sepuluh dan beberapa lagi", "Bina nombor 10-20", "Dua kumpulan sepuluh jadi 20"];
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-6">
       <section className="text-center">
@@ -1551,20 +1558,34 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
           type="button"
           onClick={() => go("menu")}
           aria-label={lang === "en" ? "Open Learning Mode" : "Buka Mod Belajar"}
-          className="group rounded-[2rem] border-4 border-sky-300 bg-white/95 p-6 text-left shadow-[0_9px_0_#60a5fa] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-400 active:translate-y-1 md:p-8"
+          className="group relative h-full overflow-hidden rounded-[2rem] border-4 border-sky-300 bg-gradient-to-br from-white via-sky-50 to-emerald-100 p-6 text-left shadow-[0_9px_0_#3b82f6] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-400 active:translate-y-1 md:p-8"
         >
-          <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-sky-200 bg-sky-50 shadow-inner">
-            <img src={chrysThinking} alt="" className="h-20 w-20 object-contain" />
-          </span>
-          <span className="mt-6 block text-3xl font-black text-blue-950">
-            {lang === "en" ? "Learning Mode" : "Mod Belajar"}
-          </span>
-          <span className="mt-2 block text-lg font-bold text-slate-600">
-            {lang === "en" ? "Learn numbers 0-9 with Chrys" : "Belajar nombor 0-9 bersama Chrys"}
-          </span>
-          <span className="mt-6 flex items-center justify-end gap-2 font-black text-blue-700">
-            {lang === "en" ? "Start learning" : "Mula belajar"}
-            <ArrowRight className="h-7 w-7 transition group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+          <span className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(14,165,233,.18),transparent_68%)]" aria-hidden="true" />
+          <span className="relative z-10 flex h-full flex-col">
+            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-sky-300 bg-gradient-to-br from-sky-100 to-emerald-100 shadow-inner">
+              <img src={chrysThinking} alt="" className="h-20 w-20 object-contain" />
+            </span>
+            <span className="mt-6 block text-3xl font-black text-blue-950">
+              {lang === "en" ? "Learning Mode" : "Mod Belajar"}
+            </span>
+            <span className="mt-2 block text-lg font-bold text-slate-600">
+              {lang === "en" ? "Learn numbers 0-9 with Chrys" : "Belajar nombor 0-9 bersama Chrys"}
+            </span>
+            <span className="mt-5 flex items-center gap-2 text-sm font-black uppercase text-blue-800">
+              <BookOpen className="h-5 w-5" aria-hidden="true" />
+              {lang === "en" ? "Topics you will explore" : "Topik yang akan diteroka"}
+            </span>
+            <span className="mt-3 flex flex-wrap gap-2">
+              {learningTopics.map((topic) => (
+                <span key={topic} className="rounded-full border-2 border-sky-200 bg-white/85 px-3 py-1.5 text-sm font-black text-blue-900 shadow-sm">
+                  {topic}
+                </span>
+              ))}
+            </span>
+            <span className="mt-auto flex items-center justify-end gap-2 pt-6 font-black text-blue-700">
+              {lang === "en" ? "Start learning" : "Mula belajar"}
+              <ArrowRight className="h-7 w-7 transition group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+            </span>
           </span>
         </button>
 
@@ -1572,23 +1593,31 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
           type="button"
           onClick={() => go("advancedMenu")}
           aria-label={lang === "en" ? "Open Advanced Adventure" : "Buka Pengembaraan Lanjutan"}
-          className="group relative overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-left text-white shadow-[0_9px_0_#064e3b] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-300 active:translate-y-1 md:p-8"
+          className="group relative h-full overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-left text-white shadow-[0_9px_0_#064e3b] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-300 active:translate-y-1 md:p-8"
         >
           <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
-          <div className="relative z-10">
+          <span className="relative z-10 flex h-full flex-col">
             <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-300/70 bg-emerald-800 shadow-inner">
               <SpriteIcon value={BANANA} className="h-16 w-16" />
             </span>
-            <span className="mt-6 inline-block rounded-full border border-yellow-300/60 bg-yellow-300/15 px-3 py-1 text-sm font-black uppercase text-yellow-200">
-              {lang === "en" ? "Next step" : "Langkah seterusnya"}
-            </span>
-            <span className="mt-3 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
+            <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
             <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedAdventureShort}</span>
-            <span className="mt-6 flex items-center justify-end gap-2 font-black text-yellow-200">
+            <span className="mt-5 flex items-center gap-2 text-sm font-black uppercase text-yellow-200">
+              <BookOpen className="h-5 w-5" aria-hidden="true" />
+              {lang === "en" ? "Topics you will explore" : "Topik yang akan diteroka"}
+            </span>
+            <span className="mt-3 flex flex-wrap gap-2">
+              {advancedTopics.map((topic) => (
+                <span key={topic} className="rounded-full border border-emerald-300/70 bg-emerald-800/80 px-3 py-1.5 text-sm font-black text-emerald-50 shadow-sm">
+                  {topic}
+                </span>
+              ))}
+            </span>
+            <span className="mt-auto flex items-center justify-end gap-2 pt-6 font-black text-yellow-200">
               {lang === "en" ? "Start expedition" : "Mula ekspedisi"}
               <ArrowRight className="h-7 w-7 transition group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
             </span>
-          </div>
+          </span>
         </button>
       </div>
     </main>
@@ -1713,17 +1742,17 @@ function TeenQuantityVisual({
                 return (
                   <span
                     key={index}
-                    className={`relative grid h-16 w-16 place-items-center rounded-2xl border-2 shadow-inner transition ${
+                    className={`relative grid h-16 w-16 place-items-center rounded-2xl border-2 pt-3 shadow-inner transition ${
                       active
                         ? "border-yellow-400 bg-yellow-100 ring-4 ring-yellow-300"
                         : reached
-                          ? "border-blue-200 bg-amber-50"
+                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                           : "border-slate-200 bg-slate-100 grayscale"
                     } ${dimFuture && !reached ? "opacity-35" : ""}`}
                   >
                     <SpriteIcon value={BANANA} className="h-12 w-12" />
                     {showCountLabels && reached && (
-                      <span className={`absolute -top-3 rounded-full px-2 text-xs font-black text-white ${active ? "bg-yellow-500" : "bg-blue-600"}`}>
+                      <span className="absolute top-1 rounded-full bg-blue-600 px-2 text-xs font-black text-white">
                         {value}
                       </span>
                     )}
@@ -2353,7 +2382,10 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
   const [pairedCount, setPairedCount] = useState(0);
   const [countRun, setCountRun] = useState(0);
   const [comparisonEmojiA, comparisonEmojiB] = VALUE_COMPARISON_PAIRS[(Math.max(1, n) - 1) % VALUE_COMPARISON_PAIRS.length];
-  const updatePairedCount = useCallback((value: number) => setPairedCount(value), []);
+  const updatePairedCount = useCallback((value: number) => {
+    setPairedCount(value);
+    if (value >= n) setCounting(false);
+  }, [n]);
 
   useEffect(() => {
     setCounting(false);
@@ -2384,8 +2416,8 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
   if (phase === 2) {
     const objectLabel = valueObjectLabel(n, emoji, lang);
     const totalText = lang === "en"
-      ? `So, there ${n === 1 ? "is" : "are"} ${objectLabel}.`
-      : `Jadi, ada ${objectLabel}.`;
+      ? `Total: ${objectLabel}`
+      : `Jumlah: ${objectLabel}`;
     return (
       <div className="space-y-3">
         <button
@@ -2437,7 +2469,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
         <div className="grid gap-4 md:grid-cols-2">
           <LabeledValueGroup
             key={`${n}-${comparisonEmojiA}-${countRun}`}
-            label={lang === "en" ? `This is ${firstValueLabel}.` : `Ini ${firstValueLabel}.`}
+            label={lang === "en" ? `Total: ${firstValueLabel}` : `Jumlah: ${firstValueLabel}`}
             count={n}
             emoji={comparisonEmojiA}
             counted={counting}
@@ -2449,7 +2481,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             lang={lang}
           />
           <LabeledValueGroup
-            label={lang === "en" ? `This is ${secondValueLabel}.` : `Ini ${secondValueLabel}.`}
+            label={lang === "en" ? `Total: ${secondValueLabel}` : `Jumlah: ${secondValueLabel}`}
             count={n}
             emoji={comparisonEmojiB}
             counted={counting}
@@ -2518,7 +2550,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
           speakCount={speakCount}
           visibleCount={visibleCount}
           onCountProgress={onCountProgress}
-          highlightActiveCount
+          highlightActiveCount={active}
           lang={lang}
         />
       ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
@@ -2954,17 +2986,13 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
 }
 
 function CountTotalBadge({ count, lang, unit }: { count: number; lang: Lang; unit?: string }) {
-  const totalLabel = `${lang === "en" ? "Total" : "Jumlah"} ${count}${unit ? ` ${unit}` : ""}`;
+  const totalLabel = `${lang === "en" ? "Total" : "Jumlah"}: ${count}${unit ? ` ${unit}` : ""}`;
   return (
     <div
-      className="mx-auto mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-blue-200 bg-blue-50 px-4 py-2 text-blue-950 shadow-[0_4px_0_rgba(30,64,175,.14)]"
+      className="mx-auto mt-3 inline-flex items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 px-5 py-3 text-center text-xl font-black text-emerald-950 shadow-[0_4px_0_rgba(5,150,105,.16)]"
       aria-label={totalLabel}
     >
-      <span className="text-sm font-black uppercase tracking-wide text-blue-700">{lang === "en" ? "Total" : "Jumlah"}</span>
-      <span className="grid h-10 min-w-10 place-items-center rounded-full bg-white px-3 text-2xl font-black text-blue-950">
-        {count}
-      </span>
-      {unit && <span className="text-base font-black text-blue-950">{unit}</span>}
+      {totalLabel}
     </div>
   );
 }
@@ -3289,19 +3317,19 @@ function FindNumbersExample({ lang, banana }: { lang: Lang; banana: string }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <RealWorldNumberGroup
             count={3}
-            label="3"
             emoji={banana}
             visibleCount={firstVisibleCount}
             active={countingGroup === 1}
             complete={countingGroup > 1}
+            lang={lang}
           />
           <RealWorldNumberGroup
             count={2}
-            label="2"
             emoji={banana}
             visibleCount={secondVisibleCount}
             active={countingGroup === 2}
             complete={countingGroup === 3}
+            lang={lang}
           />
         </div>
         <div className="mt-4 flex justify-center">
@@ -3371,6 +3399,7 @@ function ChooseAddExample({ lang, banana }: { lang: Lang; banana: string }) {
         ]}
       />
       <CountedObjectRow count={5} emoji={banana} showCount compact />
+      <CountTotalBadge count={5} lang={lang} unit={objectName(banana, 5, lang)} />
       <p className="text-center text-2xl font-black text-blue-950">3 + 2 = 5</p>
     </div>
   );
@@ -3389,18 +3418,19 @@ function ChooseTakeAwayExample({ lang, banana }: { lang: Lang; banana: string })
         ]}
       />
       <CountedObjectRow count={5} emoji={banana} crossed={2} showCount countRemainingOnly showCrossCount compact />
+      <CountTotalBadge count={3} lang={lang} unit={objectName(banana, 3, lang)} />
       <p className="text-center text-2xl font-black text-red-950">5 - 2 = 3</p>
     </div>
   );
 }
 
-function RealWorldNumberGroup({ count, label, emoji, visibleCount, active, complete }: {
+function RealWorldNumberGroup({ count, emoji, visibleCount, active, complete, lang }: {
   count: number;
-  label: string;
   emoji: string;
   visibleCount: number;
   active: boolean;
   complete: boolean;
+  lang: Lang;
 }) {
   return (
     <div className={`rounded-3xl border-4 bg-white p-3 text-center shadow-[0_4px_0_rgba(0,0,0,.08)] transition-[border-color,box-shadow] duration-300 ${
@@ -3419,7 +3449,16 @@ function RealWorldNumberGroup({ count, label, emoji, visibleCount, active, compl
         compact
         highlightActiveCount={active}
       />
-      <p className="mt-2 text-4xl font-black text-blue-950" style={getNumberTextStyle(label)}>{label}</p>
+      <p
+        className={`mx-auto mt-3 min-h-12 rounded-full px-4 py-2 text-xl font-black transition-opacity ${
+          complete ? "bg-emerald-100 text-emerald-950 opacity-100" : "opacity-0"
+        }`}
+        aria-live="polite"
+      >
+        {complete
+          ? `${lang === "en" ? "Total" : "Jumlah"}: ${count} ${objectName(emoji, count, lang)}`
+          : "\u00a0"}
+      </p>
     </div>
   );
 }
@@ -3986,16 +4025,25 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
     const isCrossed = mode === "crossed" && index < crossedCount;
     const isCounted = mode === "remaining" && index < remainingCount;
     const isCurrent = mode === "remaining" && phase === "counting" && index === remainingCount - 1;
+    const isCurrentCross = mode === "crossed" && phase === "crossing" && index === crossedCount - 1;
     const isInactive = (mode === "crossed" && phase === "ready") || (mode === "remaining" && (phase === "ready" || phase === "crossing"));
     return (
       <div
         key={`${mode}-${index}`}
-        className={`relative grid h-20 w-16 place-items-center rounded-2xl border-2 bg-amber-50 transition-[border-color,background-color,filter,opacity,box-shadow] duration-300 ${
-          isCurrent ? "border-blue-400 bg-blue-50 ring-4 ring-blue-200" : "border-amber-100"
+        className={`relative grid h-20 w-16 place-items-center rounded-2xl border-2 pt-3 transition-[border-color,background-color,filter,opacity,box-shadow,transform] duration-300 ${
+          isCurrent
+            ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+            : isCurrentCross
+              ? "scale-105 border-red-500 bg-red-100 ring-4 ring-red-200 shadow-lg"
+              : isCrossed
+                ? "border-red-300 bg-slate-100 ring-2 ring-red-100"
+                : mode === "start" || isCounted
+                  ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                  : "border-amber-100 bg-amber-50"
         } ${isInactive ? "opacity-30 grayscale" : "opacity-100"}`}
       >
         {(mode === "start" || isCrossed || isCounted) && (
-          <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full px-2 text-[0.65rem] font-black leading-none text-white shadow-sm ${isCrossed ? "bg-red-600" : "bg-blue-600"}`}>
+          <span className={`absolute top-1 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full px-2 text-[0.65rem] font-black leading-none text-white shadow-sm ${isCrossed ? "bg-red-600" : "bg-blue-600"}`}>
             {index + 1}
           </span>
         )}
@@ -4039,7 +4087,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
           <div className="grid min-h-64 grid-cols-2 place-content-center place-items-center gap-x-3 gap-y-5 rounded-3xl bg-white p-5">
             {Array.from({ length: 7 }, (_, index) => renderBanana(index, "start"))}
           </div>
-          <p className="mt-4 text-2xl font-black text-blue-900">{lang === "en" ? "7 bananas" : "7 pisang"}</p>
+          <CountTotalBadge count={7} lang={lang} unit={objectName(String.fromCodePoint(0x1f34c), 7, lang)} />
         </div>
 
         <span className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">-</span>
@@ -4049,7 +4097,9 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
           <div className="grid min-h-64 grid-cols-2 place-content-center place-items-center gap-x-3 gap-y-5 rounded-3xl bg-white p-5">
             {Array.from({ length: 3 }, (_, index) => renderBanana(index, "crossed"))}
           </div>
-          <p className="mt-4 text-2xl font-black text-red-900">{lang === "en" ? "3 bananas" : "3 pisang"}</p>
+          <p className="mx-auto mt-3 inline-flex rounded-full bg-red-100 px-5 py-3 text-xl font-black text-red-900">
+            {lang === "en" ? "Taken away: 3 bananas" : "Diambil: 3 pisang"}
+          </p>
         </div>
 
         <span className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">=</span>
@@ -4059,7 +4109,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
           <div className="grid min-h-64 grid-cols-2 place-content-center place-items-center gap-x-3 gap-y-5 rounded-3xl bg-white p-5">
             {Array.from({ length: 4 }, (_, index) => renderBanana(index, "remaining"))}
           </div>
-          <p className="mt-4 text-2xl font-black text-blue-900">{lang === "en" ? "4 bananas" : "4 pisang"}</p>
+          <CountTotalBadge count={4} lang={lang} unit={objectName(String.fromCodePoint(0x1f34c), 4, lang)} />
         </div>
       </div>
 
@@ -4577,7 +4627,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
                       current
                         ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
                         : groupComplete
-                          ? "border-amber-100 bg-amber-50"
+                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                           : counted
                             ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                             : "border-transparent bg-amber-50 opacity-55 grayscale"
@@ -4697,7 +4747,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
                       current
                         ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
                         : groupComplete
-                          ? "border-amber-100 bg-amber-50"
+                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                           : counted
                             ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                             : "border-transparent bg-amber-50 opacity-55 grayscale"
@@ -4779,7 +4829,7 @@ function BasketBananaScene({ count, counted, isCounting, label }: {
             >
               <SpriteIcon value={banana} className="h-14 w-14" />
               {isCounted && (
-                <span className="absolute -top-3 grid h-8 min-w-8 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white shadow-md">
+                <span className="absolute top-1 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white shadow-md">
                   {index + 1}
                 </span>
               )}
@@ -4988,7 +5038,7 @@ function AdditionBananaEquation({
           currentBanana
             ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
             : groupComplete
-              ? "border-amber-100 bg-amber-50"
+              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
             : counted
               ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
               : "border-transparent bg-amber-50 opacity-55 grayscale"
@@ -5626,6 +5676,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   const remaining = count - crossed;
   const [visible, setVisible] = useState(0);
   const [visibleCrossed, setVisibleCrossed] = useState(animateCrossOut ? 0 : crossed);
+  const [countingInProgress, setCountingInProgress] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -5678,18 +5729,21 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
     let cancelled = false;
     if (visibleCount !== undefined) return;
     setVisible(0);
+    setCountingInProgress(false);
     onCountProgress?.(0);
     if (!showCount) return;
     const max = countRemainingOnly ? remaining : count;
     const countDelay = animateCrossOut ? (crossed * stepIntervalMs) + stepIntervalMs : 0;
 
     if (max <= 0) {
+      setCountingInProgress(false);
       onCountComplete?.();
       return;
     }
 
     if (speakCount && !audioMuted) {
       const startAudioCount = () => {
+        setCountingInProgress(true);
         void speakCountingSequence(
           max,
           lang,
@@ -5701,7 +5755,10 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
             }
           },
         ).then(() => {
-          if (!cancelled) onCountComplete?.();
+          if (!cancelled) {
+            setCountingInProgress(false);
+            onCountComplete?.();
+          }
         });
       };
       const speechTimer = countDelay > 0
@@ -5717,16 +5774,21 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
 
     if (prefersReducedMotion) {
       setVisible(max);
+      setCountingInProgress(false);
       onCountProgress?.(max);
       onCountComplete?.();
       return;
     }
 
+    setCountingInProgress(true);
     const timers = Array.from({ length: max }, (_, i) => window.setTimeout(() => {
       if (cancelled) return;
       setVisible(i + 1);
       onCountProgress?.(i + 1);
-      if (i + 1 === max) onCountComplete?.();
+      if (i + 1 === max) {
+        setCountingInProgress(false);
+        onCountComplete?.();
+      }
     }, countDelay + (stepIntervalMs * (i + 1))));
     return () => {
       cancelled = true;
@@ -5751,21 +5813,31 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
         const label = shouldCount ? ++leftIndex : 0;
         const labelVisible = shouldCount && label <= displayedCount;
-        const isActiveCount = highlightActiveCount && (speakCount || visibleCount !== undefined) && labelVisible && label === displayedCount;
+        const isActiveCount = highlightActiveCount
+          && (visibleCount !== undefined || countingInProgress)
+          && labelVisible
+          && label === displayedCount;
         const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
+        const hasCountedLabel = labelVisible && !gone;
         return (
           <div
             key={i}
-            className={`relative flex flex-col items-center justify-center overflow-visible rounded-2xl shadow-inner transition-[background-color,box-shadow] duration-300 ${
-              isActiveCount ? "bg-blue-50 ring-4 ring-blue-300" : "bg-amber-50"
+            className={`relative flex flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,box-shadow,transform] duration-300 ${
+              isActiveCount
+                ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                : hasCountedLabel
+                  ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                  : gone
+                    ? "border-red-200 bg-slate-100"
+                    : "border-amber-100 bg-amber-50"
             } ${compact ? "h-20 w-12 text-3xl" : "h-24 w-16 text-4xl"}`}
           >
             {crossLabelVisible ? (
-              <span className={`absolute -top-7 z-20 rounded-full bg-red-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
+              <span className={`absolute top-1 z-20 rounded-full bg-red-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
                 {i + 1}
               </span>
             ) : (
-              <span className={`absolute -top-7 z-20 rounded-full bg-blue-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
+              <span className={`absolute top-1 z-20 rounded-full bg-blue-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
                 {labelVisible ? label : "."}
               </span>
             )}
@@ -6560,7 +6632,7 @@ function ActiveAnswerPanel({
             : `Mula dengan ${startCount} pisang.`}
         </p>
         <CountedObjectRow count={startCount} emoji={emoji} crossed={shownRemoved} showCount={answered} countRemainingOnly showCrossCount={shownRemoved > 0} lang={lang} />
-        {answered && hasNumericAnswer && <CountTotalBadge count={selectedNumber} lang={lang} />}
+        {answered && hasNumericAnswer && <CountTotalBadge count={selectedNumber} lang={lang} unit={objectName(emoji, selectedNumber, lang)} />}
         <p className="mt-4 text-lg font-black text-blue-800">
           {lang === "en" ? "Tap to take away." : "Tekan untuk ambil."}
         </p>
@@ -6600,7 +6672,7 @@ function ActiveAnswerPanel({
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
       <p className="mb-3 text-lg font-black text-slate-700">{instruction}</p>
       <ObjectGroup count={shownCount} emoji={emoji} numbered={answered} lang={lang} />
-      {answered && <CountTotalBadge count={shownCount} lang={lang} />}
+      {answered && <CountTotalBadge count={shownCount} lang={lang} unit={objectName(emoji, shownCount, lang)} />}
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <button
           disabled={answered || builtCount <= 0}
@@ -6977,12 +7049,18 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
       {Array.from({ length: count }, (_, i) => {
         const gone = i < crossed;
         return (
-          <div key={i} className={`relative grid h-16 w-16 place-items-center rounded-2xl text-4xl shadow-inner ${gone ? "bg-slate-100" : "bg-amber-50"}`}>
+          <div className={`relative grid h-16 w-16 place-items-center rounded-2xl border-2 pt-3 text-4xl shadow-inner ${
+            gone
+              ? "border-red-200 bg-slate-100"
+              : numbered
+                ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                : "border-amber-100 bg-amber-50"
+          }`} key={i}>
             <span className={gone ? "grayscale opacity-35" : ""}>
               <SpriteIcon value={emoji} className="h-12 w-12" />
             </span>
             {(numbered || (crossedLabels && gone)) && (
-              <span className={`absolute -top-2 rounded-full px-2 text-xs font-black text-white ${gone ? "bg-red-600" : "bg-blue-600"}`}>
+              <span className={`absolute top-1 rounded-full px-2 text-xs font-black text-white ${gone ? "bg-red-600" : "bg-blue-600"}`}>
                 {i + 1}
               </span>
             )}
@@ -7022,10 +7100,12 @@ function ContainerScene({
           {Array.from({ length: count }, (_, i) => (
             <div
               key={i}
-              className="relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/90 shadow-md"
+              className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 pt-3 shadow-md ${
+                numbered ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100" : "border-white/70 bg-white/90"
+              }`}
             >
               <SpriteIcon value={emoji} className="h-11 w-11" />
-              {numbered && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
+              {numbered && <span className="absolute top-1 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
             </div>
           ))}
         </div>
@@ -7199,7 +7279,7 @@ function CountedCompareGroupsSolution({ visual, lang }: {
           />
           {stage >= 1 && (
             <p className="mt-3 rounded-full bg-emerald-100 px-4 py-2 text-xl font-black text-emerald-900">
-              {lang === "en" ? `Total: ${visual.a} bananas` : `Jumlah: ${visual.a} pisang`}
+              {`${lang === "en" ? "Total" : "Jumlah"}: ${visual.a} ${objectName(visual.emojiA, visual.a, lang)}`}
             </p>
           )}
         </div>
@@ -7220,7 +7300,7 @@ function CountedCompareGroupsSolution({ visual, lang }: {
           )}
           {stage >= 2 && (
             <p className="mt-3 rounded-full bg-emerald-100 px-4 py-2 text-xl font-black text-emerald-900">
-              {lang === "en" ? `Total: ${visual.b} bananas` : `Jumlah: ${visual.b} pisang`}
+              {`${lang === "en" ? "Total" : "Jumlah"}: ${visual.b} ${objectName(visual.emojiB, visual.b, lang)}`}
             </p>
           )}
         </div>
@@ -7262,8 +7342,8 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
   };
 
   const quantityLabel = (count: number) => lang === "en"
-    ? `${count} ${count === 1 ? "banana" : "bananas"}`
-    : `${count} pisang`;
+    ? `Total: ${count} ${count === 1 ? "banana" : "bananas"}`
+    : `Jumlah: ${count} pisang`;
 
   return (
     <div className="space-y-4">
@@ -8402,7 +8482,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
     return (
       <div className="space-y-3">
         <CountedObjectRow count={visual.count} emoji={emoji} showCount speakCount lang={lang} />
-        <CountTotalBadge count={visual.count} lang={lang} />
+        <CountTotalBadge count={visual.count} lang={lang} unit={objectName(emoji, visual.count, lang)} />
         <p className="text-center text-lg font-black text-emerald-800">
           {lang === "en" ? `This is ${visual.count}.` : `Ini ${visual.count}.`}
         </p>
@@ -8612,7 +8692,8 @@ function playNumberFile(value: number, lang: Lang, runId: number) {
 function playNumberWithTts(value: number, lang: Lang, runId: number) {
   if (!("speechSynthesis" in window) || runId !== audioRunId) return Promise.resolve(false);
   return new Promise<boolean>((resolve) => {
-    const utterance = new SpeechSynthesisUtterance(String(value));
+    const spokenNumber = TEEN_WORDS[lang][value] ?? WORDS[lang][value] ?? String(value);
+    const utterance = new SpeechSynthesisUtterance(spokenNumber);
     let settled = false;
     const finish = (played: boolean) => {
       if (settled) return;
