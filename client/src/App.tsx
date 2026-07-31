@@ -3490,28 +3490,34 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
       <div className="grid gap-4 md:grid-cols-3">
         <RealWorldSituationCard
           title={lang === "en" ? "Apples in a basket" : "Epal di dalam bakul"}
-          prompt={lang === "en" ? "We count apples." : "Kita kira epal."}
+          prompt={lang === "en" ? "Total: 3 apples" : "Jumlah: 3 epal"}
         >
           <MiniAppleBasket count={3} />
         </RealWorldSituationCard>
         <RealWorldSituationCard
           title={lang === "en" ? "Fish in a pond" : "Ikan di dalam kolam"}
-          prompt={lang === "en" ? "We count fish." : "Kita kira ikan."}
+          prompt={lang === "en" ? "Total: 3 fish" : "Jumlah: 3 ikan"}
         >
-          <div className="relative mx-auto flex h-28 max-w-52 items-center justify-center gap-4 overflow-hidden rounded-[50%] border-4 border-sky-300 bg-sky-200 shadow-inner">
-            <span className="absolute left-5 top-3 text-3xl" aria-hidden="true">🐟</span>
-            <span className="mt-7 text-4xl" aria-hidden="true">🐠</span>
-            <span className="absolute right-5 top-5 text-3xl" aria-hidden="true">🐟</span>
-            <span className="absolute bottom-1 left-8 text-2xl" aria-hidden="true">🌿</span>
+          <div className="relative mx-auto flex h-32 max-w-56 items-center justify-center gap-2 overflow-hidden rounded-[50%] border-4 border-sky-300 bg-sky-200 px-3 shadow-inner">
+            <span className="absolute bottom-1 left-5 text-2xl" aria-hidden="true">🌿</span>
+            {["🐟", "🐠", "🐟"].map((fish, index) => (
+              <SceneCountObject key={`${fish}-${index}`} number={index + 1}>
+                <span className="text-3xl" aria-hidden="true">{fish}</span>
+              </SceneCountObject>
+            ))}
           </div>
         </RealWorldSituationCard>
         <RealWorldSituationCard
           title={lang === "en" ? "Cars in a car park" : "Kereta di tempat letak kereta"}
-          prompt={lang === "en" ? "We count cars." : "Kita kira kereta."}
+          prompt={lang === "en" ? "Total: 3 cars" : "Jumlah: 3 kereta"}
         >
-          <div className="mx-auto grid h-28 max-w-52 grid-cols-3 items-center gap-2 rounded-2xl border-4 border-slate-400 bg-slate-600 p-3 shadow-inner">
-            {["🚗", "🚙", "🚕"].map((car) => (
-              <span key={car} className="flex h-20 items-center justify-center border-x-2 border-white/80 text-4xl" aria-hidden="true">{car}</span>
+          <div className="mx-auto grid h-32 max-w-56 grid-cols-3 items-center gap-2 rounded-2xl border-4 border-slate-400 bg-slate-600 p-3 shadow-inner">
+            {["🚗", "🚙", "🚕"].map((car, index) => (
+              <div key={car} className="flex h-24 items-center justify-center border-x-2 border-white/80">
+                <SceneCountObject number={index + 1}>
+                  <span className="text-3xl" aria-hidden="true">{car}</span>
+                </SceneCountObject>
+              </div>
             ))}
           </div>
         </RealWorldSituationCard>
@@ -3520,6 +3526,22 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
         {lang === "en" ? "Numbers are not just bananas!" : "Nombor bukan untuk pisang sahaja!"}
       </p>
     </div>
+  );
+}
+
+function SceneCountObject({ number, children, className = "", compact = false }: {
+  number: number;
+  children: React.ReactNode;
+  className?: string;
+  compact?: boolean;
+}) {
+  return (
+    <span className={`relative flex shrink-0 items-center justify-center rounded-full border-[3px] border-blue-500 bg-white/90 shadow-[0_3px_0_#93c5fd] ${compact ? "h-12 w-12" : "h-14 w-14"} ${className}`}>
+      <span className="absolute -right-1 -top-3 flex h-7 min-w-7 items-center justify-center rounded-full bg-blue-600 px-1 text-sm font-black text-white shadow-sm">
+        {number}
+      </span>
+      {children}
+    </span>
   );
 }
 
@@ -3539,19 +3561,19 @@ function RealWorldSituationCard({ title, prompt, children }: {
 
 function MiniAppleBasket({ count }: { count: number }) {
   const positions = [
-    "left-[31%] top-[31%]",
-    "right-[31%] top-[31%]",
-    "left-1/2 top-[51%] -translate-x-1/2",
+    "left-[18%] top-[28%]",
+    "right-[18%] top-[28%]",
+    "left-1/2 bottom-[2%] -translate-x-1/2",
   ];
   return (
-    <div className="relative mx-auto h-28 max-w-52">
+    <div className="relative mx-auto h-32 max-w-56">
       <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" />
       {Array.from({ length: count }, (_, index) => (
-        <SpriteIcon
-          key={index}
-          value="🍎"
-          className={`absolute ${positions[index]} h-10 w-10 drop-shadow-md`}
-        />
+        <span key={index} className={`absolute ${positions[index]}`}>
+          <SceneCountObject number={index + 1} compact>
+            <SpriteIcon value="🍎" className="h-8 w-8 drop-shadow-md" />
+          </SceneCountObject>
+        </span>
       ))}
     </div>
   );
