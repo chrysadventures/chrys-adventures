@@ -3498,11 +3498,11 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
           title={lang === "en" ? "Fish in a pond" : "Ikan di dalam kolam"}
           prompt={lang === "en" ? "Total: 3 fish" : "Jumlah: 3 ikan"}
         >
-          <div className="relative mx-auto flex h-32 max-w-56 items-center justify-center gap-2 overflow-hidden rounded-[50%] border-4 border-sky-300 bg-sky-200 px-3 shadow-inner">
+          <div className="relative mx-auto flex h-40 max-w-64 items-center justify-center gap-3 overflow-hidden rounded-[50%] border-4 border-sky-300 bg-sky-200 px-4 shadow-inner">
             <span className="absolute bottom-1 left-5 text-2xl" aria-hidden="true">🌿</span>
             {["🐟", "🐠", "🐟"].map((fish, index) => (
-              <SceneCountObject key={`${fish}-${index}`} number={index + 1}>
-                <span className="text-3xl" aria-hidden="true">{fish}</span>
+              <SceneCountObject key={`${fish}-${index}`} number={index + 1} outlined={false}>
+                <span className="text-4xl" aria-hidden="true">{fish}</span>
               </SceneCountObject>
             ))}
           </div>
@@ -3511,11 +3511,11 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
           title={lang === "en" ? "Cars in a car park" : "Kereta di tempat letak kereta"}
           prompt={lang === "en" ? "Total: 3 cars" : "Jumlah: 3 kereta"}
         >
-          <div className="mx-auto grid h-32 max-w-56 grid-cols-3 items-center gap-2 rounded-2xl border-4 border-slate-400 bg-slate-600 p-3 shadow-inner">
+          <div className="mx-auto grid h-40 max-w-64 grid-cols-3 items-center gap-2 rounded-2xl border-4 border-slate-400 bg-slate-600 p-3 shadow-inner">
             {["🚗", "🚙", "🚕"].map((car, index) => (
-              <div key={car} className="flex h-24 items-center justify-center border-x-2 border-white/80">
-                <SceneCountObject number={index + 1}>
-                  <span className="text-3xl" aria-hidden="true">{car}</span>
+              <div key={car} className="flex h-28 items-center justify-center border-x-2 border-white/80">
+                <SceneCountObject number={index + 1} outlined={false}>
+                  <span className="text-4xl" aria-hidden="true">{car}</span>
                 </SceneCountObject>
               </div>
             ))}
@@ -3529,15 +3529,16 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
   );
 }
 
-function SceneCountObject({ number, children, className = "", compact = false }: {
+function SceneCountObject({ number, children, className = "", compact = false, outlined = true }: {
   number: number;
   children: React.ReactNode;
   className?: string;
   compact?: boolean;
+  outlined?: boolean;
 }) {
   return (
-    <span className={`relative flex shrink-0 items-center justify-center rounded-full border-[3px] border-blue-500 bg-white/90 shadow-[0_3px_0_#93c5fd] ${compact ? "h-12 w-12" : "h-14 w-14"} ${className}`}>
-      <span className="absolute -right-1 -top-3 flex h-7 min-w-7 items-center justify-center rounded-full bg-blue-600 px-1 text-sm font-black text-white shadow-sm">
+    <span className={`relative flex shrink-0 items-center justify-center ${outlined ? "rounded-full border-[3px] border-blue-500 bg-white/90 shadow-[0_3px_0_#93c5fd]" : ""} ${compact ? "h-12 w-12" : "h-16 w-16"} ${className}`}>
+      <span className={`absolute -top-3 flex h-7 min-w-7 items-center justify-center rounded-full bg-blue-600 px-1 text-sm font-black text-white shadow-sm ${outlined ? "-right-1" : "left-1/2 -translate-x-1/2"}`}>
         {number}
       </span>
       {children}
@@ -3566,7 +3567,7 @@ function MiniAppleBasket({ count }: { count: number }) {
     "left-1/2 bottom-[2%] -translate-x-1/2",
   ];
   return (
-    <div className="relative mx-auto h-32 max-w-56">
+    <div className="relative mx-auto h-40 max-w-64">
       <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" />
       {Array.from({ length: count }, (_, index) => (
         <span key={index} className={`absolute ${positions[index]}`}>
@@ -3944,7 +3945,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const [sharing, setSharing] = useState(false);
   const [flight, setFlight] = useState<Array<{ left: number; top: number; x: number; y: number; sourceIndex: number; targetIndex: number }> | null>(null);
   const basketRef = useRef<HTMLDivElement>(null);
-  const chrysBananaRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const chrysBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const alyseBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const flyingBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const left = 7 - given;
@@ -3972,42 +3973,47 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       const keyframes = reducedMotion
         ? [
           { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
-          { transform: `translate3d(${item.x}px, ${item.y}px, 0) scale(.65)`, opacity: 0 },
+          { transform: `translate3d(${item.x}px, ${item.y}px, 0) scale(1)`, opacity: 1 },
         ]
         : [
-          { transform: "translate3d(0, 0, 0) rotate(0deg) scale(1)", opacity: 1 },
-          { offset: 0.24, transform: `translate3d(${item.x * 0.22}px, ${item.y * 0.22 - arcHeight * 0.72}px, 0) rotate(-8deg) scale(1.02)`, opacity: 1 },
-          { offset: 0.52, transform: `translate3d(${item.x * 0.52}px, ${item.y * 0.52 - arcHeight}px, 0) rotate(5deg) scale(.96)`, opacity: 1 },
-          { offset: 0.8, transform: `translate3d(${item.x * 0.82}px, ${item.y * 0.82 - arcHeight * 0.55}px, 0) rotate(10deg) scale(.82)`, opacity: 1 },
-          { transform: `translate3d(${item.x}px, ${item.y}px, 0) rotate(0deg) scale(.65)`, opacity: 0 },
+          { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
+          { offset: 0.25, transform: `translate3d(${item.x * 0.2}px, ${item.y * 0.2 - arcHeight * 0.7}px, 0) scale(1.04)`, opacity: 1 },
+          { offset: 0.5, transform: `translate3d(${item.x * 0.5}px, ${item.y * 0.5 - arcHeight}px, 0) scale(1.04)`, opacity: 1 },
+          { offset: 0.75, transform: `translate3d(${item.x * 0.8}px, ${item.y * 0.8 - arcHeight * 0.7}px, 0) scale(1.02)`, opacity: 1 },
+          { transform: `translate3d(${item.x}px, ${item.y}px, 0) scale(1)`, opacity: 1 },
         ];
       return [banana.animate(keyframes, {
-        duration: reducedMotion ? 1 : 2600,
-        easing: "cubic-bezier(.4,0,.2,1)",
+        duration: reducedMotion ? 1 : 2400,
+        easing: "cubic-bezier(.45,0,.2,1)",
         fill: "forwards",
       })];
     });
 
     if (animations.length !== 1) return;
     let cancelled = false;
+    let landingFrame = 0;
     Promise.all(animations.map((animation) => animation.finished.catch(() => undefined))).then(() => {
       if (cancelled) return;
-      const nextGiven = Math.min(3, given + 1);
+      const nextGiven = Math.min(3, flight[0].targetIndex + 1);
       setGiven(nextGiven);
-      setFlight(null);
       // Speak the new remaining count only after this banana reaches Alyse.
       speakNumber(7 - nextGiven, lang);
-      if (nextGiven === 3) {
-        setSharing(false);
-        setStoryStep(4);
-      }
+      // Keep the flying banana over the destination until React paints the landed tile.
+      landingFrame = window.requestAnimationFrame(() => {
+        setFlight(null);
+        if (nextGiven === 3) {
+          setSharing(false);
+          setStoryStep(4);
+        }
+      });
     });
 
     return () => {
       cancelled = true;
+      window.cancelAnimationFrame(landingFrame);
       animations.forEach((animation) => animation.cancel());
     };
-  }, [flight, given, lang]);
+  }, [flight, lang]);
 
   useEffect(() => {
     if (!showSituation || !sharing || flight || given >= 3 || !basketRef.current) return;
@@ -4066,19 +4072,32 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
               <div ref={basketRef} className="min-h-56 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
                 <img src={chrysHappy} alt="Chrys" className="mx-auto h-20 w-20 object-contain" />
                 <p className="mb-3 text-sm font-black uppercase text-amber-800">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</p>
-                <div className="flex min-h-24 flex-wrap content-center justify-center gap-3 rounded-3xl border-2 border-slate-100 bg-white p-4">
-                  {Array.from({ length: left }, (_, index) => (
-                    <span
-                      key={index}
-                      ref={(node) => { chrysBananaRefs.current[index] = node; }}
-                      className={`relative grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 shadow-inner ${flight?.some((item) => item.sourceIndex === index) ? "opacity-0" : "opacity-100"}`}
-                    >
-                      <span className="absolute -top-1 left-1/2 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-2 text-[0.65rem] font-black leading-none text-white shadow-sm">
-                        {index + 1}
-                      </span>
-                      <SpriteIcon value="🍌" className="h-9 w-9 sm:h-11 sm:w-11" />
-                    </span>
-                  ))}
+                <div className="relative mx-auto min-h-[19rem] max-w-[23rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
+                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain opacity-95" />
+                  <div className="relative z-10 grid min-h-[19rem] grid-cols-4 place-content-center gap-x-2 gap-y-7 px-2 pb-8 pt-10 sm:gap-x-3 sm:px-5">
+                    {Array.from({ length: 7 }, (_, index) => {
+                      const inBasket = index < left;
+                      const isFlying = flight?.some((item) => item.sourceIndex === index);
+                      return (
+                        <div
+                          key={index}
+                          ref={(node) => { chrysBananaRefs.current[index] = node; }}
+                          className={`relative flex h-24 w-16 flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-opacity duration-150 ${
+                            inBasket
+                              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                              : "pointer-events-none border-transparent bg-transparent opacity-0"
+                          } ${isFlying ? "opacity-0" : ""}`}
+                        >
+                          {inBasket && <>
+                            <span className="absolute top-1 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-2 text-[0.65rem] font-black leading-none text-white shadow-sm">
+                              {index + 1}
+                            </span>
+                            <SpriteIcon value="🍌" className="h-12 w-12" />
+                          </>}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-lg font-black">
                   <p className="rounded-2xl bg-amber-100 px-3 py-2 text-amber-950">
@@ -4101,26 +4120,29 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                   <p className="text-sm font-black uppercase text-emerald-800">{lang === "en" ? "Alyse's basket" : "Bakul Alyse"}</p>
                 </div>
                 <p className="mb-4 text-base font-black text-emerald-900">{lang === "en" ? "Alyse gets 3 bananas." : "Alyse dapat 3 pisang."}</p>
-                {sharing || given > 0 ? (
-                  <div className="grid grid-cols-3 gap-3 rounded-3xl border-2 border-emerald-100 bg-white p-4">
+                <div className="relative mx-auto min-h-[19rem] max-w-[23rem] overflow-hidden rounded-3xl border-2 border-emerald-100 bg-white">
+                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain opacity-95" />
+                  <div className="relative z-10 grid min-h-[19rem] grid-cols-3 place-content-center gap-3 px-7 py-10">
                     {Array.from({ length: 3 }, (_, index) => (
                       <div
                         key={index}
                         ref={(node) => { alyseBananaRefs.current[index] = node; }}
-                        className={`relative grid h-16 min-w-0 place-items-center rounded-2xl border-2 ${index < given ? "border-emerald-300 bg-emerald-50" : "border-dashed border-slate-200 bg-slate-50"}`}
+                        className={`relative flex h-24 w-16 flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,box-shadow,transform] duration-300 ${
+                          index < given
+                            ? index === given - 1 && sharing
+                              ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+                              : "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                            : "border-dashed border-slate-300 bg-white/80"
+                        }`}
                       >
-                        <span className={`absolute -top-1 left-1/2 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full px-2 text-[0.65rem] font-black leading-none text-white shadow-sm ${index < given ? "bg-emerald-600" : "bg-slate-400"}`}>
+                        <span className={`absolute top-1 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full px-2 text-[0.65rem] font-black leading-none text-white shadow-sm ${index < given ? "bg-blue-600" : "bg-slate-400"}`}>
                           {index + 1}
                         </span>
-                        {index < given && <SpriteIcon value="🍌" className="h-11 w-11" />}
+                        {index < given && <SpriteIcon value="🍌" className="h-12 w-12" />}
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="grid min-h-24 place-items-center rounded-3xl border-2 border-dashed border-emerald-200 bg-white">
-                    <p className="rounded-full bg-slate-100 px-5 py-2 text-xl font-black text-slate-600">{lang === "en" ? "0 bananas" : "0 pisang"}</p>
-                  </div>
-                )}
+                </div>
                 <p className="mt-3 text-xl font-black text-emerald-950">
                   {lang === "en" ? `Alyse has: ${given}` : `Alyse ada: ${given}`}
                 </p>
@@ -4185,7 +4207,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         <div
           key={item.targetIndex}
           ref={(node) => { flyingBananaRefs.current[item.targetIndex] = node; }}
-          className="pointer-events-none fixed z-[100] grid h-12 w-12 place-items-center"
+          className="pointer-events-none fixed z-[100] grid h-12 w-12 place-items-center drop-shadow-lg"
           style={{ left: item.left, top: item.top }}
           aria-hidden="true"
         >
