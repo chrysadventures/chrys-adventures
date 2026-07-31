@@ -3498,7 +3498,7 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
           title={lang === "en" ? "Fish in a pond" : "Ikan di dalam kolam"}
           prompt={lang === "en" ? "Total: 3 fish" : "Jumlah: 3 ikan"}
         >
-          <div className="relative mx-auto flex h-40 max-w-64 items-center justify-center gap-3 overflow-hidden rounded-[50%] border-4 border-sky-300 bg-sky-200 px-4 shadow-inner">
+          <div className="relative mx-auto flex h-40 max-w-64 items-center justify-center gap-1 overflow-hidden rounded-[50%] border-4 border-sky-300 bg-sky-200 px-5 shadow-inner">
             <span className="absolute bottom-1 left-5 text-2xl" aria-hidden="true">🌿</span>
             {["🐟", "🐠", "🐟"].map((fish, index) => (
               <SceneCountObject key={`${fish}-${index}`} number={index + 1} outlined={false}>
