@@ -3485,6 +3485,11 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
 }
 
 function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
+  const soundEnabled = React.useContext(AudioEnabledContext);
+  const spokenExamples = lang === "en"
+    ? "We count apples. We count fish. We count cars."
+    : "Kita kira epal. Kita kira ikan. Kita kira kereta.";
+
   return (
     <div className="rounded-[2rem] border-2 border-sky-100 bg-sky-50 p-4 shadow-[0_6px_0_rgba(14,116,144,.12)]">
       <div className="grid gap-4 md:grid-cols-3">
@@ -3522,8 +3527,26 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
           </div>
         </RealWorldSituationCard>
       </div>
+      {soundEnabled && (
+        <div className="mt-5 flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              markAudioInteraction();
+              speakText(spokenExamples, lang, { allowWhenWordAudioDisabled: true });
+            }}
+            aria-label={lang === "en" ? "Hear the three counting examples" : "Dengar tiga contoh mengira"}
+            className="inline-flex items-center gap-3 rounded-2xl border-2 border-blue-700 bg-blue-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
+          >
+            <SpeakerIcon />
+            {lang === "en" ? "Hear the examples" : "Dengar contoh"}
+          </button>
+        </div>
+      )}
       <p className="mt-5 rounded-2xl bg-white p-4 text-center text-xl font-black text-blue-950">
-        {lang === "en" ? "Numbers are not just bananas!" : "Nombor bukan untuk pisang sahaja!"}
+        {lang === "en"
+          ? "We count everywhere: apples, fish, cars, and more!"
+          : "Kita mengira di mana-mana: epal, ikan, kereta dan banyak lagi!"}
       </p>
     </div>
   );
@@ -3562,9 +3585,9 @@ function RealWorldSituationCard({ title, prompt, children }: {
 
 function MiniAppleBasket({ count }: { count: number }) {
   const positions = [
-    "left-[18%] top-[28%]",
-    "right-[18%] top-[28%]",
-    "left-1/2 bottom-[2%] -translate-x-1/2",
+    "left-[28%] top-[30%]",
+    "right-[28%] top-[30%]",
+    "left-1/2 bottom-[10%] -translate-x-1/2",
   ];
   return (
     <div className="relative mx-auto h-40 max-w-64">
@@ -3583,6 +3606,11 @@ function MiniAppleBasket({ count }: { count: number }) {
 function FindStoryNumbersExample({ lang }: { lang: Lang }) {
   return (
     <div className="space-y-4 rounded-[2rem] border-2 border-amber-100 bg-amber-50 p-4 shadow-[0_6px_0_rgba(146,64,14,.12)]">
+      <div className="flex justify-center">
+        <span className="rounded-full border-2 border-blue-200 bg-blue-50 px-4 py-2 text-sm font-black text-blue-800">
+          {lang === "en" ? "Step 1 of 3" : "Langkah 1 daripada 3"}
+        </span>
+      </div>
       <p className="rounded-3xl bg-white p-5 text-center text-xl font-black leading-relaxed text-blue-950 md:text-2xl">
         {lang === "en" ? "Ali has " : "Ali ada "}
         <StoryNumber value={3} />
@@ -3610,7 +3638,9 @@ function FindStoryNumbersExample({ lang }: { lang: Lang }) {
         </div>
       </div>
       <p className="rounded-2xl bg-yellow-200 p-4 text-center text-xl font-black text-yellow-950">
-        {lang === "en" ? "We found the numbers 3 and 2." : "Kita jumpa nombor 3 dan 2."}
+        {lang === "en"
+          ? "Step 1: we find the numbers. Next, we ask: what happens?"
+          : "Langkah 1: kita cari nombor. Seterusnya, kita tanya: apa yang berlaku?"}
       </p>
     </div>
   );
@@ -4068,13 +4098,13 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       <div className="overflow-hidden rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_6px_0_rgba(0,0,0,.12)]">
         {showSituation && (
           <div className="space-y-5">
-            <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
-              <div ref={basketRef} className="min-h-56 rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center">
-                <img src={chrysHappy} alt="Chrys" className="mx-auto h-20 w-20 object-contain" />
+            <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
+              <div ref={basketRef} className="min-h-56 rounded-3xl border-2 border-amber-200 bg-amber-50 p-3 text-center sm:p-4">
+                <img src={chrysHappy} alt="Chrys" className="mx-auto h-16 w-16 object-contain sm:h-20 sm:w-20" />
                 <p className="mb-3 text-sm font-black uppercase text-amber-800">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</p>
-                <div className="relative mx-auto min-h-[19rem] max-w-[23rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
-                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain opacity-95" />
-                  <div className="relative z-10 grid min-h-[19rem] grid-cols-4 place-content-center gap-x-2 gap-y-7 px-2 pb-8 pt-10 sm:gap-x-3 sm:px-5">
+                <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
+                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />
+                  <div className="relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 px-7 pb-10 pt-12 sm:gap-x-2 sm:px-9">
                     {Array.from({ length: 7 }, (_, index) => {
                       const inBasket = index < left;
                       const isFlying = flight?.some((item) => item.sourceIndex === index);
@@ -4082,14 +4112,14 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                         <div
                           key={index}
                           ref={(node) => { chrysBananaRefs.current[index] = node; }}
-                          className={`relative flex h-24 w-16 flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-opacity duration-150 ${
+                          className={`relative col-span-2 flex h-16 w-16 items-center justify-center justify-self-center overflow-visible rounded-full border-[3px] shadow-[0_3px_0_#93c5fd] transition-opacity duration-150 ${index === 4 ? "col-start-2" : ""} ${
                             inBasket
-                              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                              ? "border-blue-400 bg-blue-50/95"
                               : "pointer-events-none border-transparent bg-transparent opacity-0"
                           } ${isFlying ? "opacity-0" : ""}`}
                         >
                           {inBasket && <>
-                            <span className="absolute top-1 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-2 text-[0.65rem] font-black leading-none text-white shadow-sm">
+                            <span className="absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1.5 text-[0.65rem] font-black leading-none text-white shadow-sm">
                               {index + 1}
                             </span>
                             <SpriteIcon value="🍌" className="h-12 w-12" />
@@ -4114,28 +4144,28 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                   {lang === "en" ? "Share 3" : "Kongsi 3"}
                 </p>
               </div>
-              <div className="min-h-56 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+              <div className="min-h-56 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-3 text-center sm:p-4">
                 <div className="mb-2 flex items-center justify-center gap-2">
                   <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
                   <p className="text-sm font-black uppercase text-emerald-800">{lang === "en" ? "Alyse's basket" : "Bakul Alyse"}</p>
                 </div>
                 <p className="mb-4 text-base font-black text-emerald-900">{lang === "en" ? "Alyse gets 3 bananas." : "Alyse dapat 3 pisang."}</p>
-                <div className="relative mx-auto min-h-[19rem] max-w-[23rem] overflow-hidden rounded-3xl border-2 border-emerald-100 bg-white">
-                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain opacity-95" />
-                  <div className="relative z-10 grid min-h-[19rem] grid-cols-3 place-content-center gap-3 px-7 py-10">
+                <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-emerald-100 bg-white">
+                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />
+                  <div className="relative z-10 grid min-h-[21rem] grid-cols-3 place-content-center gap-4 px-8 py-12">
                     {Array.from({ length: 3 }, (_, index) => (
                       <div
                         key={index}
                         ref={(node) => { alyseBananaRefs.current[index] = node; }}
-                        className={`relative flex h-24 w-16 flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,box-shadow,transform] duration-300 ${
+                        className={`relative flex h-16 w-16 items-center justify-center justify-self-center overflow-visible rounded-full border-[3px] transition-[background-color,border-color,box-shadow,transform] duration-300 ${
                           index < given
                             ? index === given - 1 && sharing
-                              ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
-                              : "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
-                            : "border-dashed border-slate-300 bg-white/80"
+                              ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-[0_3px_0_#facc15]"
+                              : "border-blue-400 bg-blue-50/95 shadow-[0_3px_0_#93c5fd]"
+                            : "border-dashed border-slate-300 bg-white/75"
                         }`}
                       >
-                        <span className={`absolute top-1 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full px-2 text-[0.65rem] font-black leading-none text-white shadow-sm ${index < given ? "bg-blue-600" : "bg-slate-400"}`}>
+                        <span className={`absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full px-1.5 text-[0.65rem] font-black leading-none text-white shadow-sm ${index < given ? "bg-blue-600" : "bg-slate-400"}`}>
                           {index + 1}
                         </span>
                         {index < given && <SpriteIcon value="🍌" className="h-12 w-12" />}
@@ -9062,8 +9092,8 @@ async function speakMathCue(cue: MathCue, lang: Lang) {
   });
 }
 
-function speakText(text: string, lang: Lang, options: { requireInteraction?: boolean } = {}) {
-  if (!WORD_AUDIO_ENABLED || audioMuted) return;
+function speakText(text: string, lang: Lang, options: { requireInteraction?: boolean; allowWhenWordAudioDisabled?: boolean } = {}) {
+  if ((!WORD_AUDIO_ENABLED && !options.allowWhenWordAudioDisabled) || audioMuted) return;
   if (options.requireInteraction && !audioUserInteracted) return;
   if (!("speechSynthesis" in window)) return;
   if (activeCountingRunId !== null) {
