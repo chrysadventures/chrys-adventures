@@ -699,7 +699,7 @@ q("rt-add-bananas-0-5", "real", { en: "The basket has 0 bananas. Put in 5 banana
   q("rt-sub-apples-8-6", "real", { en: "There are 8 apples. You eat 6 apples. How many apples are left?", ms: "Ada 8 epal. Kamu makan 6 epal. Tinggal berapa epal?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 8, b: 6, emoji: "🍎" }),
   q("rt-sub-oranges-7-1", "real", { en: "There are 7 oranges. You take away 1 orange. How many oranges are left?", ms: "Ada 7 oren. Kamu ambil 1 oren. Tinggal berapa oren?" }, [5, 6, 7, 8], 6, { kind: "subtract", a: 7, b: 1, emoji: "🍊" }),
   q("rt-sub-books-6-4", "real", { en: "There are 6 books. You put away 4 books. How many books are left?", ms: "Ada 6 buku. Kamu simpan 4 buku. Tinggal berapa buku?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 6, b: 4, emoji: "📘" }),
-  q("rt-sub-cups-5-5", "real", { en: "There are 5 cups. You put away all 5 cups. How many cups are left?", ms: "Ada 5 cawan. Kamu simpan semua 5 cawan. Tinggal berapa cawan?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🥤" }),
+  q("rt-sub-cups-5-5", "real", { en: "There are 5 cups. You put away all 5 cups.\nHow many cups are left?", ms: "Ada 5 cawan. Kamu simpan semua 5 cawan.\nTinggal berapa cawan?" }, [0, 1, 4, 5], 0, { kind: "subtract", a: 5, b: 5, emoji: "🥤" }),
   q("rt-sub-flowers-4-2", "real", { en: "There are 4 flowers. You pick 2 flowers. How many flowers are left?", ms: "Ada 4 bunga. Kamu petik 2 bunga. Tinggal berapa bunga?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 4, b: 2, emoji: "🌸" }),
   q("rt-sub-eggs-3-0", "real", { en: "There are 3 eggs. You take away 0 eggs. How many eggs are left?", ms: "Ada 3 telur. Kamu ambil 0 telur. Tinggal berapa telur?" }, [0, 2, 3, 4], 3, { kind: "subtract", a: 3, b: 0, emoji: "🥚" }),
   q("rt-sub-toys-2-1", "real", { en: "There are 2 toy cars. You move 1 toy car away. How many toy cars are left?", ms: "Ada 2 kereta mainan. Kamu pindah 1 kereta mainan. Tinggal berapa kereta mainan?" }, [0, 1, 2, 3], 1, { kind: "subtract", a: 2, b: 1, emoji: "🚗" }),
@@ -4379,7 +4379,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
           </span>
         )}
         <span className="relative grid h-12 w-12 place-items-center">
-          <SpriteIcon value={banana} className={`h-12 w-12 ${isCrossed ? "opacity-35 grayscale" : ""}`} />
+          <SpriteIcon value={banana} className="h-12 w-12 opacity-100 saturate-100 grayscale-0" />
           {isCrossed && (
             <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-5xl font-black leading-none text-red-500 drop-shadow-sm" aria-hidden="true">&times;</span>
           )}
@@ -5147,10 +5147,10 @@ function BasketBananaScene({ count, counted, isCounting, label }: {
 }) {
   const banana = String.fromCodePoint(0x1f34c);
   const positions = [
-    ["left-[29%]", "top-[35%]", "-rotate-12"],
-    ["left-[63%]", "top-[30%]", "rotate-12"],
-    ["left-[39%]", "top-[62%]", "rotate-6"],
-    ["left-[69%]", "top-[59%]", "-rotate-6"],
+    ["left-[38%]", "top-[39%]", "-rotate-12"],
+    ["left-[62%]", "top-[39%]", "rotate-12"],
+    ["left-[38%]", "top-[61%]", "rotate-6"],
+    ["left-[62%]", "top-[61%]", "-rotate-6"],
   ];
 
   return (
@@ -5164,15 +5164,15 @@ function BasketBananaScene({ count, counted, isCounting, label }: {
           return (
             <div
               key={index}
-              className={`absolute ${x} ${y} ${rotation} grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,box-shadow,transform] duration-300 ${
+              className={`absolute ${x} ${y} ${rotation} grid h-24 w-24 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,box-shadow,transform] duration-300 ${
                 isActiveCount
                   ? "border-yellow-400 bg-yellow-100/70 ring-4 ring-yellow-200"
                   : isCounted
                     ? "border-blue-600 bg-blue-100/60 ring-4 ring-blue-200 shadow-md"
-                  : "border-transparent bg-transparent"
+                  : "border-white/90 bg-white/80 shadow-lg"
               }`}
             >
-              <SpriteIcon value={banana} className="h-14 w-14" />
+              <SpriteIcon value={banana} className="h-20 w-20 drop-shadow-lg" />
               {isCounted && (
                 <span className="absolute top-1 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white shadow-md">
                   {index + 1}
@@ -6237,6 +6237,105 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   );
 }
 
+function AnimatedCupSubtractionVisual({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [crossedCount, setCrossedCount] = useState(0);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setCrossedCount(0);
+    stopNumberAudio();
+
+    const runAnimation = async () => {
+      await wait(prefersReducedMotion ? 80 : 450);
+      if (cancelled) return;
+
+      if (prefersReducedMotion) {
+        setCrossedCount(5);
+      }
+
+      if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+        await speakCountingSequence(5, lang, COUNTING_STEP_MS, (value) => {
+          if (!cancelled && !prefersReducedMotion) setCrossedCount(value);
+        });
+      } else if (!prefersReducedMotion) {
+        for (let value = 1; value <= 5; value += 1) {
+          await wait(COUNTING_STEP_MS);
+          if (cancelled) return;
+          setCrossedCount(value);
+        }
+      }
+
+      if (cancelled) return;
+      setCrossedCount(5);
+      onCompleteRef.current();
+      speakText(
+        lang === "en" ? "Five minus five equals zero." : "Lima tolak lima sama dengan sifar.",
+        lang,
+      );
+    };
+
+    void runAnimation();
+    return () => {
+      cancelled = true;
+      stopNumberAudio();
+    };
+  }, [lang, prefersReducedMotion]);
+
+  const statusText = crossedCount === 0
+    ? (lang === "en" ? "Five cups are ready." : "Lima cawan sudah sedia.")
+    : crossedCount < 5
+      ? (lang === "en" ? `Putting away cup ${crossedCount} of 5.` : `Menyimpan cawan ${crossedCount} daripada 5.`)
+      : (lang === "en" ? "All five cups are put away." : "Semua lima cawan telah disimpan.");
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap justify-center gap-x-3 gap-y-7 rounded-3xl border-2 border-slate-100 bg-white px-4 pb-4 pt-8">
+        {Array.from({ length: 5 }, (_, index) => {
+          const crossed = index < crossedCount;
+          const active = crossedCount > 0 && index === crossedCount - 1;
+          return (
+            <div
+              key={index}
+              aria-label={lang === "en"
+                ? `Cup ${index + 1}${crossed ? ", put away" : ""}`
+                : `Cawan ${index + 1}${crossed ? ", disimpan" : ""}`}
+              className={`relative grid h-24 w-16 place-items-center rounded-2xl border-2 bg-amber-50 shadow-inner transition-[border-color,box-shadow,transform] duration-300 ${
+                active ? "scale-105 border-yellow-400 ring-4 ring-yellow-200" : "border-amber-100"
+              }`}
+            >
+              <span className={`absolute -top-7 z-20 grid h-7 min-w-8 place-items-center rounded-full px-2 text-sm font-black text-white shadow-md transition-colors ${
+                crossed ? "bg-red-600" : "bg-blue-600"
+              }`}>
+                {index + 1}
+              </span>
+              <span className="relative inline-flex h-12 w-12 items-center justify-center">
+                <SpriteIcon value="🥤" className="h-full w-full opacity-100 saturate-100 grayscale-0" />
+                {crossed && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center text-5xl font-black leading-none text-red-500 drop-shadow-sm"
+                  >
+                    &times;
+                  </span>
+                )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="min-h-7 text-center text-lg font-black text-blue-800" aria-live="polite">
+        {statusText}
+      </p>
+    </div>
+  );
+}
+
 function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Screen) => void }) {
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
@@ -6282,6 +6381,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const [answers, setAnswers] = useState<Record<number, number | string>>({});
   const [showBreather, setShowBreather] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
+  const [cupAnimationComplete, setCupAnimationComplete] = useState(false);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const qn = randomizedQuestions[index];
   const selected = answers[index] ?? null;
@@ -6293,6 +6393,8 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
+  const isAnimatedCupQuestion = qn.id === "rt-sub-cups-5-5";
+  const answersLockedForAnimation = isAnimatedCupQuestion && !cupAnimationComplete;
   const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen";
   const additionCountingQuestionIndex = additionPracticeQuestions
     .filter((question) => question.inputMode !== "buildTotal")
@@ -6303,11 +6405,19 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
 
+  useEffect(() => {
+    setCupAnimationComplete(false);
+  }, [lang]);
+
   const next = () => {
     if (index === randomizedQuestions.length - 1) onFinish(correct, randomizedQuestions.length);
-    else if (chunkSize && (index + 1) % chunkSize === 0) setShowBreather(true);
+    else if (chunkSize && (index + 1) % chunkSize === 0) {
+      setCupAnimationComplete(false);
+      setShowBreather(true);
+    }
     else {
       setShowSolution(false);
+      setCupAnimationComplete(false);
       setIndex((i) => i + 1);
     }
   };
@@ -6315,6 +6425,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const continueAfterBreather = () => {
     setShowBreather(false);
     setShowSolution(false);
+    setCupAnimationComplete(false);
     setIndex((i) => Math.min(randomizedQuestions.length - 1, i + 1));
   };
 
@@ -6401,6 +6512,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                   <button
                     onClick={() => {
                       setShowSolution(false);
+                      setCupAnimationComplete(false);
                       setIndex((i) => Math.max(0, i - 1));
                     }}
                     className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1"
@@ -6420,15 +6532,22 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               {extraAction && <SecondaryLessonButton label={extraAction.label} onClick={extraAction.onClick} variant={extraAction.variant} />}
             </div>
           )}
-          <h2 data-narration-read="true" className="text-center text-2xl font-black text-slate-900">{qn.text[lang]}</h2>
+          <h2 data-narration-read="true" className="whitespace-pre-line text-center text-2xl font-black leading-snug text-slate-900">{qn.text[lang]}</h2>
           {!groupChoiceVisual && !activePanelOwnsVisual && (
             <div className="my-4 rounded-3xl border-2 border-sky-100 bg-sky-50 p-3">
-              <VisualDisplay
-                visual={qn.visual}
-                lang={lang}
-                revealNumbers={showSolution || showGuidedAdditionLabels}
-                revealCrossedLabels={showGuidedSubtractionLabels}
-              />
+              {isAnimatedCupQuestion ? (
+                <AnimatedCupSubtractionVisual
+                  lang={lang}
+                  onComplete={() => setCupAnimationComplete(true)}
+                />
+              ) : (
+                <VisualDisplay
+                  visual={qn.visual}
+                  lang={lang}
+                  revealNumbers={showSolution || showGuidedAdditionLabels}
+                  revealCrossedLabels={showGuidedSubtractionLabels}
+                />
+              )}
             </div>
           )}
           {groupChoiceVisual ? (
@@ -6487,11 +6606,11 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                     ref={(element) => {
                       optionRefs.current[optionIndex] = element;
                     }}
-                    disabled={answered}
+                    disabled={answered || answersLockedForAnimation}
                     aria-label={`${lang === "en" ? "Answer" : "Jawapan"} ${displayedOption}${resultText}`}
                     onClick={() => answerQuestion(option)}
                     onKeyDown={(event) => handleOptionKeyDown(event, optionIndex, option)}
-                    className={`relative min-h-20 rounded-3xl border-2 px-2 font-black shadow-[0_5px_0_rgba(0,0,0,.14)] ${optionSize} ${stateClass}`}
+                    className={`relative min-h-20 rounded-3xl border-2 px-2 font-black shadow-[0_5px_0_rgba(0,0,0,.14)] disabled:cursor-wait disabled:opacity-50 ${optionSize} ${stateClass}`}
                     style={typeof option === "number" ? getNumberTextStyle(option) : undefined}
                   >
                     <span className="inline-block pr-8">{displayedOption}</span>
@@ -6512,8 +6631,9 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
             <div className="mt-4 flex justify-center">
               <button
                 type="button"
+                disabled={answersLockedForAnimation}
                 onClick={showUnknownSolution}
-                className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-7 py-3 font-black text-amber-900 shadow-[0_5px_0_rgba(180,83,9,.18)] active:translate-y-1"
+                className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-7 py-3 font-black text-amber-900 shadow-[0_5px_0_rgba(180,83,9,.18)] active:translate-y-1 disabled:cursor-wait disabled:opacity-50"
               >
                 {lang === "en" ? "I don't know" : "Tidak tahu"}
               </button>
@@ -7429,12 +7549,12 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
         return (
           <div className={`relative grid h-16 w-16 place-items-center rounded-2xl border-2 pt-3 text-4xl shadow-inner ${
             gone
-              ? "border-red-200 bg-slate-100"
+              ? "border-red-200 bg-amber-50"
               : numbered
                 ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                 : "border-amber-100 bg-amber-50"
           }`} key={i}>
-            <span className={gone ? "grayscale opacity-35" : ""}>
+            <span className="opacity-100 saturate-100 grayscale-0">
               <SpriteIcon value={emoji} className="h-12 w-12" />
             </span>
             {(numbered || (crossedLabels && gone)) && (

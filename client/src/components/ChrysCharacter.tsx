@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import chrysHappy from "@assets/chrys_happy_new_nobg.png";
 import chrysExcited from "@assets/chrys_excited_new_nobg.png";
 import chrysThinking from "@assets/chrys_thinking_new_nobg.png";
-import chrysRunning from "@assets/chrys_running_new_nobg.png";
+import chrysRunning from "@assets/chrys_running_new_user_hd_nobg.png";
 import chrysCelebrate from "@assets/chrys_swinging_new_nobg.png";
 
 export type ChrysМood =
