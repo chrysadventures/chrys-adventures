@@ -1527,10 +1527,9 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
       </div>
       <section className="lesson-panel rounded-[2rem] p-5 text-center md:p-8">
         <div className="mx-auto mb-3 flex max-w-sm items-center justify-center gap-3">
-          <img src={chrysHappy} alt="Chrys the monkey" className="h-20 w-20 object-contain" />
+          <img src={chrysThinking} alt="Chrys reading" className="h-20 w-20 object-contain" />
           <div className="text-left">
             <h2 className="text-4xl font-black leading-none text-blue-900 md:text-5xl">{t.title}</h2>
-            <p className="mt-2 text-base font-bold text-slate-500">{t.subtitle}</p>
           </div>
         </div>
         <div className="mx-auto mt-3 flex max-w-sm items-center justify-center gap-4 rounded-3xl border-2 border-emerald-100 bg-emerald-50/70 px-4 py-2">
