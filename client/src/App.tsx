@@ -129,6 +129,9 @@ const COUNTING_STEP_MS = 1400;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
 const ADDITION_BANANA_STAGGER_MS = ADDITION_BANANA_TRAVEL_MS + ADDITION_BANANA_COUNT_PAUSE_MS;
+const SUBTRACTION_SHARE_TRAVEL_MS = 1600;
+const SUBTRACTION_SHARE_PAUSE_MS = 900;
+const SUBTRACTION_SHARE_ARC_PX = 52;
 const ADDITION_EQUATION_GROUPS = [2, 3, 5] as const;
 const VALUE_COMPARISON_PAIRS = [
   ["🍃", "🪨"],
@@ -1520,7 +1523,7 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
   return (
     <main className="mx-auto grid w-full max-w-5xl flex-1 items-center gap-6 py-4 md:grid-cols-[1fr_1.1fr]">
       <div className="flex justify-center">
-        <img src={chrysExcited} alt="Chrys the monkey" className="h-72 w-72 object-contain drop-shadow-2xl md:h-96 md:w-96" />
+        <img src={chrysHappy} alt="Chrys the monkey waving hello" className="h-72 w-72 object-contain drop-shadow-2xl md:h-96 md:w-96" />
       </div>
       <section className="lesson-panel rounded-[2rem] p-5 text-center md:p-8">
         <div className="mx-auto mb-3 flex max-w-sm items-center justify-center gap-3">
@@ -2121,13 +2124,12 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                 {lang === "en" ? "Already know this? Go to exercises." : "Dah tahu? Terus ke latihan."}
               </button>
             )}
-            <button
-              type="button"
+            <LessonNextButton
+              disabled={phase === 1 && exampleCounting}
               onClick={() => phase < 3 ? setPhase((current) => Math.min(3, current + 1) as 0 | 1 | 2 | 3) : setShowPractice(true)}
-              className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 text-xl font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
-            >
-              {phase < 3 ? t.next : (lang === "en" ? "Start practice" : "Mula latihan")}
-            </button>
+              label={phase < 3 ? t.next : (lang === "en" ? "Start practice" : "Mula latihan")}
+              className="text-xl"
+            />
           </div>
         </LessonShell>
       </div>
@@ -2325,9 +2327,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
             <button onClick={skipNextNumber} className="rounded-2xl border-2 border-blue-200 bg-white px-5 py-3 font-black text-blue-700 shadow-[0_5px_0_rgba(30,64,175,.18)] active:translate-y-1">
               {number < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)}
             </button>
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
-              {number === 9 && step === 4 ? t.done : t.next}
-            </button>
+            <LessonNextButton label={number === 9 && step === 4 ? t.done : t.next} onClick={next} />
           </div>
         </div>
       </LessonShell>
@@ -2462,7 +2462,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
             >
               {skipNextNumberLabel(lang)}
             </button>
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{number === 9 && step === 4 ? t.practice : t.next}</button>
+            <LessonNextButton label={number === 9 && step === 4 ? t.practice : t.next} onClick={next} />
           </div>
         </div>
       </LessonShell>
@@ -2559,7 +2559,10 @@ function NumberValuesLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
               label={!inConcept && currentNumber < 9 ? skipNextNumberLabel(lang) : skipPracticeLabel(lang)}
               onClick={skipNextNumber}
             />
-            <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < maxPhase) ? t.next : t.practice}</button>
+            <LessonNextButton
+              label={step < examples.length + conceptSlides.length - 1 || (!inConcept && phase < maxPhase) ? t.next : t.practice}
+              onClick={next}
+            />
           </div>
         </div>
       </LessonShell>
@@ -2852,7 +2855,10 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
           <button disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">{t.previous}</button>
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
-            <button onClick={() => step < slides.length - 1 ? setStep((s) => s + 1) : setPractice(true)} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">{step < slides.length - 1 ? t.next : t.practice}</button>
+            <LessonNextButton
+              label={step < slides.length - 1 ? t.next : t.practice}
+              onClick={() => step < slides.length - 1 ? setStep((s) => s + 1) : setPractice(true)}
+            />
           </div>
         </div>
       </LessonShell>
@@ -3051,9 +3057,10 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
           <div className="flex flex-wrap justify-end gap-3">
             <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={() => setPractice(true)} variant="green" />
             {!canEdit && (
-              <button onClick={next} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
-                {step < maxStep || activityIndex < GROUPING_LESSON_STEPS.length - 1 ? t.next : t.practice}
-              </button>
+              <LessonNextButton
+                label={step < maxStep || activityIndex < GROUPING_LESSON_STEPS.length - 1 ? t.next : t.practice}
+                onClick={next}
+              />
             )}
           </div>
         </div>
@@ -3471,13 +3478,7 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
         <PreviousLessonButton label={t.previous} onClick={onPrevious} />
         <div className="flex flex-wrap justify-end gap-3">
           {phase === 0 && <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkip} variant="green" />}
-          <button
-            type="button"
-            onClick={onNext}
-            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
-          >
-            {nextLabel}
-          </button>
+          <LessonNextButton label={nextLabel} onClick={onNext} />
         </div>
       </div>
     </div>
@@ -3585,9 +3586,9 @@ function RealWorldSituationCard({ title, prompt, children }: {
 
 function MiniAppleBasket({ count }: { count: number }) {
   const positions = [
-    "left-[28%] top-[30%]",
-    "right-[28%] top-[30%]",
-    "left-1/2 bottom-[10%] -translate-x-1/2",
+    "left-[20%] top-[22%]",
+    "right-[20%] top-[22%]",
+    "left-1/2 bottom-[8%] -translate-x-1/2",
   ];
   return (
     <div className="relative mx-auto h-40 max-w-64">
@@ -3814,6 +3815,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
 }) {
   const [step, setStep] = useState(1);
   const [eatingStep, setEatingStep] = useState<number | null>(null);
+  const [eatingCompleteStep, setEatingCompleteStep] = useState<number | null>(null);
   const [zeroStep, setZeroStep] = useState<1 | 2 | 3>(1);
   const bellyCounterRef = useRef<HTMLDivElement>(null);
   const storyText: Record<number, string> = lang === "en"
@@ -3835,6 +3837,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const showSecond = step >= 2 && step <= 3;
   const eatSecond = step === 3 && eatingStep === 3;
   const waitingToEat = (step === 1 || step === 3) && eatingStep !== step;
+  const eatingAnimationPending = (step === 1 || step === 3) && eatingCompleteStep !== step;
   const bellyTarget = step >= 3 ? 5 : step >= 1 ? 2 : 0;
   const zeroStoryText: Record<1 | 2 | 3, string> = lang === "en"
     ? {
@@ -3890,7 +3893,10 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
                   <button
                     type="button"
                     disabled={eatingStep === step}
-                    onClick={() => setEatingStep(step)}
+                    onClick={() => {
+                      setEatingCompleteStep(null);
+                      setEatingStep(step);
+                    }}
                     aria-label={lang === "en" ? `Eat ${step === 1 ? 2 : 3} bananas` : `Makan ${step === 1 ? 2 : 3} pisang`}
                     className="relative -mt-3 rounded-2xl border-2 border-amber-500 bg-amber-400 px-5 py-3 font-black text-amber-950 shadow-[0_5px_0_#a86000] active:translate-y-1 disabled:cursor-default disabled:opacity-60"
                   >
@@ -3912,6 +3918,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
                   label={lang === "en" ? "Chrys's belly" : "Perut Chrys"}
                   unit={lang === "en" ? "bananas" : "pisang"}
                   lang={lang}
+                  onComplete={() => setEatingCompleteStep(step)}
                 />
               )}
             </div>
@@ -3924,6 +3931,7 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
         <button
           onClick={() => {
             setEatingStep(null);
+            setEatingCompleteStep(null);
             if (step === 1) onPrev();
             else if (step === 3) setStep(1);
             else if (step === 5) setStep(3);
@@ -3939,9 +3947,11 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
           {actions.map((action) => (
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
-          <button
+          <LessonNextButton
+            disabled={eatingAnimationPending}
             onClick={() => {
               setEatingStep(null);
+              setEatingCompleteStep(null);
               if (step === 1) setStep(3);
               else if (step === 3) setStep(5);
               else if (step === 5) {
@@ -3952,10 +3962,8 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
               else if (step < 7) setStep((current) => current + 1);
               else onDone();
             }}
-            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {step < 7 || (step === 7 && zeroStep < 3) ? t.next : t.practice}
-          </button>
+            label={step < 7 || (step === 7 && zeroStep < 3) ? t.next : t.practice}
+          />
         </div>
       </div>
     </div>
@@ -3979,6 +3987,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const alyseBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const flyingBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const left = 7 - given;
+  const sharingFinished = showSituation && storyStep === 4 && given === 3 && !sharing && !flight;
   const storyText: Record<number, string> = lang === "en"
     ? {
       1: "Chrys will give Alyse 3 bananas.",
@@ -3999,7 +4008,6 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
     const animations = flight.flatMap((item) => {
       const banana = flyingBananaRefs.current[item.targetIndex];
       if (!banana) return [];
-      const arcHeight = Math.max(135, Math.min(210, Math.abs(item.x) * 0.38)) + item.targetIndex * 12;
       const keyframes = reducedMotion
         ? [
           { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
@@ -4007,14 +4015,13 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         ]
         : [
           { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
-          { offset: 0.25, transform: `translate3d(${item.x * 0.2}px, ${item.y * 0.2 - arcHeight * 0.7}px, 0) scale(1.04)`, opacity: 1 },
-          { offset: 0.5, transform: `translate3d(${item.x * 0.5}px, ${item.y * 0.5 - arcHeight}px, 0) scale(1.04)`, opacity: 1 },
-          { offset: 0.75, transform: `translate3d(${item.x * 0.8}px, ${item.y * 0.8 - arcHeight * 0.7}px, 0) scale(1.02)`, opacity: 1 },
+          { offset: 0.33, transform: `translate3d(${item.x * 0.33}px, ${item.y * 0.33 - SUBTRACTION_SHARE_ARC_PX}px, 0) scale(1.02)`, opacity: 1 },
+          { offset: 0.67, transform: `translate3d(${item.x * 0.67}px, ${item.y * 0.67 - SUBTRACTION_SHARE_ARC_PX}px, 0) scale(1.02)`, opacity: 1 },
           { transform: `translate3d(${item.x}px, ${item.y}px, 0) scale(1)`, opacity: 1 },
         ];
       return [banana.animate(keyframes, {
-        duration: reducedMotion ? 1 : 2400,
-        easing: "cubic-bezier(.45,0,.2,1)",
+        duration: reducedMotion ? 1 : SUBTRACTION_SHARE_TRAVEL_MS,
+        easing: "cubic-bezier(.4,0,.2,1)",
         fill: "forwards",
       })];
     });
@@ -4030,11 +4037,13 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       speakNumber(7 - nextGiven, lang);
       // Keep the flying banana over the destination until React paints the landed tile.
       landingFrame = window.requestAnimationFrame(() => {
-        setFlight(null);
-        if (nextGiven === 3) {
-          setSharing(false);
-          setStoryStep(4);
-        }
+        landingFrame = window.requestAnimationFrame(() => {
+          setFlight(null);
+          if (nextGiven === 3) {
+            setSharing(false);
+            setStoryStep(4);
+          }
+        });
       });
     });
 
@@ -4066,7 +4075,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         sourceIndex,
         targetIndex,
       }]);
-    }, given === 0 ? 500 : 1800);
+    }, SUBTRACTION_SHARE_PAUSE_MS);
 
     return () => window.clearTimeout(timer);
   }, [flight, given, sharing, showSituation]);
@@ -4194,8 +4203,8 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
               </div>
             </div>
 
-            <div className="flex justify-center">
-              {given < 3 ? (
+            {given < 3 && (
+              <div className="flex justify-center">
                 <button
                   type="button"
                   disabled={sharing || Boolean(flight)}
@@ -4209,22 +4218,8 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                     <PointerIcon />
                   </span>
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSituation(false);
-                    setStoryPosition(6);
-                  }}
-                  className="relative rounded-2xl border-2 border-blue-600 bg-blue-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1d4ed8] active:translate-y-1"
-                >
-                  {lang === "en" ? "Count what is left" : "Kira yang tinggal"}
-                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
-                    <PointerIcon />
-                  </span>
-                </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -4265,27 +4260,36 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
           {actions.map((action) => (
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
-          <button
-            disabled={showSituation || storyStep <= 4}
+          <LessonNextButton
+            disabled={showSituation && !sharingFinished}
             onClick={() => {
+              if (sharingFinished) {
+                setShowSituation(false);
+                setStoryPosition(6);
+                return;
+              }
               if (storyStep < 6) setStoryPosition((storyStep + 1) as 2 | 3 | 4 | 5 | 6);
               else onDone();
             }}
-            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {storyStep < 6 ? t.next : t.practice}
-          </button>
+            label={storyStep < 6 ? t.next : t.practice}
+          />
         </div>
       </div>
     </div>
   );
 }
 
+type SubtractionEquationPhase = "ready" | "countingStart" | "crossing" | "removing" | "counting" | "done";
+
 function SubtractionBananaEquation({ lang }: { lang: Lang }) {
-  const [phase, setPhase] = useState<"ready" | "crossing" | "counting" | "done">("ready");
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [phase, setPhase] = useState<SubtractionEquationPhase>("ready");
+  const [startCount, setStartCount] = useState(0);
   const [crossedCount, setCrossedCount] = useState(0);
   const [remainingCount, setRemainingCount] = useState(0);
   const runRef = useRef(0);
+  const banana = String.fromCodePoint(0x1f34c);
+  const isRunning = phase !== "ready" && phase !== "done";
 
   useEffect(() => () => {
     runRef.current += 1;
@@ -4307,18 +4311,31 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
   };
 
   const startExplanation = async () => {
-    if (phase === "crossing" || phase === "counting") return;
+    if (isRunning) return;
     const runId = ++runRef.current;
     stopNumberAudio();
+    setStartCount(0);
     setCrossedCount(0);
     setRemainingCount(0);
+
+    setPhase("countingStart");
+    await playCount(7, setStartCount, runId);
+    if (runRef.current !== runId) return;
+    await wait(prefersReducedMotion ? 20 : 650);
+    if (runRef.current !== runId) return;
+
     setPhase("crossing");
     await speakMathCue("minus", lang);
     if (runRef.current !== runId) return;
     await playCount(3, setCrossedCount, runId);
     if (runRef.current !== runId) return;
-    await wait(800);
+    await wait(prefersReducedMotion ? 20 : 650);
     if (runRef.current !== runId) return;
+
+    setPhase("removing");
+    await wait(prefersReducedMotion ? 20 : 1150);
+    if (runRef.current !== runId) return;
+
     setPhase("counting");
     await speakMathCue("equals", lang);
     if (runRef.current !== runId) return;
@@ -4327,34 +4344,42 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
     setPhase("done");
   };
 
-  const renderBanana = (index: number, mode: "start" | "crossed" | "remaining") => {
-    const isCrossed = mode === "crossed" && index < crossedCount;
-    const isCounted = mode === "remaining" && index < remainingCount;
-    const isCurrent = mode === "remaining" && phase === "counting" && index === remainingCount - 1;
-    const isCurrentCross = mode === "crossed" && phase === "crossing" && index === crossedCount - 1;
-    const isInactive = (mode === "crossed" && phase === "ready") || (mode === "remaining" && (phase === "ready" || phase === "crossing"));
+  const renderBanana = (index: number, mode: "start" | "crossed" | "resultCrossed" | "remaining") => {
+    const value = index + 1;
+    const isCrossMode = mode === "crossed" || mode === "resultCrossed";
+    const isCrossed = isCrossMode && value <= crossedCount;
+    const isStartCounted = mode === "start" && value <= startCount;
+    const isRemainingCounted = mode === "remaining" && value <= remainingCount;
+    const isCounted = isStartCounted || isRemainingCounted;
+    const isCurrent = (mode === "start" && phase === "countingStart" && value === startCount)
+      || (mode === "remaining" && phase === "counting" && value === remainingCount);
+    const isCurrentCross = isCrossMode && phase === "crossing" && value === crossedCount;
+    const isLeaving = mode === "resultCrossed" && ["removing", "counting", "done"].includes(phase);
+    const centerLast = (mode === "start" && index === 6)
+      || ((mode === "crossed" || mode === "resultCrossed") && index === 2);
     return (
       <div
         key={`${mode}-${index}`}
-        className={`relative grid h-20 w-16 place-items-center rounded-2xl border-2 pt-3 transition-[border-color,background-color,filter,opacity,box-shadow,transform] duration-300 ${
+        className={`relative grid h-24 w-16 place-items-center rounded-2xl border-2 pt-4 transition-[border-color,background-color,filter,opacity,box-shadow,transform] duration-700 ${centerLast ? "col-span-2 justify-self-center" : ""} ${
           isCurrent
             ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
             : isCurrentCross
               ? "scale-105 border-red-500 bg-red-100 ring-4 ring-red-200 shadow-lg"
               : isCrossed
                 ? "border-red-300 bg-slate-100 ring-2 ring-red-100"
-                : mode === "start" || isCounted
+                : isCounted
                   ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                   : "border-amber-100 bg-amber-50"
-        } ${isInactive ? "opacity-30 grayscale" : "opacity-100"}`}
+        } ${isLeaving ? "translate-x-16 scale-75 opacity-0" : "translate-x-0 opacity-100"}`}
+        style={isLeaving && !prefersReducedMotion ? { transitionDelay: `${index * 120}ms` } : undefined}
       >
-        {(mode === "start" || isCrossed || isCounted) && (
+        {(isCrossed || isCounted) && (
           <span className={`absolute top-1 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full px-2 text-[0.65rem] font-black leading-none text-white shadow-sm ${isCrossed ? "bg-red-600" : "bg-blue-600"}`}>
-            {index + 1}
+            {value}
           </span>
         )}
-        <span className="relative grid h-11 w-11 place-items-center">
-          <SpriteIcon value="🍌" className={`h-11 w-11 ${isCrossed ? "opacity-35 grayscale" : ""}`} />
+        <span className="relative grid h-12 w-12 place-items-center">
+          <SpriteIcon value={banana} className={`h-12 w-12 ${isCrossed ? "opacity-35 grayscale" : ""}`} />
           {isCrossed && (
             <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-5xl font-black leading-none text-red-500 drop-shadow-sm" aria-hidden="true">&times;</span>
           )}
@@ -4369,16 +4394,20 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
         <button
           type="button"
           onClick={() => void startExplanation()}
-          disabled={phase === "crossing" || phase === "counting"}
+          disabled={isRunning}
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
         >
-          {phase === "crossing"
-            ? (lang === "en" ? "Crossing out..." : "Memangkah...")
-            : phase === "counting"
-              ? (lang === "en" ? "Counting what is left..." : "Mengira yang tinggal...")
-              : phase === "done"
-                ? (lang === "en" ? "Show it again" : "Lihat sekali lagi")
-                : (lang === "en" ? "Start the solution" : "Mula cara jawab")}
+          {phase === "countingStart"
+            ? (lang === "en" ? "Counting 7 bananas..." : "Mengira 7 pisang...")
+            : phase === "crossing"
+              ? (lang === "en" ? "Crossing out..." : "Memangkah...")
+              : phase === "removing"
+                ? (lang === "en" ? "Taking them away..." : "Mengambilnya...")
+                : phase === "counting"
+                  ? (lang === "en" ? "Counting what is left..." : "Mengira yang tinggal...")
+                  : phase === "done"
+                    ? (lang === "en" ? "Show it again" : "Lihat sekali lagi")
+                    : (lang === "en" ? "Start the solution" : "Mula cara jawab")}
           {(phase === "ready" || phase === "done") && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
               <PointerIcon />
@@ -4387,35 +4416,48 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
         </button>
       </div>
 
-      <div className="grid items-stretch gap-3 lg:grid-cols-[minmax(0,1.15fr)_auto_minmax(0,.85fr)_auto_minmax(0,.85fr)] lg:items-center">
-        <div className={`rounded-3xl border-2 bg-blue-50 p-4 text-center transition-colors ${phase === "ready" ? "border-blue-500" : "border-blue-200"}`}>
+      <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(10.5rem,1fr)_auto_minmax(10.5rem,1fr)_auto_minmax(10.5rem,1fr)] lg:items-center">
+        <div className={`rounded-3xl border-2 bg-blue-50 p-4 text-center transition-[border-color,box-shadow] ${phase === "countingStart" ? "border-blue-500 ring-4 ring-blue-100" : "border-blue-200"}`}>
           <p className="mb-4 text-xl font-black text-blue-950">{lang === "en" ? "Start with 7" : "Mula dengan 7"}</p>
-          <div className="grid min-h-64 grid-cols-2 place-content-center place-items-center gap-x-3 gap-y-5 rounded-3xl bg-white p-5">
+          <div className="grid min-h-[23rem] grid-cols-2 place-content-center place-items-center gap-3 rounded-3xl bg-white p-5">
             {Array.from({ length: 7 }, (_, index) => renderBanana(index, "start"))}
           </div>
-          <CountTotalBadge count={7} lang={lang} unit={objectName(String.fromCodePoint(0x1f34c), 7, lang)} />
+          <div className="min-h-20 pt-3">
+            {startCount === 7 && <CountTotalBadge count={7} lang={lang} unit={objectName(banana, 7, lang)} />}
+          </div>
         </div>
 
         <span className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">-</span>
 
         <div className={`rounded-3xl border-2 p-4 text-center transition-[border-color,background-color,box-shadow] ${phase === "crossing" ? "border-red-500 bg-red-50 ring-4 ring-red-100" : "border-red-200 bg-red-50"}`}>
           <p className="mb-4 text-xl font-black text-red-900">{lang === "en" ? "Cross out 3" : "Pangkah 3"}</p>
-          <div className="grid min-h-64 grid-cols-2 place-content-center place-items-center gap-x-3 gap-y-5 rounded-3xl bg-white p-5">
+          <div className="grid min-h-[23rem] grid-cols-2 place-content-center place-items-center gap-3 rounded-3xl bg-white p-5">
             {Array.from({ length: 3 }, (_, index) => renderBanana(index, "crossed"))}
           </div>
-          <p className="mx-auto mt-3 inline-flex rounded-full bg-red-100 px-5 py-3 text-xl font-black text-red-900">
-            {lang === "en" ? "Taken away: 3 bananas" : "Diambil: 3 pisang"}
-          </p>
+          <div className="min-h-20 pt-3">
+            {crossedCount === 3 && (
+              <p className="mx-auto inline-flex rounded-full bg-red-100 px-5 py-3 text-xl font-black text-red-900">
+                {lang === "en" ? "Taken away: 3 bananas" : "Diambil: 3 pisang"}
+              </p>
+            )}
+          </div>
         </div>
 
         <span className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">=</span>
 
         <div className={`rounded-3xl border-2 p-4 text-center transition-[border-color,background-color,box-shadow] ${phase === "counting" ? "border-blue-500 bg-blue-50 ring-4 ring-blue-100" : phase === "done" ? "border-emerald-500 bg-emerald-50 ring-4 ring-emerald-100" : "border-blue-200 bg-blue-50"}`}>
-          <p className="mb-4 text-xl font-black text-blue-950">{lang === "en" ? "Count 4 left" : "Kira 4 yang tinggal"}</p>
-          <div className="grid min-h-64 grid-cols-2 place-content-center place-items-center gap-x-3 gap-y-5 rounded-3xl bg-white p-5">
-            {Array.from({ length: 4 }, (_, index) => renderBanana(index, "remaining"))}
+          <p className="mb-4 text-xl font-black text-blue-950">{lang === "en" ? "Count what is left" : "Kira yang tinggal"}</p>
+          <div className="flex min-h-[23rem] flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl bg-white p-5">
+            <div className="grid grid-cols-2 place-items-center gap-3">
+              {Array.from({ length: 4 }, (_, index) => renderBanana(index, "remaining"))}
+            </div>
+            <div className={`grid grid-cols-2 place-items-center gap-3 transition-[max-height,opacity,transform,margin] duration-700 ${["removing", "counting", "done"].includes(phase) ? "-translate-y-3 max-h-0 overflow-hidden opacity-0" : "max-h-56 opacity-100"}`}>
+              {Array.from({ length: 3 }, (_, index) => renderBanana(index, "resultCrossed"))}
+            </div>
           </div>
-          <CountTotalBadge count={4} lang={lang} unit={objectName(String.fromCodePoint(0x1f34c), 4, lang)} />
+          <div className="min-h-20 pt-3">
+            {remainingCount === 4 && <CountTotalBadge count={4} lang={lang} unit={objectName(banana, 4, lang)} />}
+          </div>
         </div>
       </div>
 
@@ -4510,13 +4552,10 @@ function WorkedSubtractionStory({ lang, t, title, story, processText, start, tak
           {actions.map((action) => (
             <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
           ))}
-          <button
-            type="button"
+          <LessonNextButton
             onClick={() => stage === "end" ? onDone() : setStage(stages[stageIndex + 1])}
-            className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
-          >
-            {stage === "end" ? (character === "alyse" ? t.practice : t.next) : t.next}
-          </button>
+            label={stage === "end" ? (character === "alyse" ? t.practice : t.next) : t.next}
+          />
         </div>
       </div>
     </div>
@@ -5594,8 +5633,14 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
   label: string;
   unit: string;
   lang: Lang;
-}>(function BellyCounter({ start, target, counting, waiting, label, unit, lang }, ref) {
+  onComplete?: () => void;
+}>(function BellyCounter({ start, target, counting, waiting, label, unit, lang, onComplete }, ref) {
   const [visible, setVisible] = useState(counting || waiting ? start : target);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     if (target === 0) {
@@ -5612,6 +5657,7 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
     }
     if (getReducedMotionPreference()) {
       setVisible(target);
+      onCompleteRef.current?.();
       return;
     }
 
@@ -5631,6 +5677,10 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
         );
       }, finalCountDelay + ADDITION_BANANA_COUNT_PAUSE_MS));
     }
+    const completionDelay = ADDITION_BANANA_TRAVEL_MS
+      + Math.max(0, additions - 1) * ADDITION_BANANA_STAGGER_MS
+      + ADDITION_BANANA_COUNT_PAUSE_MS;
+    timers.push(window.setTimeout(() => onCompleteRef.current?.(), completionDelay));
 
     return () => {
       timers.forEach(window.clearTimeout);
@@ -5708,11 +5758,35 @@ function LessonActionRow({ previousLabel, onPrevious, primaryLabel, onPrimary, a
         {actions.map((action) => (
           <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
         ))}
-        <button onClick={onPrimary} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1">
-          {primaryLabel}
-        </button>
+        <LessonNextButton label={primaryLabel} onClick={onPrimary} />
       </div>
     </div>
+  );
+}
+
+function LessonNextButton({ label, onClick, disabled = false, className = "" }: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={`relative rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+    >
+      {label}
+      {!disabled && (
+        <span
+          className="lesson-next-hint pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md"
+          aria-hidden="true"
+        >
+          <PointerIcon />
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -5773,12 +5847,10 @@ function SlowOperationExample({ kind, lang, t, doneLabel, onPrev, onDone }: {
         >
           {t.previous}
         </button>
-        <button
+        <LessonNextButton
+          label={step < totalSteps - 1 ? t.next : doneLabel}
           onClick={() => step < totalSteps - 1 ? setStep((s) => s + 1) : onDone()}
-          className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1"
-        >
-          {step < totalSteps - 1 ? t.next : doneLabel}
-        </button>
+        />
       </div>
     </div>
   );

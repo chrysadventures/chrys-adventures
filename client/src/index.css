@@ -371,6 +371,15 @@
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.58; }
   }
+  @keyframes lessonNextHintPulse {
+    0%, 100% { transform: scale(0.96); }
+    50%      { transform: scale(1.06); }
+  }
+
+  .lesson-next-hint {
+    transform-origin: center;
+    animation: lessonNextHintPulse 1.25s ease-in-out infinite;
+  }
   @keyframes blockBounce {
     0%   { transform: translateY(0) scale(1, 1); }
     22%  { transform: translateY(-20px) scale(1.08, 0.93); }
