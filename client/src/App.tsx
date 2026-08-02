@@ -1731,6 +1731,52 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
     },
   ];
 
+  const testModeComplete = ["testNumbers", "testOperations", "testReal"].every((key) =>
+    Object.prototype.hasOwnProperty.call(player.progress, key),
+  );
+  const trailDestinations = [
+    {
+      label: lang === "en" ? "Recognize" : "Kenal",
+      complete: (player.progress.recognizeNumbers ?? 0) > 0,
+      markerClass: "bg-sky-500 shadow-[0_4px_0_#0369a1]",
+    },
+    {
+      label: lang === "en" ? "Values" : "Nilai",
+      complete: (player.progress.numberValues ?? 0) > 0,
+      markerClass: "bg-emerald-500 shadow-[0_4px_0_#047857]",
+    },
+    {
+      label: lang === "en" ? "Order" : "Susunan",
+      complete: (player.progress.sequencing ?? 0) > 0,
+      markerClass: "bg-sky-500 shadow-[0_4px_0_#0369a1]",
+    },
+    {
+      label: lang === "en" ? "Groups" : "Kumpulan",
+      complete: (player.progress.groupingMode ?? 0) > 0,
+      markerClass: "bg-amber-400 text-amber-950 shadow-[0_4px_0_#b45309]",
+    },
+    {
+      label: lang === "en" ? "Addition" : "Tambah",
+      complete: (player.progress.addition ?? 0) > 0,
+      markerClass: "bg-emerald-500 shadow-[0_4px_0_#047857]",
+    },
+    {
+      label: lang === "en" ? "Subtraction" : "Tolak",
+      complete: (player.progress.subtraction ?? 0) > 0,
+      markerClass: "bg-pink-500 shadow-[0_4px_0_#be185d]",
+    },
+    {
+      label: lang === "en" ? "Real world" : "Aplikasi",
+      complete: (player.progress.learnReal ?? 0) > 0,
+      markerClass: "bg-pink-500 shadow-[0_4px_0_#be185d]",
+    },
+    {
+      label: lang === "en" ? "Tests" : "Ujian",
+      complete: testModeComplete,
+      markerClass: "bg-amber-400 text-amber-950 shadow-[0_4px_0_#b45309]",
+    },
+  ];
+
   let destinationNumber = 0;
 
   return (
@@ -1764,14 +1810,27 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
       </section>
 
       <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning trail with 8 destinations" : "Laluan belajar dengan 8 destinasi"}>
-        <div className="flex min-w-[44rem] items-center justify-between gap-2 px-3 py-4">
-          {Array.from({ length: 8 }, (_, index) => (
-            <React.Fragment key={index}>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-4 border-white bg-blue-600 text-lg font-black text-white shadow-[0_4px_0_#1e3a8a]">
+        <div className="grid min-w-[48rem] grid-cols-8 gap-3 px-4 py-4">
+          {trailDestinations.map((destination, index) => (
+            <div
+              key={destination.label}
+              className="flex min-w-0 flex-col items-center gap-2 text-center"
+              aria-label={`${index + 1}. ${destination.label}. ${destination.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}
+            >
+              <span
+                className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black ${destination.markerClass} ${destination.complete ? "border-emerald-700 ring-4 ring-emerald-200" : "border-white"} ${destination.markerClass.includes("text-amber") ? "" : "text-white"}`}
+              >
                 {index + 1}
+                {destination.complete && (
+                  <span className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-emerald-700 text-white shadow-sm" aria-hidden="true">
+                    <Check className="h-4 w-4" strokeWidth={4} />
+                  </span>
+                )}
               </span>
-              {index < 7 && <ArrowRight className="h-6 w-6 shrink-0 text-emerald-700" strokeWidth={3} aria-hidden="true" />}
-            </React.Fragment>
+              <span className={`truncate text-xs font-black sm:text-sm ${destination.complete ? "text-emerald-800" : "text-blue-950"}`}>
+                {destination.label}
+              </span>
+            </div>
           ))}
         </div>
       </section>
@@ -3294,7 +3353,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 }
 
 function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "hungryStory" | "alyseStory" | "practice">("intro");
+  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "hungryStory" | "alyseStory" | "mangoStory" | "practice">("intro");
 
   if (phase === "practice") {
     return <Quiz lang={lang} t={t} title={`${t.subtraction}: ${t.practice}`} questions={subtractionPracticeQuestions} randomize={false} visualOnlyOperationSolutions onFinish={() => onDone()} onBackToLearning={() => setPhase("intro")} />;
@@ -3365,6 +3424,15 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             takeAway={5}
             character="alyse"
             onPrev={() => setPhase("hungryStory")}
+            onDone={() => setPhase("mangoStory")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+          />
+        )}
+        {phase === "mangoStory" && (
+          <MangoTraySubtractionStory
+            lang={lang}
+            t={t}
+            onPrev={() => setPhase("alyseStory")}
             onDone={() => setPhase("practice")}
             actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
@@ -4531,9 +4599,9 @@ function WorkedSubtractionStory({ lang, t, title, story, processText, start, tak
         <div className={`space-y-4 rounded-3xl border-2 p-4 text-center ${stage === "process" ? "border-red-200 bg-red-50" : stage === "end" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
           <p className="text-sm font-black uppercase tracking-wide text-slate-500">{stageLabel}</p>
           <p className="text-2xl font-black text-blue-950">{instruction}</p>
-          {stage === "initial" && <ObjectGroup count={start} emoji="ðŸŒ" numbered />}
-          {stage === "process" && <ObjectGroup count={start} emoji="ðŸŒ" numbered crossed={takeAway} />}
-          {stage === "end" && <ObjectGroup count={left} emoji="ðŸŒ" numbered />}
+          {stage === "initial" && <ObjectGroup count={start} emoji={BANANA} numbered />}
+          {stage === "process" && <ObjectGroup count={start} emoji={BANANA} numbered crossed={takeAway} />}
+          {stage === "end" && <ObjectGroup count={left} emoji={BANANA} numbered />}
           <p className={`text-3xl font-black ${stage === "process" ? "text-red-800" : stage === "end" ? "text-emerald-800" : "text-blue-800"}`} style={NUMBER_TEXT_STYLE}>
             {stage === "initial" ? `${start} - ${takeAway} = ?` : stage === "process" ? `${start} - ${takeAway}` : `${start} - ${takeAway} = ${left}`}
           </p>
@@ -4556,6 +4624,239 @@ function WorkedSubtractionStory({ lang, t, title, story, processText, start, tak
             onClick={() => stage === "end" ? onDone() : setStage(stages[stageIndex + 1])}
             label={stage === "end" ? (character === "alyse" ? t.practice : t.next) : t.next}
           />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type MangoTrayStoryPhase = "ready" | "countingStart" | "packing" | "countingLeft" | "done";
+
+function MangoTraySubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
+  lang: Lang;
+  t: UIStrings;
+  onPrev: () => void;
+  onDone: () => void;
+  actions?: LessonAction[];
+}) {
+  const mango = "🥭";
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [phase, setPhase] = useState<MangoTrayStoryPhase>("ready");
+  const [startCount, setStartCount] = useState(0);
+  const [packedCount, setPackedCount] = useState(0);
+  const [leftCount, setLeftCount] = useState(0);
+  const runRef = useRef(0);
+  const running = phase !== "ready" && phase !== "done";
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const playCount = async (count: number, onCount: (value: number) => void, runId: number) => {
+    if (!audioMuted) {
+      await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) onCount(value);
+      });
+      return;
+    }
+
+    const silentStepMs = prefersReducedMotion ? 180 : COUNTING_STEP_MS;
+    for (let value = 1; value <= count; value += 1) {
+      await wait(silentStepMs);
+      if (runRef.current !== runId) return;
+      onCount(value);
+    }
+  };
+
+  const resetStory = () => {
+    runRef.current += 1;
+    stopNumberAudio();
+    setPhase("ready");
+    setStartCount(0);
+    setPackedCount(0);
+    setLeftCount(0);
+  };
+
+  const startStory = async () => {
+    if (running) return;
+    const runId = ++runRef.current;
+    stopNumberAudio();
+    setStartCount(0);
+    setPackedCount(0);
+    setLeftCount(0);
+
+    setPhase("countingStart");
+    await playCount(8, setStartCount, runId);
+    if (runRef.current !== runId) return;
+
+    await wait(prefersReducedMotion ? 120 : 450);
+    if (runRef.current !== runId) return;
+    await speakMathCue("minus", lang);
+    if (runRef.current !== runId) return;
+
+    setPhase("packing");
+    await playCount(6, setPackedCount, runId);
+    if (runRef.current !== runId) return;
+
+    await wait(prefersReducedMotion ? 120 : 500);
+    if (runRef.current !== runId) return;
+    await speakMathCue("equals", lang);
+    if (runRef.current !== runId) return;
+
+    setPhase("countingLeft");
+    await playCount(2, setLeftCount, runId);
+    if (runRef.current !== runId) return;
+    setPhase("done");
+  };
+
+  const instruction = phase === "ready"
+    ? (lang === "en" ? "8 mangoes are on a tray." : "Ada 8 mangga di atas dulang.")
+    : phase === "countingStart"
+      ? (lang === "en" ? "Count the 8 mangoes." : "Kira 8 mangga.")
+      : phase === "packing"
+        ? (lang === "en" ? "Pack 6 mangoes into the basket." : "Masukkan 6 mangga ke dalam bakul.")
+        : phase === "countingLeft"
+          ? (lang === "en" ? "Count the mangoes left on the tray." : "Kira mangga yang tinggal di atas dulang.")
+          : (lang === "en" ? "2 mangoes are left." : "Tinggal 2 mangga.");
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:text-left">
+          <img src={chrysHappy} alt="Chrys" className="h-24 w-24 shrink-0 object-contain" />
+          <div>
+            <h3 className="text-center text-3xl font-black text-blue-950 sm:text-left">
+              {lang === "en" ? "Mangoes on a tray" : "Mangga di atas dulang"}
+            </h3>
+            <p className="mt-2 text-center text-lg font-black leading-snug text-slate-700 sm:text-left">
+              {lang === "en"
+                ? "There are 8 mangoes on a tray. Chrys packs 6 into a basket."
+                : "Ada 8 mangga di atas dulang. Chrys masukkan 6 ke dalam bakul."}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-[2rem] border-4 border-white bg-white p-4 shadow-[0_7px_0_rgba(0,0,0,.12)] md:p-6">
+        <div className="mb-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-xl font-black text-emerald-950">
+          {instruction}
+        </div>
+
+        <div className="grid items-stretch gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-5">
+          <section className={`rounded-[2rem] border-4 p-4 transition-colors ${phase === "countingStart" || phase === "countingLeft" ? "border-blue-400 bg-blue-50" : "border-amber-300 bg-amber-50"}`}>
+            <h4 className="mb-3 text-center text-2xl font-black text-amber-900">
+              {lang === "en" ? "Mango tray" : "Dulang mangga"}
+            </h4>
+            <div className="relative mx-auto rounded-[2rem] border-[6px] border-amber-500 bg-amber-100 px-5 py-6 shadow-[inset_0_7px_0_rgba(180,83,9,.14),0_6px_0_rgba(180,83,9,.18)]">
+              <span className="absolute -left-4 top-1/2 h-14 w-5 -translate-y-1/2 rounded-l-full border-4 border-r-0 border-amber-500 bg-amber-200" aria-hidden="true" />
+              <span className="absolute -right-4 top-1/2 h-14 w-5 -translate-y-1/2 rounded-r-full border-4 border-l-0 border-amber-500 bg-amber-200" aria-hidden="true" />
+              <div className="mx-auto grid max-w-sm grid-cols-4 justify-items-center gap-3">
+                {Array.from({ length: 8 }, (_, index) => {
+                  const removed = index < packedCount && index < 6;
+                  const startingCurrent = phase === "countingStart" && index + 1 === startCount;
+                  const startingCounted = phase === "countingStart" && index + 1 <= startCount;
+                  const leftIndex = index - 5;
+                  const leftCurrent = phase === "countingLeft" && index >= 6 && leftIndex === leftCount;
+                  const leftCounted = (phase === "countingLeft" || phase === "done") && index >= 6 && leftIndex <= leftCount;
+                  const label = phase === "countingLeft" || phase === "done" ? leftIndex : index + 1;
+                  const showLabel = !removed && (startingCounted || leftCounted);
+
+                  return (
+                    <div
+                      key={index}
+                      className={`relative grid h-24 w-20 place-items-center rounded-2xl border-2 transition-all duration-500 ${removed ? "-translate-y-3 scale-90 border-slate-200 bg-slate-100 opacity-20" : startingCurrent || leftCurrent ? "scale-105 border-yellow-400 bg-yellow-100 shadow-[0_0_0_4px_rgba(250,204,21,.24)]" : showLabel ? "border-blue-400 bg-blue-50 shadow-[0_3px_0_rgba(37,99,235,.14)]" : "border-amber-200 bg-white/75"}`}
+                    >
+                      {showLabel && (
+                        <span className="absolute -top-3 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white">
+                          {label}
+                        </span>
+                      )}
+                      <SpriteIcon value={mango} className="h-12 w-12" />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="min-h-20 pt-3 text-center">
+              {startCount === 8 && packedCount === 0 && <CountTotalBadge count={8} lang={lang} unit={objectName(mango, 8, lang)} />}
+              {phase === "done" && <CountTotalBadge count={2} lang={lang} unit={objectName(mango, 2, lang)} />}
+            </div>
+          </section>
+
+          <div className="flex items-center justify-center md:flex-col">
+            <div className={`grid h-16 w-16 place-items-center rounded-2xl border-2 border-yellow-500 bg-yellow-100 text-4xl font-black text-blue-950 shadow-[0_5px_0_#a86000] ${phase === "packing" ? "ring-4 ring-red-200" : ""}`} aria-label={lang === "en" ? "minus" : "tolak"}>-</div>
+          </div>
+
+          <section className={`rounded-[2rem] border-4 p-4 transition-colors ${phase === "packing" ? "border-emerald-400 bg-emerald-50" : "border-emerald-200 bg-white"}`}>
+            <h4 className="mb-3 text-center text-2xl font-black text-emerald-900">
+              {lang === "en" ? "Packing basket" : "Bakul simpanan"}
+            </h4>
+            <div className="relative mx-auto min-h-[18rem] max-w-sm overflow-hidden rounded-[2rem] bg-amber-50/60 p-5">
+              <img src={BASKET_SPRITE} alt={lang === "en" ? "Basket" : "Bakul"} className="absolute inset-0 h-full w-full object-contain" />
+              <div className="relative z-10 mx-auto mt-12 grid max-w-[15rem] grid-cols-3 justify-items-center gap-3">
+                {Array.from({ length: 6 }, (_, index) => {
+                  const packed = index < packedCount;
+                  const current = index + 1 === packedCount && phase === "packing";
+                  return (
+                    <div
+                      key={index}
+                      className={`relative grid h-20 w-16 place-items-center rounded-2xl border-2 transition-all duration-500 ${packed ? current ? "scale-105 border-yellow-400 bg-yellow-100" : "border-emerald-400 bg-emerald-50" : "translate-y-4 border-dashed border-white/0 opacity-0"}`}
+                    >
+                      {packed && (
+                        <>
+                          <span className="absolute -top-3 grid h-7 min-w-7 place-items-center rounded-full bg-emerald-600 px-2 text-sm font-black text-white">{index + 1}</span>
+                          <SpriteIcon value={mango} className="h-11 w-11" />
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="min-h-20 pt-3 text-center">
+              {packedCount > 0 && <CountTotalBadge count={packedCount} lang={lang} unit={objectName(mango, packedCount, lang)} />}
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-5 flex justify-center">
+          <button
+            type="button"
+            onClick={() => phase === "done" ? resetStory() : void startStory()}
+            disabled={running}
+            className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
+          >
+            {running
+              ? (lang === "en" ? "Story playing..." : "Cerita sedang berjalan...")
+              : phase === "done"
+                ? (lang === "en" ? "Show again" : "Lihat lagi")
+                : (lang === "en" ? "Start the story" : "Mula cerita")}
+            {!running && (
+              <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
+                <PointerIcon />
+              </span>
+            )}
+          </button>
+        </div>
+
+        {phase === "done" && (
+          <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+            <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>8 - 6 = 2</p>
+            <p className="mt-2 text-xl font-black text-emerald-950">
+              {lang === "en" ? "8 mangoes. Pack 6. 2 are left." : "8 mangga. Simpan 6. Tinggal 2."}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PreviousLessonButton label={t.previous} onClick={phase === "ready" ? onPrev : resetStory} />
+        <div className="flex flex-wrap justify-end gap-3">
+          {actions.map((action) => (
+            <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />
+          ))}
+          <LessonNextButton label={t.practice} onClick={onDone} disabled={phase !== "done"} />
         </div>
       </div>
     </div>
