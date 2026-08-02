@@ -216,6 +216,7 @@ const APP_BACKGROUND_STYLE = {
   "--app-bg-mobile": `url("${BACKGROUND_BASE}jungle-bg-mobile.png")`,
 } as React.CSSProperties;
 const BASKET_SPRITE = `${SPRITE_BASE}basket.png`;
+const ADVANCED_BANANA_ICON = `${SPRITE_BASE}advanced-banana.png`;
 const OBJECT_SPRITES: Record<string, string> = {
   "\u{1F350}": `${SPRITE_BASE}pear.png`,
   "\u{1F349}": `${SPRITE_BASE}watermelon.png`,
@@ -1620,7 +1621,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
           <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
             <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-300/70 bg-emerald-800 shadow-inner">
-              <SpriteIcon value={BANANA} className="h-16 w-16" />
+              <img src={ADVANCED_BANANA_ICON} alt="" className="h-20 w-20 rounded-[1.2rem] object-cover shadow-[0_0_18px_rgba(250,204,21,.35)]" />
             </span>
             <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
             <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedAdventureShort}</span>
