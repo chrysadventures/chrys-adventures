@@ -290,7 +290,7 @@ const UI = {
     continue: "Continue",
     menuTitle: "Where shall we learn today?",
     advancedAdventure: "Advanced Adventure",
-    advancedAdventureShort: "Explore numbers 10-20 with Chrys",
+    advancedAdventureShort: "Explore more maths skills with Chrys",
     advancedMenuTitle: "Advanced Expedition",
     advancedMenuHelp: "Explore bigger numbers with Chrys.",
     advancedTeenNumbers: "Teen Numbers",
@@ -341,7 +341,7 @@ const UI = {
     continue: "Teruskan",
     menuTitle: "Hari ini mahu belajar apa?",
     advancedAdventure: "Pengembaraan Lanjutan",
-    advancedAdventureShort: "Teroka nombor 10-20 bersama Chrys",
+    advancedAdventureShort: "Teroka kemahiran matematik bersama Chrys",
     advancedMenuTitle: "Ekspedisi Lanjutan",
     advancedMenuHelp: "Teroka nombor lebih besar bersama Chrys.",
     advancedTeenNumbers: "Nombor Belasan",
@@ -1563,8 +1563,8 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
     ? ["Recognize numbers", "Number values", "Number order", "Grouping", "Addition", "Subtraction", "Real-world maths", "Practice tests"]
     : ["Kenal nombor", "Nilai nombor", "Susunan nombor", "Kumpulan nombor", "Tambah", "Tolak", "Aplikasi konsep", "Soalan latihan"];
   const advancedTopics = lang === "en"
-    ? ["One group of ten", "Ten and some more", "Build numbers 10-20", "Two tens make 20"]
-    : ["Satu kumpulan sepuluh", "Sepuluh dan beberapa lagi", "Bina nombor 10-20", "Dua kumpulan sepuluh jadi 20"];
+    ? ["Recognizing", "Addition", "Subtraction", "Greater than (>) and less than (<)", "Multiplication", "Division", "Real-world maths", "Test mode"]
+    : ["Kenal nombor", "Tambah", "Tolak", "Lebih besar (>) dan lebih kecil (<)", "Darab", "Bahagi", "Matematik dunia sebenar", "Mod ujian"];
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-6">
@@ -1630,7 +1630,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
             </span>
             <span className="mt-3 flex flex-wrap gap-2">
               {advancedTopics.map((topic) => (
-                <span key={topic} className="rounded-full border border-emerald-300/70 bg-emerald-800/80 px-3 py-1.5 text-sm font-black text-emerald-50 shadow-sm">
+                <span key={topic} className="max-w-full rounded-full border border-emerald-300/70 bg-emerald-800/80 px-3 py-1.5 text-sm font-black leading-snug text-emerald-50 shadow-sm">
                   {topic}
                 </span>
               ))}
