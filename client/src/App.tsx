@@ -3413,7 +3413,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 }
 
 function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "hungryStory" | "alyseStory" | "mangoStory" | "butterflyStory" | "sharedAllStory" | "practice">("intro");
+  const [phase, setPhase] = useState<"intro" | "sign" | "story7" | "story9" | "story5" | "practice">("intro");
 
   if (phase === "practice") {
     return <Quiz lang={lang} t={t} title={`${t.subtraction}: ${t.practice}`} questions={subtractionPracticeQuestions} randomize={false} visualOnlyOperationSolutions onFinish={() => onDone()} onBackToLearning={() => setPhase("intro")} />;
@@ -3439,78 +3439,53 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             symbol="-"
             text={lang === "en" ? "The - sign means take away." : "Tanda - maksudnya tolak."}
             onPrevious={() => setPhase("intro")}
-            onNext={() => setPhase("story")}
+            onNext={() => setPhase("story7")}
             onSkip={() => setPhase("practice")}
             t={t}
             lang={lang}
           />
         )}
-        {phase === "story" && (
+        {phase === "story7" && (
           <ChrysSubtractionStory
             lang={lang}
             t={t}
+            start={7}
+            takeAway={3}
+            situation={{
+              en: "Alyse is hungry. Chrys wants to share 3 bananas.",
+              ms: "Alyse lapar. Chrys mahu berkongsi 3 pisang.",
+            }}
             onPrev={() => setPhase("sign")}
-            onDone={() => setPhase("hungryStory")}
+            onDone={() => setPhase("story9")}
             actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
         )}
-        {phase === "hungryStory" && (
-          <WorkedSubtractionStory
+        {phase === "story9" && (
+          <ChrysSubtractionStory
             lang={lang}
             t={t}
-            title={lang === "en" ? "Chrys is hungry" : "Chrys lapar"}
-            story={lang === "en"
-              ? "Chrys has 9 bananas. He is hungry. He wants to eat 5 bananas."
-              : "Chrys ada 9 pisang. Dia lapar. Dia mahu makan 5 pisang."}
-            processText={lang === "en" ? "Chrys eats 5 bananas." : "Chrys makan 5 pisang."}
             start={9}
+            takeAway={7}
+            situation={{
+              en: "Alyse needs 7 bananas. Chrys has 9 bananas and wants to share 7.",
+              ms: "Alyse memerlukan 7 pisang. Chrys ada 9 pisang dan mahu berkongsi 7.",
+            }}
+            onPrev={() => setPhase("story7")}
+            onDone={() => setPhase("story5")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+          />
+        )}
+        {phase === "story5" && (
+          <ChrysSubtractionStory
+            lang={lang}
+            t={t}
+            start={5}
             takeAway={5}
-            character="chrys"
-            onPrev={() => setPhase("story")}
-            onDone={() => setPhase("alyseStory")}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
-          />
-        )}
-        {phase === "alyseStory" && (
-          <WorkedSubtractionStory
-            lang={lang}
-            t={t}
-            title={lang === "en" ? "Chrys takes bananas" : "Chrys mengambil pisang"}
-            story={lang === "en"
-              ? "Alyse has 8 bananas. Chrys takes 5 bananas from her."
-              : "Alyse ada 8 pisang. Chrys mengambil 5 pisang daripadanya."}
-            processText={lang === "en" ? "Chrys takes away 5 bananas." : "Chrys mengambil 5 pisang."}
-            start={8}
-            takeAway={5}
-            character="alyse"
-            onPrev={() => setPhase("hungryStory")}
-            onDone={() => setPhase("mangoStory")}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
-          />
-        )}
-        {phase === "mangoStory" && (
-          <MangoTraySubtractionStory
-            lang={lang}
-            t={t}
-            onPrev={() => setPhase("alyseStory")}
-            onDone={() => setPhase("butterflyStory")}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
-          />
-        )}
-        {phase === "butterflyStory" && (
-          <ButterfliesFlyHomeStory
-            lang={lang}
-            t={t}
-            onPrev={() => setPhase("mangoStory")}
-            onDone={() => setPhase("sharedAllStory")}
-            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
-          />
-        )}
-        {phase === "sharedAllStory" && (
-          <AllBananasSharedStory
-            lang={lang}
-            t={t}
-            onPrev={() => setPhase("butterflyStory")}
+            situation={{
+              en: "Chrys has 5 bananas. He wants to give all 5 bananas to Alyse.",
+              ms: "Chrys ada 5 pisang. Dia mahu memberikan kesemua 5 pisang kepada Alyse.",
+            }}
+            onPrev={() => setPhase("story9")}
             onDone={() => setPhase("practice")}
             actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
@@ -4116,9 +4091,12 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   );
 }
 
-function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
+function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, onDone, actions = [] }: {
   lang: Lang;
   t: UIStrings;
+  start: number;
+  takeAway: number;
+  situation: Record<Lang, string>;
   onPrev: () => void;
   onDone: () => void;
   actions?: LessonAction[];
@@ -4132,20 +4110,21 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
   const chrysBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const alyseBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const flyingBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const left = 7 - given;
-  const sharingFinished = showSituation && storyStep === 4 && given === 3 && !sharing && !flight;
+  const answer = start - takeAway;
+  const left = start - given;
+  const sharingFinished = showSituation && storyStep === 4 && given === takeAway && !sharing && !flight;
   const storyText: Record<number, string> = lang === "en"
     ? {
-      1: "Chrys will give Alyse 3 bananas.",
-      4: "Chrys gives Alyse 3 bananas. 4 are left.",
-      5: "Count what is left. 4 bananas!",
-      6: "7 bananas. Give Alyse 3. 4 are left.",
+      1: `Chrys will give Alyse ${takeAway} bananas.`,
+      4: `Chrys gives Alyse ${takeAway} bananas. ${answer} are left.`,
+      5: `Count what is left. ${answer} bananas!`,
+      6: `${start} bananas. Give Alyse ${takeAway}. ${answer} are left.`,
     }
     : {
-      1: "Chrys akan beri Alyse 3 pisang.",
-      4: "Chrys beri Alyse 3 pisang. Tinggal 4.",
-      5: "Kira yang tinggal. 4 pisang!",
-      6: "7 pisang. Beri Alyse 3. Tinggal 4.",
+      1: `Chrys akan beri Alyse ${takeAway} pisang.`,
+      4: `Chrys beri Alyse ${takeAway} pisang. Tinggal ${answer}.`,
+      5: `Kira yang tinggal. ${answer} pisang!`,
+      6: `${start} pisang. Beri Alyse ${takeAway}. Tinggal ${answer}.`,
     };
 
   useEffect(() => {
@@ -4177,15 +4156,15 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
     let landingFrame = 0;
     Promise.all(animations.map((animation) => animation.finished.catch(() => undefined))).then(() => {
       if (cancelled) return;
-      const nextGiven = Math.min(3, flight[0].targetIndex + 1);
+      const nextGiven = Math.min(takeAway, flight[0].targetIndex + 1);
       setGiven(nextGiven);
       // Speak the new remaining count only after this banana reaches Alyse.
-      speakNumber(7 - nextGiven, lang);
+      speakNumber(start - nextGiven, lang);
       // Keep the flying banana over the destination until React paints the landed tile.
       landingFrame = window.requestAnimationFrame(() => {
         landingFrame = window.requestAnimationFrame(() => {
           setFlight(null);
-          if (nextGiven === 3) {
+          if (nextGiven === takeAway) {
             setSharing(false);
             setStoryStep(4);
           }
@@ -4198,12 +4177,12 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
       window.cancelAnimationFrame(landingFrame);
       animations.forEach((animation) => animation.cancel());
     };
-  }, [flight, lang]);
+  }, [flight, lang, start, takeAway]);
 
   useEffect(() => {
-    if (!showSituation || !sharing || flight || given >= 3 || !basketRef.current) return;
+    if (!showSituation || !sharing || flight || given >= takeAway || !basketRef.current) return;
     const timer = window.setTimeout(() => {
-      const sourceIndex = 6 - given;
+      const sourceIndex = start - 1 - given;
       const targetIndex = given;
       const source = chrysBananaRefs.current[sourceIndex];
       const target = alyseBananaRefs.current[targetIndex];
@@ -4224,10 +4203,10 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
     }, SUBTRACTION_SHARE_PAUSE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [flight, given, sharing, showSituation]);
+  }, [flight, given, sharing, showSituation, start, takeAway]);
 
-  const giveThree = () => {
-    if (flight || sharing || given >= 3 || !basketRef.current) return;
+  const giveBananas = () => {
+    if (flight || sharing || given >= takeAway || !basketRef.current) return;
     setSharing(true);
   };
 
@@ -4235,7 +4214,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
     setFlight(null);
     setSharing(false);
     setStoryStep(nextStep);
-    setGiven(nextStep === 1 ? 0 : 3);
+    setGiven(nextStep === 1 ? 0 : takeAway);
   };
 
   return (
@@ -4244,7 +4223,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         <h3 className="text-2xl font-black leading-snug text-blue-950 md:text-3xl">
           <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">
             {showSituation && storyStep === 1
-              ? (lang === "en" ? "Alyse is hungry. Chrys wants to share 3 bananas." : "Alyse lapar. Chrys mahu berkongsi 3 pisang.")
+              ? situation[lang]
               : storyText[storyStep]}
           </span>
         </h3>
@@ -4260,14 +4239,14 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
                   <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />
                   <div className="relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 px-7 pb-10 pt-12 sm:gap-x-2 sm:px-9">
-                    {Array.from({ length: 7 }, (_, index) => {
+                    {Array.from({ length: start }, (_, index) => {
                       const inBasket = index < left;
                       const isFlying = flight?.some((item) => item.sourceIndex === index);
                       return (
                         <div
                           key={index}
                           ref={(node) => { chrysBananaRefs.current[index] = node; }}
-                          className={`relative col-span-2 flex h-16 w-16 items-center justify-center justify-self-center overflow-visible rounded-full border-[3px] shadow-[0_3px_0_#93c5fd] transition-opacity duration-150 ${index === 4 ? "col-start-2" : ""} ${
+                          className={`relative col-span-2 flex h-16 w-16 items-center justify-center justify-self-center overflow-visible rounded-full border-[3px] shadow-[0_3px_0_#93c5fd] transition-opacity duration-150 ${
                             inBasket
                               ? "border-blue-400 bg-blue-50/95"
                               : "pointer-events-none border-transparent bg-transparent opacity-0"
@@ -4286,7 +4265,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-lg font-black">
                   <p className="rounded-2xl bg-amber-100 px-3 py-2 text-amber-950">
-                    {lang === "en" ? "Start: 7" : "Mula: 7"}
+                    {lang === "en" ? `Start: ${start}` : `Mula: ${start}`}
                   </p>
                   <p className="rounded-2xl bg-blue-100 px-3 py-2 text-blue-950">
                     {lang === "en" ? `Left: ${left}` : `Tinggal: ${left}`}
@@ -4296,7 +4275,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
               <div className="text-center">
                 <p className="text-5xl font-black text-emerald-600" aria-hidden="true">→</p>
                 <p className="mt-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-black text-emerald-900">
-                  {lang === "en" ? "Share 3" : "Kongsi 3"}
+                  {lang === "en" ? `Share ${takeAway}` : `Kongsi ${takeAway}`}
                 </p>
               </div>
               <div className="min-h-56 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-3 text-center sm:p-4">
@@ -4304,11 +4283,11 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                   <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
                   <p className="text-sm font-black uppercase text-emerald-800">{lang === "en" ? "Alyse's basket" : "Bakul Alyse"}</p>
                 </div>
-                <p className="mb-4 text-base font-black text-emerald-900">{lang === "en" ? "Alyse gets 3 bananas." : "Alyse dapat 3 pisang."}</p>
+                <p className="mb-4 text-base font-black text-emerald-900">{lang === "en" ? `Alyse gets ${takeAway} bananas.` : `Alyse dapat ${takeAway} pisang.`}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-emerald-100 bg-white">
                   <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />
                   <div className="relative z-10 grid min-h-[21rem] grid-cols-3 place-content-center gap-4 px-8 py-12">
-                    {Array.from({ length: 3 }, (_, index) => (
+                    {Array.from({ length: takeAway }, (_, index) => (
                       <div
                         key={index}
                         ref={(node) => { alyseBananaRefs.current[index] = node; }}
@@ -4337,7 +4316,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             <div className="grid gap-3 text-center sm:grid-cols-3" aria-label={lang === "en" ? "Subtraction number labels" : "Label nombor tolak"}>
               <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-3">
                 <p className="text-sm font-black text-amber-800">{lang === "en" ? "Start" : "Mula"}</p>
-                <p className="text-3xl font-black text-amber-950" style={NUMBER_TEXT_STYLE}>7</p>
+                <p className="text-3xl font-black text-amber-950" style={NUMBER_TEXT_STYLE}>{start}</p>
               </div>
               <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-3">
                 <p className="text-sm font-black text-emerald-800">{lang === "en" ? "Given to Alyse" : "Diberi kepada Alyse"}</p>
@@ -4349,17 +4328,17 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
               </div>
             </div>
 
-            {given < 3 && (
+            {given < takeAway && (
               <div className="flex justify-center">
                 <button
                   type="button"
                   disabled={sharing || Boolean(flight)}
-                  onClick={giveThree}
+                  onClick={giveBananas}
                   className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
                 >
                   {sharing
                     ? (lang === "en" ? "Sharing one at a time..." : "Berkongsi satu demi satu...")
-                    : (lang === "en" ? "Share 3 with Alyse" : "Kongsi 3 kepada Alyse")}
+                    : (lang === "en" ? `Share ${takeAway} with Alyse` : `Kongsi ${takeAway} kepada Alyse`)}
                   <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
                     <PointerIcon />
                   </span>
@@ -4370,7 +4349,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
         )}
 
         {!showSituation && storyStep === 6 && (
-          <SubtractionBananaEquation lang={lang} />
+          <SubtractionBananaEquation lang={lang} start={start} takeAway={takeAway} />
         )}
       </div>
 
@@ -4427,7 +4406,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
 
 type SubtractionEquationPhase = "ready" | "countingStart" | "crossing" | "removing" | "counting" | "done";
 
-function SubtractionBananaEquation({ lang }: { lang: Lang }) {
+function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; start: number; takeAway: number }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [phase, setPhase] = useState<SubtractionEquationPhase>("ready");
   const [startCount, setStartCount] = useState(0);
@@ -4436,6 +4415,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
   const [remainingCount, setRemainingCount] = useState(0);
   const runRef = useRef(0);
   const banana = String.fromCodePoint(0x1f34c);
+  const answer = start - takeAway;
   const isRunning = phase !== "ready" && phase !== "done";
 
   useEffect(() => () => {
@@ -4467,7 +4447,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
     setRemainingCount(0);
 
     setPhase("countingStart");
-    await playCount(7, setStartCount, runId);
+    await playCount(start, setStartCount, runId);
     if (runRef.current !== runId) return;
     setStartCountComplete(true);
     await wait(prefersReducedMotion ? 20 : 650);
@@ -4476,7 +4456,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
     setPhase("crossing");
     await speakMathCue("minus", lang);
     if (runRef.current !== runId) return;
-    await playCount(3, setCrossedCount, runId);
+    await playCount(takeAway, setCrossedCount, runId);
     if (runRef.current !== runId) return;
     await wait(prefersReducedMotion ? 20 : 650);
     if (runRef.current !== runId) return;
@@ -4488,7 +4468,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
     setPhase("counting");
     await speakMathCue("equals", lang);
     if (runRef.current !== runId) return;
-    await playCount(4, setRemainingCount, runId);
+    await playCount(answer, setRemainingCount, runId);
     if (runRef.current !== runId) return;
     setPhase("done");
   };
@@ -4504,8 +4484,8 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
       || (mode === "remaining" && phase === "counting" && value === remainingCount);
     const isCurrentCross = isCrossMode && phase === "crossing" && value === crossedCount;
     const isLeaving = mode === "resultCrossed" && ["removing", "counting", "done"].includes(phase);
-    const centerLast = (mode === "start" && index === 6)
-      || ((mode === "crossed" || mode === "resultCrossed") && index === 2);
+    const groupCount = mode === "start" ? start : mode === "remaining" ? answer : takeAway;
+    const centerLast = groupCount % 2 === 1 && index === groupCount - 1;
     return (
       <div
         key={`${mode}-${index}`}
@@ -4547,7 +4527,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
         >
           {phase === "countingStart"
-            ? (lang === "en" ? "Counting 7 bananas..." : "Mengira 7 pisang...")
+            ? (lang === "en" ? `Counting ${start} bananas...` : `Mengira ${start} pisang...`)
             : phase === "crossing"
               ? (lang === "en" ? "Crossing out..." : "Memangkah...")
               : phase === "removing"
@@ -4567,26 +4547,26 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
 
       <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(10.5rem,1fr)_auto_minmax(10.5rem,1fr)_auto_minmax(10.5rem,1fr)] lg:items-center">
         <div className={`rounded-3xl border-2 bg-blue-50 p-4 text-center transition-[border-color,box-shadow] ${phase === "countingStart" ? "border-blue-500 ring-4 ring-blue-100" : "border-blue-200"}`}>
-          <p className="mb-4 text-xl font-black text-blue-950">{lang === "en" ? "Start with 7" : "Mula dengan 7"}</p>
+          <p className="mb-4 text-xl font-black text-blue-950">{lang === "en" ? `Start with ${start}` : `Mula dengan ${start}`}</p>
           <div className="grid min-h-[23rem] grid-cols-2 place-content-center place-items-center gap-3 rounded-3xl bg-white p-5">
-            {Array.from({ length: 7 }, (_, index) => renderBanana(index, "start"))}
+            {Array.from({ length: start }, (_, index) => renderBanana(index, "start"))}
           </div>
           <div className="min-h-20 pt-3">
-            {startCountComplete && <CountTotalBadge count={7} lang={lang} unit={objectName(banana, 7, lang)} />}
+            {startCountComplete && <CountTotalBadge count={start} lang={lang} unit={objectName(banana, start, lang)} />}
           </div>
         </div>
 
         <span className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">-</span>
 
         <div className={`rounded-3xl border-2 p-4 text-center transition-[border-color,background-color,box-shadow] ${phase === "crossing" ? "border-red-500 bg-red-50 ring-4 ring-red-100" : "border-red-200 bg-red-50"}`}>
-          <p className="mb-4 text-xl font-black text-red-900">{lang === "en" ? "Cross out 3" : "Pangkah 3"}</p>
+          <p className="mb-4 text-xl font-black text-red-900">{lang === "en" ? `Cross out ${takeAway}` : `Pangkah ${takeAway}`}</p>
           <div className="grid min-h-[23rem] grid-cols-2 place-content-center place-items-center gap-3 rounded-3xl bg-white p-5">
-            {Array.from({ length: 3 }, (_, index) => renderBanana(index, "crossed"))}
+            {Array.from({ length: takeAway }, (_, index) => renderBanana(index, "crossed"))}
           </div>
           <div className="min-h-20 pt-3">
-            {crossedCount === 3 && (
+            {crossedCount === takeAway && (
               <p className="mx-auto inline-flex rounded-full bg-red-100 px-5 py-3 text-xl font-black text-red-900">
-                {lang === "en" ? "Taken away: 3 bananas" : "Diambil: 3 pisang"}
+                {lang === "en" ? `Taken away: ${takeAway} bananas` : `Diambil: ${takeAway} pisang`}
               </p>
             )}
           </div>
@@ -4598,22 +4578,22 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
           <p className="mb-4 text-xl font-black text-blue-950">{lang === "en" ? "Count what is left" : "Kira yang tinggal"}</p>
           <div className="flex min-h-[23rem] flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl bg-white p-5">
             <div className="grid grid-cols-2 place-items-center gap-3">
-              {Array.from({ length: 4 }, (_, index) => renderBanana(index, "remaining"))}
+              {Array.from({ length: answer }, (_, index) => renderBanana(index, "remaining"))}
             </div>
             <div className={`grid grid-cols-2 place-items-center gap-3 transition-[max-height,opacity,transform,margin] duration-700 ${["removing", "counting", "done"].includes(phase) ? "-translate-y-3 max-h-0 overflow-hidden opacity-0" : "max-h-56 opacity-100"}`}>
-              {Array.from({ length: 3 }, (_, index) => renderBanana(index, "resultCrossed"))}
+              {Array.from({ length: takeAway }, (_, index) => renderBanana(index, "resultCrossed"))}
             </div>
           </div>
           <div className="min-h-20 pt-3">
-            {remainingCount === 4 && <CountTotalBadge count={4} lang={lang} unit={objectName(banana, 4, lang)} />}
+            {remainingCount === answer && <CountTotalBadge count={answer} lang={lang} unit={objectName(banana, answer, lang)} />}
           </div>
         </div>
       </div>
 
       {phase === "done" && (
         <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
-          <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>7 - 3 = 4</p>
-          <p className="mt-2 text-xl font-black text-emerald-900">{lang === "en" ? "7 bananas. Cross out 3. 4 are left." : "7 pisang. Pangkah 3. Tinggal 4."}</p>
+          <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>{start} - {takeAway} = {answer}</p>
+          <p className="mt-2 text-xl font-black text-emerald-900">{lang === "en" ? `${start} bananas. Cross out ${takeAway}. ${answer} are left.` : `${start} pisang. Pangkah ${takeAway}. Tinggal ${answer}.`}</p>
         </div>
       )}
     </div>
