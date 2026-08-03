@@ -184,7 +184,17 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
     7: "seven.mp3",
     8: "eight.mp3",
     9: "nine.mp3",
-    10: "floraphonic-casual-voice-man-says-10-209712.mp3",
+    10: "Ten.mp3",
+    11: "Eleven.mp3",
+    12: "Twelve.mp3",
+    13: "Thirteen.mp3",
+    14: "Fourteen.mp3",
+    15: "Fifteen.mp3",
+    16: "Sixteen.mp3",
+    17: "Seventeen.mp3",
+    18: "eighteen.mp3",
+    19: "Nineteen.mp3",
+    20: "Twenty.mp3",
   },
   ms: {
     0: "Kosong.mp3",
@@ -1816,7 +1826,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
       </section>
 
       <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning journey with 8 destinations" : "Perjalanan pembelajaran dengan 8 destinasi"}>
-        <div className="grid min-w-[48rem] grid-cols-8 gap-3 px-4 py-4">
+        <div className="grid min-w-[52rem] grid-cols-8 gap-3 px-4 py-5">
           {trailDestinations.map((destination, index) => (
             <div
               key={destination.label}
@@ -1824,7 +1834,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
               aria-label={`${index + 1}. ${destination.label}. ${destination.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}
             >
               <span
-                className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black ${destination.markerClass} ${destination.complete ? "border-emerald-700 ring-4 ring-emerald-200" : "border-white"} ${destination.markerClass.includes("text-amber") ? "" : "text-white"}`}
+                className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 text-xl font-black ${destination.markerClass} ${destination.complete ? "border-emerald-700 ring-4 ring-emerald-200" : "border-white"} ${destination.markerClass.includes("text-amber") ? "" : "text-white"}`}
               >
                 {index + 1}
                 {destination.complete && (
@@ -1833,7 +1843,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
                   </span>
                 )}
               </span>
-              <span className={`truncate text-xs font-black sm:text-sm ${destination.complete ? "text-emerald-800" : "text-blue-950"}`}>
+              <span className={`w-full truncate text-base font-black ${destination.complete ? "text-emerald-800" : "text-blue-950"}`}>
                 {destination.label}
               </span>
             </div>
@@ -1999,55 +2009,161 @@ function TeenQuantityVisual({
   );
 }
 
+function TeenValueBananas({
+  value,
+  lang,
+  visibleCount,
+  counting,
+  complete,
+}: {
+  value: number;
+  lang: Lang;
+  visibleCount: number;
+  counting: boolean;
+  complete: boolean;
+}) {
+  const hasStarted = visibleCount > 0 || counting || complete;
+  const groups = value === 20
+    ? [
+        { start: 1, count: 10, label: lang === "en" ? "First group of ten" : "Kumpulan sepuluh pertama" },
+        { start: 11, count: 10, label: lang === "en" ? "Second group of ten" : "Kumpulan sepuluh kedua" },
+      ]
+    : value === 10
+      ? [{ start: 1, count: 10, label: lang === "en" ? "One group of ten" : "Satu kumpulan sepuluh" }]
+      : [
+          { start: 1, count: 10, label: lang === "en" ? "One group of ten" : "Satu kumpulan sepuluh" },
+          { start: 11, count: value - 10, label: lang === "en" ? `${value - 10} more` : `${value - 10} lagi` },
+        ];
+
+  return (
+    <div className={`rounded-[2rem] border-4 p-4 transition sm:p-5 ${
+      complete
+        ? "border-emerald-400 bg-emerald-50 shadow-[0_0_0_6px_rgba(52,211,153,.18)]"
+        : "border-yellow-200 bg-white"
+    }`}>
+      <div className={`grid items-stretch justify-center gap-5 ${groups.length > 1 ? "lg:grid-cols-2" : "mx-auto max-w-2xl"}`}>
+        {groups.map((group) => (
+          <section key={group.start} className="rounded-[1.6rem] border-3 border-emerald-300 bg-emerald-50/70 p-4">
+            <p className="mb-4 text-center text-lg font-black text-emerald-900">{group.label}</p>
+            <div className="mx-auto grid w-fit grid-cols-5 gap-2 rounded-2xl bg-white/90 p-3 shadow-inner">
+              {Array.from({ length: group.count }, (_, index) => {
+                const countValue = group.start + index;
+                const reached = countValue <= visibleCount;
+                const active = counting && countValue === visibleCount;
+                return (
+                  <span
+                    key={countValue}
+                    className={`relative grid h-14 w-14 place-items-center rounded-2xl border-2 pt-2 transition sm:h-16 sm:w-16 ${
+                      active
+                        ? "border-yellow-400 bg-yellow-100 ring-4 ring-yellow-300"
+                        : reached
+                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+                          : hasStarted
+                            ? "border-slate-200 bg-slate-100 opacity-40 grayscale"
+                            : "border-amber-200 bg-amber-50"
+                    }`}
+                  >
+                    <SpriteIcon value={BANANA} className="h-10 w-10 sm:h-12 sm:w-12" />
+                    {reached && (
+                      <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
+                        {countValue}
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+      {complete && (
+        <div className="mx-auto mt-5 w-fit rounded-full border-2 border-emerald-300 bg-emerald-100 px-7 py-3 text-center text-2xl font-black text-emerald-950 shadow-[0_4px_0_#6ee7b7]">
+          {lang === "en" ? `Total: ${value} bananas` : `Jumlah: ${value} pisang`}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [phase, setPhase] = useState<0 | 1 | 2 | 3>(0);
+  const [number, setNumber] = useState(10);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
   const [showPractice, setShowPractice] = useState(false);
-  const [exampleCount, setExampleCount] = useState<number | null>(null);
-  const [exampleCounting, setExampleCounting] = useState(false);
-  const [looseCount, setLooseCount] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [counting, setCounting] = useState(false);
+  const [countComplete, setCountComplete] = useState(false);
   const soundEnabled = React.useContext(AudioEnabledContext);
-  const phaseCopy = [
-    {
-      title: lang === "en" ? "Meet one group of ten" : "Kenal satu kumpulan sepuluh",
-      text: lang === "en" ? "Ten bananas make one group of ten." : "Sepuluh pisang jadi satu kumpulan sepuluh.",
-    },
-    {
-      title: lang === "en" ? "Ten and some more" : "Sepuluh dan beberapa lagi",
-      text: lang === "en" ? "Ten and 4 more makes 14." : "Sepuluh dan 4 lagi jadi 14.",
-    },
-    {
-      title: lang === "en" ? "Count on from ten" : "Kira terus daripada sepuluh",
-      text: lang === "en" ? "Keep the ten. Add loose bananas one at a time." : "Kekalkan sepuluh. Tambah pisang berasingan satu demi satu.",
-    },
-    {
-      title: lang === "en" ? "Twenty is two tens" : "Dua puluh ialah dua sepuluh",
-      text: lang === "en" ? "Two groups of ten make 20." : "Dua kumpulan sepuluh jadi 20.",
-    },
-  ] as const;
+  const countRunRef = React.useRef(0);
+  const numberWord = TEEN_WORDS[lang][number];
+  const spelledWord = numberWord
+    .split(" ")
+    .map((part) => part.split("").join(" - "))
+    .join("   ");
 
-  useEffect(() => () => stopNumberAudio(), []);
+  useEffect(() => {
+    countRunRef.current += 1;
+    stopNumberAudio();
+    setVisibleCount(0);
+    setCounting(false);
+    setCountComplete(false);
+  }, [number, step, lang]);
 
-  const countFourteen = async () => {
-    if (exampleCounting) return;
-    setExampleCounting(true);
-    setExampleCount(9);
-    if (!soundEnabled) {
-      for (const value of [10, 11, 12, 13, 14]) {
-        setExampleCount(value);
-        await wait(500);
-      }
-      setExampleCounting(false);
-      return;
-    }
-    await speakNumberValuesSequence([10, 11, 12, 13, 14], lang, 1200, setExampleCount);
-    setExampleCounting(false);
+  useEffect(() => () => {
+    countRunRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const goToNumber = (nextNumber: number, nextStep: 0 | 1 | 2 = 0) => {
+    countRunRef.current += 1;
+    stopNumberAudio();
+    setNumber(Math.min(20, Math.max(10, nextNumber)));
+    setStep(nextStep);
   };
 
-  const addLooseBanana = () => {
-    if (looseCount >= 10) return;
-    const nextOnes = looseCount + 1;
-    const nextValue = 10 + nextOnes;
-    speakNumber(nextValue, lang, () => setLooseCount(nextOnes));
+  const startCounting = async () => {
+    if (counting) return;
+    const runId = ++countRunRef.current;
+    stopNumberAudio();
+    setVisibleCount(0);
+    setCountComplete(false);
+    setCounting(true);
+    const values = Array.from({ length: number }, (_, index) => index + 1);
+
+    if (soundEnabled) {
+      await speakNumberValuesSequence(values, lang, 1300, (value) => {
+        if (countRunRef.current === runId) setVisibleCount(value);
+      });
+    } else {
+      for (const value of values) {
+        if (countRunRef.current !== runId) return;
+        setVisibleCount(value);
+        await wait(500);
+      }
+    }
+
+    if (countRunRef.current !== runId) return;
+    await wait(450);
+    if (countRunRef.current !== runId) return;
+    setCounting(false);
+    setCountComplete(true);
+  };
+
+  const goPrevious = () => {
+    if (step > 0) {
+      setStep((current) => Math.max(0, current - 1) as 0 | 1 | 2);
+    } else if (number > 10) {
+      goToNumber(number - 1, 2);
+    }
+  };
+
+  const goNext = () => {
+    if (step < 2) {
+      setStep((current) => Math.min(2, current + 1) as 0 | 1 | 2);
+    } else if (number < 20) {
+      goToNumber(number + 1);
+    } else {
+      setShowPractice(true);
+    }
   };
 
   if (showPractice) {
@@ -2060,139 +2176,147 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
         randomize={false}
         onBackToLearning={() => {
           setShowPractice(false);
-          setPhase(3);
+          goToNumber(20, 2);
         }}
         onFinish={() => onDone()}
       />
     );
   }
 
+  const teachingCopy = step === 0
+    ? {
+        title: lang === "en" ? `Meet number ${number}` : `Kenal nombor ${number}`,
+        text: lang === "en" ? `This is the number ${number}.` : `Ini nombor ${number}.`,
+      }
+    : step === 1
+      ? {
+          title: lang === "en" ? "Spell and hear the number" : "Eja dan dengar nombor",
+          text: lang === "en"
+            ? "Read the word. Tap the speaker to hear it."
+            : "Baca perkataan. Tekan pembesar suara untuk dengar.",
+        }
+      : {
+          title: lang === "en" ? `See the value of ${number}` : `Lihat nilai ${number}`,
+          text: lang === "en" ? `${number} means ${number} bananas. Count them.` : `${number} bermaksud ${number} pisang. Kira semuanya.`,
+        };
+
   return (
-    <main className="mx-auto w-full max-w-5xl pb-8">
+    <main className="mx-auto w-full max-w-6xl pb-8">
       <div className="rounded-[2.25rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-2 shadow-[0_10px_0_#064e3b] sm:p-3">
         <LessonShell
           lang={lang}
           title={t.advancedTeenNumbers}
-          helper={lang === "en" ? "Advanced Expedition: numbers 10-20" : "Ekspedisi Lanjutan: nombor 10-20"}
+          helper={lang === "en" ? "Numbers 10-20: see, spell, and count." : "Nombor 10-20: lihat, eja dan kira."}
         >
-          <div className="mb-5 grid grid-cols-4 gap-2">
-            {[0, 1, 2, 3].map((item) => (
-              <div key={item} className={`h-3 rounded-full ${item <= phase ? "bg-yellow-400" : "bg-emerald-100"}`} />
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="rounded-full bg-emerald-900 px-4 py-2 text-sm font-black text-yellow-200">
+              {lang === "en" ? `Number ${number} of 10-20` : `Nombor ${number} daripada 10-20`}
+            </p>
+            <p className="font-black text-emerald-800">{number - 9} / 11</p>
+          </div>
+          <div className="mb-5 grid grid-cols-3 gap-2">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className={`h-3 rounded-full ${item <= step ? "bg-yellow-400" : "bg-emerald-100"}`} />
             ))}
           </div>
+
           <div className="mb-5 grid items-center gap-4 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 sm:grid-cols-[auto_1fr]">
             <img src={chrysThinking} alt="Chrys teaching" className="mx-auto h-24 w-24 object-contain" />
             <div>
-              <h2 className="text-2xl font-black text-emerald-950">{phaseCopy[phase].title}</h2>
-              <p data-narration-read="true" className="mt-1 text-xl font-black text-slate-700">{phaseCopy[phase].text}</p>
+              <h2 className="text-2xl font-black text-emerald-950">{teachingCopy.title}</h2>
+              <p className="mt-1 text-xl font-black text-slate-700">{teachingCopy.text}</p>
             </div>
           </div>
 
-          {phase === 0 && (
-            <div className="mx-auto max-w-2xl rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
-              <TenBananaBundle lang={lang} />
-              <p className="mt-4 text-center text-2xl font-black text-emerald-900">
-                {lang === "en" ? "Count this as ten." : "Kira ini sebagai sepuluh."}
-              </p>
+          {step === 0 && (
+            <div className="mx-auto grid min-h-[24rem] max-w-3xl place-items-center rounded-[2rem] border-4 border-yellow-300 bg-gradient-to-b from-yellow-50 to-white p-6">
+              <div className="grid h-56 w-64 place-items-center rounded-[2.5rem] border-4 border-yellow-500 bg-yellow-300 text-8xl font-black text-emerald-950 shadow-[0_10px_0_#a16207]" style={getNumberTextStyle(number)}>
+                {number}
+              </div>
             </div>
           )}
 
-          {phase === 1 && (
-            <div className="rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
-              <TeenQuantityVisual lang={lang} tens={1} ones={4} activeTotal={exampleCount} showCountLabels dimFuture />
-              <div className="mt-5 text-center">
+          {step === 1 && (
+            <div className="mx-auto grid min-h-[24rem] max-w-3xl place-items-center rounded-[2rem] border-4 border-yellow-300 bg-yellow-50 p-6 text-center">
+              <div>
+                <p className="break-words text-5xl font-black capitalize text-emerald-950 sm:text-6xl">{numberWord}</p>
+                <p className="mt-5 whitespace-pre-wrap text-lg font-black text-slate-600 sm:text-xl">{spelledWord}</p>
                 <button
                   type="button"
-                  disabled={exampleCounting}
-                  onClick={countFourteen}
-                  className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:opacity-60"
+                  onClick={() => speakNumber(number, lang)}
+                  aria-label={lang === "en" ? `Hear ${numberWord}` : `Dengar ${numberWord}`}
+                  className="relative mx-auto mt-8 grid h-20 w-24 place-items-center rounded-2xl border-2 border-blue-700 bg-blue-600 text-white shadow-[0_7px_0_#1e3a8a] active:translate-y-1"
                 >
-                  {exampleCounting
+                  <SpeakerIcon />
+                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
+                    <PointerIcon />
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <div className="mb-5 text-center">
+                <button
+                  type="button"
+                  disabled={counting}
+                  onClick={startCounting}
+                  className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-4 text-xl font-black text-white shadow-[0_7px_0_#1e3a8a] active:translate-y-1 disabled:opacity-60"
+                >
+                  {counting
                     ? (lang === "en" ? "Counting..." : "Mengira...")
-                    : (lang === "en" ? "Count from ten" : "Kira daripada sepuluh")}
-                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
-                    <PointerIcon />
-                  </span>
-                </button>
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-4xl font-black text-emerald-900">
-                  <span className="rounded-2xl bg-emerald-100 px-4 py-2">10</span>
-                  <span>+</span>
-                  <span className="rounded-2xl bg-yellow-100 px-4 py-2">4</span>
-                  <span>=</span>
-                  <span className="rounded-2xl bg-blue-100 px-4 py-2" style={getNumberTextStyle(14)}>14</span>
-                </div>
-                <p className="mt-3 text-lg font-black text-slate-600">
-                  {lang === "en" ? "Ten... eleven, twelve, thirteen, fourteen." : "Sepuluh... sebelas, dua belas, tiga belas, empat belas."}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {phase === 2 && (
-            <div className="rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
-              <TeenQuantityVisual lang={lang} tens={1} ones={looseCount} activeTotal={10 + looseCount} showCountLabels />
-              <div className="mt-5 text-center">
-                <div className="mx-auto grid h-24 w-32 place-items-center rounded-3xl border-4 border-yellow-400 bg-yellow-100 text-5xl font-black text-emerald-950 shadow-[0_6px_0_#d97706]" style={getNumberTextStyle(10 + looseCount)}>
-                  {10 + looseCount}
-                </div>
-                <p className="mt-3 text-lg font-black text-slate-600">
-                  {looseCount === 0
-                    ? (lang === "en" ? "Start with ten." : "Mula dengan sepuluh.")
-                    : `${TEEN_WORDS[lang][10 + looseCount]}`}
-                </p>
-                <button
-                  type="button"
-                  disabled={looseCount >= 10}
-                  onClick={addLooseBanana}
-                  className="relative mt-4 inline-flex items-center gap-3 rounded-2xl border-2 border-yellow-500 bg-yellow-300 px-7 py-4 text-xl font-black text-emerald-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-50"
-                >
-                  <SpriteIcon value={BANANA} className="h-10 w-10" />
-                  {looseCount >= 10
-                    ? (lang === "en" ? "You made 20!" : "Kamu sudah bina 20!")
-                    : (lang === "en" ? "Add one loose banana" : "Tambah satu pisang berasingan")}
-                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
-                    <PointerIcon />
-                  </span>
+                    : countComplete
+                      ? (lang === "en" ? "Count again" : "Kira lagi")
+                      : (lang === "en" ? "Start counting" : "Mula mengira")}
+                  {!counting && (
+                    <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
+                      <PointerIcon />
+                    </span>
+                  )}
                 </button>
               </div>
-            </div>
-          )}
-
-          {phase === 3 && (
-            <div className="rounded-[2rem] border-4 border-yellow-200 bg-white p-5">
-              <TeenQuantityVisual lang={lang} tens={2} ones={0} />
-              <div className="mt-5 flex items-center justify-center gap-4 text-4xl font-black text-emerald-900">
-                <span>10</span>
-                <span>+</span>
-                <span>10</span>
-                <span>=</span>
-                <span className="rounded-2xl bg-yellow-200 px-5 py-2" style={getNumberTextStyle(20)}>20</span>
-              </div>
+              <TeenValueBananas
+                value={number}
+                lang={lang}
+                visibleCount={visibleCount}
+                counting={counting}
+                complete={countComplete}
+              />
             </div>
           )}
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
-              disabled={phase === 0}
-              onClick={() => setPhase((current) => Math.max(0, current - 1) as 0 | 1 | 2 | 3)}
+              disabled={number === 10 && step === 0}
+              onClick={goPrevious}
               className="rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 font-black text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
             >
               {t.previous}
             </button>
-            {phase === 0 && (
+            {number === 10 && step === 0 && (
               <button
                 type="button"
                 onClick={() => setShowPractice(true)}
                 className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-800 shadow-[0_4px_0_rgba(4,120,87,.14)] active:translate-y-1"
               >
-                {lang === "en" ? "Already know this? Go to exercises." : "Dah tahu? Terus ke latihan."}
+                {lang === "en" ? "Skip to practice questions" : "Terus ke soalan latihan"}
+              </button>
+            )}
+            {number < 20 && (
+              <button
+                type="button"
+                onClick={() => goToNumber(number + 1)}
+                className="rounded-2xl border-2 border-blue-200 bg-white px-5 py-3 text-sm font-black text-blue-700 shadow-[0_4px_0_#bfdbfe] active:translate-y-1"
+              >
+                {lang === "en" ? "Skip to next number" : "Terus ke nombor seterusnya"}
               </button>
             )}
             <LessonNextButton
-              disabled={phase === 1 && exampleCounting}
-              onClick={() => phase < 3 ? setPhase((current) => Math.min(3, current + 1) as 0 | 1 | 2 | 3) : setShowPractice(true)}
-              label={phase < 3 ? t.next : (lang === "en" ? "Start practice" : "Mula latihan")}
+              onClick={goNext}
+              label={number === 20 && step === 2 ? (lang === "en" ? "Start practice" : "Mula latihan") : t.next}
               className="text-xl"
             />
           </div>
@@ -3609,11 +3733,6 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
 }
 
 function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
-  const soundEnabled = React.useContext(AudioEnabledContext);
-  const spokenExamples = lang === "en"
-    ? "We count apples. We count fish. We count cars."
-    : "Kita kira epal. Kita kira ikan. Kita kira kereta.";
-
   return (
     <div className="rounded-[2rem] border-2 border-sky-100 bg-sky-50 p-4 shadow-[0_6px_0_rgba(14,116,144,.12)]">
       <div className="grid gap-4 md:grid-cols-3">
@@ -3651,22 +3770,6 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
           </div>
         </RealWorldSituationCard>
       </div>
-      {soundEnabled && (
-        <div className="mt-5 flex justify-center">
-          <button
-            type="button"
-            onClick={() => {
-              markAudioInteraction();
-              speakText(spokenExamples, lang, { allowWhenWordAudioDisabled: true });
-            }}
-            aria-label={lang === "en" ? "Hear the three counting examples" : "Dengar tiga contoh mengira"}
-            className="inline-flex items-center gap-3 rounded-2xl border-2 border-blue-700 bg-blue-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
-          >
-            <SpeakerIcon />
-            {lang === "en" ? "Hear the examples" : "Dengar contoh"}
-          </button>
-        </div>
-      )}
       <p className="mt-5 rounded-2xl bg-white p-4 text-center text-xl font-black text-blue-950">
         {lang === "en"
           ? "We count everywhere: apples, fish, cars, and more!"
@@ -3709,9 +3812,9 @@ function RealWorldSituationCard({ title, prompt, children }: {
 
 function MiniAppleBasket({ count }: { count: number }) {
   const positions = [
-    "left-[20%] top-[22%]",
-    "right-[20%] top-[22%]",
-    "left-1/2 bottom-[8%] -translate-x-1/2",
+    "left-[28%] top-[23%]",
+    "right-[28%] top-[23%]",
+    "left-1/2 bottom-[9%] -translate-x-1/2",
   ];
   return (
     <div className="relative mx-auto h-40 max-w-64">
@@ -9465,24 +9568,32 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false }: {
 
   if (startsWithCounting && !started) {
     return (
-      <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-5 text-center">
-        <h4 className="text-xl font-black text-emerald-900">
-          {startPrompt}
+      <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4">
+        <h4 className="text-lg font-black text-emerald-900">
+          {lang === "en" ? "How to solve it" : "Cara selesaikan"}
         </h4>
-        <button
-          type="button"
-          onClick={() => setStarted(true)}
-          aria-label={startLabel}
-          className="relative mt-4 rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1"
-        >
-          {startLabel}
-          <span
-            className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
-            aria-hidden="true"
+
+        <div className="mt-3 rounded-[2rem] border-2 border-emerald-200 bg-white p-4 shadow-[inset_0_2px_0_rgba(255,255,255,.8)]">
+          <VisualDisplay visual={solutionVisual} lang={lang} revealNumbers={false} />
+        </div>
+
+        <div className="mt-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4 text-center">
+          <h5 className="text-xl font-black text-blue-950">{startPrompt}</h5>
+          <button
+            type="button"
+            onClick={() => setStarted(true)}
+            aria-label={startLabel}
+            className="relative mt-3 rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1"
           >
-            <PointerIcon />
-          </span>
-        </button>
+            {startLabel}
+            <span
+              className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
+              aria-hidden="true"
+            >
+              <PointerIcon />
+            </span>
+          </button>
+        </div>
       </div>
     );
   }
