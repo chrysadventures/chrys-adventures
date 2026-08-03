@@ -976,6 +976,7 @@ function objectName(emoji: string | undefined, count: number, lang: Lang) {
     "🥭": { en: ["mango", "mangoes"], ms: "mangga" },
     "🥥": { en: ["coconut", "coconuts"], ms: "kelapa" },
     "🍃": { en: ["leaf", "leaves"], ms: "daun" },
+    "🦋": { en: ["butterfly", "butterflies"], ms: "rama-rama" },
     "🌸": { en: ["flower", "flowers"], ms: "bunga" },
     "⭐": { en: ["star", "stars"], ms: "bintang" },
     "🍄": { en: ["mushroom", "mushrooms"], ms: "cendawan" },
@@ -3481,9 +3482,10 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             t={t}
             start={5}
             takeAway={5}
+            objectKind="butterflies"
             situation={{
-              en: "Chrys has 5 bananas. He wants to give all 5 bananas to Alyse.",
-              ms: "Chrys ada 5 pisang. Dia mahu memberikan kesemua 5 pisang kepada Alyse.",
+              en: "Chrys sees 5 butterflies. All 5 butterflies fly away.",
+              ms: "Chrys nampak 5 rama-rama. Kesemua 5 rama-rama terbang pergi.",
             }}
             onPrev={() => setPhase("story9")}
             onDone={() => setPhase("practice")}
@@ -4091,12 +4093,13 @@ function ChrysAdditionStory({ lang, t, onPrev, onDone, actions = [] }: {
   );
 }
 
-function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, onDone, actions = [] }: {
+function ChrysSubtractionStory({ lang, t, start, takeAway, situation, objectKind = "bananas", onPrev, onDone, actions = [] }: {
   lang: Lang;
   t: UIStrings;
   start: number;
   takeAway: number;
   situation: Record<Lang, string>;
+  objectKind?: "bananas" | "butterflies";
   onPrev: () => void;
   onDone: () => void;
   actions?: LessonAction[];
@@ -4112,8 +4115,24 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
   const flyingBananaRefs = useRef<Array<HTMLDivElement | null>>([]);
   const answer = start - takeAway;
   const left = start - given;
+  const butterflies = objectKind === "butterflies";
+  const objectEmoji = butterflies ? "🦋" : BANANA;
   const sharingFinished = showSituation && storyStep === 4 && given === takeAway && !sharing && !flight;
-  const storyText: Record<number, string> = lang === "en"
+  const storyText: Record<number, string> = butterflies
+    ? lang === "en"
+      ? {
+        1: `${takeAway} butterflies will fly away.`,
+        4: `${takeAway} butterflies fly away. ${answer} are left.`,
+        5: `Count what is left. ${answer} butterflies!`,
+        6: `${start} butterflies. ${takeAway} fly away. ${answer} are left.`,
+      }
+      : {
+        1: `${takeAway} rama-rama akan terbang pergi.`,
+        4: `${takeAway} rama-rama terbang pergi. Tinggal ${answer}.`,
+        5: `Kira yang tinggal. ${answer} rama-rama!`,
+        6: `${start} rama-rama. ${takeAway} terbang pergi. Tinggal ${answer}.`,
+      }
+    : lang === "en"
     ? {
       1: `Chrys will give Alyse ${takeAway} bananas.`,
       4: `Chrys gives Alyse ${takeAway} bananas. ${answer} are left.`,
@@ -4158,7 +4177,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
       if (cancelled) return;
       const nextGiven = Math.min(takeAway, flight[0].targetIndex + 1);
       setGiven(nextGiven);
-      // Speak the new remaining count only after this banana reaches Alyse.
+      // Speak the new remaining count only after this object reaches its destination.
       speakNumber(start - nextGiven, lang);
       // Keep the flying banana over the destination until React paints the landed tile.
       landingFrame = window.requestAnimationFrame(() => {
@@ -4235,9 +4254,9 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
             <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
               <div ref={basketRef} className="min-h-56 rounded-3xl border-2 border-amber-200 bg-amber-50 p-3 text-center sm:p-4">
                 <img src={chrysHappy} alt="Chrys" className="mx-auto h-16 w-16 object-contain sm:h-20 sm:w-20" />
-                <p className="mb-3 text-sm font-black uppercase text-amber-800">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</p>
+                <p className="mb-3 text-sm font-black uppercase text-amber-800">{butterflies ? (lang === "en" ? "Butterflies near Chrys" : "Rama-rama dekat Chrys") : (lang === "en" ? "Chrys's basket" : "Bakul Chrys")}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
-                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />
+                  {!butterflies && <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />}
                   <div className="relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 px-7 pb-10 pt-12 sm:gap-x-2 sm:px-9">
                     {Array.from({ length: start }, (_, index) => {
                       const inBasket = index < left;
@@ -4256,7 +4275,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
                             <span className="absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
                               {index + 1}
                             </span>
-                            <SpriteIcon value="🍌" className="h-12 w-12" />
+                            <SpriteIcon value={objectEmoji} className="h-12 w-12" />
                           </>}
                         </div>
                       );
@@ -4275,17 +4294,17 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
               <div className="text-center">
                 <p className="text-5xl font-black text-emerald-600" aria-hidden="true">→</p>
                 <p className="mt-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-black text-emerald-900">
-                  {lang === "en" ? `Share ${takeAway}` : `Kongsi ${takeAway}`}
+                  {butterflies ? (lang === "en" ? `Fly away ${takeAway}` : `${takeAway} terbang pergi`) : (lang === "en" ? `Share ${takeAway}` : `Kongsi ${takeAway}`)}
                 </p>
               </div>
               <div className="min-h-56 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-3 text-center sm:p-4">
                 <div className="mb-2 flex items-center justify-center gap-2">
-                  <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />
-                  <p className="text-sm font-black uppercase text-emerald-800">{lang === "en" ? "Alyse's basket" : "Bakul Alyse"}</p>
+                  {butterflies ? <SpriteIcon value="🌳" className="h-16 w-16" /> : <img src={alyseGuide} alt="Alyse" className="h-16 w-16 object-contain" />}
+                  <p className="text-sm font-black uppercase text-emerald-800">{butterflies ? (lang === "en" ? "Butterflies flying home" : "Rama-rama terbang pulang") : (lang === "en" ? "Alyse's basket" : "Bakul Alyse")}</p>
                 </div>
-                <p className="mb-4 text-base font-black text-emerald-900">{lang === "en" ? `Alyse gets ${takeAway} bananas.` : `Alyse dapat ${takeAway} pisang.`}</p>
+                <p className="mb-4 text-base font-black text-emerald-900">{butterflies ? (lang === "en" ? `${takeAway} butterflies fly away.` : `${takeAway} rama-rama terbang pergi.`) : (lang === "en" ? `Alyse gets ${takeAway} bananas.` : `Alyse dapat ${takeAway} pisang.`)}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-emerald-100 bg-white">
-                  <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />
+                  {!butterflies && <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />}
                   <div className="relative z-10 grid min-h-[21rem] grid-cols-3 place-content-center gap-4 px-8 py-12">
                     {Array.from({ length: takeAway }, (_, index) => (
                       <div
@@ -4302,13 +4321,13 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
                         <span className={`absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full px-1 text-xs font-black leading-none text-white shadow-sm ${index < given ? "bg-blue-600" : "bg-slate-400"}`}>
                           {index + 1}
                         </span>
-                        {index < given && <SpriteIcon value="🍌" className="h-12 w-12" />}
+                        {index < given && <SpriteIcon value={objectEmoji} className="h-12 w-12" />}
                       </div>
                     ))}
                   </div>
                 </div>
                 <p className="mt-3 text-xl font-black text-emerald-950">
-                  {lang === "en" ? `Alyse has: ${given}` : `Alyse ada: ${given}`}
+                  {butterflies ? (lang === "en" ? `Flown away: ${given}` : `Terbang pergi: ${given}`) : (lang === "en" ? `Alyse has: ${given}` : `Alyse ada: ${given}`)}
                 </p>
               </div>
             </div>
@@ -4319,7 +4338,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
                 <p className="text-3xl font-black text-amber-950" style={NUMBER_TEXT_STYLE}>{start}</p>
               </div>
               <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-3">
-                <p className="text-sm font-black text-emerald-800">{lang === "en" ? "Given to Alyse" : "Diberi kepada Alyse"}</p>
+                <p className="text-sm font-black text-emerald-800">{butterflies ? (lang === "en" ? "Flown away" : "Terbang pergi") : (lang === "en" ? "Given to Alyse" : "Diberi kepada Alyse")}</p>
                 <p className="text-3xl font-black text-emerald-950" style={NUMBER_TEXT_STYLE}>{given}</p>
               </div>
               <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-3">
@@ -4337,8 +4356,8 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
                   className="relative rounded-2xl border-2 border-emerald-600 bg-emerald-500 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
                 >
                   {sharing
-                    ? (lang === "en" ? "Sharing one at a time..." : "Berkongsi satu demi satu...")
-                    : (lang === "en" ? `Share ${takeAway} with Alyse` : `Kongsi ${takeAway} kepada Alyse`)}
+                    ? butterflies ? (lang === "en" ? "Flying away one at a time..." : "Terbang pergi satu demi satu...") : (lang === "en" ? "Sharing one at a time..." : "Berkongsi satu demi satu...")
+                    : butterflies ? (lang === "en" ? `Let ${takeAway} fly away` : `Biarkan ${takeAway} terbang pergi`) : (lang === "en" ? `Share ${takeAway} with Alyse` : `Kongsi ${takeAway} kepada Alyse`)}
                   <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
                     <PointerIcon />
                   </span>
@@ -4349,7 +4368,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
         )}
 
         {!showSituation && storyStep === 6 && (
-          <SubtractionBananaEquation lang={lang} start={start} takeAway={takeAway} />
+          <SubtractionBananaEquation lang={lang} start={start} takeAway={takeAway} objectEmoji={objectEmoji} />
         )}
       </div>
 
@@ -4361,7 +4380,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
           style={{ left: item.left, top: item.top }}
           aria-hidden="true"
         >
-          <SpriteIcon value="🍌" className="h-12 w-12" />
+          <SpriteIcon value={objectEmoji} className="h-12 w-12" />
         </div>
       ))}
 
@@ -4396,7 +4415,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
               if (storyStep < 6) setStoryPosition((storyStep + 1) as 2 | 3 | 4 | 5 | 6);
               else onDone();
             }}
-            label={storyStep < 6 ? t.next : t.practice}
+            label={t.next}
           />
         </div>
       </div>
@@ -4406,7 +4425,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, onPrev, on
 
 type SubtractionEquationPhase = "ready" | "countingStart" | "crossing" | "removing" | "counting" | "done";
 
-function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; start: number; takeAway: number }) {
+function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA }: { lang: Lang; start: number; takeAway: number; objectEmoji?: string }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [phase, setPhase] = useState<SubtractionEquationPhase>("ready");
   const [startCount, setStartCount] = useState(0);
@@ -4414,8 +4433,8 @@ function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; star
   const [crossedCount, setCrossedCount] = useState(0);
   const [remainingCount, setRemainingCount] = useState(0);
   const runRef = useRef(0);
-  const banana = String.fromCodePoint(0x1f34c);
   const answer = start - takeAway;
+  const objectPlural = objectName(objectEmoji, 2, lang);
   const isRunning = phase !== "ready" && phase !== "done";
 
   useEffect(() => () => {
@@ -4508,7 +4527,7 @@ function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; star
           </span>
         )}
         <span className="relative grid h-12 w-12 place-items-center">
-          <SpriteIcon value={banana} className="h-12 w-12 opacity-100 saturate-100 grayscale-0" />
+          <SpriteIcon value={objectEmoji} className="h-12 w-12 opacity-100 saturate-100 grayscale-0" />
           {isCrossed && (
             <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-5xl font-black leading-none text-red-500 drop-shadow-sm" aria-hidden="true">&times;</span>
           )}
@@ -4527,7 +4546,7 @@ function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; star
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
         >
           {phase === "countingStart"
-            ? (lang === "en" ? `Counting ${start} bananas...` : `Mengira ${start} pisang...`)
+            ? (lang === "en" ? `Counting ${start} ${objectPlural}...` : `Mengira ${start} ${objectPlural}...`)
             : phase === "crossing"
               ? (lang === "en" ? "Crossing out..." : "Memangkah...")
               : phase === "removing"
@@ -4552,7 +4571,7 @@ function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; star
             {Array.from({ length: start }, (_, index) => renderBanana(index, "start"))}
           </div>
           <div className="min-h-20 pt-3">
-            {startCountComplete && <CountTotalBadge count={start} lang={lang} unit={objectName(banana, start, lang)} />}
+            {startCountComplete && <CountTotalBadge count={start} lang={lang} unit={objectName(objectEmoji, start, lang)} />}
           </div>
         </div>
 
@@ -4566,7 +4585,7 @@ function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; star
           <div className="min-h-20 pt-3">
             {crossedCount === takeAway && (
               <p className="mx-auto inline-flex rounded-full bg-red-100 px-5 py-3 text-xl font-black text-red-900">
-                {lang === "en" ? `Taken away: ${takeAway} bananas` : `Diambil: ${takeAway} pisang`}
+                {lang === "en" ? `Taken away: ${takeAway} ${objectName(objectEmoji, takeAway, lang)}` : `Diambil: ${takeAway} ${objectName(objectEmoji, takeAway, lang)}`}
               </p>
             )}
           </div>
@@ -4585,7 +4604,7 @@ function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; star
             </div>
           </div>
           <div className="min-h-20 pt-3">
-            {remainingCount === answer && <CountTotalBadge count={answer} lang={lang} unit={objectName(banana, answer, lang)} />}
+            {remainingCount === answer && <CountTotalBadge count={answer} lang={lang} unit={objectName(objectEmoji, answer, lang)} />}
           </div>
         </div>
       </div>
@@ -4593,7 +4612,7 @@ function SubtractionBananaEquation({ lang, start, takeAway }: { lang: Lang; star
       {phase === "done" && (
         <div className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
           <p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>{start} - {takeAway} = {answer}</p>
-          <p className="mt-2 text-xl font-black text-emerald-900">{lang === "en" ? `${start} bananas. Cross out ${takeAway}. ${answer} are left.` : `${start} pisang. Pangkah ${takeAway}. Tinggal ${answer}.`}</p>
+          <p className="mt-2 text-xl font-black text-emerald-900">{lang === "en" ? `${start} ${objectName(objectEmoji, start, lang)}. Cross out ${takeAway}. ${answer} are left.` : `${start} ${objectName(objectEmoji, start, lang)}. Pangkah ${takeAway}. Tinggal ${answer}.`}</p>
         </div>
       )}
     </div>
