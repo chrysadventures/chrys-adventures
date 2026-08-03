@@ -1794,7 +1794,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           <div className="text-center md:text-left">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-cyan-100/80 bg-blue-950/35 px-4 py-2 text-sm font-black uppercase text-cyan-50">
               <Compass className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
-              {lang === "en" ? "Chrys's learning trail" : "Laluan belajar Chrys"}
+              {lang === "en" ? "Chrys's learning journey" : "Perjalanan pembelajaran Chrys"}
             </span>
             <h2 className="mt-3 text-3xl font-black leading-tight text-white sm:text-4xl">
               {lang === "en" ? `Ready to explore, ${player.name}?` : `Sedia meneroka, ${player.name}?`}
@@ -1814,7 +1814,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
         </div>
       </section>
 
-      <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning trail with 8 destinations" : "Laluan belajar dengan 8 destinasi"}>
+      <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning journey with 8 destinations" : "Perjalanan pembelajaran dengan 8 destinasi"}>
         <div className="grid min-w-[48rem] grid-cols-8 gap-3 px-4 py-4">
           {trailDestinations.map((destination, index) => (
             <div
@@ -1848,7 +1848,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
             </span>
             <div>
               <p className="text-sm font-black uppercase text-emerald-700">
-                {lang === "en" ? `Trail stage ${stage.number}` : `Peringkat laluan ${stage.number}`}
+                {lang === "en" ? `Stage ${stage.number}` : `Peringkat ${stage.number}`}
               </p>
               <h3 className="text-2xl font-black leading-tight text-blue-950 sm:text-3xl">{stage.title}</h3>
               <p className="mt-1 font-bold text-slate-600">{stage.help}</p>
@@ -3413,7 +3413,7 @@ function AdditionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onD
 }
 
 function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
-  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "hungryStory" | "alyseStory" | "mangoStory" | "practice">("intro");
+  const [phase, setPhase] = useState<"intro" | "sign" | "story" | "hungryStory" | "alyseStory" | "mangoStory" | "butterflyStory" | "sharedAllStory" | "practice">("intro");
 
   if (phase === "practice") {
     return <Quiz lang={lang} t={t} title={`${t.subtraction}: ${t.practice}`} questions={subtractionPracticeQuestions} randomize={false} visualOnlyOperationSolutions onFinish={() => onDone()} onBackToLearning={() => setPhase("intro")} />;
@@ -3493,6 +3493,24 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
             lang={lang}
             t={t}
             onPrev={() => setPhase("alyseStory")}
+            onDone={() => setPhase("butterflyStory")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+          />
+        )}
+        {phase === "butterflyStory" && (
+          <ButterfliesFlyHomeStory
+            lang={lang}
+            t={t}
+            onPrev={() => setPhase("mangoStory")}
+            onDone={() => setPhase("sharedAllStory")}
+            actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
+          />
+        )}
+        {phase === "sharedAllStory" && (
+          <AllBananasSharedStory
+            lang={lang}
+            t={t}
+            onPrev={() => setPhase("butterflyStory")}
             onDone={() => setPhase("practice")}
             actions={[{ label: skipPracticeLabel(lang), onClick: () => setPhase("practice"), variant: "green" }]}
           />
@@ -4922,6 +4940,194 @@ function MangoTraySubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
           <LessonNextButton label={t.practice} onClick={onDone} disabled={phase !== "done"} />
         </div>
       </div>
+    </div>
+  );
+}
+
+type NewSubtractionStoryPhase = "ready" | "countingStart" | "takingAway" | "countingLeft" | "done";
+
+async function playSubtractionStoryCount(
+  count: number,
+  lang: Lang,
+  onCount: (value: number) => void,
+  runRef: React.RefObject<number>,
+  runId: number,
+  prefersReducedMotion: boolean,
+) {
+  if (count === 0) {
+    onCount(0);
+    speakNumber(0, lang);
+    await wait(prefersReducedMotion ? 100 : COUNTING_STEP_MS);
+    return;
+  }
+  if (!audioMuted) {
+    await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+      if (runRef.current === runId) onCount(value);
+    });
+    return;
+  }
+  for (let value = 1; value <= count; value += 1) {
+    await wait(prefersReducedMotion ? 120 : COUNTING_STEP_MS);
+    if (runRef.current !== runId) return;
+    onCount(value);
+  }
+}
+
+function ButterfliesFlyHomeStory({ lang, t, onPrev, onDone, actions = [] }: {
+  lang: Lang;
+  t: UIStrings;
+  onPrev: () => void;
+  onDone: () => void;
+  actions?: LessonAction[];
+}) {
+  const butterfly = String.fromCodePoint(0x1f98b);
+  const tree = String.fromCodePoint(0x1f333);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [phase, setPhase] = useState<NewSubtractionStoryPhase>("ready");
+  const [startCount, setStartCount] = useState(0);
+  const [flownCount, setFlownCount] = useState(0);
+  const [leftCount, setLeftCount] = useState(0);
+  const runRef = useRef(0);
+  const running = phase !== "ready" && phase !== "done";
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const reset = () => {
+    runRef.current += 1;
+    stopNumberAudio();
+    setPhase("ready");
+    setStartCount(0);
+    setFlownCount(0);
+    setLeftCount(0);
+  };
+
+  const start = async () => {
+    if (running) return;
+    const runId = ++runRef.current;
+    stopNumberAudio();
+    setStartCount(0);
+    setFlownCount(0);
+    setLeftCount(0);
+    setPhase("countingStart");
+    await playSubtractionStoryCount(6, lang, setStartCount, runRef, runId, prefersReducedMotion);
+    if (runRef.current !== runId) return;
+    await speakMathCue("minus", lang);
+    setPhase("takingAway");
+    for (let value = 1; value <= 2; value += 1) {
+      setFlownCount(value);
+      speakNumber(value, lang);
+      await wait(prefersReducedMotion ? 180 : COUNTING_STEP_MS);
+      if (runRef.current !== runId) return;
+    }
+    await speakMathCue("equals", lang);
+    setPhase("countingLeft");
+    await playSubtractionStoryCount(4, lang, setLeftCount, runRef, runId, prefersReducedMotion);
+    if (runRef.current === runId) setPhase("done");
+  };
+
+  const instruction = phase === "ready"
+    ? (lang === "en" ? "Chrys sees 6 butterflies near the banana trees." : "Chrys nampak 6 rama-rama berhampiran pokok pisang.")
+    : phase === "countingStart"
+      ? (lang === "en" ? "Count the 6 butterflies." : "Kira 6 rama-rama.")
+      : phase === "takingAway"
+        ? (lang === "en" ? "2 butterflies fly home." : "2 rama-rama terbang pulang.")
+        : phase === "countingLeft"
+          ? (lang === "en" ? "Count the butterflies that remain." : "Kira rama-rama yang masih ada.")
+          : (lang === "en" ? "4 butterflies remain." : "Tinggal 4 rama-rama.");
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl border-2 border-sky-200 bg-sky-50 p-5 text-center">
+        <h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "The butterflies fly home" : "Rama-rama terbang pulang"}</h3>
+        <p className="mt-2 text-lg font-black text-slate-700">{instruction}</p>
+      </div>
+      <div className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-[linear-gradient(#dff6ff_0%,#f0fff4_58%,#bbf7d0_100%)] p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
+        <div className="grid min-h-[23rem] items-center gap-5 md:grid-cols-[1fr_auto]">
+          <div className="grid grid-cols-3 place-items-center gap-5">
+            {Array.from({ length: 6 }, (_, index) => {
+              const flown = index < flownCount;
+              const remainingIndex = index - 1;
+              const showStartLabel = phase === "countingStart" && index < startCount;
+              const showLeftLabel = (phase === "countingLeft" || phase === "done") && index >= 2 && remainingIndex <= leftCount;
+              const active = phase === "countingStart" ? index + 1 === startCount : phase === "countingLeft" && index >= 2 && remainingIndex === leftCount;
+              return (
+                <div key={index} className={`relative grid h-24 w-24 place-items-center rounded-full border-4 transition-all duration-700 ${flown ? "-translate-y-32 translate-x-28 scale-75 opacity-0" : active ? "scale-110 border-yellow-400 bg-yellow-100 ring-4 ring-yellow-200" : "border-sky-300 bg-white/85"}`}>
+                  <SpriteIcon value={butterfly} className="h-14 w-14" />
+                  {(showStartLabel || showLeftLabel) && <span className="absolute -top-3 grid h-8 min-w-8 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white">{showLeftLabel ? remainingIndex : index + 1}</span>}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex flex-col items-center justify-center">
+            <SpriteIcon value={tree} className="h-40 w-40" />
+            <p className="rounded-full bg-emerald-100 px-4 py-2 font-black text-emerald-900">{lang === "en" ? "Home" : "Rumah"}</p>
+          </div>
+        </div>
+        {phase === "done" && <div className="mt-4 rounded-3xl border-2 border-emerald-200 bg-white/90 p-4 text-center"><p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>6 - 2 = 4</p></div>}
+        <div className="mt-5 flex justify-center"><button type="button" disabled={running} onClick={() => phase === "done" ? reset() : void start()} className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] disabled:opacity-60">{running ? (lang === "en" ? "Story playing..." : "Cerita sedang berjalan...") : phase === "done" ? (lang === "en" ? "Show again" : "Lihat lagi") : (lang === "en" ? "Start the story" : "Mula cerita")}</button></div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><PreviousLessonButton label={t.previous} onClick={phase === "ready" ? onPrev : reset} /><div className="flex flex-wrap justify-end gap-3">{actions.map((action) => <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />)}<LessonNextButton label={t.next} onClick={onDone} disabled={phase !== "done"} /></div></div>
+    </div>
+  );
+}
+
+function AllBananasSharedStory({ lang, t, onPrev, onDone, actions = [] }: {
+  lang: Lang;
+  t: UIStrings;
+  onPrev: () => void;
+  onDone: () => void;
+  actions?: LessonAction[];
+}) {
+  const friend = String.fromCodePoint(0x1f412);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [phase, setPhase] = useState<NewSubtractionStoryPhase>("ready");
+  const [startCount, setStartCount] = useState(0);
+  const [sharedCount, setSharedCount] = useState(0);
+  const runRef = useRef(0);
+  const running = phase !== "ready" && phase !== "done";
+
+  useEffect(() => () => { runRef.current += 1; stopNumberAudio(); }, []);
+  const reset = () => { runRef.current += 1; stopNumberAudio(); setPhase("ready"); setStartCount(0); setSharedCount(0); };
+  const start = async () => {
+    if (running) return;
+    const runId = ++runRef.current;
+    stopNumberAudio();
+    setStartCount(0);
+    setSharedCount(0);
+    setPhase("countingStart");
+    await playSubtractionStoryCount(5, lang, setStartCount, runRef, runId, prefersReducedMotion);
+    if (runRef.current !== runId) return;
+    await speakMathCue("minus", lang);
+    setPhase("takingAway");
+    for (let value = 1; value <= 5; value += 1) {
+      setSharedCount(value);
+      speakNumber(value, lang);
+      await wait(prefersReducedMotion ? 150 : COUNTING_STEP_MS);
+      if (runRef.current !== runId) return;
+    }
+    await speakMathCue("equals", lang);
+    setPhase("countingLeft");
+    await playSubtractionStoryCount(0, lang, () => undefined, runRef, runId, prefersReducedMotion);
+    if (runRef.current === runId) setPhase("done");
+  };
+  const left = 5 - sharedCount;
+  const instruction = phase === "ready" ? (lang === "en" ? "Chrys has 5 bananas. Five hungry friends arrive." : "Chrys ada 5 pisang. Lima kawan yang lapar datang.") : phase === "countingStart" ? (lang === "en" ? "Count Chrys's 5 bananas." : "Kira 5 pisang Chrys.") : phase === "takingAway" ? (lang === "en" ? "Chrys gives one banana to each friend." : "Chrys memberi satu pisang kepada setiap kawan.") : (lang === "en" ? "Chrys's basket is empty. 0 bananas are left." : "Bakul Chrys kosong. Tinggal 0 pisang.");
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl border-2 border-yellow-200 bg-yellow-50 p-5 text-center"><h3 className="text-3xl font-black text-blue-950">{lang === "en" ? "Chrys shares all his bananas" : "Chrys berkongsi semua pisangnya"}</h3><p className="mt-2 text-lg font-black text-slate-700">{instruction}</p></div>
+      <div className="rounded-[2rem] border-4 border-white bg-white p-5 shadow-[0_7px_0_rgba(0,0,0,.12)]">
+        <div className="grid gap-5 md:grid-cols-2">
+          <section className="rounded-3xl border-2 border-amber-200 bg-amber-50 p-4 text-center"><h4 className="text-xl font-black text-amber-900">{lang === "en" ? "Chrys's basket" : "Bakul Chrys"}</h4><div className="mt-4 flex min-h-40 flex-wrap items-center justify-center gap-3 rounded-3xl bg-white p-4">{Array.from({ length: 5 }, (_, index) => index >= sharedCount && <div key={index} className={`relative grid h-20 w-16 place-items-center rounded-2xl border-2 ${phase === "countingStart" && index + 1 === startCount ? "border-yellow-400 bg-yellow-100 ring-4 ring-yellow-200" : "border-blue-200 bg-blue-50"}`}><SpriteIcon value={BANANA} className="h-12 w-12" />{phase === "countingStart" && index < startCount && <span className="absolute -top-2 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{index + 1}</span>}</div>)}</div><p className="mt-3 text-2xl font-black text-amber-950">{lang === "en" ? `${left} left` : `Tinggal ${left}`}</p></section>
+          <section className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center"><h4 className="text-xl font-black text-emerald-900">{lang === "en" ? "Five hungry friends" : "Lima kawan yang lapar"}</h4><div className="mt-4 grid grid-cols-5 gap-2">{Array.from({ length: 5 }, (_, index) => <div key={index} className={`rounded-2xl border-2 p-2 transition-all ${index < sharedCount ? "border-yellow-400 bg-yellow-100" : "border-slate-200 bg-white"}`}><span className="text-3xl" aria-hidden="true">{friend}</span><div className="mt-2 grid h-10 place-items-center">{index < sharedCount ? <SpriteIcon value={BANANA} className="h-9 w-9" /> : <span className="text-xs font-black text-slate-400">{index + 1}</span>}</div></div>)}</div></section>
+        </div>
+        {phase === "done" && <div className="mt-5 rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center"><p className="text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>5 - 5 = 0</p><p className="mt-2 text-xl font-black text-emerald-950">{lang === "en" ? "Subtracting everything leaves zero." : "Menolak semuanya meninggalkan sifar."}</p></div>}
+        <div className="mt-5 flex justify-center"><button type="button" disabled={running} onClick={() => phase === "done" ? reset() : void start()} className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] disabled:opacity-60">{running ? (lang === "en" ? "Sharing..." : "Berkongsi...") : phase === "done" ? (lang === "en" ? "Show again" : "Lihat lagi") : (lang === "en" ? "Start the story" : "Mula cerita")}</button></div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><PreviousLessonButton label={t.previous} onClick={phase === "ready" ? onPrev : reset} /><div className="flex flex-wrap justify-end gap-3">{actions.map((action) => <SecondaryLessonButton key={action.label} label={action.label} onClick={action.onClick} variant={action.variant} />)}<LessonNextButton label={t.practice} onClick={onDone} disabled={phase !== "done"} /></div></div>
     </div>
   );
 }
