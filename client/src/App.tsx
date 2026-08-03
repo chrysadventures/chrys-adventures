@@ -1978,7 +1978,7 @@ function TeenQuantityVisual({
                   >
                     <SpriteIcon value={BANANA} className="h-12 w-12" />
                     {showCountLabels && reached && (
-                      <span className="absolute top-1 rounded-full bg-blue-600 px-2 text-xs font-black text-white">
+                      <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
                         {value}
                       </span>
                     )}
@@ -3630,7 +3630,7 @@ function SceneCountObject({ number, children, className = "", compact = false, o
 }) {
   return (
     <span className={`relative flex shrink-0 items-center justify-center ${outlined ? "rounded-full border-[3px] border-blue-500 bg-white/90 shadow-[0_3px_0_#93c5fd]" : ""} ${compact ? "h-12 w-12" : "h-16 w-16"} ${className}`}>
-      <span className={`absolute -top-3 flex h-7 min-w-7 items-center justify-center rounded-full bg-blue-600 px-1 text-sm font-black text-white shadow-sm ${outlined ? "-right-1" : "left-1/2 -translate-x-1/2"}`}>
+      <span className="absolute -top-2 left-1/2 z-20 flex h-6 min-w-6 -translate-x-1/2 items-center justify-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
         {number}
       </span>
       {children}
@@ -4196,7 +4196,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                           } ${isFlying ? "opacity-0" : ""}`}
                         >
                           {inBasket && <>
-                            <span className="absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1.5 text-[0.65rem] font-black leading-none text-white shadow-sm">
+                            <span className="absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
                               {index + 1}
                             </span>
                             <SpriteIcon value="🍌" className="h-12 w-12" />
@@ -4242,7 +4242,7 @@ function ChrysSubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                             : "border-dashed border-slate-300 bg-white/75"
                         }`}
                       >
-                        <span className={`absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full px-1.5 text-[0.65rem] font-black leading-none text-white shadow-sm ${index < given ? "bg-blue-600" : "bg-slate-400"}`}>
+                        <span className={`absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full px-1 text-xs font-black leading-none text-white shadow-sm ${index < given ? "bg-blue-600" : "bg-slate-400"}`}>
                           {index + 1}
                         </span>
                         {index < given && <SpriteIcon value="🍌" className="h-12 w-12" />}
@@ -4353,6 +4353,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [phase, setPhase] = useState<SubtractionEquationPhase>("ready");
   const [startCount, setStartCount] = useState(0);
+  const [startCountComplete, setStartCountComplete] = useState(false);
   const [crossedCount, setCrossedCount] = useState(0);
   const [remainingCount, setRemainingCount] = useState(0);
   const runRef = useRef(0);
@@ -4383,12 +4384,14 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
     const runId = ++runRef.current;
     stopNumberAudio();
     setStartCount(0);
+    setStartCountComplete(false);
     setCrossedCount(0);
     setRemainingCount(0);
 
     setPhase("countingStart");
     await playCount(7, setStartCount, runId);
     if (runRef.current !== runId) return;
+    setStartCountComplete(true);
     await wait(prefersReducedMotion ? 20 : 650);
     if (runRef.current !== runId) return;
 
@@ -4419,7 +4422,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
     const isStartCounted = mode === "start" && value <= startCount;
     const isRemainingCounted = mode === "remaining" && value <= remainingCount;
     const isCounted = isStartCounted || isRemainingCounted;
-    const isCurrent = (mode === "start" && phase === "countingStart" && value === startCount)
+    const isCurrent = (mode === "start" && phase === "countingStart" && !startCountComplete && value === startCount)
       || (mode === "remaining" && phase === "counting" && value === remainingCount);
     const isCurrentCross = isCrossMode && phase === "crossing" && value === crossedCount;
     const isLeaving = mode === "resultCrossed" && ["removing", "counting", "done"].includes(phase);
@@ -4442,7 +4445,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
         style={isLeaving && !prefersReducedMotion ? { transitionDelay: `${index * 120}ms` } : undefined}
       >
         {(isCrossed || isCounted) && (
-          <span className={`absolute top-1 left-1/2 z-20 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full px-2 text-[0.65rem] font-black leading-none text-white shadow-sm ${isCrossed ? "bg-red-600" : "bg-blue-600"}`}>
+          <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1 text-xs font-black leading-none text-white shadow-sm ${isCrossed ? "bg-red-600" : "bg-blue-600"}`}>
             {value}
           </span>
         )}
@@ -4491,7 +4494,7 @@ function SubtractionBananaEquation({ lang }: { lang: Lang }) {
             {Array.from({ length: 7 }, (_, index) => renderBanana(index, "start"))}
           </div>
           <div className="min-h-20 pt-3">
-            {startCount === 7 && <CountTotalBadge count={7} lang={lang} unit={objectName(banana, 7, lang)} />}
+            {startCountComplete && <CountTotalBadge count={7} lang={lang} unit={objectName(banana, 7, lang)} />}
           </div>
         </div>
 
@@ -4768,7 +4771,7 @@ function MangoTraySubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                       className={`relative grid h-24 w-20 place-items-center rounded-2xl border-2 transition-all duration-500 ${removed ? "-translate-y-3 scale-90 border-slate-200 bg-slate-100 opacity-20" : startingCurrent || leftCurrent ? "scale-105 border-yellow-400 bg-yellow-100 shadow-[0_0_0_4px_rgba(250,204,21,.24)]" : showLabel ? "border-blue-400 bg-blue-50 shadow-[0_3px_0_rgba(37,99,235,.14)]" : "border-amber-200 bg-white/75"}`}
                     >
                       {showLabel && (
-                        <span className="absolute -top-3 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white">
+                        <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
                           {label}
                         </span>
                       )}
@@ -4805,7 +4808,7 @@ function MangoTraySubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
                     >
                       {packed && (
                         <>
-                          <span className="absolute -top-3 grid h-7 min-w-7 place-items-center rounded-full bg-emerald-600 px-2 text-sm font-black text-white">{index + 1}</span>
+                          <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">{index + 1}</span>
                           <SpriteIcon value={mango} className="h-11 w-11" />
                         </>
                       )}
@@ -5279,7 +5282,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
                             : "border-transparent bg-amber-50 opacity-55 grayscale"
                     }`}
                   >
-                    <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                    <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
                       {objectIndex + 1}
                     </span>
                     <SpriteIcon value={banana} className={`h-12 w-12 transition-transform duration-300 ${current ? "scale-110" : ""}`} />
@@ -5399,7 +5402,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
                             : "border-transparent bg-amber-50 opacity-55 grayscale"
                     }`}
                   >
-                    <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+                    <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
                       {objectIndex + 1}
                     </span>
                     <SpriteIcon value={banana} className={`h-12 w-12 transition-transform duration-300 ${current ? "scale-110" : ""}`} />
@@ -5475,7 +5478,7 @@ function BasketBananaScene({ count, counted, isCounting, label }: {
             >
               <SpriteIcon value={banana} className="h-20 w-20 drop-shadow-lg" />
               {isCounted && (
-                <span className="absolute top-1 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white shadow-md">
+                <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-md">
                   {index + 1}
                 </span>
               )}
@@ -5690,7 +5693,7 @@ function AdditionBananaEquation({
               : "border-transparent bg-amber-50 opacity-55 grayscale"
         } ${layoutCount % 2 === 1 && layoutIndex === layoutCount - 1 ? "col-span-2 justify-self-center" : ""}`}
       >
-        <span className={`absolute top-1 rounded-full bg-blue-600 px-2 text-sm font-black text-white transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
+        <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
           {countIndex + 1}
         </span>
         <SpriteIcon value={emoji} className={`h-12 w-12 transition-[filter,transform] duration-300 ${currentBanana ? "scale-110 drop-shadow-lg" : ""}`} />
@@ -5999,7 +6002,7 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
       <div className="mt-3 flex min-h-10 max-w-40 flex-wrap justify-center gap-1">
         {Array.from({ length: visible }, (_, i) => (
           <span key={i} className="relative grid h-10 w-7 place-items-end">
-            <span className="absolute -top-1 left-1/2 grid h-5 min-w-7 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-2 text-[0.65rem] font-black leading-none text-white shadow-sm">
+            <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1.5 text-xs font-black leading-none text-white shadow-sm">
               {i + 1}
             </span>
             <SpriteIcon value="🍌" className="h-6 w-6" />
@@ -6512,11 +6515,11 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
             } ${compact ? "h-20 w-12 text-3xl" : "h-24 w-16 text-4xl"}`}
           >
             {crossLabelVisible ? (
-              <span className={`absolute top-1 z-20 rounded-full bg-red-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"}`}>
+              <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-red-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity">
                 {i + 1}
               </span>
             ) : (
-              <span className={`absolute top-1 z-20 rounded-full bg-blue-600 px-2 font-black text-white shadow-sm transition-opacity ${compact ? "text-xs" : "text-sm"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
+              <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity ${labelVisible ? "opacity-100" : "opacity-0"}`}>
                 {labelVisible ? label : "."}
               </span>
             )}
@@ -7844,7 +7847,7 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
     return <div className="mx-auto rounded-3xl border-4 border-dashed border-slate-200 bg-white p-8 text-center text-2xl font-black text-slate-400">{numbered ? "0" : lang === "en" ? "empty" : "kosong"}</div>;
   }
   return (
-    <div className="flex flex-wrap justify-center gap-3 rounded-3xl border-2 border-slate-100 bg-white p-4">
+    <div className="flex flex-wrap justify-center gap-x-3 gap-y-6 rounded-3xl border-2 border-slate-100 bg-white px-4 pb-4 pt-7">
       {Array.from({ length: count }, (_, i) => {
         const gone = i < crossed;
         return (
@@ -7859,7 +7862,7 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
               <SpriteIcon value={emoji} className="h-12 w-12" />
             </span>
             {(numbered || (crossedLabels && gone)) && (
-              <span className={`absolute top-1 rounded-full px-2 text-xs font-black text-white ${gone ? "bg-red-600" : "bg-blue-600"}`}>
+              <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1.5 text-xs font-black leading-none text-white shadow-sm ${gone ? "bg-red-600" : "bg-blue-600"}`}>
                 {i + 1}
               </span>
             )}
@@ -7895,7 +7898,7 @@ function ContainerScene({
     <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 z-0 h-full w-full object-contain" />
-        <div className="absolute inset-[12%] z-10 flex flex-wrap content-center items-center justify-center gap-2">
+        <div className="absolute inset-[12%] z-10 flex flex-wrap content-center items-center justify-center gap-x-2 gap-y-5">
           {Array.from({ length: count }, (_, i) => (
             <div
               key={i}
@@ -7904,7 +7907,7 @@ function ContainerScene({
               }`}
             >
               <SpriteIcon value={emoji} className="h-11 w-11" />
-              {numbered && <span className="absolute top-1 rounded-full bg-blue-600 px-2 text-xs font-black text-white">{i + 1}</span>}
+              {numbered && <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1.5 text-xs font-black leading-none text-white shadow-sm">{i + 1}</span>}
             </div>
           ))}
         </div>
