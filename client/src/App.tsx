@@ -211,8 +211,10 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
 };
 
 const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Record<number, string>> = {
-  en: Object.fromEntries(NUMBERS.map((value) => [value, `total ${value} banana.mp3`])) as Record<number, string>,
-  ms: Object.fromEntries(NUMBERS.map((value) => [value, `jumlah ${value} pisang.mp3`])) as Record<number, string>,
+  // These two batches were exported with their numeric filenames in reverse order.
+  // Map the displayed value to the recording whose spoken content matches it.
+  en: Object.fromEntries(NUMBERS.map((value) => [value, `total ${9 - value} banana.mp3`])) as Record<number, string>,
+  ms: Object.fromEntries(NUMBERS.map((value) => [value, `jumlah ${9 - value} pisang.mp3`])) as Record<number, string>,
 };
 
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
@@ -3154,12 +3156,6 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
       setStep((current) => Math.min(maxStep, current + 1));
     }
   };
-
-  useEffect(() => {
-    if (celebrationKey === 0) return;
-    const timer = window.setTimeout(() => setCelebrationKey(0), 3200);
-    return () => window.clearTimeout(timer);
-  }, [celebrationKey]);
 
   const next = () => {
     setChecked(false);
@@ -7901,13 +7897,18 @@ function CorrectCelebration() {
   ];
 
   useEffect(() => {
-    playSuccessFanfare();
+    let cancelled = false;
+    const finishCelebration = () => {
+      if (!cancelled) setIsVisible(false);
+    };
+    const audioStarted = playSuccessFanfare(finishCelebration);
     const hideTimer = window.setTimeout(
-      () => setIsVisible(false),
-      prefersReducedMotion ? 100 : 3800,
+      finishCelebration,
+      prefersReducedMotion ? 100 : audioStarted ? 10000 : 3800,
     );
 
     return () => {
+      cancelled = true;
       window.clearTimeout(hideTimer);
       stopCelebrationAudio();
     };
@@ -8517,6 +8518,77 @@ function CountedCompareGroupsSolution({ visual, lang }: {
   );
 }
 
+function CountedGroupCombineSolution({ visual, lang }: {
+  visual: Extract<Visual, { kind: "groupCombine" }>;
+  lang: Lang;
+}) {
+  const [stage, setStage] = useState(0);
+  const total = visual.a + visual.b;
+  const finishFirstGroup = useCallback(() => setStage((current) => Math.max(current, 1)), []);
+  const finishSecondGroup = useCallback(() => setStage((current) => Math.max(current, 2)), []);
+  const finishTotal = useCallback(() => setStage(3), []);
+
+  useEffect(() => setStage(0), [visual.a, visual.b, visual.emoji]);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 0 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"}`}>
+          <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 1" : "Kumpulan 1"}</p>
+          <CountedObjectRow
+            count={visual.a}
+            emoji={visual.emoji}
+            showCount
+            speakCount={stage === 0}
+            visibleCount={stage > 0 ? visual.a : undefined}
+            onCountComplete={finishFirstGroup}
+            lang={lang}
+          />
+          {stage >= 1 && <CountTotalBadge count={visual.a} lang={lang} unit={objectName(visual.emoji, visual.a, lang)} />}
+        </div>
+
+        <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 1 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage === 0 ? "opacity-35 grayscale" : ""}`}>
+          <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 2" : "Kumpulan 2"}</p>
+          {stage >= 1 ? (
+            <CountedObjectRow
+              count={visual.b}
+              emoji={visual.emoji}
+              showCount
+              speakCount={stage === 1}
+              visibleCount={stage > 1 ? visual.b : undefined}
+              onCountComplete={finishSecondGroup}
+              lang={lang}
+            />
+          ) : (
+            <ObjectGroup count={visual.b} emoji={visual.emoji} lang={lang} />
+          )}
+          {stage >= 2 && <CountTotalBadge count={visual.b} lang={lang} unit={objectName(visual.emoji, visual.b, lang)} />}
+        </div>
+      </div>
+
+      <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 2 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage < 2 ? "opacity-35 grayscale" : ""}`}>
+        <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "One big group" : "Satu kumpulan besar"}</p>
+        {stage >= 2 ? (
+          <CountedObjectRow
+            count={total}
+            emoji={visual.emoji}
+            showCount
+            speakCount={stage === 2}
+            visibleCount={stage > 2 ? total : undefined}
+            onCountComplete={finishTotal}
+            lang={lang}
+          />
+        ) : (
+          <ObjectGroup count={total} emoji={visual.emoji} lang={lang} />
+        )}
+        {stage >= 3 && <CountTotalBadge count={total} lang={lang} unit={objectName(visual.emoji, total, lang)} />}
+      </div>
+
+      {stage >= 3 && <GroupingAnswerLine text={`${visual.a} + ${visual.b} = ${total}`} />}
+    </div>
+  );
+}
+
 function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode: "up" | "down" }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [completedIndex, setCompletedIndex] = useState(-1);
@@ -8811,12 +8883,6 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
     setChecked(true);
     if (selected === answer) setCelebrationKey((current) => current + 1);
   };
-
-  useEffect(() => {
-    if (celebrationKey === 0) return;
-    const timer = window.setTimeout(() => setCelebrationKey(0), 3200);
-    return () => window.clearTimeout(timer);
-  }, [celebrationKey]);
 
   return (
     <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
@@ -9710,24 +9776,30 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
     );
   }
   if (visual.kind === "groupCompare") {
+    if (visual.ask !== "same") {
+      return (
+        <CountedCompareGroupsSolution
+          visual={{
+            kind: "compareGroups",
+            a: visual.a,
+            b: visual.b,
+            emojiA: visual.emoji,
+            emojiB: visual.emoji,
+            ask: visual.ask,
+          }}
+          lang={lang}
+        />
+      );
+    }
     return (
       <div className="grid gap-4 md:grid-cols-2">
-        <GroupingTray label="Group A" count={visual.a} emoji={visual.emoji} counted lang={lang} />
-        <GroupingTray label="Group B" count={visual.b} emoji={visual.emoji} counted lang={lang} />
+        <GroupingTray label="Group A" count={visual.a} emoji={visual.emoji} counted={false} lang={lang} />
+        <GroupingTray label="Group B" count={visual.b} emoji={visual.emoji} counted={false} lang={lang} />
       </div>
     );
   }
   if (visual.kind === "groupCombine") {
-    return (
-      <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={visual.a} emoji={visual.emoji} counted lang={lang} />
-          <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={visual.b} emoji={visual.emoji} counted lang={lang} />
-        </div>
-        <GroupingTray label={lang === "en" ? "One big group" : "Satu kumpulan besar"} count={visual.a + visual.b} emoji={visual.emoji} counted lang={lang} />
-        <GroupingAnswerLine text={`${visual.a} + ${visual.b} = ${visual.a + visual.b}`} />
-      </div>
-    );
+    return <CountedGroupCombineSolution visual={visual} lang={lang} />;
   }
   if (visual.kind === "compareGroups") {
     return <CountedCompareGroupsSolution visual={visual} lang={lang} />;
@@ -9879,19 +9951,24 @@ function stopCelebrationAudio() {
   activeCelebrationAudio = null;
 }
 
-function playSuccessFanfare() {
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+function playSuccessFanfare(onFinished?: () => void) {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
   stopCelebrationAudio();
   const audio = new Audio(`${import.meta.env.BASE_URL}audio/${SUCCESS_FANFARE_FILE}`);
   audio.preload = "auto";
   audio.volume = 0.72;
   activeCelebrationAudio = audio;
+  let settled = false;
   const clear = () => {
+    if (settled) return;
+    settled = true;
     if (activeCelebrationAudio === audio) activeCelebrationAudio = null;
+    onFinished?.();
   };
   audio.onended = clear;
   audio.onerror = clear;
   void audio.play().catch(clear);
+  return true;
 }
 
 function playNumberFile(value: number, lang: Lang, runId: number) {
