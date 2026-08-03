@@ -2934,6 +2934,7 @@ type NewGroupingActivity =
   | { kind: "observe"; count: number; emoji: string }
   | { kind: "makeOne"; target: number; emoji: string }
   | { kind: "makeTwo"; a: number; b: number; emoji: string }
+  | { kind: "makeThree"; a: number; b: number; c: number; emoji: string }
   | { kind: "same"; a: number; b: number; emoji: string }
   | { kind: "more"; a: number; b: number; emoji: string }
   | { kind: "combine"; a: number; b: number; emoji: string };
@@ -2943,6 +2944,7 @@ const GROUPING_LESSON_STEPS: NewGroupingActivity[] = [
   { kind: "makeOne", target: 2, emoji: "🍌" },
   { kind: "makeOne", target: 3, emoji: "🍌" },
   { kind: "makeTwo", a: 2, b: 3, emoji: "🍌" },
+  { kind: "makeThree", a: 2, b: 3, c: 4, emoji: "🍌" },
   { kind: "same", a: 3, b: 3, emoji: "🍌" },
   { kind: "more", a: 3, b: 5, emoji: "🍌" },
   { kind: "combine", a: 1, b: 1, emoji: "🍌" },
@@ -2959,7 +2961,7 @@ const fullGroupingPracticeQuestions: Question[] = [
   q("group-practice-make-4", "numbers", { en: "Make a group of 4 bananas.", ms: "Bina kumpulan 4 pisang." }, [], 4, { kind: "groupMake", emoji: "🍌", count: 4 }, "makeGroup"),
   q("group-practice-2-3", "numbers", { en: "What is the total of 2 bananas and 3 bananas?", ms: "Berapakah jumlah 2 pisang dan 3 pisang?" }, [4, 5, 6], 5, { kind: "groupCombine", emoji: "🍌", a: 2, b: 3 }),
   q("group-practice-3-4", "numbers", { en: "What is the total of 3 bananas and 4 bananas?", ms: "Berapakah jumlah 3 pisang dan 4 pisang?" }, [6, 7, 8], 7, { kind: "groupCombine", emoji: "🍌", a: 3, b: 4 }),
-  q("group-practice-more", "numbers", { en: "Which banana group has more?", ms: "Kumpulan pisang mana lebih banyak?" }, ["Group 1", "Group 2"], "Group 2", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
+  q("group-practice-more", "numbers", { en: "Which banana group has more?", ms: "Kumpulan pisang mana lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
 ];
 
 function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
@@ -2967,13 +2969,14 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
   const [step, setStep] = useState(0);
   const [groupA, setGroupA] = useState(0);
   const [groupB, setGroupB] = useState(0);
+  const [groupC, setGroupC] = useState(0);
   const [checked, setChecked] = useState(false);
   const [practice, setPractice] = useState(false);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const activity = GROUPING_LESSON_STEPS[activityIndex];
   const maxStep = getNewGroupingMaxStep(activity);
   const activeTarget = getActiveGroupingTarget(activity, step);
-  const activeCount = getActiveGroupingCount(activity, step, groupA, groupB);
+  const activeCount = getActiveGroupingCount(activity, step, groupA, groupB, groupC);
   const canEdit = activeTarget !== null;
   const correct = activeTarget !== null && activeCount === activeTarget;
   const instruction = getNewGroupingInstruction(activity, step, lang);
@@ -2983,26 +2986,30 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
     setStep(0);
     setGroupA(0);
     setGroupB(0);
+    setGroupC(0);
     setChecked(false);
   };
 
   const addObject = () => {
     if (!canEdit) return;
     setChecked(false);
-    if (activity.kind === "makeTwo" && step === 2) setGroupB((count) => Math.min(9, count + 1));
+    if ((activity.kind === "makeTwo" || activity.kind === "makeThree") && step === 2) setGroupB((count) => Math.min(9, count + 1));
+    else if (activity.kind === "makeThree" && step === 4) setGroupC((count) => Math.min(9, count + 1));
     else setGroupA((count) => Math.min(9, count + 1));
   };
 
   const removeObject = () => {
     if (!canEdit) return;
     setChecked(false);
-    if (activity.kind === "makeTwo" && step === 2) setGroupB((count) => Math.max(0, count - 1));
+    if ((activity.kind === "makeTwo" || activity.kind === "makeThree") && step === 2) setGroupB((count) => Math.max(0, count - 1));
+    else if (activity.kind === "makeThree" && step === 4) setGroupC((count) => Math.max(0, count - 1));
     else setGroupA((count) => Math.max(0, count - 1));
   };
 
   const retryGroup = () => {
     setChecked(false);
-    if (activity.kind === "makeTwo" && step === 2) setGroupB(0);
+    if ((activity.kind === "makeTwo" || activity.kind === "makeThree") && step === 2) setGroupB(0);
+    else if (activity.kind === "makeThree" && step === 4) setGroupC(0);
     else setGroupA(0);
   };
 
@@ -3064,7 +3071,7 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
         </div>
 
         <div className="rounded-[2rem] border-4 border-white bg-[linear-gradient(180deg,#e8fff2_0%,#f7ffe8_58%,#d6f2a2_100%)] p-4 shadow-inner">
-          <NewGroupingLessonVisual activity={activity} step={step} groupA={groupA} groupB={groupB} lang={lang} />
+          <NewGroupingLessonVisual activity={activity} step={step} groupA={groupA} groupB={groupB} groupC={groupC} lang={lang} />
         </div>
 
         {canEdit && (
@@ -3137,6 +3144,7 @@ function getNewGroupingMaxStep(activity: NewGroupingActivity) {
   if (activity.kind === "observe") return 2;
   if (activity.kind === "makeOne") return 1;
   if (activity.kind === "makeTwo") return 4;
+  if (activity.kind === "makeThree") return 6;
   if (activity.kind === "combine") return 5;
   return 2;
 }
@@ -3145,11 +3153,15 @@ function getActiveGroupingTarget(activity: NewGroupingActivity, step: number) {
   if (activity.kind === "makeOne" && step === 0) return activity.target;
   if (activity.kind === "makeTwo" && step === 0) return activity.a;
   if (activity.kind === "makeTwo" && step === 2) return activity.b;
+  if (activity.kind === "makeThree" && step === 0) return activity.a;
+  if (activity.kind === "makeThree" && step === 2) return activity.b;
+  if (activity.kind === "makeThree" && step === 4) return activity.c;
   return null;
 }
 
-function getActiveGroupingCount(activity: NewGroupingActivity, step: number, groupA: number, groupB: number) {
-  if (activity.kind === "makeTwo" && step === 2) return groupB;
+function getActiveGroupingCount(activity: NewGroupingActivity, step: number, groupA: number, groupB: number, groupC: number) {
+  if ((activity.kind === "makeTwo" || activity.kind === "makeThree") && step === 2) return groupB;
+  if (activity.kind === "makeThree" && step === 4) return groupC;
   return groupA;
 }
 
@@ -3174,6 +3186,23 @@ function getNewGroupingInstruction(activity: NewGroupingActivity, step: number, 
     if (step === 3) return lang === "en" ? `Count the ${activity.b} ${objectName(activity.emoji, activity.b, "en")} in Group 2.` : `Kira ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} dalam Kumpulan 2.`;
     return lang === "en" ? `Group 1 has ${activity.a} ${objectName(activity.emoji, activity.a, "en")}. Group 2 has ${activity.b} ${objectName(activity.emoji, activity.b, "en")}.` : `Kumpulan 1 ada ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}. Kumpulan 2 ada ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}.`;
   }
+  if (activity.kind === "makeThree") {
+    if (step === 0) return lang === "en"
+      ? `Make Group 1 with ${activity.a} ${objectName(activity.emoji, activity.a, "en")}. Then you will make Groups 2 and 3.`
+      : `Bina Kumpulan 1 dengan ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}. Kemudian bina Kumpulan 2 dan 3.`;
+    if (step === 1) return lang === "en" ? "Count Group 1." : "Kira Kumpulan 1.";
+    if (step === 2) return lang === "en"
+      ? `Now make Group 2 with ${activity.b} ${objectName(activity.emoji, activity.b, "en")}.`
+      : `Sekarang bina Kumpulan 2 dengan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}.`;
+    if (step === 3) return lang === "en" ? "Count Group 2." : "Kira Kumpulan 2.";
+    if (step === 4) return lang === "en"
+      ? `Now make Group 3 with ${activity.c} ${objectName(activity.emoji, activity.c, "en")}.`
+      : `Sekarang bina Kumpulan 3 dengan ${activity.c} ${objectName(activity.emoji, activity.c, "ms")}.`;
+    if (step === 5) return lang === "en" ? "Count Group 3." : "Kira Kumpulan 3.";
+    return lang === "en"
+      ? `You made 3 groups: ${activity.a}, ${activity.b}, and ${activity.c} ${objectName(activity.emoji, activity.c, "en")}.`
+      : `Anda membina 3 kumpulan: ${activity.a}, ${activity.b}, dan ${activity.c} ${objectName(activity.emoji, activity.c, "ms")}.`;
+  }
   if (activity.kind === "same") {
     if (step === 0) return lang === "en" ? "Look at both groups." : "Lihat dua kumpulan.";
     if (step === 1) return lang === "en" ? "Count each group." : "Kira setiap kumpulan.";
@@ -3196,7 +3225,7 @@ function getNewGroupingInstruction(activity: NewGroupingActivity, step: number, 
   return lang === "en" ? `${activity.a} ${objectName(activity.emoji, activity.a, "en")} and ${activity.b} ${objectName(activity.emoji, activity.b, "en")} make ${activity.a + activity.b} ${objectName(activity.emoji, activity.a + activity.b, "en")}.` : `${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} menjadi ${activity.a + activity.b} ${objectName(activity.emoji, activity.a + activity.b, "ms")}.`;
 }
 
-function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { activity: NewGroupingActivity; step: number; groupA: number; groupB: number; lang: Lang }) {
+function NewGroupingLessonVisual({ activity, step, groupA, groupB, groupC, lang }: { activity: NewGroupingActivity; step: number; groupA: number; groupB: number; groupC: number; lang: Lang }) {
   if (activity.kind === "observe") {
     return (
       <div className="space-y-4">
@@ -3227,6 +3256,32 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, lang }: { act
           <GroupingTray label={groupTwoLabel} count={step >= 3 ? activity.b : groupB} emoji={activity.emoji} counted={step >= 3} active={step === 2} lang={lang} />
         </div>
         {step >= 4 && <GroupingAnswerLine text={lang === "en" ? `Each group has its own number.` : `Setiap kumpulan ada nombor sendiri.`} />}
+      </div>
+    );
+  }
+  if (activity.kind === "makeThree") {
+    const targets = [activity.a, activity.b, activity.c];
+    const currentCounts = [groupA, groupB, groupC];
+    const completedSteps = [1, 3, 5];
+    const activeSteps = [0, 2, 4];
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-3">
+          {targets.map((target, index) => (
+            <GroupingTray
+              key={`group-${index + 1}`}
+              label={lang === "en"
+                ? `Group ${index + 1}: ${target} ${objectName(activity.emoji, target, "en")}`
+                : `Kumpulan ${index + 1}: ${target} ${objectName(activity.emoji, target, "ms")}`}
+              count={step >= completedSteps[index] ? target : currentCounts[index]}
+              emoji={activity.emoji}
+              counted={step >= completedSteps[index]}
+              active={step === activeSteps[index]}
+              lang={lang}
+            />
+          ))}
+        </div>
+        {step >= 6 && <GroupingAnswerLine text={lang === "en" ? "Great work! You made 3 groups." : "Bagus! Anda membina 3 kumpulan."} />}
       </div>
     );
   }
@@ -7490,9 +7545,10 @@ function ActiveAnswerPanel({
         <button
           disabled={answered || builtCount <= 0}
           onClick={() => setBuiltCount((count) => Math.max(0, count - 1))}
-          className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-2xl font-black text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
+          aria-label={lang === "en" ? "Remove banana" : "Buang pisang"}
+          className="rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 text-xl font-black text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
         >
-          -
+          {lang === "en" ? "Remove banana" : "Buang pisang"}
         </button>
         <button
           disabled={answered || builtCount >= 9}
@@ -7514,6 +7570,8 @@ function ActiveAnswerPanel({
 }
 
 function CorrectCelebration() {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [isVisible, setIsVisible] = useState(true);
   const colors = ["#facc15", "#22c55e", "#3b82f6", "#fb7185", "#a855f7", "#f97316", "#14b8a6"];
   const balloons = [
     { left: "3%", color: "#fb7185", delay: "0ms" },
@@ -7527,8 +7585,18 @@ function CorrectCelebration() {
 
   useEffect(() => {
     playSuccessFanfare();
-    return stopCelebrationAudio;
-  }, []);
+    const hideTimer = window.setTimeout(
+      () => setIsVisible(false),
+      prefersReducedMotion ? 100 : 3800,
+    );
+
+    return () => {
+      window.clearTimeout(hideTimer);
+      stopCelebrationAudio();
+    };
+  }, [prefersReducedMotion]);
+
+  if (!isVisible) return null;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[100] overflow-hidden" aria-hidden="true">

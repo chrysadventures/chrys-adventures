@@ -574,6 +574,7 @@
   line-height: 1;
   filter: drop-shadow(0 3px 0 rgb(255 255 255 / 0.85));
   animation: correctSparklePop 1.45s ease-in-out 2;
+  animation-fill-mode: forwards;
 }
 
 .correct-celebration-burst {
