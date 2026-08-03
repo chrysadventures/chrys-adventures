@@ -256,6 +256,15 @@ const OBJECT_SPRITES: Record<string, string> = {
   "🪶": `${SPRITE_BASE}feather.png`,
   "🌰": `${SPRITE_BASE}acorn.png`,
   "❄️": `${SPRITE_BASE}snowflake.png`,
+  "⭐": `${SPRITE_BASE}star.png`,
+  "🐚": `${SPRITE_BASE}shell.png`,
+  "✏️": `${SPRITE_BASE}pencil.png`,
+  "✏": `${SPRITE_BASE}pencil.png`,
+  "📘": `${SPRITE_BASE}book.png`,
+  "🥚": `${SPRITE_BASE}egg.png`,
+  "🍪": `${SPRITE_BASE}cookie.png`,
+  "🎈": `${SPRITE_BASE}balloon.png`,
+  "🚗": `${SPRITE_BASE}toycar.png`,
 };
 
 let activeNumberAudio: HTMLAudioElement | null = null;
@@ -3760,10 +3769,10 @@ function RealWorldEverywhereExample({ lang }: { lang: Lang }) {
           prompt={lang === "en" ? "Total: 3 cars" : "Jumlah: 3 kereta"}
         >
           <div className="mx-auto grid h-40 max-w-64 grid-cols-3 items-center gap-2 rounded-2xl border-4 border-slate-400 bg-slate-600 p-3 shadow-inner">
-            {["🚗", "🚙", "🚕"].map((car, index) => (
-              <div key={car} className="flex h-28 items-center justify-center border-x-2 border-white/80">
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="flex h-28 items-center justify-center border-x-2 border-white/80">
                 <SceneCountObject number={index + 1} outlined={false}>
-                  <span className="text-4xl" aria-hidden="true">{car}</span>
+                  <SpriteIcon value="🚗" className="h-12 w-12 drop-shadow-md" />
                 </SceneCountObject>
               </div>
             ))}
@@ -3895,10 +3904,10 @@ function FindClueWordExample({ lang }: { lang: Lang }) {
           note={lang === "en" ? "FINDS MORE is an ADDITION (+) clue." : "JUMPA LAGI ialah petunjuk TAMBAH (+)."}
         >
           <div className="flex min-h-32 items-center justify-center gap-3 rounded-3xl bg-sky-50 p-4">
-            <span className="text-5xl drop-shadow-md" aria-hidden="true">🐚</span>
+            <SpriteIcon value="🐚" className="h-14 w-14 drop-shadow-md" />
             <span className="text-4xl font-black text-blue-800">+</span>
-            <span className="text-5xl drop-shadow-md" aria-hidden="true">🐚</span>
-            <span className="text-5xl drop-shadow-md" aria-hidden="true">🐚</span>
+            <SpriteIcon value="🐚" className="h-14 w-14 drop-shadow-md" />
+            <SpriteIcon value="🐚" className="h-14 w-14 drop-shadow-md" />
           </div>
         </RealWorldStoryCard>
         <RealWorldStoryCard
@@ -3908,8 +3917,8 @@ function FindClueWordExample({ lang }: { lang: Lang }) {
         >
           <div className="flex min-h-32 flex-wrap items-center justify-center gap-3 rounded-3xl bg-orange-50 p-4">
             {[0, 1, 2, 3].map((index) => (
-              <span key={index} className="relative text-5xl drop-shadow-md" aria-hidden="true">
-                🍪
+              <span key={index} className="relative inline-flex h-14 w-14 items-center justify-center drop-shadow-md" aria-hidden="true">
+                <SpriteIcon value="🍪" className="h-14 w-14" />
                 {index < 2 && <span className="absolute inset-0 flex items-center justify-center text-4xl font-black text-red-500">×</span>}
               </span>
             ))}
