@@ -76,7 +76,7 @@ type Visual =
   | { kind: "numberWithGroup"; value: number; emoji: string }
   | { kind: "sameValue"; count: number; emojis: string[] }
   | { kind: "layoutValue"; count: number; emoji: string }
-  | { kind: "compareGroups"; a: number; b: number; emojiA: string; emojiB: string; ask: "more" | "fewer" }
+  | { kind: "compareGroups"; a: number; b: number; emojiA: string; emojiB: string; ask: "same" | "more" | "fewer" }
   | { kind: "order"; nums: number[]; direction: "asc" | "desc" }
   | { kind: "symbol"; a: number; b: number; showObjects?: boolean }
   | { kind: "sequence"; nums: Array<number | "?"> }
@@ -656,12 +656,12 @@ const operationQuestions: Question[] = [
 
 const additionPracticeQuestions: Question[] = [
   q("l-add-build-2-3", "operations", { en: "Build the answer: 2 + 3.", ms: "Bina jawapan: 2 + 3." }, [], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }, "buildTotal"),
-  q("l-add-3-4", "operations", { en: "Chrys eats 3 bananas and 4 more bananas. How many bananas?", ms: "Chrys makan 3 pisang dan 4 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌" }),
-  q("l-add-2-4", "operations", { en: "Chrys has 2 bananas and gets 4 more. How many bananas now?", ms: "Chrys ada 2 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 2, b: 4, emoji: "🍌" }),
-  q("l-add-4-5", "operations", { en: "Chrys has 4 bananas. Chrys finds 5 more. How many bananas?", ms: "Chrys ada 4 pisang. Chrys jumpa 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
-  q("l-add-0-6", "operations", { en: "Chrys starts with 0 bananas and gets 6 bananas. How many bananas?", ms: "Chrys mula dengan 0 pisang dan dapat 6 pisang. Berapa pisang?" }, [0, 5, 6, 7], 6, { kind: "add", a: 0, b: 6, emoji: "🍌" }),
-  q("l-add-6-1", "operations", { en: "Chrys eats 6 bananas and 1 more banana. How many bananas?", ms: "Chrys makan 6 pisang dan 1 pisang lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍌" }),
-  q("l-add-8-1", "operations", { en: "Chrys has 8 bananas and gets 1 more. How many bananas now?", ms: "Chrys ada 8 pisang dan dapat 1 lagi. Berapa pisang sekarang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🍌" }),
+  q("l-add-3-4", "operations", { en: "Chrys eats 3 bananas, then eats 4 more. How many bananas does he eat altogether?", ms: "Chrys makan 3 pisang dan 4 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌" }),
+  q("l-add-2-4", "operations", { en: "Chrys has 2 bananas and gets 4 more. How many bananas does he have now?", ms: "Chrys ada 2 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 2, b: 4, emoji: "🍌" }),
+  q("l-add-4-5", "operations", { en: "Chrys has 4 bananas. He finds 5 more. How many bananas does he have now?", ms: "Chrys ada 4 pisang. Chrys jumpa 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
+  q("l-add-0-6", "operations", { en: "Chrys starts with 0 bananas and gets 6 bananas. How many bananas does he have now?", ms: "Chrys mula dengan 0 pisang dan dapat 6 pisang. Berapa pisang?" }, [0, 5, 6, 7], 6, { kind: "add", a: 0, b: 6, emoji: "🍌" }),
+  q("l-add-6-1", "operations", { en: "Chrys eats 6 bananas, then eats 1 more. How many bananas does he eat altogether?", ms: "Chrys makan 6 pisang dan 1 pisang lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍌" }),
+  q("l-add-8-1", "operations", { en: "Chrys has 8 bananas and gets 1 more. How many bananas does he have now?", ms: "Chrys ada 8 pisang dan dapat 1 lagi. Berapa pisang sekarang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🍌" }),
 ];
 
 const subtractionPracticeQuestions: Question[] = [
@@ -678,11 +678,11 @@ const realQuestions: Question[] = [
   q("r-count-apples", "real", { en: "Count the apples.", ms: "Kira epal." }, [3, 4, 5, 6], 5, { kind: "count", emoji: "🍎", count: 5 }),
   q("r-count-pencils", "real", { en: "Count the pencils.", ms: "Kira pensel." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "✏️", count: 7 }),
 q("r-count-cups", "real", { en: "How many cups are on the tray?", ms: "Ada berapa cawan di atas dulang?" }, [0, 1, 2, 3], 0, { kind: "count", emoji: "🥤", count: 0, container: "tray" }),
-q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the basket. How many oranges?", ms: "Ada 3 oren. Letak 4 oren lagi dalam bakul. Berapa oren?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍊", container: "basket" }),
-  q("r-add-books", "real", { en: "Chrys has 1 book and gets 6 more books. How many books?", ms: "Chrys ada 1 buku dan dapat 6 buku lagi. Berapa buku?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "📘" }),
-  q("r-add-bananas", "real", { en: "Chrys has 2 bananas. His friend gives him 5 more. How many bananas?", ms: "Chrys ada 2 pisang. Kawannya beri 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 2, b: 5, emoji: "🍌" }),
-  q("r-add-flowers", "real", { en: "There are 4 flowers. Add 0 more flowers. How many flowers?", ms: "Ada 4 bunga. Tambah 0 bunga lagi. Berapa bunga?" }, [0, 3, 4, 5], 4, { kind: "add", a: 4, b: 0, emoji: "🌸" }),
-  q("r-add-eggs", "real", { en: "5 eggs and 4 more eggs. How many eggs?", ms: "5 telur dan 4 telur lagi. Berapa telur?" }, [6, 7, 8, 9], 9, { kind: "add", a: 5, b: 4, emoji: "🥚" }),
+q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the basket. How many oranges are in the basket now?", ms: "Ada 3 oren. Letak 4 oren lagi dalam bakul. Berapa oren?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍊", container: "basket" }),
+  q("r-add-books", "real", { en: "Chrys has 1 book and gets 6 more books. How many books does he have now?", ms: "Chrys ada 1 buku dan dapat 6 buku lagi. Berapa buku?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "📘" }),
+  q("r-add-bananas", "real", { en: "Chrys has 2 bananas. His friend gives him 5 more. How many bananas does he have now?", ms: "Chrys ada 2 pisang. Kawannya beri 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 2, b: 5, emoji: "🍌" }),
+  q("r-add-flowers", "real", { en: "There are 4 flowers. Add 0 more flowers. How many flowers are there now?", ms: "Ada 4 bunga. Tambah 0 bunga lagi. Berapa bunga?" }, [0, 3, 4, 5], 4, { kind: "add", a: 4, b: 0, emoji: "🌸" }),
+  q("r-add-eggs", "real", { en: "There are 5 eggs. Add 4 more eggs. How many eggs are there now?", ms: "5 telur dan 4 telur lagi. Berapa telur?" }, [6, 7, 8, 9], 9, { kind: "add", a: 5, b: 4, emoji: "🥚" }),
   q("r-sub-cookies", "real", { en: "There are 8 cookies. Take away 3. How many are left?", ms: "Ada 8 biskut. Ambil 3. Tinggal berapa?" }, [4, 5, 6, 7], 5, { kind: "subtract", a: 8, b: 3, emoji: "🍪" }),
   q("r-sub-balloons", "real", { en: "There are 4 balloons. 0 balloons fly away. How many balloons are left?", ms: "Ada 4 belon. 0 belon terbang pergi. Tinggal berapa belon?" }, [0, 3, 4, 5], 4, { kind: "subtract", a: 4, b: 0, emoji: "🎈" }),
   q("r-sub-pencils", "real", { en: "There are 9 pencils. You give away 2 pencils. How many pencils are left?", ms: "Ada 9 pensel. Kamu beri 2 pensel. Tinggal berapa pensel?" }, [5, 6, 7, 8], 7, { kind: "subtract", a: 9, b: 2, emoji: "✏️" }),
@@ -694,11 +694,11 @@ q("r-add-oranges", "real", { en: "There are 3 oranges. Put 4 more oranges in the
 
 const realPracticeQuestions: Question[] = [
   q("rp-count-pears", "real", { en: "How many pears does Chrys see?", ms: "Berapa buah pir yang Chrys nampak?" }, [0, 1, 2, 3], 2, { kind: "count", emoji: "\u{1F350}", count: 2 }),
-  q("rp-add-watermelon", "real", { en: "Chrys has 1 watermelon slice and finds 1 more. How many slices?", ms: "Chrys ada 1 potong tembikai dan jumpa 1 lagi. Berapa potong tembikai?" }, [1, 2, 3, 4], 2, { kind: "add", a: 1, b: 1, emoji: "\u{1F349}" }),
+  q("rp-add-watermelon", "real", { en: "Chrys has 1 watermelon slice and finds 1 more. How many slices does he have now?", ms: "Chrys ada 1 potong tembikai dan jumpa 1 lagi. Berapa potong tembikai?" }, [1, 2, 3, 4], 2, { kind: "add", a: 1, b: 1, emoji: "\u{1F349}" }),
   q("rp-sub-kiwi", "real", { en: "Chrys has 3 kiwi slices. He eats 1. How many slices are left?", ms: "Chrys ada 3 potong kiwi. Dia makan 1. Tinggal berapa potong kiwi?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 3, b: 1, emoji: "\u{1F95D}" }),
-  q("rp-add-oranges", "real", { en: "Chrys has 2 oranges. He finds 3 more. How many oranges?", ms: "Chrys ada 2 oren. Dia jumpa 3 lagi. Berapa oren?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "\u{1F34A}" }),
+  q("rp-add-oranges", "real", { en: "Chrys has 2 oranges. He finds 3 more. How many oranges does he have now?", ms: "Chrys ada 2 oren. Dia jumpa 3 lagi. Berapa oren?" }, [3, 4, 5, 6], 5, { kind: "add", a: 2, b: 3, emoji: "\u{1F34A}" }),
   q("rp-sub-pineapples", "real", { en: "Chrys has 5 pineapples. He gives away 1. How many are left?", ms: "Chrys ada 5 nanas. Dia beri 1. Tinggal berapa nanas?" }, [3, 4, 5, 6], 4, { kind: "subtract", a: 5, b: 1, emoji: "\u{1F34D}" }),
-  q("rp-add-apples", "real", { en: "2 apples are in the basket. Add 3 more. How many apples?", ms: "Ada 2 epal dalam bakul. Tambah 3 lagi. Berapa epal?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "\u{1F34E}", container: "basket" }),
+  q("rp-add-apples", "real", { en: "There are 2 apples in the basket. Add 3 more. How many apples are in the basket now?", ms: "Ada 2 epal dalam bakul. Tambah 3 lagi. Berapa epal?" }, [4, 5, 6, 7], 5, { kind: "add", a: 2, b: 3, emoji: "\u{1F34E}", container: "basket" }),
   q("rp-choose-strawberries", "real", { en: "Chrys has 4 strawberries. He finds 2 more. Is this adding or taking away?", ms: "Chrys ada 4 strawberi. Dia jumpa 2 lagi. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Adding", { kind: "add", a: 4, b: 2, emoji: "\u{1F353}" }),
   q("rp-choose-lemons", "real", { en: "Chrys has 6 lemons. He gives away 2. Is this adding or taking away?", ms: "Chrys ada 6 lemon. Dia beri 2. Ini tambah atau tolak?" }, ["Adding", "Taking away"], "Taking away", { kind: "subtract", a: 6, b: 2, emoji: "\u{1F34B}" }),
 ];
@@ -712,15 +712,15 @@ q("rt-count-cups-1", "real", { en: "How many cups are on the tray?", ms: "Ada be
   q("rt-count-flowers-9", "real", { en: "Count the flowers.", ms: "Kira bunga." }, [6, 7, 8, 9], 9, { kind: "count", emoji: "🌸", count: 9 }),
   q("rt-count-eggs-2", "real", { en: "Count the eggs.", ms: "Kira telur." }, [0, 1, 2, 3], 2, { kind: "count", emoji: "🥚", count: 2 }),
   q("rt-count-toys-7", "real", { en: "Count the toy cars.", ms: "Kira kereta mainan." }, [5, 6, 7, 8], 7, { kind: "count", emoji: "🚗", count: 7 }),
-  q("rt-add-bananas-1-6", "real", { en: "Chrys has 1 banana. Chrys finds 6 more. How many bananas?", ms: "Chrys ada 1 pisang. Chrys jumpa 6 lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "🍌" }),
-  q("rt-add-apples-4-3", "real", { en: "4 apples and 3 more apples. How many apples?", ms: "4 epal dan 3 epal lagi. Berapa epal?" }, [5, 6, 7, 8], 7, { kind: "add", a: 4, b: 3, emoji: "🍎" }),
-  q("rt-add-oranges-6-1", "real", { en: "There are 6 oranges. Add 1 more orange. How many oranges?", ms: "Ada 6 oren. Tambah 1 oren lagi. Berapa oren?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍊" }),
-  q("rt-add-books-2-4", "real", { en: "Chrys has 2 books and finds 4 more books. How many books?", ms: "Chrys ada 2 buku dan jumpa 4 buku lagi. Berapa buku?" }, [4, 5, 6, 7], 6, { kind: "add", a: 2, b: 4, emoji: "📘" }),
-  q("rt-add-cups-8-1", "real", { en: "There are 8 cups. Add 1 more cup. How many cups?", ms: "Ada 8 cawan. Tambah 1 cawan lagi. Berapa cawan?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🥤" }),
-  q("rt-add-flowers-5-2", "real", { en: "There are 5 flowers. Add 2 more flowers. How many flowers?", ms: "Ada 5 bunga. Tambah 2 bunga lagi. Berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "add", a: 5, b: 2, emoji: "🌸" }),
-  q("rt-add-eggs-3-5", "real", { en: "3 eggs and 5 more eggs. How many eggs?", ms: "3 telur dan 5 telur lagi. Berapa telur?" }, [6, 7, 8, 9], 8, { kind: "add", a: 3, b: 5, emoji: "🥚" }),
-  q("rt-add-toys-9-0", "real", { en: "There are 9 toy cars. Add 0 more toy cars. How many toy cars?", ms: "Ada 9 kereta mainan. Tambah 0 lagi. Berapa kereta mainan?" }, [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "🚗" }),
-q("rt-add-bananas-0-5", "real", { en: "The basket has 0 bananas. Put in 5 bananas. How many bananas?", ms: "Bakul ada 0 pisang. Letak 5 pisang. Berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "add", a: 0, b: 5, emoji: "🍌", container: "basket" }),
+  q("rt-add-bananas-1-6", "real", { en: "Chrys has 1 banana. He finds 6 more. How many bananas does he have now?", ms: "Chrys ada 1 pisang. Chrys jumpa 6 lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 1, b: 6, emoji: "🍌" }),
+  q("rt-add-apples-4-3", "real", { en: "There are 4 apples. Add 3 more apples. How many apples are there now?", ms: "4 epal dan 3 epal lagi. Berapa epal?" }, [5, 6, 7, 8], 7, { kind: "add", a: 4, b: 3, emoji: "🍎" }),
+  q("rt-add-oranges-6-1", "real", { en: "There are 6 oranges. Add 1 more orange. How many oranges are there now?", ms: "Ada 6 oren. Tambah 1 oren lagi. Berapa oren?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍊" }),
+  q("rt-add-books-2-4", "real", { en: "Chrys has 2 books and finds 4 more. How many books does he have now?", ms: "Chrys ada 2 buku dan jumpa 4 buku lagi. Berapa buku?" }, [4, 5, 6, 7], 6, { kind: "add", a: 2, b: 4, emoji: "📘" }),
+  q("rt-add-cups-8-1", "real", { en: "There are 8 cups. Add 1 more cup. How many cups are there now?", ms: "Ada 8 cawan. Tambah 1 cawan lagi. Berapa cawan?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🥤" }),
+  q("rt-add-flowers-5-2", "real", { en: "There are 5 flowers. Add 2 more flowers. How many flowers are there now?", ms: "Ada 5 bunga. Tambah 2 bunga lagi. Berapa bunga?" }, [5, 6, 7, 8], 7, { kind: "add", a: 5, b: 2, emoji: "🌸" }),
+  q("rt-add-eggs-3-5", "real", { en: "There are 3 eggs. Add 5 more eggs. How many eggs are there now?", ms: "3 telur dan 5 telur lagi. Berapa telur?" }, [6, 7, 8, 9], 8, { kind: "add", a: 3, b: 5, emoji: "🥚" }),
+  q("rt-add-toys-9-0", "real", { en: "There are 9 toy cars. Add 0 more toy cars. How many toy cars are there now?", ms: "Ada 9 kereta mainan. Tambah 0 lagi. Berapa kereta mainan?" }, [0, 7, 8, 9], 9, { kind: "add", a: 9, b: 0, emoji: "🚗" }),
+q("rt-add-bananas-0-5", "real", { en: "The basket has 0 bananas. Put in 5 bananas. How many bananas are in the basket now?", ms: "Bakul ada 0 pisang. Letak 5 pisang. Berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "add", a: 0, b: 5, emoji: "🍌", container: "basket" }),
   q("rt-sub-bananas-9-3", "real", { en: "Chrys has 9 bananas. He eats 3 bananas. How many bananas are left?", ms: "Chrys ada 9 pisang. Dia makan 3 pisang. Tinggal berapa pisang?" }, [4, 5, 6, 7], 6, { kind: "subtract", a: 9, b: 3, emoji: "🍌" }),
   q("rt-sub-apples-8-6", "real", { en: "There are 8 apples. You eat 6 apples. How many apples are left?", ms: "Ada 8 epal. Kamu makan 6 epal. Tinggal berapa epal?" }, [1, 2, 3, 4], 2, { kind: "subtract", a: 8, b: 6, emoji: "🍎" }),
   q("rt-sub-oranges-7-1", "real", { en: "There are 7 oranges. You take away 1 orange. How many oranges are left?", ms: "Ada 7 oren. Kamu ambil 1 oren. Tinggal berapa oren?" }, [5, 6, 7, 8], 6, { kind: "subtract", a: 7, b: 1, emoji: "🍊" }),
@@ -2802,6 +2802,8 @@ function getNumberValueMaxPhase(n: number) {
 
 function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: string; phase: number; lang: Lang }) {
   const [counting, setCounting] = useState(false);
+  const [singleCountValue, setSingleCountValue] = useState(0);
+  const [singleCountComplete, setSingleCountComplete] = useState(false);
   const [pairedCount, setPairedCount] = useState(0);
   const [countRun, setCountRun] = useState(0);
   const [comparisonEmojiA, comparisonEmojiB] = VALUE_COMPARISON_PAIRS[(Math.max(1, n) - 1) % VALUE_COMPARISON_PAIRS.length];
@@ -2809,9 +2811,16 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     setPairedCount(value);
     if (value >= n) setCounting(false);
   }, [n]);
+  const finishSingleCount = useCallback(() => {
+    setSingleCountValue(n);
+    setSingleCountComplete(true);
+    setCounting(false);
+  }, [n]);
 
   useEffect(() => {
     setCounting(false);
+    setSingleCountValue(0);
+    setSingleCountComplete(false);
     setPairedCount(0);
     setCountRun(0);
   }, [n, emoji, phase]);
@@ -2844,10 +2853,20 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     return (
       <div className="space-y-3">
         <button
-          onClick={() => setCounting(true)}
+          onClick={() => {
+            setSingleCountValue(0);
+            setSingleCountComplete(false);
+            setCounting(true);
+            setCountRun((run) => run + 1);
+          }}
+          disabled={counting}
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
         >
-          {lang === "en" ? "Tap to count" : "Tekan untuk kira"}
+          {counting
+            ? (lang === "en" ? "Counting..." : "Mengira...")
+            : singleCountComplete
+              ? (lang === "en" ? "Count again" : "Kira lagi")
+              : (lang === "en" ? "Tap to count" : "Tekan untuk kira")}
           <span
             className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
             aria-hidden="true"
@@ -2855,11 +2874,26 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             <PointerIcon />
           </span>
         </button>
-        {counting
-          ? <CountedObjectRow key={`${n}-${emoji}-count-on`} count={n} emoji={emoji} showCount speakCount lang={lang} intervalMs={650} />
+        {counting || singleCountComplete
+          ? <CountedObjectRow
+              key={`${n}-${emoji}-count-on-${countRun}`}
+              count={n}
+              emoji={emoji}
+              showCount
+              speakCount={counting}
+              visibleCount={singleCountComplete && !counting ? n : undefined}
+              onCountProgress={setSingleCountValue}
+              onCountComplete={finishSingleCount}
+              lang={lang}
+              intervalMs={COUNTING_STEP_MS}
+            />
           : <ObjectGroup count={n} emoji={emoji} lang={lang} />}
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900">
-          {totalText}
+        <p className={`rounded-2xl px-4 py-3 text-xl font-black ${singleCountComplete ? "bg-emerald-50 text-emerald-900" : "bg-blue-50 text-blue-900"}`} aria-live="polite">
+          {singleCountComplete
+            ? totalText
+            : singleCountValue > 0
+              ? (lang === "en" ? `Counting: ${singleCountValue}` : `Mengira: ${singleCountValue}`)
+              : (lang === "en" ? "Count each object one by one." : "Kira setiap objek satu demi satu.")}
         </p>
       </div>
     );
@@ -3452,11 +3486,41 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, groupC, lang 
 }
 
 function GroupingTray({ label, count, emoji, counted, active = false, lang }: { label?: string; count: number; emoji: string; counted: boolean; active?: boolean; lang: Lang }) {
+  const [currentCount, setCurrentCount] = useState(0);
+  const [countComplete, setCountComplete] = useState(false);
+  const finishCounting = useCallback(() => {
+    setCurrentCount(count);
+    setCountComplete(true);
+  }, [count]);
+
+  useEffect(() => {
+    setCurrentCount(0);
+    setCountComplete(false);
+  }, [count, counted, emoji, lang]);
+
   return (
     <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
       {label && <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>}
-      {counted ? <CountedObjectRow count={count} emoji={emoji} showCount compact speakCount lang={lang} /> : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
-      {counted && <CountTotalBadge count={count} lang={lang} unit={objectName(emoji, count, lang)} />}
+      {counted ? (
+        <CountedObjectRow
+          count={count}
+          emoji={emoji}
+          showCount
+          compact
+          speakCount
+          lang={lang}
+          intervalMs={COUNTING_STEP_MS}
+          onCountProgress={setCurrentCount}
+          onCountComplete={finishCounting}
+        />
+      ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
+      {counted && (
+        <div className="min-h-16" aria-live="polite">
+          {countComplete
+            ? <CountTotalBadge count={count} lang={lang} unit={objectName(emoji, count, lang)} />
+            : <p className="mt-3 rounded-full bg-blue-50 px-4 py-3 text-lg font-black text-blue-900">{lang === "en" ? `Counting: ${currentCount}` : `Mengira: ${currentCount}`}</p>}
+        </div>
+      )}
     </div>
   );
 }
@@ -3817,9 +3881,9 @@ function RealWorldSituationCard({ title, prompt, children }: {
 
 function MiniAppleBasket({ count }: { count: number }) {
   const positions = [
-    "left-[28%] top-[23%]",
-    "right-[28%] top-[23%]",
-    "left-1/2 bottom-[9%] -translate-x-1/2",
+    "left-[40%] top-[42%] -translate-x-1/2 -translate-y-1/2",
+    "left-[60%] top-[42%] -translate-x-1/2 -translate-y-1/2",
+    "left-1/2 top-[65%] -translate-x-1/2 -translate-y-1/2",
   ];
   return (
     <div className="relative mx-auto h-40 max-w-64">
@@ -3915,7 +3979,12 @@ function FindClueWordExample({ lang }: { lang: Lang }) {
             {[0, 1, 2, 3].map((index) => (
               <span key={index} className="relative inline-flex h-14 w-14 items-center justify-center drop-shadow-md" aria-hidden="true">
                 <SpriteIcon value="🍪" className="h-14 w-14" />
-                {index < 2 && <span className="absolute inset-0 flex items-center justify-center text-4xl font-black text-red-500">×</span>}
+                {index < 2 && (
+                  <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
+                    <span className="absolute h-2.5 w-9 rotate-45 rounded-full border border-white bg-red-600 shadow-sm" />
+                    <span className="absolute h-2.5 w-9 -rotate-45 rounded-full border border-white bg-red-600 shadow-sm" />
+                  </span>
+                )}
               </span>
             ))}
           </div>
@@ -3928,7 +3997,56 @@ function FindClueWordExample({ lang }: { lang: Lang }) {
   );
 }
 
+function StoryBird({ flying }: { flying: boolean }) {
+  return (
+    <svg viewBox="0 0 86 72" className="h-14 w-16 overflow-visible drop-shadow-[0_4px_2px_rgba(15,23,42,.22)]" aria-hidden="true">
+      <path d="M20 39 5 28l3 20 17-3Z" fill="#2563eb" stroke="#1e3a8a" strokeWidth="2.5" strokeLinejoin="round" />
+      <ellipse cx="38" cy="40" rx="27" ry="20" fill="#38bdf8" stroke="#1e3a8a" strokeWidth="3" />
+      <circle cx="60" cy="26" r="15" fill="#7dd3fc" stroke="#1e3a8a" strokeWidth="3" />
+      <path d="m73 25 11 5-11 6Z" fill="#f59e0b" stroke="#b45309" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="64" cy="22" r="3" fill="#0f172a" />
+      <circle cx="65" cy="21" r="1" fill="white" />
+      <ellipse
+        cx="36"
+        cy="40"
+        rx="16"
+        ry="10"
+        fill="#facc15"
+        stroke="#ca8a04"
+        strokeWidth="2.5"
+        className="transition-transform duration-300"
+        style={{ transformBox: "fill-box", transformOrigin: "center", transform: flying ? "rotate(-28deg) translateY(-3px)" : "rotate(-8deg)" }}
+      />
+      <path d="M30 58v7m13-7v7m-16 0h7m6 0h7" fill="none" stroke="#b45309" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function SolveRealStoryExample({ lang }: { lang: Lang }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [birdStage, setBirdStage] = useState<"together" | "flying" | "complete">("together");
+  const [birdAnimationRun, setBirdAnimationRun] = useState(0);
+
+  useEffect(() => {
+    setBirdStage("together");
+
+    const takeOffTimer = window.setTimeout(
+      () => setBirdStage(prefersReducedMotion ? "complete" : "flying"),
+      1500,
+    );
+    const completeTimer = window.setTimeout(
+      () => setBirdStage("complete"),
+      prefersReducedMotion ? 1500 : 3400,
+    );
+
+    return () => {
+      window.clearTimeout(takeOffTimer);
+      window.clearTimeout(completeTimer);
+    };
+  }, [birdAnimationRun, lang, prefersReducedMotion]);
+
+  const birdPositions = ["18%", "34%", "50%", "66%", "82%"];
+
   return (
     <div className="space-y-4 rounded-[2rem] border-2 border-sky-100 bg-sky-50 p-4 shadow-[0_6px_0_rgba(14,116,144,.12)]">
       <p className="rounded-3xl bg-white p-5 text-center text-xl font-black leading-relaxed text-blue-950 md:text-2xl">
@@ -3943,39 +4061,84 @@ function SolveRealStoryExample({ lang }: { lang: Lang }) {
         {lang === "en" ? ". How many are left?" : ". Berapa yang tinggal?"}
       </p>
 
-      <div className="relative overflow-hidden rounded-[2rem] border-2 border-sky-200 bg-gradient-to-b from-sky-200 to-emerald-100 p-5">
-        <SpriteIcon value="🌳" className="absolute bottom-2 left-3 h-36 w-36 opacity-90" />
-        <div className="relative z-10 grid min-h-44 grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {[0, 1, 2].map((index) => <span key={index} className="text-5xl drop-shadow-md" aria-hidden="true">🐦</span>)}
+      <div className="relative overflow-hidden rounded-[2rem] border-2 border-sky-200 bg-gradient-to-b from-sky-200 via-sky-100 to-emerald-100 shadow-inner">
+        <div className="absolute right-[8%] top-6 h-14 w-14 rounded-full bg-yellow-200/80 shadow-[0_0_28px_rgba(250,204,21,.45)]" aria-hidden="true" />
+        <div className="absolute left-[9%] top-8 h-8 w-24 rounded-full bg-white/70 blur-[1px]" aria-hidden="true" />
+        <div className="absolute left-[5%] top-12 h-7 w-32 rounded-full bg-white/70 blur-[1px]" aria-hidden="true" />
+
+        <div className="relative min-h-72 sm:min-h-80" aria-label={lang === "en" ? "Five birds on a tree branch; two fly away" : "Lima burung di atas dahan; dua terbang pergi"}>
+          <div className="absolute -bottom-12 -left-7 h-64 w-36 rounded-[48%_52%_30%_25%] bg-gradient-to-r from-amber-950 via-amber-800 to-amber-700 shadow-lg" aria-hidden="true">
+            <span className="absolute bottom-8 right-6 top-16 w-3 rounded-full bg-amber-600/45" />
           </div>
-          <div className="text-center">
-            <span className="block text-4xl font-black text-red-600">←</span>
-            <span className="mt-1 block rounded-full bg-red-100 px-3 py-1 text-sm font-black text-red-800">
-              {lang === "en" ? "2 fly away" : "2 terbang pergi"}
-            </span>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <span className="-translate-y-6 text-5xl drop-shadow-md" aria-hidden="true">🐦</span>
-            <span className="translate-y-6 text-5xl drop-shadow-md" aria-hidden="true">🐦</span>
+          <div className="absolute -left-12 bottom-32 h-32 w-48 rounded-full border-b-8 border-emerald-800/25 bg-emerald-600 shadow-[50px_-20px_0_#22c55e,88px_8px_0_#16a34a]" aria-hidden="true" />
+          <div className="absolute bottom-[28%] left-[10%] right-[6%] h-7 -rotate-1 rounded-full border-b-4 border-amber-950/40 bg-gradient-to-b from-amber-700 to-amber-900 shadow-lg" aria-hidden="true" />
+          <div className="absolute bottom-[29%] right-[7%] h-5 w-32 origin-right -rotate-[18deg] rounded-full bg-amber-800" aria-hidden="true" />
+
+          {birdPositions.map((left, index) => {
+            const fliesAway = index >= 3;
+            const isLeaving = fliesAway && birdStage !== "together";
+            const flightTransform = index === 3
+              ? "translate(calc(-50% + min(46vw, 24rem)), -5rem) rotate(-10deg)"
+              : "translate(calc(-50% + min(52vw, 28rem)), -8rem) rotate(8deg)";
+
+            return (
+              <span
+                key={index}
+                className="absolute bottom-[34%] z-10 flex h-20 w-16 items-center justify-center"
+                style={{
+                  left,
+                  opacity: isLeaving ? 0 : 1,
+                  transform: isLeaving ? flightTransform : "translateX(-50%)",
+                  transition: prefersReducedMotion
+                    ? "none"
+                    : `transform 1500ms cubic-bezier(.2,.75,.2,1) ${index === 4 ? 180 : 0}ms, opacity 300ms ease ${index === 4 ? 1250 : 1070}ms`,
+                }}
+                aria-hidden="true"
+              >
+                <span className="absolute -top-1 left-1/2 z-20 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full border-2 border-white bg-blue-600 px-1 text-sm font-black text-white shadow-md">
+                  {index + 1}
+                </span>
+                <StoryBird flying={isLeaving} />
+              </span>
+            );
+          })}
+
+          <div className="absolute inset-x-3 bottom-3 z-20 flex flex-col items-center gap-2 text-center">
+            <p className={`rounded-full border-2 bg-white/95 px-5 py-2 text-lg font-black shadow-md ${birdStage === "complete" ? "border-emerald-300 text-emerald-900" : birdStage === "flying" ? "border-red-200 text-red-700" : "border-blue-200 text-blue-900"}`} aria-live="polite">
+              {birdStage === "together"
+                ? (lang === "en" ? "Start with 5 birds." : "Mula dengan 5 burung.")
+                : birdStage === "flying"
+                  ? (lang === "en" ? "Watch birds 4 and 5 fly away!" : "Lihat burung 4 dan 5 terbang pergi!")
+                  : (lang === "en" ? "3 birds stay. 2 birds flew away." : "3 burung tinggal. 2 burung terbang pergi.")}
+            </p>
+            {birdStage === "complete" && (
+              <button
+                type="button"
+                onClick={() => setBirdAnimationRun((run) => run + 1)}
+                className="rounded-full border-2 border-blue-300 bg-white px-4 py-1.5 text-sm font-black text-blue-800 shadow-sm transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
+              >
+                ↻ {lang === "en" ? "Watch again" : "Lihat lagi"}
+              </button>
+            )}
           </div>
         </div>
-        <p className="relative z-10 mt-2 text-center text-xl font-black text-emerald-950">
-          {lang === "en" ? "3 birds stay. 2 birds fly away." : "3 burung tinggal. 2 burung terbang pergi."}
-        </p>
       </div>
 
-      <RealWorldStepGrid
-        steps={[
-          { label: lang === "en" ? "Find the numbers" : "Cari nombor", value: "5, 2" },
-          { label: lang === "en" ? "Find the clue" : "Cari petunjuk", value: lang === "en" ? "fly away" : "terbang pergi" },
-          { label: lang === "en" ? "Choose" : "Pilih", value: lang === "en" ? "take away (-)" : "tolak (-)" },
-          { label: lang === "en" ? "Count what is left" : "Kira yang tinggal", value: "3" },
-        ]}
-      />
-      <p className="rounded-2xl bg-emerald-100 p-4 text-center text-3xl font-black text-emerald-950">
-        5 - 2 = 3
-      </p>
+      {birdStage === "complete" && (
+        <div className="space-y-4">
+          <RealWorldStepGrid
+            steps={[
+              { label: lang === "en" ? "Find the numbers" : "Cari nombor", value: "5, 2" },
+              { label: lang === "en" ? "Find the clue" : "Cari petunjuk", value: lang === "en" ? "fly away" : "terbang pergi" },
+              { label: lang === "en" ? "Choose" : "Pilih", value: lang === "en" ? "take away (-)" : "tolak (-)" },
+              { label: lang === "en" ? "Count what is left" : "Kira yang tinggal", value: "3" },
+            ]}
+          />
+          <p className="rounded-2xl bg-emerald-100 p-4 text-center text-3xl font-black text-emerald-950">
+            5 - 2 = 3
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -6622,6 +6785,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
 }) {
   const [phase, setPhase] = useState<SubtractionPhase>("start");
   const [cuePlaying, setCuePlaying] = useState(false);
+  const [remainingCountValue, setRemainingCountValue] = useState(0);
   const left = start - takeAway;
   const intervalMs = COUNTING_STEP_MS;
   const crossed = phase === "start" ? 0 : takeAway;
@@ -6630,11 +6794,20 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
 
   const finishCrossCount = useCallback(() => setPhase((current) => current === "crossing" ? "crossed" : current), []);
   const finishRemainingCount = useCallback(() => {
+    setRemainingCountValue(left);
     setPhase((current) => current === "counting" ? "done" : current);
     onComplete?.();
-  }, [onComplete]);
+  }, [left, onComplete]);
 
-  const instruction = getSubtractionFlowInstruction(lang, phase, start, takeAway, left, emoji);
+  useEffect(() => {
+    setPhase("start");
+    setCuePlaying(false);
+    setRemainingCountValue(0);
+  }, [emoji, start, takeAway]);
+
+  const instruction = phase === "counting" && remainingCountValue > 0
+    ? [lang === "en" ? `Counting what is left: ${remainingCountValue}` : `Mengira yang tinggal: ${remainingCountValue}`]
+    : getSubtractionFlowInstruction(lang, phase, start, takeAway, left, emoji);
   const actionLabel = phase === "start"
     ? (lang === "en" ? "Tap to take away" : "Tekan untuk ambil")
     : (lang === "en" ? "Tap to count what is left" : "Tekan untuk kira yang tinggal");
@@ -6642,6 +6815,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
   const advancePhase = async () => {
     if (cuePlaying || (phase !== "start" && phase !== "crossed")) return;
     setCuePlaying(true);
+    if (phase === "crossed") setRemainingCountValue(0);
     await speakMathCue(phase === "start" ? "minus" : "equals", lang);
     setCuePlaying(false);
     setPhase(phase === "start" ? "crossing" : "counting");
@@ -6661,6 +6835,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
           intervalMs={intervalMs}
           speakCrossCount={phase === "crossing"}
           speakCount={phase === "counting" || phase === "done"}
+          onCountProgress={setRemainingCountValue}
           onCrossCountComplete={finishCrossCount}
           onCountComplete={finishRemainingCount}
           lang={lang}
@@ -8263,7 +8438,12 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
                 {i + 1}
               </span>
             )}
-            {gone && <span className="absolute text-5xl font-black text-red-500">×</span>}
+            {gone && (
+              <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center" aria-hidden="true">
+                <span className="absolute h-2.5 w-8 rotate-45 rounded-full border border-white bg-red-600 shadow-sm" />
+                <span className="absolute h-2.5 w-8 -rotate-45 rounded-full border border-white bg-red-600 shadow-sm" />
+              </span>
+            )}
           </div>
         );
       })}
@@ -8451,6 +8631,62 @@ function CompareGroupsVisual({ a, b, emojiA, emojiB, lang, showReason = false }:
   );
 }
 
+function CountedGroupTwoSolution({ visual, lang }: {
+  visual: Extract<Visual, { kind: "groupTwo" }>;
+  lang: Lang;
+}) {
+  const [stage, setStage] = useState(0);
+  const finishFirstGroup = useCallback(() => setStage((current) => Math.max(current, 1)), []);
+  const finishSecondGroup = useCallback(() => setStage(2), []);
+
+  useEffect(() => setStage(0), [visual.a, visual.b, visual.emoji]);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 0 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"}`}>
+          <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 1" : "Kumpulan 1"}</p>
+          <CountedObjectRow
+            count={visual.a}
+            emoji={visual.emoji}
+            showCount
+            speakCount={stage === 0}
+            visibleCount={stage > 0 ? visual.a : undefined}
+            onCountComplete={finishFirstGroup}
+            lang={lang}
+          />
+          {stage >= 1 && <CountTotalBadge count={visual.a} lang={lang} unit={objectName(visual.emoji, visual.a, lang)} />}
+        </div>
+
+        <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 1 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage === 0 ? "opacity-35 grayscale" : ""}`}>
+          <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 2" : "Kumpulan 2"}</p>
+          {stage >= 1 ? (
+            <CountedObjectRow
+              count={visual.b}
+              emoji={visual.emoji}
+              showCount
+              speakCount={stage === 1}
+              visibleCount={stage > 1 ? visual.b : undefined}
+              onCountComplete={finishSecondGroup}
+              lang={lang}
+            />
+          ) : (
+            <ObjectGroup count={visual.b} emoji={visual.emoji} lang={lang} />
+          )}
+          {stage >= 2 && <CountTotalBadge count={visual.b} lang={lang} unit={objectName(visual.emoji, visual.b, lang)} />}
+        </div>
+      </div>
+      <p className="rounded-2xl bg-blue-50 px-4 py-3 text-center text-lg font-black text-blue-900" aria-live="polite">
+        {stage === 0
+          ? (lang === "en" ? "Count Group 1 one by one." : "Kira Kumpulan 1 satu demi satu.")
+          : stage === 1
+            ? (lang === "en" ? "Now count Group 2 one by one." : "Sekarang kira Kumpulan 2 satu demi satu.")
+            : (lang === "en" ? "Both groups are counted." : "Kedua-dua kumpulan telah dikira.")}
+      </p>
+    </div>
+  );
+}
+
 function CountedCompareGroupsSolution({ visual, lang }: {
   visual: Extract<Visual, { kind: "compareGroups" }>;
   lang: Lang;
@@ -8510,9 +8746,13 @@ function CountedCompareGroupsSolution({ visual, lang }: {
           ? (lang === "en" ? "Count Group A first." : "Kira Kumpulan A dahulu.")
           : stage === 1
             ? (lang === "en" ? "Now count Group B." : "Sekarang kira Kumpulan B.")
-            : visual.ask === "more"
-              ? (lang === "en" ? `${larger} is more.` : `${larger} lebih banyak.`)
-              : (lang === "en" ? `${smaller} is less.` : `${smaller} lebih sedikit.`)}
+            : visual.ask === "same"
+              ? visual.a === visual.b
+                ? (lang === "en" ? "The groups are the same." : "Kumpulan ini sama.")
+                : (lang === "en" ? "The groups are different." : "Kumpulan ini berbeza.")
+              : visual.ask === "more"
+                ? (lang === "en" ? `${larger} is more.` : `${larger} lebih banyak.`)
+                : (lang === "en" ? `${smaller} is less.` : `${smaller} lebih sedikit.`)}
       </p>
     </div>
   );
@@ -9740,6 +9980,52 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false }: {
   );
 }
 
+function SequentialCountResult({ count, emoji, lang }: { count: number; emoji: string; lang: Lang }) {
+  const [currentCount, setCurrentCount] = useState(0);
+  const [complete, setComplete] = useState(false);
+
+  const finishCounting = useCallback(() => {
+    setCurrentCount(count);
+    setComplete(true);
+  }, [count]);
+
+  useEffect(() => {
+    setCurrentCount(0);
+    setComplete(false);
+  }, [count, emoji, lang]);
+
+  return (
+    <div className="space-y-3">
+      <CountedObjectRow
+        count={count}
+        emoji={emoji}
+        showCount
+        speakCount
+        lang={lang}
+        intervalMs={COUNTING_STEP_MS}
+        onCountProgress={setCurrentCount}
+        onCountComplete={finishCounting}
+      />
+      <div className="min-h-16" aria-live="polite">
+        {complete ? (
+          <div className="space-y-3">
+            <CountTotalBadge count={count} lang={lang} unit={objectName(emoji, count, lang)} />
+            <p className="text-center text-lg font-black text-emerald-800">
+              {lang === "en" ? `This is ${count}.` : `Ini ${count}.`}
+            </p>
+          </div>
+        ) : (
+          <p className="rounded-full bg-blue-50 px-4 py-3 text-center text-xl font-black text-blue-900">
+            {currentCount > 0
+              ? (lang === "en" ? `Counting: ${currentCount}` : `Mengira: ${currentCount}`)
+              : (lang === "en" ? "Get ready to count one by one." : "Bersedia untuk mengira satu demi satu.")}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
   if (visual.kind === "teenBundle") {
     return <VisualDisplay visual={visual} lang={lang} revealNumbers />;
@@ -9751,15 +10037,7 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
         ? <ContainerScene count={0} emoji={emoji} container={visual.container} numbered lang={lang} />
         : <ObjectGroup count={0} emoji={emoji} numbered lang={lang} />;
     }
-    return (
-      <div className="space-y-3">
-        <CountedObjectRow count={visual.count} emoji={emoji} showCount speakCount lang={lang} />
-        <CountTotalBadge count={visual.count} lang={lang} unit={objectName(emoji, visual.count, lang)} />
-        <p className="text-center text-lg font-black text-emerald-800">
-          {lang === "en" ? `This is ${visual.count}.` : `Ini ${visual.count}.`}
-        </p>
-      </div>
-    );
+    return <SequentialCountResult count={visual.count} emoji={emoji} lang={lang} />;
   }
   if (visual.kind === "add") {
     return <AdditionBananaEquation lang={lang} a={visual.a} b={visual.b} emoji={visual.emoji ?? "🍌"} autoStart />;
@@ -9768,34 +10046,21 @@ function SolutionVisual({ visual, lang }: { visual: Visual; lang: Lang }) {
     return <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={visual.count} emoji={visual.emoji} counted lang={lang} />;
   }
   if (visual.kind === "groupTwo") {
-    return (
-      <div className="grid gap-4 md:grid-cols-2">
-        <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={visual.a} emoji={visual.emoji} counted lang={lang} />
-        <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={visual.b} emoji={visual.emoji} counted lang={lang} />
-      </div>
-    );
+    return <CountedGroupTwoSolution visual={visual} lang={lang} />;
   }
   if (visual.kind === "groupCompare") {
-    if (visual.ask !== "same") {
-      return (
-        <CountedCompareGroupsSolution
-          visual={{
-            kind: "compareGroups",
-            a: visual.a,
-            b: visual.b,
-            emojiA: visual.emoji,
-            emojiB: visual.emoji,
-            ask: visual.ask,
-          }}
-          lang={lang}
-        />
-      );
-    }
     return (
-      <div className="grid gap-4 md:grid-cols-2">
-        <GroupingTray label="Group A" count={visual.a} emoji={visual.emoji} counted={false} lang={lang} />
-        <GroupingTray label="Group B" count={visual.b} emoji={visual.emoji} counted={false} lang={lang} />
-      </div>
+      <CountedCompareGroupsSolution
+        visual={{
+          kind: "compareGroups",
+          a: visual.a,
+          b: visual.b,
+          emojiA: visual.emoji,
+          emojiB: visual.emoji,
+          ask: visual.ask,
+        }}
+        lang={lang}
+      />
     );
   }
   if (visual.kind === "groupCombine") {
