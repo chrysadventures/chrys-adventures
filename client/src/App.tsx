@@ -320,8 +320,8 @@ const UI = {
     advancedAdventureShort: "Explore more maths skills with Chrys",
     advancedMenuTitle: "Advanced Expedition",
     advancedMenuHelp: "Explore bigger numbers with Chrys.",
-    advancedTeenNumbers: "Teen Numbers",
-    advancedTeenNumbersShort: "Ten and some more",
+    advancedTeenNumbers: "Recognize Double-Digit Numbers",
+    advancedTeenNumbersShort: "Meet digits, then learn numbers 10-20",
     recognizeNumbers: "Recognize and Identify Numbers",
     numberValues: "Number Values",
     sequencing: "Number Order",
@@ -371,8 +371,8 @@ const UI = {
     advancedAdventureShort: "Teroka kemahiran matematik bersama Chrys",
     advancedMenuTitle: "Ekspedisi Lanjutan",
     advancedMenuHelp: "Teroka nombor lebih besar bersama Chrys.",
-    advancedTeenNumbers: "Nombor Belasan",
-    advancedTeenNumbersShort: "Sepuluh dan beberapa lagi",
+    advancedTeenNumbers: "Kenal Nombor Dua Digit",
+    advancedTeenNumbersShort: "Kenal digit, kemudian belajar nombor 10-20",
     recognizeNumbers: "Kenal Nombor",
     numberValues: "Nilai Nombor",
     sequencing: "Susunan Nombor",
@@ -1674,6 +1674,19 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
   );
 }
 
+type LearningSectionColor = "sky" | "emerald" | "violet" | "amber" | "teal" | "rose" | "orange" | "indigo";
+
+const LEARNING_SECTION_MARKERS: Record<LearningSectionColor, string> = {
+  sky: "bg-sky-500 shadow-[0_4px_0_#0369a1]",
+  emerald: "bg-emerald-500 shadow-[0_4px_0_#047857]",
+  violet: "bg-violet-500 shadow-[0_4px_0_#6d28d9]",
+  amber: "bg-amber-400 text-amber-950 shadow-[0_4px_0_#b45309]",
+  teal: "bg-teal-500 shadow-[0_4px_0_#0f766e]",
+  rose: "bg-rose-500 shadow-[0_4px_0_#be123c]",
+  orange: "bg-orange-500 shadow-[0_4px_0_#c2410c]",
+  indigo: "bg-indigo-500 shadow-[0_4px_0_#4338ca]",
+};
+
 function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
   const stages = [
     {
@@ -1700,7 +1713,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           title: t.sequencing,
           subtitle: lang === "en" ? "Put numbers in the right order" : "Susun nombor dengan betul",
           icon: <ListOrdered className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
-          color: "sky" as const,
+          color: "violet" as const,
           onClick: () => go("learnSequencing"),
         },
       ],
@@ -1722,14 +1735,14 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           title: t.addition,
           subtitle: lang === "en" ? "Put groups together" : "Gabungkan kumpulan",
           icon: <Plus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
-          color: "emerald" as const,
+          color: "teal" as const,
           onClick: () => go("learnAddition"),
         },
         {
           title: t.subtraction,
           subtitle: lang === "en" ? "Take bananas away" : "Ambil pisang",
           icon: <Minus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
-          color: "pink" as const,
+          color: "rose" as const,
           onClick: () => go("learnSubtraction"),
         },
       ],
@@ -1744,14 +1757,14 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           title: t.learnReal,
           subtitle: lang === "en" ? "Solve simple everyday stories" : "Selesaikan cerita harian mudah",
           icon: <MapIcon className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
-          color: "pink" as const,
+          color: "orange" as const,
           onClick: () => go("learnReal"),
         },
         {
           title: t.testMode,
           subtitle: t.testHelp,
           icon: <Star className="h-11 w-11" fill="currentColor" strokeWidth={2.5} aria-hidden="true" />,
-          color: "amber" as const,
+          color: "indigo" as const,
           onClick: () => go("testMenu"),
         },
       ],
@@ -1765,42 +1778,42 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
     {
       label: lang === "en" ? "Recognize" : "Kenal",
       complete: (player.progress.recognizeNumbers ?? 0) > 0,
-      markerClass: "bg-sky-500 shadow-[0_4px_0_#0369a1]",
+      markerClass: LEARNING_SECTION_MARKERS.sky,
     },
     {
       label: lang === "en" ? "Values" : "Nilai",
       complete: (player.progress.numberValues ?? 0) > 0,
-      markerClass: "bg-emerald-500 shadow-[0_4px_0_#047857]",
+      markerClass: LEARNING_SECTION_MARKERS.emerald,
     },
     {
       label: lang === "en" ? "Order" : "Susunan",
       complete: (player.progress.sequencing ?? 0) > 0,
-      markerClass: "bg-sky-500 shadow-[0_4px_0_#0369a1]",
+      markerClass: LEARNING_SECTION_MARKERS.violet,
     },
     {
       label: lang === "en" ? "Groups" : "Kumpulan",
       complete: (player.progress.groupingMode ?? 0) > 0,
-      markerClass: "bg-amber-400 text-amber-950 shadow-[0_4px_0_#b45309]",
+      markerClass: LEARNING_SECTION_MARKERS.amber,
     },
     {
       label: lang === "en" ? "Addition" : "Tambah",
       complete: (player.progress.addition ?? 0) > 0,
-      markerClass: "bg-emerald-500 shadow-[0_4px_0_#047857]",
+      markerClass: LEARNING_SECTION_MARKERS.teal,
     },
     {
       label: lang === "en" ? "Subtraction" : "Tolak",
       complete: (player.progress.subtraction ?? 0) > 0,
-      markerClass: "bg-pink-500 shadow-[0_4px_0_#be185d]",
+      markerClass: LEARNING_SECTION_MARKERS.rose,
     },
     {
       label: lang === "en" ? "Real world" : "Aplikasi",
       complete: (player.progress.learnReal ?? 0) > 0,
-      markerClass: "bg-pink-500 shadow-[0_4px_0_#be185d]",
+      markerClass: LEARNING_SECTION_MARKERS.orange,
     },
     {
       label: lang === "en" ? "Tests" : "Ujian",
       complete: testModeComplete,
-      markerClass: "bg-amber-400 text-amber-950 shadow-[0_4px_0_#b45309]",
+      markerClass: LEARNING_SECTION_MARKERS.indigo,
     },
   ];
 
@@ -1900,32 +1913,82 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 }
 
 function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  const lessonComplete = Boolean(player.progress.advancedTeenNumbers);
+
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 pb-8">
-      <section className="relative overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-center text-white shadow-[0_10px_0_#064e3b]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,204,21,.18),transparent_48%)]" aria-hidden="true" />
-        <img src={chrysRunning} alt="Chrys ready for an expedition" className="relative mx-auto h-36 w-36 object-contain drop-shadow-xl" />
-        <h2 className="relative text-4xl font-black text-yellow-200">{t.advancedMenuTitle}</h2>
-        <p className="relative mt-2 text-lg font-bold text-emerald-100">
-          {player.name}, {t.advancedMenuHelp}
-        </p>
-      </section>
-      <button
-        type="button"
-        onClick={() => go("advancedTeenNumbers")}
-        className="group rounded-[2rem] border-4 border-yellow-300 bg-emerald-900 p-6 text-left text-white shadow-[0_8px_0_#064e3b] transition hover:-translate-y-1 active:translate-y-1 md:p-8"
-      >
-        <div className="grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-          <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-4 border-yellow-300 bg-emerald-800 text-3xl font-black text-yellow-200 shadow-inner" style={getNumberTextStyle(14)}>
-            10-20
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
+      <section className="relative overflow-hidden rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-emerald-950 to-cyan-950 p-6 text-white shadow-[0_10px_0_#083344] sm:p-8">
+        <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(34,211,238,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.22)_1px,transparent_1px)] [background-size:28px_28px]" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(250,204,21,.2),transparent_34%)]" aria-hidden="true" />
+        <div className="relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
+          <span className="grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-cyan-200 bg-white/95 shadow-[0_6px_0_#0891b2]">
+            <img src={chrysRunning} alt="Chrys ready for an expedition" className="h-24 w-24 object-contain" />
           </span>
-          <span>
-            <span className="block text-3xl font-black text-yellow-200">{t.advancedTeenNumbers}</span>
-            <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedTeenNumbersShort}</span>
-          </span>
-          <ArrowRight className="hidden h-12 w-12 text-yellow-300 transition group-hover:translate-x-1 sm:block" strokeWidth={3} />
+          <div>
+            <p className="flex w-fit items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-950/70 px-4 py-2 text-sm font-black uppercase text-cyan-100">
+              <Compass className="h-5 w-5" aria-hidden="true" />
+              {lang === "en" ? "Cyber learning trail" : "Laluan belajar siber"}
+            </p>
+            <h2 className="mt-3 text-4xl font-black text-yellow-200">{t.advancedMenuTitle}</h2>
+            <p className="mt-2 text-lg font-bold text-cyan-50">
+              {player.name}, {t.advancedMenuHelp}
+            </p>
+          </div>
+          <div className="flex gap-3 sm:flex-col">
+            <span className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-4 py-3 text-center font-black text-slate-950 shadow-[0_5px_0_#a16207]">
+              {lang === "en" ? "Mission 1" : "Misi 1"}
+            </span>
+            <span className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 px-4 py-3 text-center font-black text-cyan-50 shadow-[0_5px_0_#155e75]">
+              {lang === "en" ? "Numbers 10-20" : "Nombor 10-20"}
+            </span>
+          </div>
         </div>
-      </button>
+      </section>
+
+      <section className="rounded-[1.75rem] border-2 border-cyan-200 bg-slate-950/90 p-4 shadow-[0_7px_0_#083344]" aria-label={lang === "en" ? "Advanced learning trail" : "Laluan pembelajaran lanjutan"}>
+        <div className="flex items-center gap-4">
+          <span className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 text-xl font-black text-white shadow-[0_4px_0_#164e63] ${lessonComplete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/30" : "border-cyan-200 bg-cyan-600"}`}>
+            1
+            {lessonComplete && <Check className="absolute -right-2 -top-2 h-7 w-7 rounded-full border-2 border-white bg-emerald-500 p-1" strokeWidth={4} aria-hidden="true" />}
+          </span>
+          <div className="h-2 flex-1 rounded-full bg-slate-700">
+            <div className={`h-full rounded-full ${lessonComplete ? "w-full bg-emerald-400" : "w-1/4 bg-cyan-400"}`} />
+          </div>
+          <span className="font-black text-cyan-100">{lessonComplete ? (lang === "en" ? "Mission complete" : "Misi selesai") : (lang === "en" ? "Ready to begin" : "Sedia untuk mula")}</span>
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border-2 border-cyan-200 bg-gradient-to-br from-slate-950/95 to-emerald-950/95 p-5 shadow-[0_8px_0_#083344] sm:p-7">
+        <div className="mb-5 flex items-start gap-4">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-2xl font-black text-slate-950 shadow-[0_5px_0_#a16207]">1</span>
+          <div>
+            <p className="text-sm font-black uppercase text-cyan-300">{lang === "en" ? "Cyber mission 1" : "Misi siber 1"}</p>
+            <h3 className="text-2xl font-black text-white sm:text-3xl">{lang === "en" ? "Decode bigger numbers" : "Kenal nombor lebih besar"}</h3>
+            <p className="mt-1 font-bold text-cyan-100">{lang === "en" ? "Learn digits, then unlock numbers 10-20." : "Belajar digit, kemudian buka nombor 10-20."}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => go("advancedTeenNumbers")}
+          className="group w-full rounded-[2rem] border-4 border-yellow-300 bg-gradient-to-r from-emerald-900 to-cyan-950 p-5 text-left text-white shadow-[0_8px_0_#064e3b] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-cyan-300 active:translate-y-1 sm:p-7"
+        >
+          <span className="grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
+            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-4 border-yellow-300 bg-slate-950 text-3xl font-black text-yellow-200 shadow-[inset_0_0_18px_rgba(34,211,238,.35)]" style={getNumberTextStyle(14)}>
+              10-20
+            </span>
+            <span>
+              <span className="block text-3xl font-black leading-tight text-yellow-200">{t.advancedTeenNumbers}</span>
+              <span className="mt-2 block text-lg font-bold text-cyan-100">{t.advancedTeenNumbersShort}</span>
+              <span className="mt-4 flex flex-wrap gap-2">
+                {(lang === "en" ? ["What is a digit?", "One-digit numbers", "Two-digit numbers", "Values 10-20"] : ["Apa itu digit?", "Nombor satu digit", "Nombor dua digit", "Nilai 10-20"]).map((topic) => (
+                  <span key={topic} className="rounded-full border border-cyan-300/70 bg-slate-950/70 px-3 py-1.5 text-sm font-black text-cyan-50">{topic}</span>
+                ))}
+              </span>
+            </span>
+            <ArrowRight className="hidden h-12 w-12 text-yellow-300 transition group-hover:translate-x-1 sm:block" strokeWidth={3} />
+          </span>
+        </button>
+      </section>
     </main>
   );
 }
@@ -2096,7 +2159,108 @@ function TeenValueBananas({
   );
 }
 
+type DigitIntroStep = 0 | 1 | 2 | 3;
+
+function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: Lang }) {
+  if (step === 0) {
+    return (
+      <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-6 text-center shadow-[inset_0_0_32px_rgba(34,211,238,.2)]">
+        <div>
+          <div className="mx-auto flex w-fit gap-4">
+            {[2, 5, 8].map((digit) => (
+              <span
+                key={digit}
+                className="grid h-24 w-20 place-items-center rounded-2xl border-4 border-cyan-300 bg-slate-900 text-5xl font-black text-yellow-200 shadow-[0_6px_0_#155e75] sm:h-28 sm:w-24"
+                style={getNumberTextStyle(digit)}
+              >
+                {digit}
+              </span>
+            ))}
+          </div>
+          <p className="mt-7 text-2xl font-black text-white">
+            {lang === "en" ? "Each symbol is one digit." : "Setiap simbol ialah satu digit."}
+          </p>
+          <p className="mt-2 text-lg font-bold text-cyan-100">
+            {lang === "en" ? "We use digits to write numbers." : "Kita guna digit untuk menulis nombor."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 1) {
+    return (
+      <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-6 text-center">
+        <div>
+          <p className="mb-4 text-lg font-black uppercase tracking-wide text-cyan-200">
+            {lang === "en" ? "One digit slot" : "Satu ruang digit"}
+          </p>
+          <div className="mx-auto grid h-44 w-36 place-items-center rounded-[2rem] border-4 border-yellow-300 bg-slate-900 text-8xl font-black text-yellow-200 shadow-[0_8px_0_#a16207]" style={getNumberTextStyle(7)}>
+            7
+          </div>
+          <p className="mt-7 text-2xl font-black text-white">
+            {lang === "en" ? "7 uses one digit." : "7 menggunakan satu digit."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <div className="mx-auto min-h-[24rem] max-w-4xl rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 text-center sm:p-7">
+        <p className="text-2xl font-black text-white">
+          {lang === "en" ? "These are all the one-digit numbers." : "Ini semua nombor satu digit."}
+        </p>
+        <div className="mx-auto mt-7 grid max-w-3xl grid-cols-5 gap-3 sm:gap-4">
+          {Array.from({ length: 10 }, (_, digit) => (
+            <span
+              key={digit}
+              className="grid aspect-square place-items-center rounded-2xl border-3 border-cyan-300 bg-slate-900 text-3xl font-black text-yellow-200 shadow-[0_5px_0_#155e75] sm:text-5xl"
+              style={getNumberTextStyle(digit)}
+            >
+              {digit}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-6 text-center">
+      <div>
+        <p className="text-xl font-black text-cyan-100">
+          {lang === "en" ? "Put two digits side by side." : "Letak dua digit bersebelahan."}
+        </p>
+        <div className="mx-auto mt-6 flex w-fit items-center gap-4 rounded-[2rem] border-2 border-cyan-300/60 bg-slate-950/60 p-5">
+          {[1, 0].map((digit, index) => (
+            <div key={`${digit}-${index}`}>
+              <span
+                className="grid h-32 w-28 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-900 text-7xl font-black text-yellow-200 shadow-[0_7px_0_#a16207]"
+                style={getNumberTextStyle(digit)}
+              >
+                {digit}
+              </span>
+              <span className="mt-3 block rounded-full bg-cyan-900 px-3 py-1.5 text-sm font-black text-cyan-50">
+                {lang === "en" ? `Digit ${index + 1}` : `Digit ${index + 1}`}
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-3xl font-black text-white">
+          {lang === "en" ? "Together, they make 10." : "Bersama-sama, digit ini jadi 10."}
+        </p>
+        <p className="mt-2 text-lg font-bold text-cyan-100">
+          {lang === "en" ? "10 is a two-digit number." : "10 ialah nombor dua digit."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+  const [introStep, setIntroStep] = useState<DigitIntroStep | null>(0);
   const [number, setNumber] = useState(10);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [showPractice, setShowPractice] = useState(false);
@@ -2117,7 +2281,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     setVisibleCount(0);
     setCounting(false);
     setCountComplete(false);
-  }, [number, step, lang]);
+  }, [introStep, number, step, lang]);
 
   useEffect(() => () => {
     countRunRef.current += 1;
@@ -2127,6 +2291,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
   const goToNumber = (nextNumber: number, nextStep: 0 | 1 | 2 = 0) => {
     countRunRef.current += 1;
     stopNumberAudio();
+    setIntroStep(null);
     setNumber(Math.min(20, Math.max(10, nextNumber)));
     setStep(nextStep);
   };
@@ -2160,14 +2325,30 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
   };
 
   const goPrevious = () => {
+    if (introStep !== null) {
+      if (introStep > 0) setIntroStep((introStep - 1) as DigitIntroStep);
+      return;
+    }
     if (step > 0) {
       setStep((current) => Math.max(0, current - 1) as 0 | 1 | 2);
     } else if (number > 10) {
       goToNumber(number - 1, 2);
+    } else {
+      setIntroStep(3);
     }
   };
 
   const goNext = () => {
+    if (introStep !== null) {
+      if (introStep < 3) {
+        setIntroStep((introStep + 1) as DigitIntroStep);
+      } else {
+        setIntroStep(null);
+        setNumber(10);
+        setStep(0);
+      }
+      return;
+    }
     if (step < 2) {
       setStep((current) => Math.min(2, current + 1) as 0 | 1 | 2);
     } else if (number < 20) {
@@ -2182,7 +2363,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
       <Quiz
         lang={lang}
         t={t}
-        title={lang === "en" ? "Teen Numbers: Practice" : "Nombor Belasan: Latihan"}
+        title={lang === "en" ? "Double-Digit Numbers: Practice" : "Nombor Dua Digit: Latihan"}
         questions={teenPracticeQuestions}
         randomize={false}
         onBackToLearning={() => {
@@ -2194,7 +2375,27 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     );
   }
 
-  const teachingCopy = step === 0
+  const introCopy = introStep === 0
+    ? {
+        title: lang === "en" ? "What is a digit?" : "Apa itu digit?",
+        text: lang === "en" ? "A digit is one symbol used to write numbers." : "Digit ialah satu simbol yang digunakan untuk menulis nombor.",
+      }
+    : introStep === 1
+      ? {
+          title: lang === "en" ? "A one-digit number" : "Nombor satu digit",
+          text: lang === "en" ? "A one-digit number uses one digit." : "Nombor satu digit menggunakan satu digit.",
+        }
+      : introStep === 2
+        ? {
+            title: lang === "en" ? "Meet every one-digit number" : "Kenal semua nombor satu digit",
+            text: lang === "en" ? "The one-digit numbers are 0 to 9." : "Nombor satu digit ialah 0 hingga 9.",
+          }
+        : {
+            title: lang === "en" ? "Now meet two digits" : "Sekarang kenal dua digit",
+            text: lang === "en" ? "The number 10 has two digits: 1 and 0." : "Nombor 10 mempunyai dua digit: 1 dan 0.",
+          };
+
+  const numberTeachingCopy = step === 0
     ? {
         title: lang === "en" ? `Meet number ${number}` : `Kenal nombor ${number}`,
         text: lang === "en" ? `This is the number ${number}.` : `Ini nombor ${number}.`,
@@ -2210,6 +2411,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
           title: lang === "en" ? `See the value of ${number}` : `Lihat nilai ${number}`,
           text: lang === "en" ? `${number} means ${number} bananas. Count them.` : `${number} bermaksud ${number} pisang. Kira semuanya.`,
         };
+  const teachingCopy = introStep !== null ? introCopy : numberTeachingCopy;
 
   return (
     <main className="mx-auto w-full max-w-6xl pb-8">
@@ -2217,17 +2419,19 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
         <LessonShell
           lang={lang}
           title={t.advancedTeenNumbers}
-          helper={lang === "en" ? "Numbers 10-20: see, spell, and count." : "Nombor 10-20: lihat, eja dan kira."}
+          helper={lang === "en" ? "Learn digits, then see, spell, and count numbers 10-20." : "Belajar digit, kemudian lihat, eja dan kira nombor 10-20."}
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="rounded-full bg-emerald-900 px-4 py-2 text-sm font-black text-yellow-200">
-              {lang === "en" ? `Number ${number} of 10-20` : `Nombor ${number} daripada 10-20`}
+              {introStep !== null
+                ? (lang === "en" ? "Digit basics" : "Asas digit")
+                : (lang === "en" ? `Number ${number} of 10-20` : `Nombor ${number} daripada 10-20`)}
             </p>
-            <p className="font-black text-emerald-800">{number - 9} / 11</p>
+            <p className="font-black text-emerald-800">{introStep !== null ? `${introStep + 1} / 4` : `${number - 9} / 11`}</p>
           </div>
-          <div className="mb-5 grid grid-cols-3 gap-2">
-            {[0, 1, 2].map((item) => (
-              <div key={item} className={`h-3 rounded-full ${item <= step ? "bg-yellow-400" : "bg-emerald-100"}`} />
+          <div className={`mb-5 grid gap-2 ${introStep !== null ? "grid-cols-4" : "grid-cols-3"}`}>
+            {Array.from({ length: introStep !== null ? 4 : 3 }, (_, item) => (
+              <div key={item} className={`h-3 rounded-full ${item <= (introStep ?? step) ? "bg-yellow-400" : "bg-emerald-100"}`} />
             ))}
           </div>
 
@@ -2239,7 +2443,9 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
             </div>
           </div>
 
-          {step === 0 && (
+          {introStep !== null && <DigitIntroductionVisual step={introStep} lang={lang} />}
+
+          {introStep === null && step === 0 && (
             <div className="mx-auto grid min-h-[24rem] max-w-3xl place-items-center rounded-[2rem] border-4 border-yellow-300 bg-gradient-to-b from-yellow-50 to-white p-6">
               <div className="grid h-56 w-64 place-items-center rounded-[2.5rem] border-4 border-yellow-500 bg-yellow-300 text-8xl font-black text-emerald-950 shadow-[0_10px_0_#a16207]" style={getNumberTextStyle(number)}>
                 {number}
@@ -2247,7 +2453,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
             </div>
           )}
 
-          {step === 1 && (
+          {introStep === null && step === 1 && (
             <div className="mx-auto grid min-h-[24rem] max-w-3xl place-items-center rounded-[2rem] border-4 border-yellow-300 bg-yellow-50 p-6 text-center">
               <div>
                 <p className="break-words text-5xl font-black capitalize text-emerald-950 sm:text-6xl">{numberWord}</p>
@@ -2267,7 +2473,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
             </div>
           )}
 
-          {step === 2 && (
+          {introStep === null && step === 2 && (
             <div>
               <div className="mb-5 text-center">
                 <button
@@ -2301,13 +2507,13 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <button
               type="button"
-              disabled={number === 10 && step === 0}
+              disabled={introStep === 0}
               onClick={goPrevious}
               className="rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 font-black text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.12)] active:translate-y-1 disabled:opacity-40"
             >
               {t.previous}
             </button>
-            {number === 10 && step === 0 && (
+            {introStep === 0 && (
               <button
                 type="button"
                 onClick={() => setShowPractice(true)}
@@ -2316,7 +2522,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                 {lang === "en" ? "Skip to practice questions" : "Terus ke soalan latihan"}
               </button>
             )}
-            {number < 20 && (
+            {introStep === null && number < 20 && (
               <button
                 type="button"
                 onClick={() => goToNumber(number + 1)}
@@ -2327,7 +2533,11 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
             )}
             <LessonNextButton
               onClick={goNext}
-              label={number === 20 && step === 2 ? (lang === "en" ? "Start practice" : "Mula latihan") : t.next}
+              label={introStep === 3
+                ? (lang === "en" ? "Meet number 10" : "Kenal nombor 10")
+                : number === 20 && step === 2
+                  ? (lang === "en" ? "Start practice" : "Mula latihan")
+                  : t.next}
               className="text-xl"
             />
           </div>
@@ -2349,7 +2559,7 @@ function MenuCard({
   title: string;
   subtitle: string;
   icon: string | React.ReactNode;
-  color: "sky" | "emerald" | "pink" | "amber";
+  color: LearningSectionColor;
   step?: number;
   actionLabel?: string;
   onClick: () => void;
@@ -2367,17 +2577,41 @@ function MenuCard({
       badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
       step: "bg-emerald-600",
     },
-    pink: {
-      border: "border-pink-300",
-      accent: "bg-pink-400",
-      badge: "border-pink-200 bg-pink-50 text-pink-700",
-      step: "bg-pink-600",
+    violet: {
+      border: "border-violet-400",
+      accent: "bg-violet-500",
+      badge: "border-violet-200 bg-violet-50 text-violet-700",
+      step: "bg-violet-600",
     },
     amber: {
       border: "border-amber-400",
       accent: "bg-amber-400",
       badge: "border-amber-200 bg-amber-50 text-amber-800",
       step: "bg-amber-500",
+    },
+    teal: {
+      border: "border-teal-400",
+      accent: "bg-teal-500",
+      badge: "border-teal-200 bg-teal-50 text-teal-700",
+      step: "bg-teal-600",
+    },
+    rose: {
+      border: "border-rose-400",
+      accent: "bg-rose-500",
+      badge: "border-rose-200 bg-rose-50 text-rose-700",
+      step: "bg-rose-600",
+    },
+    orange: {
+      border: "border-orange-400",
+      accent: "bg-orange-500",
+      badge: "border-orange-200 bg-orange-50 text-orange-700",
+      step: "bg-orange-600",
+    },
+    indigo: {
+      border: "border-indigo-400",
+      accent: "bg-indigo-500",
+      badge: "border-indigo-200 bg-indigo-50 text-indigo-700",
+      step: "bg-indigo-600",
     },
   };
   const theme = colors[color];
@@ -3978,9 +4212,9 @@ function FindClueWordExample({ lang }: { lang: Lang }) {
           <div className="flex min-h-32 flex-wrap items-center justify-center gap-3 rounded-3xl bg-orange-50 p-4">
             {[0, 1, 2, 3].map((index) => (
               <span key={index} className="relative inline-flex h-14 w-14 items-center justify-center drop-shadow-md" aria-hidden="true">
-                <SpriteIcon value="🍪" className="h-14 w-14" />
+                <SpriteIcon value="🍪" className={`h-14 w-14 ${index < 2 ? "grayscale opacity-45" : ""}`} />
                 {index < 2 && (
-                  <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
+                  <span className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden="true">
                     <span className="absolute h-2.5 w-9 rotate-45 rounded-full border border-white bg-red-600 shadow-sm" />
                     <span className="absolute h-2.5 w-9 -rotate-45 rounded-full border border-white bg-red-600 shadow-sm" />
                   </span>
