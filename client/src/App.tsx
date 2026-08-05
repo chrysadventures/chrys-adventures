@@ -5644,22 +5644,11 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
       await wait(prefersReducedMotion ? 0 : 450);
       if (cancelled) return;
 
+      // The result is one combined group. Reveal the zero silently, then count
+      // the objects straight through without inserting another "plus" cue.
       setActivePart("zero");
-      if (audioMuted) {
-        setZeroVisible(true);
-        await wait(prefersReducedMotion ? 0 : intervalMs);
-      } else {
-        await speakNumberValuesSequence([0], lang, intervalMs, () => {
-          if (!cancelled) setZeroVisible(true);
-        });
-      }
-      if (cancelled) return;
-
-      setActivePart("plus");
-      setMergeStage("cue");
-      await wait(prefersReducedMotion ? 0 : 180);
-      await speakMathCue("plus", lang);
-      await wait(prefersReducedMotion ? 0 : 450);
+      setZeroVisible(true);
+      await wait(prefersReducedMotion ? 0 : 300);
       if (cancelled) return;
 
       setMergeStage("split");
@@ -5702,6 +5691,11 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
       if (cancelled) return;
       setMergeStage("joined");
       setActivePart(null);
+      if (!audioMuted) {
+        speakText(lang === "en" ? "The answer is 4." : "Jawapannya ialah 4.", lang);
+      }
+      await wait(WORD_AUDIO_ENABLED && !audioMuted ? 1800 : 300);
+      if (cancelled) return;
       setIsCounting(false);
     };
 
@@ -6104,17 +6098,9 @@ function AdditionBananaEquation({
             setActiveBanana(null);
           };
 
-          await revealResultValues(Array.from({ length: a }, (_, value) => value + 1));
-          if (cancelled) return;
-          setResultMergeStage("cue");
-          // Show the highlighted plus before its audio, then wait for "tambah"
-          // to finish before counting the second group from 3.
-          await wait(prefersReducedMotion ? 0 : 180);
-          await speakMathCue("plus", lang);
-          await wait(prefersReducedMotion ? 0 : 450);
-          if (cancelled) return;
-          setResultMergeStage("split");
-          await revealResultValues(Array.from({ length: b }, (_, value) => a + value + 1));
+          // Count the combined result continuously: 1, 2, 3... There must not
+          // be another "plus" between the two original subgroups.
+          await revealResultValues(Array.from({ length: a + b }, (_, value) => value + 1));
         } else if (audioMuted) {
           if (prefersReducedMotion) {
             setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? count : value));
@@ -6160,17 +6146,8 @@ function AdditionBananaEquation({
         }
 
         setCompletedGroups(groupIndex + 1);
-        const countedBananas = emoji === String.fromCodePoint(0x1f34c);
-        if (countedBananas) {
-          await speakBananaTotal(count, lang);
-        } else {
-          speakText(
-            lang === "en" ? `Total ${count} ${objectName(emoji, count, lang)}.` : `Jumlah ${count} ${objectName(emoji, count, lang)}.`,
-            lang,
-          );
-        }
+        await wait(prefersReducedMotion ? 0 : 300);
         if (cancelled) return;
-        await wait(countedBananas && !audioMuted ? 300 : WORD_AUDIO_ENABLED && !audioMuted ? 2000 : 800);
 
         if (groupIndex < groups.length - 1) {
           if (cancelled) return;
@@ -6186,20 +6163,14 @@ function AdditionBananaEquation({
       if (cancelled) return;
       setActiveGroup(-1);
 
-      if (WORD_AUDIO_ENABLED && !audioMuted) {
+      if (!audioMuted) {
         speakText(
-          lang === "en"
-            ? `${a} ${objectName(emoji, a, lang)} plus ${b} ${objectName(emoji, b, lang)} equals to ${a + b} ${objectName(emoji, a + b, lang)}.`
-            : `${a} ${objectName(emoji, a, lang)} tambah ${b} ${objectName(emoji, b, lang)} sama dengan ${a + b} ${objectName(emoji, a + b, lang)}.`,
-          lang,
-        );
-        await wait(4200);
-        if (cancelled) return;
-        speakText(
-          lang === "en" ? `${a} plus ${b} equals to ${a + b}.` : `${a} tambah ${b} sama dengan ${a + b}.`,
+          lang === "en" ? `The answer is ${a + b}.` : `Jawapannya ialah ${a + b}.`,
           lang,
         );
       }
+      await wait(WORD_AUDIO_ENABLED && !audioMuted ? 1800 : 300);
+      if (cancelled) return;
 
       if (!cancelled) setIsCounting(false);
     };
@@ -8073,18 +8044,24 @@ function CorrectCelebration() {
 
   useEffect(() => {
     let cancelled = false;
+    let postAudioTimer: number | null = null;
     const finishCelebration = () => {
       if (!cancelled) setIsVisible(false);
     };
-    const audioStarted = playSuccessFanfare(finishCelebration);
+    const finishAfterThreeSeconds = () => {
+      if (cancelled || postAudioTimer !== null) return;
+      postAudioTimer = window.setTimeout(finishCelebration, 3000);
+    };
+    const audioStarted = playSuccessFanfare(finishAfterThreeSeconds);
     const hideTimer = window.setTimeout(
       finishCelebration,
-      prefersReducedMotion ? 100 : audioStarted ? 10000 : 3800,
+      prefersReducedMotion ? 100 : audioStarted ? 13000 : 6800,
     );
 
     return () => {
       cancelled = true;
       window.clearTimeout(hideTimer);
+      if (postAudioTimer !== null) window.clearTimeout(postAudioTimer);
       stopCelebrationAudio();
     };
   }, [prefersReducedMotion]);
@@ -8172,7 +8149,7 @@ function lessonTokenSpeech(token: string, lang: Lang) {
   if (!cleanToken) return "";
   const mathWords = lang === "ms"
     ? { minus: "tolak", plus: "tambah", equals: "sama dengan", times: "darab" }
-    : { minus: "minus", plus: "plus", equals: "equals to", times: "times" };
+    : { minus: "minus", plus: "plus", equals: "equals", times: "times" };
   if (/^[0-9+=×−-]+$/.test(cleanToken)) {
     return cleanToken
       .replace(/[−-]/g, ` ${mathWords.minus} `)
@@ -10318,7 +10295,7 @@ async function speakMathCue(cue: MathCue, lang: Lang) {
   }
   stopNumberAudio();
   const cueText: Record<Lang, Record<MathCue, string>> = {
-    en: { plus: "plus", equals: "equals to", minus: "minus" },
+    en: { plus: "plus", equals: "equals", minus: "minus" },
     ms: { plus: "tambah", equals: "sama dengan", minus: "tolak" },
   };
 
