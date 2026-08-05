@@ -7410,7 +7410,7 @@ function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Scre
       <div className="grid gap-4">
         <MenuCard title={t.learnNumbers} subtitle={lang === "en" ? "25 questions, all 0-9" : "25 soalan, semua nombor 0-9"} icon="🔢" color="sky" onClick={() => go("testNumbers")} />
         <MenuCard title={t.learnOperations} subtitle={lang === "en" ? "Solve number sentences using + and −" : "Jawab ayat nombor dengan + dan −"} icon="➕" color="emerald" onClick={() => go("testOperations")} />
-        <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Solve everyday stories using visible objects" : "Jawab cerita harian dengan objek yang boleh dilihat"} icon="🍎" color="pink" onClick={() => go("testReal")} />
+        <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Solve everyday stories using visible objects" : "Jawab cerita harian dengan objek yang boleh dilihat"} icon="🍎" color="orange" onClick={() => go("testReal")} />
       </div>
     </main>
   );

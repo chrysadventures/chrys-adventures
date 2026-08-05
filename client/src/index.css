@@ -304,7 +304,7 @@
   }
 
   .learning-menu-card:hover {
-    border-color: #2563eb;
+    filter: saturate(1.08);
   }
 
   @media (max-width: 640px) {
