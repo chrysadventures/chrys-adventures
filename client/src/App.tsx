@@ -218,6 +218,11 @@ const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Record<number, string>> = {
 };
 
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
+  en: {
+    plus: "plus.wav",
+    equals: "equals-to.wav",
+    minus: "minus.wav",
+  },
   ms: {
     plus: "Tambah.mp3",
     equals: "Sama dengan.mp3",
@@ -4147,24 +4152,24 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
   onSkip: () => void;
 }) {
   const title = [
-    lang === "en" ? "Maths is everywhere" : "Matematik di mana-mana",
-    lang === "en" ? "Find the numbers" : "Cari nombor",
-    lang === "en" ? "Find the clue word" : "Cari kata petunjuk",
-    lang === "en" ? "Solve the story" : "Selesaikan cerita",
+    lang === "en" ? "Addition clue words" : "Kata petunjuk tambah",
+    lang === "en" ? "Addition story" : "Cerita tambah",
+    lang === "en" ? "Subtraction clue words" : "Kata petunjuk tolak",
+    lang === "en" ? "Subtraction story" : "Cerita tolak",
   ][phase];
   const talk = [
     lang === "en"
-      ? "We use numbers everywhere. Let's count real things!"
-      : "Kita guna nombor di mana-mana. Jom kira benda betul!",
+      ? "Words such as more tell us that an amount is added."
+      : "Perkataan seperti lagi memberitahu kita bahawa suatu jumlah ditambah.",
     lang === "en"
-      ? "Find the numbers inside the story."
-      : "Cari nombor di dalam cerita.",
+      ? "Find the starting amount, the amount added, and the addition clue."
+      : "Cari jumlah mula, jumlah yang ditambah dan petunjuk tambah.",
     lang === "en"
-      ? "Clue words help us choose. They are hints."
-      : "Kata petunjuk bantu kita pilih. Ia cuma petunjuk.",
+      ? "Words such as eats tell us that an amount is taken away."
+      : "Perkataan seperti makan memberitahu kita bahawa suatu jumlah ditolak.",
     lang === "en"
-      ? "Read it. Find the numbers. Find the clue. Add or take away. Count!"
-      : "Baca. Cari nombor. Cari petunjuk. Tambah atau tolak. Kira!",
+      ? "Find the starting amount, the amount removed, and the subtraction clue."
+      : "Cari jumlah mula, jumlah yang ditolak dan petunjuk tolak.",
   ][phase];
   const nextLabel = phase === 3 ? t.practice : t.next;
 
@@ -4182,10 +4187,10 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
         </div>
       </div>
 
-      {phase === 0 && <RealWorldEverywhereExample lang={lang} />}
-      {phase === 1 && <FindStoryNumbersExample lang={lang} />}
-      {phase === 2 && <FindClueWordExample lang={lang} />}
-      {phase === 3 && <SolveRealStoryExample lang={lang} />}
+      {phase === 0 && <RealWorldKeywordLesson lang={lang} operation="addition" />}
+      {phase === 1 && <RealWorldOperationExample lang={lang} operation="addition" />}
+      {phase === 2 && <RealWorldKeywordLesson lang={lang} operation="subtraction" />}
+      {phase === 3 && <RealWorldOperationExample lang={lang} operation="subtraction" />}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PreviousLessonButton label={t.previous} onClick={onPrevious} />
@@ -4344,6 +4349,227 @@ function StoryNumber({ value }: { value: number }) {
     <span className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-xl border-2 border-yellow-500 bg-yellow-300 px-3 text-2xl font-black text-yellow-950 shadow-[0_3px_0_#d97706]">
       {value}
     </span>
+  );
+}
+
+type RealWorldOperation = "addition" | "subtraction";
+type RealWorldExamplePhase = "ready" | "countStart" | "operate" | "countResult" | "done";
+
+function RealWorldKeywordLesson({ lang, operation }: { lang: Lang; operation: RealWorldOperation }) {
+  const addition = operation === "addition";
+  const keywords = addition
+    ? lang === "en" ? ["finds more", "gets more", "altogether", "in total"] : ["jumpa lagi", "dapat lagi", "kesemuanya", "jumlah"]
+    : lang === "en" ? ["eats", "takes away", "gives away", "left"] : ["makan", "ambil", "beri", "tinggal"];
+  const clue = addition ? (lang === "en" ? "finds 2 more" : "jumpa 2 lagi") : (lang === "en" ? "eats 2" : "makan 2");
+
+  return (
+    <div className={`space-y-5 rounded-[2rem] border-2 p-5 shadow-[0_6px_0_rgba(0,0,0,.10)] ${addition ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50"}`}>
+      <div className="rounded-3xl bg-white p-5 text-center">
+        <p className="text-lg font-black text-slate-600">
+          {addition
+            ? (lang === "en" ? "Addition clue words tell us that the amount grows." : "Kata petunjuk tambah memberitahu kita bahawa jumlah bertambah.")
+            : (lang === "en" ? "Subtraction clue words tell us that the amount becomes smaller." : "Kata petunjuk tolak memberitahu kita bahawa jumlah berkurang.")}
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          {keywords.map((keyword) => (
+            <span key={keyword} className={`rounded-full border-2 px-4 py-2 text-lg font-black ${addition ? "border-emerald-300 bg-emerald-100 text-emerald-900" : "border-orange-300 bg-orange-100 text-orange-950"}`}>
+              {keyword}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid items-center gap-5 rounded-3xl border-2 border-white bg-white p-5 md:grid-cols-[1fr_auto_1fr]">
+        <div className="text-center md:text-left">
+          <p className="text-2xl font-black leading-relaxed text-blue-950">
+            {addition ? (lang === "en" ? "Sara " : "Sara ") : (lang === "en" ? "Tom " : "Tom ")}
+            <span className="rounded-xl bg-yellow-200 px-2 py-1 text-yellow-950">{clue}</span>
+            {addition ? (lang === "en" ? " shells." : " cangkerang.") : (lang === "en" ? " cookies." : " biskut.")}
+          </p>
+          <p className="mt-4 text-lg font-black text-slate-600">
+            {addition
+              ? (lang === "en" ? "The words “finds 2 more” describe the change: add 2." : "Perkataan “jumpa 2 lagi” menerangkan perubahan: tambah 2.")
+              : (lang === "en" ? "The words “eats 2” describe the change: subtract 2." : "Perkataan “makan 2” menerangkan perubahan: tolak 2.")}
+          </p>
+        </div>
+        <div className={`grid h-24 min-w-28 place-items-center rounded-3xl text-5xl font-black text-white shadow-[0_5px_0_rgba(0,0,0,.18)] ${addition ? "bg-emerald-600" : "bg-red-600"}`} style={NUMBER_TEXT_STYLE}>
+          {addition ? "+2" : "−2"}
+        </div>
+        <div className={`flex min-h-40 items-center justify-center gap-4 rounded-3xl ${addition ? "bg-sky-50" : "bg-orange-50"}`}>
+          {[0, 1].map((index) => (
+            <div key={index} className="relative grid h-20 w-20 place-items-center rounded-full border-2 border-blue-200 bg-white shadow-sm">
+              <span className="absolute -top-2 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white">{index + 1}</span>
+              <span className="text-5xl drop-shadow-md" aria-hidden="true">{addition ? "🐚" : "🍪"}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="rounded-2xl border-2 border-yellow-300 bg-yellow-100 p-4 text-center text-lg font-black text-yellow-950">
+        {addition
+          ? (lang === "en" ? "This clue gives us +2, but not Sara’s starting amount. A complete question must also tell us how many shells she had first." : "Petunjuk ini memberi kita +2, tetapi bukan jumlah mula Sara. Soalan lengkap mesti memberitahu berapa cangkerang yang dia ada pada mulanya.")
+          : (lang === "en" ? "This clue gives us −2, but not Tom’s starting amount. A complete question must also tell us how many cookies he had first." : "Petunjuk ini memberi kita −2, tetapi bukan jumlah mula Tom. Soalan lengkap mesti memberitahu berapa biskut yang dia ada pada mulanya.")}
+      </p>
+    </div>
+  );
+}
+
+function RealWorldOperationExample({ lang, operation }: { lang: Lang; operation: RealWorldOperation }) {
+  const addition = operation === "addition";
+  const start = addition ? 3 : 5;
+  const change = 2;
+  const answer = addition ? start + change : start - change;
+  const emoji = addition ? "🐚" : "🍪";
+  const [phase, setPhase] = useState<RealWorldExamplePhase>("ready");
+  const [startCount, setStartCount] = useState(0);
+  const [changedCount, setChangedCount] = useState(0);
+  const [resultCount, setResultCount] = useState(0);
+  const runRef = useRef(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const running = phase !== "ready" && phase !== "done";
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const countTo = async (count: number, onCount: (value: number) => void, runId: number) => {
+    if (!audioMuted) {
+      await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) onCount(value);
+      });
+      return;
+    }
+    for (let value = 1; value <= count; value += 1) {
+      await wait(prefersReducedMotion ? 100 : COUNTING_STEP_MS);
+      if (runRef.current !== runId) return;
+      onCount(value);
+    }
+  };
+
+  const playExample = async () => {
+    if (running) return;
+    const runId = ++runRef.current;
+    stopNumberAudio();
+    setStartCount(0);
+    setChangedCount(0);
+    setResultCount(0);
+    setPhase("countStart");
+    await countTo(start, setStartCount, runId);
+    if (runRef.current !== runId) return;
+
+    await speakMathCue(addition ? "plus" : "minus", lang);
+    if (runRef.current !== runId) return;
+    setPhase("operate");
+    for (let value = 1; value <= change; value += 1) {
+      setChangedCount(value);
+      speakNumber(value, lang);
+      await wait(prefersReducedMotion ? 120 : COUNTING_STEP_MS);
+      if (runRef.current !== runId) return;
+    }
+
+    await speakMathCue("equals", lang);
+    if (runRef.current !== runId) return;
+    setPhase("countResult");
+    await countTo(answer, setResultCount, runId);
+    if (runRef.current === runId) setPhase("done");
+  };
+
+  const reset = () => {
+    runRef.current += 1;
+    stopNumberAudio();
+    setPhase("ready");
+    setStartCount(0);
+    setChangedCount(0);
+    setResultCount(0);
+  };
+
+  const clue = addition ? (lang === "en" ? "finds 2 more" : "jumpa 2 lagi") : (lang === "en" ? "eats 2" : "makan 2");
+  const currentInstruction = phase === "ready"
+    ? (lang === "en" ? "Press Start to build the equation from the story." : "Tekan Mula untuk membina persamaan daripada cerita.")
+    : phase === "countStart"
+      ? (lang === "en" ? `First, count the starting ${start}.` : `Mula-mula, kira jumlah mula ${start}.`)
+      : phase === "operate"
+        ? (addition ? (lang === "en" ? "“Finds 2 more” means add 2." : "“Jumpa 2 lagi” bermaksud tambah 2.") : (lang === "en" ? "“Eats 2” means subtract 2." : "“Makan 2” bermaksud tolak 2."))
+        : phase === "countResult"
+          ? (lang === "en" ? "Now count the result." : "Sekarang kira jawapannya.")
+          : (lang === "en" ? `The answer is ${answer}.` : `Jawapannya ialah ${answer}.`);
+
+  return (
+    <div className="space-y-5 rounded-[2rem] border-2 border-sky-200 bg-sky-50 p-5 shadow-[0_6px_0_rgba(14,116,144,.12)]">
+      <p className="rounded-3xl bg-white p-5 text-center text-xl font-black leading-relaxed text-blue-950 md:text-2xl">
+        {addition ? (lang === "en" ? "Sara has " : "Sara ada ") : (lang === "en" ? "Tom has " : "Tom ada ")}
+        <StoryNumber value={start} />
+        {addition ? (lang === "en" ? " shells. She " : " cangkerang. Dia ") : (lang === "en" ? " cookies. He " : " biskut. Dia ")}
+        <span className="rounded-xl bg-yellow-200 px-2 py-1 text-yellow-950">{clue}</span>
+        {addition ? (lang === "en" ? " shells. How many shells does she have now?" : " cangkerang. Berapa cangkerang yang dia ada sekarang?") : (lang === "en" ? " cookies. How many cookies are left?" : " biskut. Berapa biskut yang tinggal?")}
+      </p>
+
+      <div className="rounded-3xl border-2 border-white bg-white p-4">
+        <p className="mb-4 text-center text-xl font-black text-blue-950">{currentInstruction}</p>
+        <div className="grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+          <section className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center">
+            <h4 className="text-lg font-black text-blue-900">{lang === "en" ? `Start with ${start}` : `Mula dengan ${start}`}</h4>
+            <div className="mt-4 flex min-h-36 flex-wrap items-center justify-center gap-3">
+              {Array.from({ length: start }, (_, index) => {
+                const removed = !addition && index >= answer && changedCount > index - answer;
+                const counted = index < startCount;
+                const active = phase === "countStart" && index + 1 === startCount;
+                return (
+                  <div key={index} className={`relative grid h-20 w-16 place-items-center rounded-2xl border-2 transition-all duration-500 ${removed ? "-translate-y-5 scale-75 border-red-300 bg-red-50 opacity-35" : active ? "scale-110 border-yellow-400 bg-yellow-100 ring-4 ring-yellow-200" : "border-blue-200 bg-white"}`}>
+                    <span className="text-5xl drop-shadow-md" aria-hidden="true">{emoji}</span>
+                    {(counted || removed) && <span className={`absolute -top-2 rounded-full px-2 text-xs font-black text-white ${removed ? "bg-red-600" : "bg-blue-600"}`}>{removed ? index - answer + 1 : index + 1}</span>}
+                    {removed && <span className="absolute inset-0 grid place-items-center text-5xl font-black text-red-500">×</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          <div className={`grid h-16 w-16 place-items-center justify-self-center rounded-2xl text-4xl font-black text-white transition-all ${phase === "operate" ? "scale-110 ring-4 ring-yellow-200" : ""} ${addition ? "bg-emerald-600" : "bg-red-600"}`} style={NUMBER_TEXT_STYLE}>
+            {addition ? "+2" : "−2"}
+          </div>
+
+          <section className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+            <h4 className="text-lg font-black text-emerald-900">{addition ? (lang === "en" ? "2 more shells" : "2 cangkerang lagi") : (lang === "en" ? "2 cookies eaten" : "2 biskut dimakan")}</h4>
+            <div className="mt-4 flex min-h-36 items-center justify-center gap-3">
+              {Array.from({ length: change }, (_, index) => (
+                <div key={index} className={`relative grid h-20 w-16 place-items-center rounded-2xl border-2 transition-all duration-500 ${index < changedCount ? "translate-y-0 scale-100 border-yellow-400 bg-yellow-100 opacity-100" : "translate-y-8 scale-75 border-slate-200 bg-white opacity-25"}`}>
+                  <span className="text-5xl drop-shadow-md" aria-hidden="true">{emoji}</span>
+                  {index < changedCount && <span className="absolute -top-2 rounded-full bg-emerald-600 px-2 text-xs font-black text-white">{index + 1}</span>}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-5 rounded-3xl border-2 border-violet-200 bg-violet-50 p-4 text-center">
+          <p className="text-3xl font-black text-violet-950" style={NUMBER_TEXT_STYLE}>{start} {addition ? "+" : "−"} {change} = {phase === "done" ? answer : "?"}</p>
+          <div className="mt-4 flex min-h-24 flex-wrap items-center justify-center gap-3">
+            {Array.from({ length: answer }, (_, index) => (
+              <div key={index} className={`relative grid h-16 w-14 place-items-center rounded-2xl border-2 transition-all ${index < resultCount ? "scale-100 border-violet-400 bg-white opacity-100" : "scale-75 border-transparent opacity-15"}`}>
+                <span className="text-4xl drop-shadow-sm" aria-hidden="true">{emoji}</span>
+                {index < resultCount && <span className="absolute -top-2 rounded-full bg-violet-700 px-2 text-xs font-black text-white">{index + 1}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <RealWorldStepGrid steps={[
+          { label: lang === "en" ? "Start" : "Mula", value: String(start) },
+          { label: lang === "en" ? "Clue" : "Petunjuk", value: clue },
+          { label: lang === "en" ? "Meaning" : "Maksud", value: addition ? "+2" : "−2" },
+          { label: lang === "en" ? "Answer" : "Jawapan", value: phase === "done" ? String(answer) : "?" },
+        ]} />
+
+        <div className="mt-5 flex justify-center">
+          <button type="button" disabled={running} onClick={() => phase === "done" ? reset() : void playExample()} className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-4 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] disabled:cursor-wait disabled:opacity-60">
+            {running ? (lang === "en" ? "Example playing..." : "Contoh sedang berjalan...") : phase === "done" ? (lang === "en" ? "Show again" : "Lihat lagi") : (lang === "en" ? "Start the example" : "Mula contoh")}
+            {(phase === "ready" || phase === "done") && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true"><PointerIcon /></span>}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -6087,6 +6313,8 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
       await wait(prefersReducedMotion ? 0 : 1100);
       if (cancelled) return;
       setMergeStage("joined");
+      await speakBananaTotal(4, lang);
+      if (cancelled) return;
       setActivePart(null);
       if (!audioMuted) {
         speakText(lang === "en" ? "The answer is 4." : "Jawapannya ialah 4.", lang);
