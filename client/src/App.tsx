@@ -1674,17 +1674,17 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
   );
 }
 
-type LearningSectionColor = "sky" | "emerald" | "violet" | "amber" | "teal" | "rose" | "orange" | "indigo";
+type LearningSectionColor = "sky" | "emerald" | "violet" | "amber" | "teal" | "rose" | "orange" | "navy";
 
 const LEARNING_SECTION_MARKERS: Record<LearningSectionColor, string> = {
   sky: "bg-sky-500 shadow-[0_4px_0_#0369a1]",
-  emerald: "bg-emerald-500 shadow-[0_4px_0_#047857]",
-  violet: "bg-violet-500 shadow-[0_4px_0_#6d28d9]",
-  amber: "bg-amber-400 text-amber-950 shadow-[0_4px_0_#b45309]",
-  teal: "bg-teal-500 shadow-[0_4px_0_#0f766e]",
-  rose: "bg-rose-500 shadow-[0_4px_0_#be123c]",
-  orange: "bg-orange-500 shadow-[0_4px_0_#c2410c]",
-  indigo: "bg-indigo-500 shadow-[0_4px_0_#4338ca]",
+  emerald: "bg-emerald-600 shadow-[0_4px_0_#065f46]",
+  violet: "bg-purple-600 shadow-[0_4px_0_#6b21a8]",
+  amber: "bg-yellow-400 text-yellow-950 shadow-[0_4px_0_#ca8a04]",
+  teal: "bg-cyan-500 shadow-[0_4px_0_#0e7490]",
+  rose: "bg-pink-600 shadow-[0_4px_0_#be185d]",
+  orange: "bg-orange-600 shadow-[0_4px_0_#c2410c]",
+  navy: "bg-slate-900 text-yellow-200 shadow-[0_4px_0_#020617]",
 };
 
 function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
@@ -1764,7 +1764,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           title: t.testMode,
           subtitle: t.testHelp,
           icon: <Star className="h-11 w-11" fill="currentColor" strokeWidth={2.5} aria-hidden="true" />,
-          color: "indigo" as const,
+          color: "navy" as const,
           onClick: () => go("testMenu"),
         },
       ],
@@ -1813,7 +1813,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
     {
       label: lang === "en" ? "Tests" : "Ujian",
       complete: testModeComplete,
-      markerClass: LEARNING_SECTION_MARKERS.indigo,
+      markerClass: LEARNING_SECTION_MARKERS.navy,
     },
   ];
 
@@ -1858,7 +1858,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
               aria-label={`${index + 1}. ${destination.label}. ${destination.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}
             >
               <span
-                className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 text-xl font-black ${destination.markerClass} ${destination.complete ? "border-emerald-700 ring-4 ring-emerald-200" : "border-white"} ${destination.markerClass.includes("text-amber") ? "" : "text-white"}`}
+                className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 text-xl font-black ${destination.markerClass} ${destination.complete ? "border-emerald-700 ring-4 ring-emerald-200" : "border-white"} ${destination.markerClass.includes(" text-") ? "" : "text-white"}`}
               >
                 {index + 1}
                 {destination.complete && (
@@ -2581,46 +2581,46 @@ function MenuCard({
       step: "bg-sky-600",
     },
     emerald: {
-      border: "border-emerald-400",
-      accent: "bg-emerald-500",
+      border: "border-emerald-500",
+      accent: "bg-emerald-600",
       badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      step: "bg-emerald-600",
+      step: "bg-emerald-700",
     },
     violet: {
-      border: "border-violet-400",
-      accent: "bg-violet-500",
-      badge: "border-violet-200 bg-violet-50 text-violet-700",
-      step: "bg-violet-600",
+      border: "border-purple-500",
+      accent: "bg-purple-600",
+      badge: "border-purple-200 bg-purple-50 text-purple-800",
+      step: "bg-purple-700",
     },
     amber: {
-      border: "border-amber-400",
-      accent: "bg-amber-400",
-      badge: "border-amber-200 bg-amber-50 text-amber-800",
-      step: "bg-amber-500",
+      border: "border-yellow-400",
+      accent: "bg-yellow-400",
+      badge: "border-yellow-300 bg-yellow-50 text-yellow-900",
+      step: "bg-yellow-500",
     },
     teal: {
-      border: "border-teal-400",
-      accent: "bg-teal-500",
-      badge: "border-teal-200 bg-teal-50 text-teal-700",
-      step: "bg-teal-600",
+      border: "border-cyan-400",
+      accent: "bg-cyan-500",
+      badge: "border-cyan-200 bg-cyan-50 text-cyan-800",
+      step: "bg-cyan-600",
     },
     rose: {
-      border: "border-rose-400",
-      accent: "bg-rose-500",
-      badge: "border-rose-200 bg-rose-50 text-rose-700",
-      step: "bg-rose-600",
+      border: "border-pink-500",
+      accent: "bg-pink-600",
+      badge: "border-pink-200 bg-pink-50 text-pink-800",
+      step: "bg-pink-700",
     },
     orange: {
-      border: "border-orange-400",
-      accent: "bg-orange-500",
+      border: "border-orange-500",
+      accent: "bg-orange-600",
       badge: "border-orange-200 bg-orange-50 text-orange-700",
-      step: "bg-orange-600",
+      step: "bg-orange-700",
     },
-    indigo: {
-      border: "border-indigo-400",
-      accent: "bg-indigo-500",
-      badge: "border-indigo-200 bg-indigo-50 text-indigo-700",
-      step: "bg-indigo-600",
+    navy: {
+      border: "border-slate-800",
+      accent: "bg-slate-900",
+      badge: "border-yellow-300 bg-slate-900 text-yellow-200",
+      step: "bg-slate-900",
     },
   };
   const theme = colors[color];
