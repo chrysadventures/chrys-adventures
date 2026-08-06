@@ -220,6 +220,25 @@
     box-shadow: 0 10px 0 rgba(25, 76, 72, 0.16), 0 20px 42px rgba(23, 78, 100, 0.14);
   }
 
+  .cyber-lesson-panel {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border: 3px solid rgba(103, 232, 249, 0.92);
+    background:
+      linear-gradient(rgba(34, 211, 238, 0.11) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.11) 1px, transparent 1px),
+      radial-gradient(circle at 78% 8%, rgba(250, 204, 21, 0.18), transparent 30rem),
+      linear-gradient(135deg, #020617 0%, #083344 54%, #052e2b 100%);
+    background-size: 28px 28px, 28px 28px, auto, auto;
+    box-shadow: 0 10px 0 #083344, 0 22px 46px rgba(2, 6, 23, 0.3);
+  }
+
+  .cyber-lesson-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
   .menu-card {
     position: relative;
     overflow: hidden;
