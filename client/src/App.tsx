@@ -241,10 +241,17 @@ const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
 const BACKGROUND_BASE = `${import.meta.env.BASE_URL}assets/images/`;
-const APP_BACKGROUND_STYLE = {
+const DEFAULT_BACKGROUND_STYLE = {
+  "--app-bg-color": "#9ee8f5",
   "--app-bg-desktop": `url("${BACKGROUND_BASE}jungle-bg-desktop.png")`,
   "--app-bg-tablet": `url("${BACKGROUND_BASE}jungle-bg-tablet.png")`,
   "--app-bg-mobile": `url("${BACKGROUND_BASE}jungle-bg-mobile.png")`,
+} as React.CSSProperties;
+const CYBER_BACKGROUND_STYLE = {
+  "--app-bg-color": "#031727",
+  "--app-bg-desktop": `url("${BACKGROUND_BASE}cyber-bg-desktop.png")`,
+  "--app-bg-tablet": `url("${BACKGROUND_BASE}cyber-bg-tablet.png")`,
+  "--app-bg-mobile": `url("${BACKGROUND_BASE}cyber-bg-mobile.png")`,
 } as React.CSSProperties;
 const BASKET_SPRITE = `${SPRITE_BASE}basket.png`;
 const ADVANCED_BANANA_ICON = `${SPRITE_BASE}advanced-banana.png`;
@@ -1279,6 +1286,8 @@ function App() {
   }, []);
 
   const t = UI[lang];
+  const isCyberBackground = screen.startsWith("advanced") || Boolean(completedLesson?.startsWith("advanced"));
+  const backgroundStyle = isCyberBackground ? CYBER_BACKGROUND_STYLE : DEFAULT_BACKGROUND_STYLE;
   const go = (next: Screen) => {
     setLastScore(null);
     setCompletedLesson(null);
@@ -1313,7 +1322,7 @@ function App() {
     <AudioEnabledContext.Provider value={soundEnabled}>
       <div
         className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden"
-        style={APP_BACKGROUND_STYLE}
+        style={backgroundStyle}
         onPointerDownCapture={markAudioInteraction}
         onKeyDownCapture={markAudioInteraction}
       >

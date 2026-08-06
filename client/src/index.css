@@ -173,7 +173,7 @@
   .page-bg {
     position: relative;
     isolation: isolate;
-    background-color: #9ee8f5;
+    background-color: var(--app-bg-color, #9ee8f5);
   }
 
   .page-bg::before {
