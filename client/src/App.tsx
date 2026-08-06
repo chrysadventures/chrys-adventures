@@ -2312,7 +2312,7 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
 
   return (
     <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-6 text-center">
-      <div>
+      <div className="w-full">
         <p className="text-xl font-black text-cyan-100">
           {lang === "en" ? "Put two digits side by side." : "Letak dua digit bersebelahan."}
         </p>
@@ -2337,6 +2337,47 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
         <p className="mt-2 text-lg font-bold text-cyan-100">
           {lang === "en" ? "10 is a two-digit number." : "10 ialah nombor dua digit."}
         </p>
+
+        <div className="mx-auto mt-7 max-w-3xl border-t-2 border-cyan-400/40 pt-6">
+          <p className="text-xl font-black text-yellow-200">
+            {lang === "en" ? "Here are two more examples." : "Ini dua lagi contoh."}
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {[
+              { digits: [1, 4], value: 14 },
+              { digits: [1, 8], value: 18 },
+            ].map((example) => (
+              <div
+                key={example.value}
+                className="rounded-[1.5rem] border-2 border-cyan-300 bg-slate-950/70 p-4 shadow-[0_5px_0_#164e63]"
+              >
+                <div className="flex items-start justify-center gap-3">
+                  {example.digits.map((digit, index) => (
+                    <div key={`${example.value}-${index}`}>
+                      <span
+                        className="grid h-16 w-14 place-items-center rounded-xl border-3 border-cyan-300 bg-slate-900 text-3xl font-black text-yellow-200 shadow-[0_4px_0_#155e75]"
+                        style={getNumberTextStyle(digit)}
+                      >
+                        {digit}
+                      </span>
+                      <span className="mt-2 block rounded-full bg-cyan-900 px-2 py-1 text-xs font-black text-cyan-50">
+                        {lang === "en" ? `Digit ${index + 1}` : `Digit ${index + 1}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-xl font-black text-white">
+                  {lang === "en"
+                    ? `${example.digits[0]} and ${example.digits[1]} make ${example.value}.`
+                    : `${example.digits[0]} dan ${example.digits[1]} menjadi ${example.value}.`}
+                </p>
+                <p className="mt-1 text-sm font-bold text-cyan-100">
+                  {lang === "en" ? `${example.value} is a two-digit number.` : `${example.value} ialah nombor dua digit.`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
