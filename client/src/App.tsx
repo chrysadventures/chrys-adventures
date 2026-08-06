@@ -2083,77 +2083,75 @@ function TeenQuantityVisual({
   );
 }
 
-function TeenValueBananas({
+function TeenValueObjects({
   value,
   lang,
   visibleCount,
   counting,
-  complete,
+  resultStage,
 }: {
   value: number;
   lang: Lang;
   visibleCount: number;
   counting: boolean;
-  complete: boolean;
+  resultStage: 0 | 1 | 2;
 }) {
-  const hasStarted = visibleCount > 0 || counting || complete;
-  const groups = value === 20
-    ? [
-        { start: 1, count: 10, label: lang === "en" ? "First group of ten" : "Kumpulan sepuluh pertama" },
-        { start: 11, count: 10, label: lang === "en" ? "Second group of ten" : "Kumpulan sepuluh kedua" },
-      ]
-    : value === 10
-      ? [{ start: 1, count: 10, label: lang === "en" ? "One group of ten" : "Satu kumpulan sepuluh" }]
-      : [
-          { start: 1, count: 10, label: lang === "en" ? "One group of ten" : "Satu kumpulan sepuluh" },
-          { start: 11, count: value - 10, label: lang === "en" ? `${value - 10} more` : `${value - 10} lagi` },
-        ];
+  const bananaLabel = lang === "en"
+    ? `Total: ${value} ${objectName(BANANA, value, lang)}`
+    : `Jumlah: ${value} ${objectName(BANANA, value, lang)}`;
+  const rock = "🪨";
+  const rockLabel = lang === "en"
+    ? `Total: ${value} ${objectName(rock, value, lang)}`
+    : `Jumlah: ${value} ${objectName(rock, value, lang)}`;
+  const activelyCounting = counting && resultStage === 0;
 
   return (
     <div className={`rounded-[2rem] border-4 p-4 transition sm:p-5 ${
-      complete
+      resultStage === 2
         ? "border-emerald-400 bg-emerald-50 shadow-[0_0_0_6px_rgba(52,211,153,.18)]"
         : "border-yellow-200 bg-white"
     }`}>
-      <div className={`grid items-stretch justify-center gap-5 ${groups.length > 1 ? "lg:grid-cols-2" : "mx-auto max-w-2xl"}`}>
-        {groups.map((group) => (
-          <section key={group.start} className="rounded-[1.6rem] border-3 border-emerald-300 bg-emerald-50/70 p-4">
-            <p className="mb-4 text-center text-lg font-black text-emerald-900">{group.label}</p>
-            <div className="mx-auto grid w-fit grid-cols-5 gap-2 rounded-2xl bg-white/90 p-3 shadow-inner">
-              {Array.from({ length: group.count }, (_, index) => {
-                const countValue = group.start + index;
-                const reached = countValue <= visibleCount;
-                const active = counting && countValue === visibleCount;
-                return (
-                  <span
-                    key={countValue}
-                    className={`relative grid h-14 w-14 place-items-center rounded-2xl border-2 pt-2 transition sm:h-16 sm:w-16 ${
-                      active
-                        ? "border-yellow-400 bg-yellow-100 ring-4 ring-yellow-300"
-                        : reached
-                          ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
-                          : hasStarted
-                            ? "border-slate-200 bg-slate-100 opacity-40 grayscale"
-                            : "border-amber-200 bg-amber-50"
-                    }`}
-                  >
-                    <SpriteIcon value={BANANA} className="h-10 w-10 sm:h-12 sm:w-12" />
-                    {reached && (
-                      <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
-                        {countValue}
-                      </span>
-                    )}
-                  </span>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+      <p className="mb-4 text-center text-xl font-black text-blue-950">
+        {lang === "en" ? "Count both kinds of objects together." : "Kira kedua-dua jenis objek bersama-sama."}
+      </p>
+      <div className="grid items-stretch gap-5 md:grid-cols-2">
+        <section>
+          <h3 className="mb-3 text-center text-xl font-black text-amber-800">
+            {lang === "en" ? "Bananas" : "Pisang"}
+          </h3>
+          <LabeledValueGroup
+            label={bananaLabel}
+            count={value}
+            emoji={BANANA}
+            counted
+            visibleCount={visibleCount}
+            showLabel={resultStage >= 1}
+            active={activelyCounting}
+            lang={lang}
+          />
+        </section>
+        <section>
+          <h3 className="mb-3 text-center text-xl font-black text-slate-700">
+            {lang === "en" ? "Rocks" : "Batu"}
+          </h3>
+          <LabeledValueGroup
+            label={rockLabel}
+            count={value}
+            emoji={rock}
+            counted
+            visibleCount={visibleCount}
+            showLabel={resultStage >= 2}
+            active={activelyCounting}
+            lang={lang}
+          />
+        </section>
       </div>
-      {complete && (
-        <div className="mx-auto mt-5 w-fit rounded-full border-2 border-emerald-300 bg-emerald-100 px-7 py-3 text-center text-2xl font-black text-emerald-950 shadow-[0_4px_0_#6ee7b7]">
-          {lang === "en" ? `Total: ${value} bananas` : `Jumlah: ${value} pisang`}
-        </div>
+      {resultStage === 2 && (
+        <p className="mx-auto mt-5 w-fit rounded-full border-2 border-blue-200 bg-blue-50 px-6 py-3 text-center text-xl font-black text-blue-950">
+          {lang === "en"
+            ? `Both groups show the same value: ${value}.`
+            : `Kedua-dua kumpulan menunjukkan nilai yang sama: ${value}.`}
+        </p>
       )}
     </div>
   );
@@ -2267,6 +2265,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
   const [visibleCount, setVisibleCount] = useState(0);
   const [counting, setCounting] = useState(false);
   const [countComplete, setCountComplete] = useState(false);
+  const [resultStage, setResultStage] = useState<0 | 1 | 2>(0);
   const soundEnabled = React.useContext(AudioEnabledContext);
   const countRunRef = React.useRef(0);
   const numberWord = TEEN_WORDS[lang][number];
@@ -2281,6 +2280,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     setVisibleCount(0);
     setCounting(false);
     setCountComplete(false);
+    setResultStage(0);
   }, [introStep, number, step, lang]);
 
   useEffect(() => () => {
@@ -2302,6 +2302,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     stopNumberAudio();
     setVisibleCount(0);
     setCountComplete(false);
+    setResultStage(0);
     setCounting(true);
     const values = Array.from({ length: number }, (_, index) => index + 1);
 
@@ -2319,6 +2320,12 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
 
     if (countRunRef.current !== runId) return;
     await wait(450);
+    if (countRunRef.current !== runId) return;
+    setResultStage(1);
+    await wait(900);
+    if (countRunRef.current !== runId) return;
+    setResultStage(2);
+    await wait(300);
     if (countRunRef.current !== runId) return;
     setCounting(false);
     setCountComplete(true);
@@ -2409,7 +2416,9 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
         }
       : {
           title: lang === "en" ? `See the value of ${number}` : `Lihat nilai ${number}`,
-          text: lang === "en" ? `${number} means ${number} bananas. Count them.` : `${number} bermaksud ${number} pisang. Kira semuanya.`,
+          text: lang === "en"
+            ? `${number} means ${number} objects. Count the bananas and rocks together.`
+            : `${number} bermaksud ${number} objek. Kira pisang dan batu bersama-sama.`,
         };
   const teachingCopy = introStep !== null ? introCopy : numberTeachingCopy;
 
@@ -2494,12 +2503,12 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                   )}
                 </button>
               </div>
-              <TeenValueBananas
+              <TeenValueObjects
                 value={number}
                 lang={lang}
                 visibleCount={visibleCount}
                 counting={counting}
-                complete={countComplete}
+                resultStage={resultStage}
               />
             </div>
           )}
