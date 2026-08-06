@@ -7,7 +7,9 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  base: "/chrys-adventures/",
+  // Relative assets work from both the current GitHub Pages project path and
+  // the future chrysadventures.com domain root during the DNS transition.
+  base: "./",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
