@@ -870,39 +870,27 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     const missingIndex = visual.nums.findIndex((n) => n === "?");
     const before = visual.nums[missingIndex - 1];
     const after = visual.nums[missingIndex + 1];
-    const filledAnswer = Number(answer);
     const knownAdjacentGaps = visual.nums.slice(1).flatMap((value, index) => {
       const previous = visual.nums[index];
       return typeof previous === "number" && typeof value === "number" ? [value - previous] : [];
     });
     const sequenceStep = knownAdjacentGaps.find((gap) => gap !== 0) ?? 1;
-    const descending = sequenceStep < 0;
-    const skipByTwo = Math.abs(sequenceStep) === 2;
-    const countedValues = visual.nums.slice(0, missingIndex).filter((value): value is number => typeof value === "number");
-    const countStart = countedValues[0] ?? filledAnswer;
-    const countedWordsEn = countedValues.map((value) => WORDS.en[value]).join(", ");
-    const countedWordsMs = countedValues.map((value) => WORDS.ms[value]).join(", ");
-    const countUpEn = countedValues.length > 0
-      ? `${descending ? "Count down" : "Count up"} from ${countStart}: ${countedWordsEn}. The next number is ${answer}.`
-      : `The number line starts at ${answer}.`;
-    const countUpMs = countedValues.length > 0
-      ? `${descending ? "Kira turun" : "Kira naik"} dari ${countStart}: ${countedWordsMs}. Nombor lepas ni ialah ${answer}.`
-      : `Garis nombor bermula dengan ${answer}.`;
-    const orderEn = [
-      typeof before === "number" ? `${answer} comes after ${before}.` : "",
-      typeof after === "number" ? `${answer} comes before ${after}.` : "",
-    ].filter(Boolean).join(" ");
-    const orderMs = [
-      typeof before === "number" ? `${answer} selepas ${before}.` : "",
-      typeof after === "number" ? `${answer} sebelum ${after}.` : "",
-    ].filter(Boolean).join(" ");
+    const reference = typeof before === "number" ? before : typeof after === "number" ? after : Number(answer) - sequenceStep;
+    const distance = Math.abs(Number(answer) - reference);
+    const directionEn = Number(answer) >= reference ? "right" : "left";
+    const directionMs = Number(answer) >= reference ? "kanan" : "kiri";
+    const stepWordEn = distance === 1 ? "step" : "steps";
     return {
-      en: skipByTwo
-        ? ["Look at the jumps.", `It jumps ${descending ? "back" : "forward"} by 2.`, `So, ? is ${answer}.`]
-        : [countUpEn, orderEn].filter(Boolean),
-      ms: skipByTwo
-        ? ["Lihat lompatan nombor.", `Ia lompat ${descending ? "ke belakang" : "ke depan"} sebanyak 2.`, `Jadi, ? ialah ${answer}.`]
-        : [countUpMs, orderMs].filter(Boolean),
+      en: [
+        `Find ${reference} on the full number line.`,
+        `Move ${distance} ${stepWordEn} ${directionEn} to ${answer}.`,
+        `The missing number is ${answer}.`,
+      ],
+      ms: [
+        `Cari ${reference} pada garis nombor penuh.`,
+        `Bergerak ${distance} langkah ke ${directionMs} hingga ${answer}.`,
+        `Nombor yang hilang ialah ${answer}.`,
+      ],
     };
   }
   if (visual.kind === "number") {
@@ -9654,12 +9642,13 @@ function ContainerScene({
   );
 }
 
-function NumberLine({ marked }: { marked: number }) {
+function NumberLine({ marked }: { marked: number | number[] }) {
   return <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />;
 }
 
-function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<number | "?">; marked: number; arrow?: "left" | "right" }) {
+function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<number | "?">; marked: number | number[]; arrow?: "left" | "right" }) {
   const compact = nums.length <= 5;
+  const markedNumbers = Array.isArray(marked) ? marked : [marked];
 
   return (
     <div className="overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-4 sm:pb-3">
@@ -9670,7 +9659,7 @@ function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<num
         <div className="absolute bottom-3 left-3 right-3 h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)] sm:bottom-4 sm:left-6 sm:right-6 sm:h-3" aria-hidden="true" />
         {nums.map((n, i) => {
           const missing = n === "?";
-          const selected = !missing && n === marked;
+          const selected = !missing && markedNumbers.includes(n);
           return (
           <div key={`${n}-${i}`} className="relative z-10 flex flex-col items-center">
             {i < nums.length - 1 && (arrow === "right" ? (
@@ -9683,6 +9672,50 @@ function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<num
           </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function sequenceReferenceValues(nums: Array<number | "?">) {
+  const missingIndex = nums.findIndex((value) => value === "?");
+  const adjacentGaps = nums.slice(1).flatMap((value, index) => {
+    const previous = nums[index];
+    return typeof previous === "number" && typeof value === "number" ? [value - previous] : [];
+  });
+  const step = adjacentGaps.find((gap) => gap !== 0) ?? 1;
+  const before = nums[missingIndex - 1];
+  const after = nums[missingIndex + 1];
+  const answer = typeof before === "number"
+    ? before + step
+    : typeof after === "number"
+      ? after - step
+      : 0;
+  const reference = typeof before === "number" ? before : typeof after === "number" ? after : answer;
+  return { answer, reference };
+}
+
+function SequenceReferenceSolution({ nums, lang }: { nums: Array<number | "?">; lang: Lang }) {
+  const { answer, reference } = sequenceReferenceValues(nums);
+  const distance = Math.abs(answer - reference);
+  const direction = answer >= reference
+    ? (lang === "en" ? "right" : "kanan")
+    : (lang === "en" ? "left" : "kiri");
+  return (
+    <div className="space-y-4">
+      <NumberLine marked={[reference, answer]} />
+      <div className="flex flex-wrap items-center justify-center gap-3 text-center font-black">
+        <span className="rounded-full border-2 border-sky-300 bg-sky-50 px-4 py-2 text-sky-900">
+          {lang === "en" ? `Start at ${reference}` : `Mula pada ${reference}`}
+        </span>
+        <span className="rounded-full border-2 border-amber-300 bg-amber-50 px-4 py-2 text-amber-900">
+          {lang === "en"
+            ? `Move ${distance} ${distance === 1 ? "step" : "steps"} ${direction}`
+            : `Bergerak ${distance} langkah ke ${direction}`}
+        </span>
+        <span className="rounded-full border-2 border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-900">
+          {lang === "en" ? `Answer: ${answer}` : `Jawapan: ${answer}`}
+        </span>
       </div>
     </div>
   );
@@ -10967,7 +11000,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   if (visual.kind === "compare") {
     return (
       <div className="space-y-3">
-        <NumberLine marked={-1} />
+        <NumberLine marked={[visual.a, visual.b]} />
         <div className="grid grid-cols-2 gap-3">
           <ObjectGroup count={visual.a} emoji="🍌" lang={lang} />
           <ObjectGroup count={visual.b} emoji="🍌" lang={lang} />
@@ -11261,8 +11294,11 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
     const emoji = visual.emoji ?? "🍌";
     return <InteractiveSubtractionFlow start={visual.a} takeAway={visual.b} emoji={emoji} lang={lang} />;
   }
+  if (visual.kind === "sequence") {
+    return <SequenceReferenceSolution nums={visual.nums} lang={lang} />;
+  }
   if (visual.kind === "compare") {
-    return <NumberLine marked={-1} />;
+    return <NumberLine marked={[visual.a, visual.b]} />;
   }
   return <VisualDisplay visual={visual} lang={lang} cyber={cyber} />;
 }
