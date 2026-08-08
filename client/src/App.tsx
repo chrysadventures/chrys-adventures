@@ -815,6 +815,12 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     };
   }
   if (visual.kind === "add") {
+    if (typeof answer === "string") {
+      return {
+        en: ["The story puts more objects in.", "Answer: Adding."],
+        ms: ["Cerita menambah lebih banyak objek.", "Jawapan: Tambah."],
+      };
+    }
     const total = visual.a + visual.b;
     const countOn = countForwardSteps(visual.a, visual.b);
     return {
@@ -827,6 +833,12 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     };
   }
   if (visual.kind === "subtract") {
+    if (typeof answer === "string") {
+      return {
+        en: ["The story takes objects away.", "Answer: Taking away."],
+        ms: ["Cerita mengambil objek.", "Jawapan: Tolak."],
+      };
+    }
     const left = visual.a - visual.b;
     const item = objectName(visual.emoji, left, "en");
     const itemMs = objectName(visual.emoji, left, "ms");
@@ -843,10 +855,16 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   if (visual.kind === "compare") {
     const greater = Math.max(visual.a, visual.b);
     const smaller = Math.min(visual.a, visual.b);
-    return {
-      en: [`${greater} is more.`, `${smaller} is less.`, `Answer: ${greater}.`],
-      ms: [`${greater} lebih banyak.`, `${smaller} lebih sedikit.`, `Jawapan: ${greater}.`],
-    };
+    const asksForSmaller = Number(answer) === smaller;
+    return asksForSmaller
+      ? {
+        en: [`${smaller} is less than ${greater}.`],
+        ms: [`${smaller} lebih kecil daripada ${greater}.`],
+      }
+      : {
+        en: [`${greater} is more than ${smaller}.`],
+        ms: [`${greater} lebih besar daripada ${smaller}.`],
+      };
   }
   if (visual.kind === "sequence") {
     const missingIndex = visual.nums.findIndex((n) => n === "?");
@@ -10949,7 +10967,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   if (visual.kind === "compare") {
     return (
       <div className="space-y-3">
-        <NumberLine marked={Math.max(visual.a, visual.b)} />
+        <NumberLine marked={-1} />
         <div className="grid grid-cols-2 gap-3">
           <ObjectGroup count={visual.a} emoji="🍌" lang={lang} />
           <ObjectGroup count={visual.b} emoji="🍌" lang={lang} />
@@ -11244,7 +11262,7 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
     return <InteractiveSubtractionFlow start={visual.a} takeAway={visual.b} emoji={emoji} lang={lang} />;
   }
   if (visual.kind === "compare") {
-    return <NumberLine marked={Math.max(visual.a, visual.b)} />;
+    return <NumberLine marked={-1} />;
   }
   return <VisualDisplay visual={visual} lang={lang} cyber={cyber} />;
 }
