@@ -2645,11 +2645,11 @@ function TeenValueObjects({
   );
 }
 
-type DigitIntroStep = 0 | 1 | 2 | 3;
+type DigitIntroStep = 0 | 1 | 2 | 3 | 4;
 
 function DigitLabelSequence({ lang }: { lang: Lang }) {
   const digits = [2, 5, 8];
-  const labels = lang === "en" ? ["1 digit", "2 digits", "3 digits"] : ["1 digit", "2 digit", "3 digit"];
+  const labels = lang === "en" ? ["First digit", "Second digit", "Third digit"] : ["Digit pertama", "Digit kedua", "Digit ketiga"];
   const [activeIndex, setActiveIndex] = useState(-1);
   const [completedIndex, setCompletedIndex] = useState(-1);
   const [running, setRunning] = useState(false);
@@ -2752,6 +2752,61 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
   );
 }
 
+function DigitLengthComparison({ lang }: { lang: Lang }) {
+  const examples = lang === "en"
+    ? [
+        { value: 7, label: "1 digit", audio: "Seven is a one digit number." },
+        { value: 14, label: "2 digits", audio: "Fourteen is a two digit number." },
+        { value: 123, label: "3 digits", audio: "One hundred and twenty-three is a three digit number." },
+      ]
+    : [
+        { value: 7, label: "1 digit", audio: "Tujuh ialah nombor satu digit." },
+        { value: 14, label: "2 digit", audio: "Empat belas ialah nombor dua digit." },
+        { value: 123, label: "3 digit", audio: "Seratus dua puluh tiga ialah nombor tiga digit." },
+      ];
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const playExample = (index: number) => {
+    setActiveIndex(index);
+    speakText(examples[index].audio, lang, { allowWhenWordAudioDisabled: true });
+    window.setTimeout(() => setActiveIndex((current) => current === index ? null : current), 2600);
+  };
+
+  return (
+    <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 text-center shadow-[inset_0_0_32px_rgba(34,211,238,.2)] sm:p-7">
+      <div className="w-full">
+        <p className="text-xl font-black text-cyan-100">
+          {lang === "en" ? "Look at how many digits each number uses." : "Lihat berapa digit yang digunakan oleh setiap nombor."}
+        </p>
+        <div className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-3">
+          {examples.map((example, index) => {
+            const active = activeIndex === index;
+            return (
+              <div key={example.value} className={`rounded-[1.6rem] border-2 p-4 transition duration-300 ${active ? "border-yellow-300 bg-cyan-800 shadow-[0_0_24px_rgba(250,204,21,.5)]" : "border-cyan-300 bg-slate-950/75 shadow-[0_5px_0_#164e63]"}`}>
+                <div className={`mx-auto grid h-24 min-w-24 w-fit place-items-center rounded-2xl border-4 px-4 text-5xl font-black shadow-[0_6px_0_#a16207] ${active ? "border-yellow-200 bg-yellow-300 text-slate-950" : "border-yellow-300 bg-slate-900 text-yellow-200"}`} style={getNumberTextStyle(example.value)}>
+                  {example.value}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => playExample(index)}
+                  aria-label={lang === "en" ? `Hear ${example.value} is a ${example.label} number` : `Dengar nombor ${example.value}, ${example.label}`}
+                  className={`mt-4 inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 font-black shadow-[0_4px_0_#155e75] transition ${active ? "border-yellow-200 bg-yellow-300 text-slate-950" : "border-cyan-300 bg-slate-900 text-cyan-100"}`}
+                >
+                  <SpeakerIcon />
+                  {example.label}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-6 text-lg font-black text-white">
+          {lang === "en" ? "Tap each label to hear the number and its digit count." : "Tekan setiap label untuk dengar nombor dan jumlah digitnya."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: Lang }) {
   if (step === 0) {
     return <DigitLabelSequence lang={lang} />;
@@ -2761,14 +2816,11 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
     return (
       <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-6 text-center">
         <div>
-          <p className="mb-4 text-lg font-black uppercase tracking-wide text-cyan-200">
-            {lang === "en" ? "One digit slot" : "Satu ruang digit"}
-          </p>
           <div className="mx-auto grid h-44 w-36 place-items-center rounded-[2rem] border-4 border-yellow-300 bg-slate-900 text-8xl font-black text-yellow-200 shadow-[0_8px_0_#a16207]" style={getNumberTextStyle(7)}>
             7
           </div>
           <p className="mt-7 text-2xl font-black text-white">
-            {lang === "en" ? "7 uses one digit." : "7 menggunakan satu digit."}
+            {lang === "en" ? "7 is a one digit number." : "7 ialah nombor satu digit."}
           </p>
         </div>
       </div>
@@ -2776,6 +2828,10 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
   }
 
   if (step === 2) {
+    return <DigitLengthComparison lang={lang} />;
+  }
+
+  if (step === 3) {
     return (
       <div className="mx-auto min-h-[24rem] max-w-4xl rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 text-center sm:p-7">
         <p className="text-2xl font-black text-white">
@@ -2959,7 +3015,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
 
   const goNext = () => {
     if (introStep !== null) {
-      if (introStep < 3) {
+      if (introStep < 4) {
         setIntroStep((introStep + 1) as DigitIntroStep);
       } else {
         setIntroStep(null);
@@ -3007,13 +3063,18 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
         }
       : introStep === 2
         ? {
-            title: lang === "en" ? "Meet every one-digit number" : "Kenal semua nombor satu digit",
-            text: lang === "en" ? "The one-digit numbers are 0 to 9." : "Nombor satu digit ialah 0 hingga 9.",
+            title: lang === "en" ? "Compare digit lengths" : "Banding bilangan digit",
+            text: lang === "en" ? "A number can use one, two, or three digits." : "Satu nombor boleh menggunakan satu, dua atau tiga digit.",
           }
-        : {
-            title: lang === "en" ? "Now meet two digits" : "Sekarang kenal dua digit",
-            text: lang === "en" ? "The number 10 has two digits: 1 and 0." : "Nombor 10 mempunyai dua digit: 1 dan 0.",
-          };
+        : introStep === 3
+          ? {
+              title: lang === "en" ? "Meet every one-digit number" : "Kenal semua nombor satu digit",
+              text: lang === "en" ? "The one-digit numbers are 0 to 9." : "Nombor satu digit ialah 0 hingga 9.",
+            }
+          : {
+              title: lang === "en" ? "Now meet two digits" : "Sekarang kenal dua digit",
+              text: lang === "en" ? "The number 10 has two digits: 1 and 0." : "Nombor 10 mempunyai dua digit: 1 dan 0.",
+            };
 
   const numberTeachingCopy = step === 0
     ? {
@@ -3050,10 +3111,10 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                 ? (lang === "en" ? "Digit basics" : "Asas digit")
                 : (lang === "en" ? `Number ${number} of 10-20` : `Nombor ${number} daripada 10-20`)}
             </p>
-            <p className="rounded-full border border-cyan-400/70 bg-slate-950/80 px-4 py-2 font-black text-cyan-100">{introStep !== null ? `${introStep + 1} / 4` : `${number - 9} / 11`}</p>
+            <p className="rounded-full border border-cyan-400/70 bg-slate-950/80 px-4 py-2 font-black text-cyan-100">{introStep !== null ? `${introStep + 1} / 5` : `${number - 9} / 11`}</p>
           </div>
-          <div className={`mb-5 grid gap-2 ${introStep !== null ? "grid-cols-4" : "grid-cols-3"}`}>
-            {Array.from({ length: introStep !== null ? 4 : 3 }, (_, item) => (
+          <div className={`mb-5 grid gap-2 ${introStep !== null ? "grid-cols-5" : "grid-cols-3"}`}>
+            {Array.from({ length: introStep !== null ? 5 : 3 }, (_, item) => (
               <div key={item} className={`h-3 rounded-full border ${item <= (introStep ?? step) ? "border-yellow-200 bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,.5)]" : "border-slate-600 bg-slate-700"}`} />
             ))}
           </div>
@@ -3179,7 +3240,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
               )}
               <LessonNextButton
                 onClick={goNext}
-                label={introStep === 3
+                label={introStep === 4
                   ? (lang === "en" ? "Meet number 10" : "Kenal nombor 10")
                   : number === 20 && step === 2
                     ? (lang === "en" ? "Start practice" : "Mula latihan")
