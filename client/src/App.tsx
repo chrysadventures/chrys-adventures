@@ -240,7 +240,10 @@ const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>
 };
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
-const BACKGROUND_BASE = `${import.meta.env.BASE_URL}assets/images/`;
+// These URLs are consumed inside index.css's .page-bg::before rule. The CSS
+// bundle lives in /assets/, so this parent-relative path resolves to
+// /assets/images/ on both GitHub Pages and a root custom domain.
+const BACKGROUND_BASE = "../assets/images/";
 const DEFAULT_BACKGROUND_STYLE = {
   "--app-bg-color": "#9ee8f5",
   "--app-bg-desktop": `url("${BACKGROUND_BASE}jungle-bg-desktop.png")`,
