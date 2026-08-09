@@ -37,6 +37,7 @@ type Screen =
   | "menu"
   | "advancedMenu"
   | "advancedTeenNumbers"
+  | "advancedCompareBigger"
   | "advancedAdditionPart1"
   | "advancedAdditionPart2"
   | "learnRecognize"
@@ -62,6 +63,7 @@ type LearningSectionKey =
   | "subtraction"
   | "learnReal"
   | "advancedTeenNumbers"
+  | "advancedCompareBigger"
   | "advancedAdditionPart1"
   | "advancedAdditionPart2";
 
@@ -350,6 +352,8 @@ const UI = {
     advancedMenuHelp: "Explore bigger numbers with Chrys.",
     advancedTeenNumbers: "Recognize Double-Digit Numbers",
     advancedTeenNumbersShort: "Meet digits, then learn numbers 10-20",
+    advancedCompareBigger: "Compare Bigger Numbers",
+    advancedCompareBiggerShort: "Find which group has more",
     advancedAdditionPart1: "Make a Ten",
     advancedAdditionPart2: "Write it Down",
     recognizeNumbers: "Recognize and Identify Numbers",
@@ -407,6 +411,8 @@ const UI = {
     advancedMenuHelp: "Teroka nombor lebih besar bersama Chrys.",
     advancedTeenNumbers: "Kenal Nombor Dua Digit",
     advancedTeenNumbersShort: "Kenal digit, kemudian belajar nombor 10-20",
+    advancedCompareBigger: "Banding Nombor Besar",
+    advancedCompareBiggerShort: "Cari kumpulan yang lebih banyak",
     advancedAdditionPart1: "Bina Sepuluh",
     advancedAdditionPart2: "Tulis Tambah",
     recognizeNumbers: "Kenal Nombor",
@@ -1347,7 +1353,7 @@ function App() {
           onToggleSound={() => setSoundEnabled((current) => !current)}
           onOpenGlossary={() => setGlossaryOpen(true)}
           onBack={screen === "home" ? undefined : () => go(
-            screen === "advancedTeenNumbers" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2"
+            screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2"
               ? "advancedMenu"
               : screen === "advancedMenu"
                 ? "modeSelect"
@@ -1386,6 +1392,13 @@ function App() {
             lang={lang}
             t={t}
             onDone={() => finishLesson("advancedTeenNumbers", "advancedTeenNumbers")}
+          />
+        )}
+        {!completedLesson && screen === "advancedCompareBigger" && (
+          <AdvancedCompareBiggerLesson
+            lang={lang}
+            t={t}
+            onDone={() => finishLesson("advancedCompareBigger", "advancedCompareBigger")}
           />
         )}
         {!completedLesson && screen === "advancedAdditionPart1" && (
@@ -2060,9 +2073,10 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 
 function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
   const teenComplete = Boolean(player.progress.advancedTeenNumbers);
+  const compareComplete = Boolean(player.progress.advancedCompareBigger);
   const part1Complete = Boolean(player.progress.advancedAdditionPart1);
   const part2Complete = Boolean(player.progress.advancedAdditionPart2);
-  const missionStates = [teenComplete, false, part1Complete, part2Complete];
+  const missionStates = [teenComplete, compareComplete, part1Complete, part2Complete];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
@@ -2109,7 +2123,7 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
       </section>
 
       <AdvancedMissionTile mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} icon="10-20" complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
-      <AdvancedMissionTile mission={2} title={lang === "en" ? "Compare Bigger Numbers" : "Banding Nombor Besar"} subtitle={lang === "en" ? "Which one is greater?" : "Yang mana lebih besar?"} icon="><" locked comingSoon lang={lang} />
+      <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} icon="><" complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
       <AdvancedMissionTile mission={3} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Fill a ten-basket to add bigger numbers" : "Isi bakul puluh untuk tambah nombor besar"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
       <AdvancedMissionTile mission={4} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
     </main>
@@ -2409,6 +2423,201 @@ function AdvancedLessonNavigation({ lang, t, phase, lastPhase, canNext = true, o
   );
 }
 
+type AdvancedCompareChoice = "left" | "right" | "same" | "different" | ">" | "<" | "=";
+type AdvancedCompareObject = "apple" | "fish" | "car" | "cookie" | "coconut" | "mushroom";
+
+type AdvancedCompareQuestion = {
+  id: string;
+  tier: "visual" | "digits";
+  kind: "more" | "symbol" | "same";
+  a: number;
+  b: number;
+  object?: AdvancedCompareObject;
+  options: AdvancedCompareChoice[];
+  answer: AdvancedCompareChoice;
+};
+
+const ADVANCED_COMPARE_OBJECTS: Record<AdvancedCompareObject, { emoji: string; en: [string, string]; ms: string }> = {
+  apple: { emoji: "🍎", en: ["apple", "apples"], ms: "epal" },
+  fish: { emoji: "🐟", en: ["fish", "fish"], ms: "ikan" },
+  car: { emoji: "🚗", en: ["car", "cars"], ms: "kereta" },
+  cookie: { emoji: "🍪", en: ["cookie", "cookies"], ms: "biskut" },
+  coconut: { emoji: "🥥", en: ["coconut", "coconuts"], ms: "kelapa" },
+  mushroom: { emoji: "🍄", en: ["mushroom", "mushrooms"], ms: "cendawan" },
+};
+
+const advancedCompareBiggerQuestions: AdvancedCompareQuestion[] = [
+  { id: "ac-visual-more-apples", tier: "visual", kind: "more", a: 8, b: 3, object: "apple", options: ["left", "right"], answer: "left" },
+  { id: "ac-visual-symbol-fish", tier: "visual", kind: "symbol", a: 7, b: 6, object: "fish", options: [">", "<"], answer: ">" },
+  { id: "ac-visual-more-cars", tier: "visual", kind: "more", a: 5, b: 12, object: "car", options: ["left", "right"], answer: "right" },
+  { id: "ac-visual-symbol-cookies", tier: "visual", kind: "symbol", a: 4, b: 4, object: "cookie", options: [">", "<", "="], answer: "=" },
+  { id: "ac-visual-same-coconuts", tier: "visual", kind: "same", a: 6, b: 6, object: "coconut", options: ["same", "different"], answer: "same" },
+  { id: "ac-visual-more-mushrooms", tier: "visual", kind: "more", a: 9, b: 2, object: "mushroom", options: ["left", "right"], answer: "left" },
+  { id: "ac-digits-more-teens", tier: "digits", kind: "more", a: 14, b: 11, options: ["left", "right"], answer: "left" },
+  { id: "ac-digits-symbol-cross-ten", tier: "digits", kind: "symbol", a: 8, b: 14, options: [">", "<"], answer: "<" },
+  { id: "ac-digits-more-close", tier: "digits", kind: "more", a: 19, b: 20, options: ["left", "right"], answer: "right" },
+  { id: "ac-digits-symbol-equal", tier: "digits", kind: "symbol", a: 12, b: 12, options: [">", "<", "="], answer: "=" },
+  { id: "ac-digits-same", tier: "digits", kind: "same", a: 7, b: 7, options: ["same", "different"], answer: "same" },
+  { id: "ac-digits-symbol-teen", tier: "digits", kind: "symbol", a: 17, b: 15, options: [">", "<"], answer: ">" },
+];
+
+function AdvancedComparePile({ count, object, lang, side }: { count: number; object: AdvancedCompareObject; lang: Lang; side: "left" | "right" }) {
+  const item = ADVANCED_COMPARE_OBJECTS[object];
+  const word = lang === "en" ? (count === 1 ? item.en[0] : item.en[1]) : item.ms;
+  return (
+    <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="grid min-h-48 grid-cols-3 content-center gap-2 rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-4 sm:grid-cols-4">
+      {Array.from({ length: count }, (_, index) => (
+        <span key={index} className="grid aspect-square place-items-center rounded-xl border-2 border-cyan-900 bg-slate-900 text-3xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] sm:text-4xl" aria-hidden="true">{item.emoji}</span>
+      ))}
+    </div>
+  );
+}
+
+function AdvancedCompareVisual({ a, b, object, lang }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <section className="rounded-[1.75rem] border-2 border-cyan-300 bg-cyan-950/70 p-4">
+        <h4 className="mb-3 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Left pile" : "Kumpulan kiri"}</h4>
+        <AdvancedComparePile count={a} object={object} lang={lang} side="left" />
+      </section>
+      <section className="rounded-[1.75rem] border-2 border-cyan-300 bg-cyan-950/70 p-4">
+        <h4 className="mb-3 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Right pile" : "Kumpulan kanan"}</h4>
+        <AdvancedComparePile count={b} object={object} lang={lang} side="right" />
+      </section>
+    </div>
+  );
+}
+
+function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+  const [phase, setPhase] = useState(0);
+  const [showPractice, setShowPractice] = useState(false);
+  const slides = [
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Look for more" : "Cari yang lebih banyak",
+      text: lang === "en" ? "Count both piles. One pile can have more." : "Kira dua-dua kumpulan. Satu kumpulan boleh ada lebih banyak.",
+      visual: <AdvancedCompareVisual a={8} b={3} object="apple" lang={lang} />,
+      note: lang === "en" ? "8 apples is more than 3 apples." : "8 epal lebih banyak daripada 3 epal.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "The wide side faces more" : "Bahagian luas pandang lebih banyak",
+      text: lang === "en" ? "The wide side of > faces the bigger number." : "Bahagian luas tanda > pandang nombor yang lebih besar.",
+      visual: <div className="grid place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-8"><p className="text-7xl font-black text-yellow-200">8 &gt; 3</p></div>,
+      note: lang === "en" ? "8 is more than 3." : "8 lebih banyak daripada 3.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "The small side faces less" : "Bahagian kecil pandang kurang",
+      text: lang === "en" ? "The small side of < faces the smaller number." : "Bahagian kecil tanda < pandang nombor yang lebih kecil.",
+      visual: <div className="grid place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-8"><p className="text-7xl font-black text-yellow-200">3 &lt; 8</p></div>,
+      note: lang === "en" ? "3 is less than 8." : "3 kurang daripada 8.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Equal means the same" : "Sama maksudnya sama banyak",
+      text: lang === "en" ? "Use = when both groups have the same amount." : "Guna = apabila dua-dua kumpulan ada jumlah yang sama.",
+      visual: <AdvancedCompareVisual a={5} b={5} object="cookie" lang={lang} />,
+      note: lang === "en" ? "5 cookies = 5 cookies." : "5 biskut = 5 biskut.",
+    },
+  ];
+  const slide = slides[phase];
+
+  if (showPractice) return <AdvancedComparePractice lang={lang} t={t} onBack={() => { setShowPractice(false); setPhase(slides.length - 1); }} onDone={onDone} />;
+
+  return (
+    <main className="mx-auto w-full max-w-6xl pb-8">
+      <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3">
+        <LessonShell lang={lang} title={t.advancedCompareBigger} helper={lang === "en" ? "Compare groups and numbers from 0 to 20." : "Banding kumpulan dan nombor dari 0 hingga 20."} variant="cyber">
+          <div className="mb-5 grid grid-cols-4 gap-2">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+          <CyberTeachingCard eyebrow={slide.eyebrow} title={slide.title} text={slide.text} />
+          {slide.visual}
+          <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>
+          <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={slides.length - 1} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === slides.length - 1 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
+        </LessonShell>
+      </div>
+    </main>
+  );
+}
+
+function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: UIStrings; onBack: () => void; onDone: () => void }) {
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState<AdvancedCompareChoice | null>(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const question = advancedCompareBiggerQuestions[index];
+  const isCorrect = selected === question.answer;
+  const isVisual = question.tier === "visual";
+  const item = question.object ? ADVANCED_COMPARE_OBJECTS[question.object] : null;
+  const objectWord = (count: number) => item ? (lang === "en" ? (count === 1 ? item.en[0] : item.en[1]) : item.ms) : "";
+  const choiceLabel = (choice: AdvancedCompareChoice) => ({
+    left: lang === "en" ? "Left pile" : "Kumpulan kiri",
+    right: lang === "en" ? "Right pile" : "Kumpulan kanan",
+    same: lang === "en" ? "Same" : "Sama",
+    different: lang === "en" ? "Different" : "Berbeza",
+    ">": ">",
+    "<": "<",
+    "=": "=",
+  })[choice];
+  const prompt = question.kind === "more"
+    ? (lang === "en" ? (isVisual ? "Which pile has more?" : "Which number is bigger?") : (isVisual ? "Kumpulan mana lebih banyak?" : "Nombor mana lebih besar?"))
+    : question.kind === "symbol"
+      ? (lang === "en" ? "Choose the correct sign." : "Pilih tanda yang betul.")
+      : (lang === "en" ? "Do both have the same amount?" : "Adakah dua-dua jumlah sama?");
+  const comparisonSymbol = question.a === question.b ? "=" : question.a > question.b ? ">" : "<";
+  const largerSide = question.a > question.b ? "left" : "right";
+  const smallerSide = largerSide === "left" ? "right" : "left";
+  const feedback = question.a === question.b
+    ? (lang === "en"
+      ? isVisual ? `Both piles have ${question.a} ${objectWord(question.a)}. They are the same. So ${question.a} = ${question.b}.` : `${question.a} and ${question.b} are the same. So ${question.a} = ${question.b}.`
+      : isVisual ? `Dua-dua kumpulan ada ${question.a} ${objectWord(question.a)}. Dua-dua sama. Jadi ${question.a} = ${question.b}.` : `${question.a} dan ${question.b} sama. Jadi ${question.a} = ${question.b}.`)
+    : (lang === "en"
+      ? isVisual ? `The wide side faces the bigger pile. The ${largerSide} pile has ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. The ${smallerSide} pile has ${Math.min(question.a, question.b)}. So ${Math.max(question.a, question.b)} ${comparisonSymbol} ${Math.min(question.a, question.b)}.` : `${Math.max(question.a, question.b)} is bigger than ${Math.min(question.a, question.b)}. So ${question.a} ${comparisonSymbol} ${question.b}.`
+      : isVisual ? `Bahagian luas tanda ini menghadap kumpulan yang lebih banyak. Kumpulan ${largerSide === "left" ? "kiri" : "kanan"} ada ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. Kumpulan ${smallerSide === "left" ? "kiri" : "kanan"} ada ${Math.min(question.a, question.b)}. Jadi ${Math.max(question.a, question.b)} ${comparisonSymbol} ${Math.min(question.a, question.b)}.` : `${Math.max(question.a, question.b)} lebih besar daripada ${Math.min(question.a, question.b)}. Jadi ${question.a} ${comparisonSymbol} ${question.b}.`);
+
+  const goNext = () => {
+    if (isCorrect) setCorrectCount((value) => value + 1);
+    if (index === advancedCompareBiggerQuestions.length - 1) {
+      onDone();
+      return;
+    }
+    setIndex((value) => value + 1);
+    setSelected(null);
+  };
+
+  return (
+    <main className="mx-auto w-full max-w-6xl pb-8">
+      <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3">
+        <LessonShell lang={lang} title={lang === "en" ? "Compare Bigger Numbers: Practice" : "Banding Nombor Besar: Latihan"} helper={`${index + 1}/${advancedCompareBiggerQuestions.length} · ${lang === "en" ? "Score" : "Markah"}: ${correctCount}`} variant="cyber">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <button type="button" onClick={onBack} className="rounded-2xl border-2 border-cyan-300 bg-slate-950 px-5 py-3 font-black text-cyan-100 shadow-[0_4px_0_#164e63]">{lang === "en" ? "Back to lesson" : "Kembali ke pelajaran"}</button>
+            <span className={`rounded-full border px-4 py-2 text-sm font-black ${isVisual ? "border-yellow-300 bg-yellow-300 text-slate-950" : "border-cyan-300 bg-cyan-950 text-cyan-100"}`}>{isVisual ? (lang === "en" ? "Look at the objects" : "Lihat objek") : (lang === "en" ? "Try with numbers" : "Cuba dengan nombor")}</span>
+          </div>
+          <h3 className="mb-6 text-center text-3xl font-black text-white">{prompt}</h3>
+          {isVisual && question.object ? <AdvancedCompareVisual a={question.a} b={question.b} object={question.object} lang={lang} /> : (
+            <div className="grid gap-5 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+              <div className="grid min-h-48 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-cyan-950/80 text-7xl font-black text-yellow-200" style={getNumberTextStyle(question.a)}>{question.a}</div>
+              <span className="hidden text-5xl font-black text-cyan-300 sm:block">?</span>
+              <div className="grid min-h-48 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-cyan-950/80 text-7xl font-black text-yellow-200" style={getNumberTextStyle(question.b)}>{question.b}</div>
+            </div>
+          )}
+          <div className={`mt-6 grid gap-3 ${question.options.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+            {question.options.map((choice) => {
+              const selectedChoice = selected === choice;
+              const correctChoice = selected !== null && choice === question.answer;
+              return <button key={choice} type="button" disabled={selected !== null} onClick={() => setSelected(choice)} aria-pressed={selectedChoice} className={`min-h-20 rounded-3xl border-4 px-5 py-4 text-2xl font-black shadow-[0_6px_0_#164e63] transition disabled:cursor-default ${correctChoice ? "border-emerald-200 bg-emerald-600 text-white shadow-[0_6px_0_#065f46]" : selectedChoice ? "border-rose-300 bg-rose-600 text-white shadow-[0_6px_0_#9f1239]" : "border-cyan-300 bg-slate-900 text-cyan-50 hover:-translate-y-1 active:translate-y-1"}`}>{choiceLabel(choice)}{correctChoice && <Check className="ml-2 inline h-7 w-7" strokeWidth={4} aria-hidden="true" />}</button>;
+            })}
+          </div>
+          {selected !== null && <section className={`mt-6 rounded-3xl border-2 p-5 ${isCorrect ? "border-emerald-300 bg-emerald-950 text-emerald-100" : "border-yellow-300 bg-yellow-100 text-slate-900"}`}>
+            <h4 className="text-2xl font-black">{isCorrect ? (lang === "en" ? "Great comparing!" : "Bagus membanding!") : (lang === "en" ? "Let's look again." : "Mari lihat semula.")}</h4>
+            <p className="mt-2 text-lg font-bold">{isCorrect ? (lang === "en" ? "You chose the correct answer." : "Kamu pilih jawapan yang betul.") : feedback}</p>
+            <button type="button" onClick={goNext} className="mt-5 w-full rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-6 py-4 text-xl font-black text-slate-950 shadow-[0_5px_0_#a16207]">{index === advancedCompareBiggerQuestions.length - 1 ? (lang === "en" ? "Finish mission" : "Tamatkan misi") : (lang === "en" ? "Next question" : "Soalan seterusnya")}</button>
+          </section>}
+        </LessonShell>
+      </div>
+    </main>
+  );
+}
+
 function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
@@ -2590,6 +2799,8 @@ function TeenValueObjects({
     ? `Total: ${value} ${secondObjectName}`
     : `Jumlah: ${value} ${secondObjectName}`;
   const activelyCounting = counting && resultStage === 0;
+  // Keep teen quantities in two near-equal rows: 14 is 7 + 7, 15 is 8 + 7.
+  const balancedColumns = Math.ceil(value / 2);
 
   return (
     <div className={`rounded-[2rem] border-4 p-4 transition sm:p-5 ${
@@ -2614,6 +2825,8 @@ function TeenValueObjects({
             showLabel={resultStage >= 1}
             active={activelyCounting}
             cyber
+            fixedColumns={balancedColumns}
+            largeTiles
             lang={lang}
           />
         </section>
@@ -2630,6 +2843,8 @@ function TeenValueObjects({
             showLabel={resultStage >= 2}
             active={activelyCounting}
             cyber
+            fixedColumns={balancedColumns}
+            largeTiles
             lang={lang}
           />
         </section>
@@ -2692,7 +2907,7 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
             return (
               <div key={digit} className={`transition-transform duration-300 ${active ? "scale-110" : "scale-100"}`}>
                 <span
-                  className={`grid h-24 w-20 place-items-center rounded-2xl border-4 text-5xl font-black shadow-[0_6px_0_#155e75] transition-[background-color,border-color,color,box-shadow] duration-300 sm:h-28 sm:w-24 ${
+                  className={`mx-auto grid h-24 w-20 place-items-center rounded-2xl border-4 text-5xl font-black shadow-[0_6px_0_#155e75] transition-[background-color,border-color,color,box-shadow] duration-300 sm:h-28 sm:w-24 ${
                     active
                       ? "border-yellow-300 bg-cyan-800 text-yellow-200 ring-4 ring-yellow-300/60 shadow-[0_7px_0_#a16207]"
                       : complete
@@ -2704,7 +2919,7 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
                   {digit}
                 </span>
                 <span
-                  className={`mt-4 block min-w-24 rounded-full border-2 px-3 py-2 text-lg font-black transition-[background-color,border-color,color,box-shadow] duration-300 ${
+                  className={`mx-auto mt-4 block w-fit whitespace-nowrap rounded-full border-2 px-3 py-2 text-lg font-black transition-[background-color,border-color,color,box-shadow] duration-300 ${
                     active
                       ? "border-yellow-200 bg-yellow-300 text-slate-950 shadow-[0_4px_0_#a16207]"
                       : complete
@@ -2755,22 +2970,15 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
 function DigitLengthComparison({ lang }: { lang: Lang }) {
   const examples = lang === "en"
     ? [
-        { value: 7, label: "1 digit", audio: "Seven is a one digit number." },
-        { value: 14, label: "2 digits", audio: "Fourteen is a two digit number." },
-        { value: 123, label: "3 digits", audio: "One hundred and twenty-three is a three digit number." },
+        { value: "7", label: "1 digit" },
+        { value: "14", label: "2 digits" },
+        { value: "123", label: "3 digits" },
       ]
     : [
-        { value: 7, label: "1 digit", audio: "Tujuh ialah nombor satu digit." },
-        { value: 14, label: "2 digit", audio: "Empat belas ialah nombor dua digit." },
-        { value: 123, label: "3 digit", audio: "Seratus dua puluh tiga ialah nombor tiga digit." },
+        { value: "7", label: "1 digit" },
+        { value: "14", label: "2 digit" },
+        { value: "123", label: "3 digit" },
       ];
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-
-  const playExample = (index: number) => {
-    setActiveIndex(index);
-    speakText(examples[index].audio, lang, { allowWhenWordAudioDisabled: true });
-    window.setTimeout(() => setActiveIndex((current) => current === index ? null : current), 2600);
-  };
 
   return (
     <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 text-center shadow-[inset_0_0_32px_rgba(34,211,238,.2)] sm:p-7">
@@ -2779,28 +2987,27 @@ function DigitLengthComparison({ lang }: { lang: Lang }) {
           {lang === "en" ? "Look at how many digits each number uses." : "Lihat berapa digit yang digunakan oleh setiap nombor."}
         </p>
         <div className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-3">
-          {examples.map((example, index) => {
-            const active = activeIndex === index;
-            return (
-              <div key={example.value} className={`rounded-[1.6rem] border-2 p-4 transition duration-300 ${active ? "border-yellow-300 bg-cyan-800 shadow-[0_0_24px_rgba(250,204,21,.5)]" : "border-cyan-300 bg-slate-950/75 shadow-[0_5px_0_#164e63]"}`}>
-                <div className={`mx-auto grid h-24 min-w-24 w-fit place-items-center rounded-2xl border-4 px-4 text-5xl font-black shadow-[0_6px_0_#a16207] ${active ? "border-yellow-200 bg-yellow-300 text-slate-950" : "border-yellow-300 bg-slate-900 text-yellow-200"}`} style={getNumberTextStyle(example.value)}>
-                  {example.value}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => playExample(index)}
-                  aria-label={lang === "en" ? `Hear ${example.value} is a ${example.label} number` : `Dengar nombor ${example.value}, ${example.label}`}
-                  className={`mt-4 inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 font-black shadow-[0_4px_0_#155e75] transition ${active ? "border-yellow-200 bg-yellow-300 text-slate-950" : "border-cyan-300 bg-slate-900 text-cyan-100"}`}
-                >
-                  <SpeakerIcon />
-                  {example.label}
-                </button>
+          {examples.map((example) => (
+            <div key={example.value} className="rounded-[1.6rem] border-2 border-cyan-300 bg-slate-950/75 p-4 shadow-[0_5px_0_#164e63]">
+              <div className="flex min-h-24 items-center justify-center gap-2">
+                {example.value.split("").map((digit, index) => (
+                  <span
+                    key={`${example.value}-${index}`}
+                    className="grid h-20 w-16 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-900 text-4xl font-black text-yellow-200 shadow-[0_5px_0_#a16207] sm:h-24 sm:w-20 sm:text-5xl"
+                    style={getNumberTextStyle(Number(digit))}
+                  >
+                    {digit}
+                  </span>
+                ))}
               </div>
-            );
-          })}
+              <p className="mx-auto mt-5 w-fit rounded-full border-2 border-cyan-300 bg-slate-900 px-5 py-2 text-lg font-black text-cyan-100 shadow-[0_4px_0_#155e75]">
+                {example.label}
+              </p>
+            </div>
+          ))}
         </div>
         <p className="mt-6 text-lg font-black text-white">
-          {lang === "en" ? "Tap each label to hear the number and its digit count." : "Tekan setiap label untuk dengar nombor dan jumlah digitnya."}
+          {lang === "en" ? "Count the digit slots in each number." : "Kira ruang digit dalam setiap nombor."}
         </p>
       </div>
     </div>
@@ -2858,11 +3065,12 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
         <p className="text-xl font-black text-cyan-100">
           {lang === "en" ? "Put two digits side by side." : "Letak dua digit bersebelahan."}
         </p>
-        <div className="mx-auto mt-6 flex w-fit items-center gap-4 rounded-[2rem] border-2 border-cyan-300/60 bg-slate-950/60 p-5">
+        <div className="mx-auto mt-6 w-fit rounded-[2rem] border-2 border-cyan-300/60 bg-slate-950/60 p-5">
+          <div className="flex items-start justify-center gap-1">
           {[1, 0].map((digit, index) => (
-            <div key={`${digit}-${index}`}>
+            <div key={`${digit}-${index}`} className="w-28">
               <span
-                className="grid h-32 w-28 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-900 text-7xl font-black text-yellow-200 shadow-[0_7px_0_#a16207]"
+                className={`grid h-32 w-28 place-items-center border-4 border-yellow-300 bg-slate-900 text-7xl font-black text-yellow-200 shadow-[0_7px_0_#a16207] ${index === 0 ? "rounded-l-2xl rounded-r-md" : "rounded-l-md rounded-r-2xl"}`}
                 style={getNumberTextStyle(digit)}
               >
                 {digit}
@@ -2872,6 +3080,10 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
               </span>
             </div>
           ))}
+          </div>
+          <div className="mx-auto mt-5 grid h-16 w-36 place-items-center rounded-2xl border-3 border-emerald-300 bg-emerald-500 text-4xl font-black text-white shadow-[0_5px_0_#047857]" style={getNumberTextStyle(10)}>
+            10
+          </div>
         </div>
         <p className="mt-6 text-3xl font-black text-white">
           {lang === "en" ? "Together, they make 10." : "Bersama-sama, digit ini jadi 10."}
@@ -3042,7 +3254,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
         questions={teenPracticeQuestions}
         randomize={false}
         variant="cyber"
-        onBackToLearning={() => {
+          onBackToLearning={() => {
           setShowPractice(false);
           goToNumber(20, 2);
         }}
@@ -3081,18 +3293,14 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
         title: lang === "en" ? `Meet number ${number}` : `Kenal nombor ${number}`,
         text: lang === "en" ? `This is the number ${number}.` : `Ini nombor ${number}.`,
       }
-    : step === 1
-      ? {
-          title: lang === "en" ? "Spell and hear the number" : "Eja dan dengar nombor",
-          text: lang === "en"
-            ? "Read the word. Tap the speaker to hear it."
-            : "Baca perkataan. Tekan pembesar suara untuk dengar.",
-        }
-      : {
+    : step === 1 ? {
           title: lang === "en" ? `See the value of ${number}` : `Lihat nilai ${number}`,
           text: lang === "en"
             ? `${number} means ${number} objects. Count the bananas and ${objectName(teenValueSecondObject(number), number, lang)} together.`
             : `${number} bermaksud ${number} objek. Kira pisang dan ${objectName(teenValueSecondObject(number), number, lang)} bersama-sama.`,
+      } : {
+          title: lang === "en" ? `Trace ${number}` : `Ikut garisan ${number}`,
+          text: lang === "en" ? `Follow the number ${number} with your pencil or finger.` : `Ikut nombor ${number} dengan pensel atau jari kamu.`,
         };
   const teachingCopy = introStep !== null ? introCopy : numberTeachingCopy;
 
@@ -3133,36 +3341,32 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
           {introStep !== null && <DigitIntroductionVisual step={introStep} lang={lang} />}
 
           {introStep === null && step === 0 && (
-            <div className="mx-auto grid min-h-[24rem] max-w-3xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 shadow-[inset_0_0_36px_rgba(34,211,238,.16)]">
-              <div className="grid h-56 w-64 place-items-center rounded-[2.5rem] border-4 border-yellow-300 bg-yellow-300 text-8xl font-black text-slate-950 shadow-[0_10px_0_#a16207,0_0_30px_rgba(250,204,21,.25)]" style={getNumberTextStyle(number)}>
-                {number}
+            <div className="mx-auto grid min-h-[24rem] max-w-4xl items-stretch gap-5 rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 shadow-[inset_0_0_36px_rgba(34,211,238,.16)] sm:grid-cols-2">
+              <div className="grid place-items-center rounded-[2rem] border-2 border-cyan-300/80 bg-cyan-950/50 p-5">
+                <div className="grid h-52 w-56 place-items-center rounded-[2.5rem] border-4 border-yellow-300 bg-yellow-300 text-8xl font-black text-slate-950 shadow-[0_10px_0_#a16207,0_0_30px_rgba(250,204,21,.25)]" style={getNumberTextStyle(number)}>
+                  {number}
+                </div>
+              </div>
+              <div className="grid content-center justify-items-center rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-b from-cyan-950 to-slate-950 p-6 text-center shadow-[0_6px_0_#164e63]">
+                <p className="text-sm font-black uppercase tracking-wide text-cyan-300">{lang === "en" ? "Spelling" : "Ejaan"}</p>
+                <p className="mt-3 break-words text-5xl font-black capitalize text-yellow-200 sm:text-6xl">{numberWord}</p>
+                <p className="mt-5 whitespace-pre-wrap text-lg font-black text-cyan-100 sm:text-xl">{spelledWord}</p>
+                <button
+                  type="button"
+                  onClick={() => speakNumber(number, lang)}
+                  aria-label={lang === "en" ? `Hear ${numberWord}` : `Dengar ${numberWord}`}
+                  className="relative mt-6 grid h-16 w-20 place-items-center rounded-2xl border-2 border-cyan-300 bg-cyan-600 text-white shadow-[0_6px_0_#164e63] active:translate-y-1"
+                >
+                  <SpeakerIcon />
+                  <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
+                    <PointerIcon />
+                  </span>
+                </button>
               </div>
             </div>
           )}
 
           {introStep === null && step === 1 && (
-            <div className="mx-auto grid min-h-[24rem] max-w-3xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center shadow-[inset_0_0_36px_rgba(34,211,238,.16)]">
-              <div>
-                <div className="flex flex-wrap items-center justify-center gap-5">
-                  <p className="break-words text-5xl font-black capitalize text-yellow-200 sm:text-6xl">{numberWord}</p>
-                  <button
-                    type="button"
-                    onClick={() => speakNumber(number, lang)}
-                    aria-label={lang === "en" ? `Hear ${numberWord}` : `Dengar ${numberWord}`}
-                    className="relative grid h-16 w-20 place-items-center rounded-2xl border-2 border-cyan-300 bg-cyan-600 text-white shadow-[0_6px_0_#164e63] active:translate-y-1"
-                  >
-                    <SpeakerIcon />
-                    <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
-                      <PointerIcon />
-                    </span>
-                  </button>
-                </div>
-                <p className="mt-5 whitespace-pre-wrap text-lg font-black text-cyan-100 sm:text-xl">{spelledWord}</p>
-              </div>
-            </div>
-          )}
-
-          {introStep === null && step === 2 && (
             <div>
               <div className="mb-5 text-center">
                 <button
@@ -3189,6 +3393,17 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                 visibleCount={visibleCount}
                 counting={counting}
                 resultStage={resultStage}
+              />
+            </div>
+          )}
+
+          {introStep === null && step === 2 && (
+            <div className="rounded-[2rem] border-2 border-cyan-300 bg-slate-950/80 p-4 shadow-[inset_0_0_36px_rgba(34,211,238,.16)]">
+              <TracePad
+                value={number}
+                t={t}
+                lang={lang}
+                onComplete={goNext}
               />
             </div>
           )}
@@ -3921,7 +4136,7 @@ function ZeroContainerCard({ label, container, lang }: { label: string; containe
   );
 }
 
-function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, active = false, complete = false, cyber = false, lang }: {
+function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, active = false, complete = false, cyber = false, fixedColumns, largeTiles = false, lang }: {
   label: string;
   count: number;
   emoji: string;
@@ -3933,6 +4148,8 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
   active?: boolean;
   complete?: boolean;
   cyber?: boolean;
+  fixedColumns?: number;
+  largeTiles?: boolean;
   lang: Lang;
 }) {
   return (
@@ -3956,6 +4173,8 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
           onCountProgress={onCountProgress}
           highlightActiveCount={active}
           cyber={cyber}
+          fixedColumns={fixedColumns}
+          largeTiles={largeTiles}
           lang={lang}
         />
       ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
@@ -8029,7 +8248,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, fixedColumns, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, highlightActiveCount = true, cyber = false, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, fixedColumns, largeTiles = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, highlightActiveCount = true, cyber = false, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -8037,7 +8256,8 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   countRemainingOnly?: boolean;
   animateCrossOut?: boolean;
   compact?: boolean;
-  fixedColumns?: 1 | 2;
+  fixedColumns?: number;
+  largeTiles?: boolean;
   showCrossCount?: boolean;
   intervalMs?: number;
   speakCrossCount?: boolean;
@@ -8182,10 +8402,34 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
     ? "grid grid-cols-[3rem] place-content-center"
     : fixedColumns === 2
       ? "grid grid-cols-[repeat(2,3rem)] place-content-center"
-      : "flex flex-wrap justify-center";
+      : fixedColumns === 5
+        ? "grid grid-cols-[repeat(5,3.5rem)] place-content-center"
+        : fixedColumns
+          ? "grid place-content-center"
+          : "flex flex-wrap justify-center";
+  const balancedTeenGrid = fixedColumns !== undefined && fixedColumns > 5;
+  const layoutStyle = balancedTeenGrid
+    ? { gridTemplateColumns: `repeat(${fixedColumns}, minmax(0, 1fr))` }
+    : undefined;
+  const spacingClass = balancedTeenGrid
+    ? "gap-2 px-3 pb-4 pt-7"
+    : largeTiles
+    ? "gap-x-3 gap-y-7 px-4 pb-4 pt-7"
+    : compact
+      ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6"
+      : "gap-x-3 gap-y-7 px-4 pb-4 pt-7";
+  const tileSizeClass = balancedTeenGrid
+    ? "h-20 w-full max-w-14 text-3xl"
+    : largeTiles ? "h-24 w-14 text-4xl" : compact ? "h-20 w-12 text-3xl" : "h-24 w-16 text-4xl";
+  const iconSizeClass = balancedTeenGrid
+    ? "h-11 w-full max-w-10"
+    : largeTiles ? "h-14 w-12" : compact ? "h-10 w-10" : "h-12 w-12";
   let leftIndex = 0;
   return (
-    <div className={`${layoutClass} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${compact ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6" : "gap-x-3 gap-y-7 px-4 pb-4 pt-7"}`}>
+    <div
+      className={`${layoutClass} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
+      style={layoutStyle}
+    >
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
         const willBeTaken = i < crossed;
@@ -8198,6 +8442,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
           && label === displayedCount;
         const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
         const hasCountedLabel = labelVisible && !gone;
+        const isUncounted = shouldCount && !labelVisible && !gone;
         return (
           <div
             key={i}
@@ -8215,9 +8460,11 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
                       ? "border-red-800 bg-slate-900/70"
                       : "border-red-200 bg-slate-100"
                     : cyber
-                      ? "border-cyan-900 bg-slate-900/90"
+                      ? isUncounted
+                        ? "border-slate-700 bg-slate-950/80"
+                        : "border-cyan-900 bg-slate-900/90"
                       : "border-amber-100 bg-amber-50"
-            } ${compact ? "h-20 w-12 text-3xl" : "h-24 w-16 text-4xl"}`}
+            } ${tileSizeClass}`}
           >
             {crossLabelVisible ? (
               <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-red-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity">
@@ -8228,8 +8475,8 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
                 {labelVisible ? label : "."}
               </span>
             )}
-            <span className={`relative inline-flex items-center justify-center ${compact ? "h-10 w-10" : "h-12 w-12"}`}>
-              <SpriteIcon value={emoji} className="h-full w-full opacity-100 saturate-100 grayscale-0" />
+            <span className={`relative inline-flex items-center justify-center ${iconSizeClass}`}>
+              <SpriteIcon value={emoji} className={`h-full w-full ${isUncounted ? "opacity-40 grayscale" : "opacity-100 saturate-100 grayscale-0"}`} />
               {gone && (
                 <span
                   aria-hidden="true"
