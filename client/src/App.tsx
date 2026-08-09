@@ -1348,6 +1348,7 @@ function App() {
           onToggleLang={() => setLang((current) => (current === "en" ? "ms" : "en"))}
           title={screen === "home" ? "" : t.title}
           stars={player?.stars ?? 0}
+          cyber={screen.startsWith("advanced")}
           t={t}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled((current) => !current)}
@@ -1496,11 +1497,12 @@ function LessonCompletionScreen({ lang, sectionName, onContinue }: {
   );
 }
 
-function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSound, onOpenGlossary, onBack }: {
+function Header({ lang, onToggleLang, title, stars, cyber = false, t, soundEnabled, onToggleSound, onOpenGlossary, onBack }: {
   lang: Lang;
   onToggleLang: () => void;
   title: string;
   stars: number;
+  cyber?: boolean;
   t: UIStrings;
   soundEnabled: boolean;
   onToggleSound: () => void;
@@ -1508,14 +1510,14 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
   onBack?: () => void;
 }) {
   return (
-    <header className="soft-panel mb-4 flex items-center justify-between gap-2 rounded-[1.75rem] px-3 py-2 sm:gap-3">
+    <header className={`${cyber ? "border-2 border-cyan-300/80 bg-[#041c2d]/95 shadow-[0_6px_0_#07546e]" : "soft-panel"} mb-4 flex items-center justify-between gap-2 rounded-[1.75rem] px-3 py-2 sm:gap-3`}>
       <div className="flex min-w-0 items-center gap-2">
         {onBack && (
-          <button onClick={onBack} aria-label={t.back} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-sky-100 bg-white text-blue-800 shadow-[0_5px_0_rgba(14,116,144,.18)] transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-sky-50 active:translate-y-1">
+          <button onClick={onBack} aria-label={t.back} className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 transition hover:-translate-y-0.5 active:translate-y-1 ${cyber ? "border-cyan-300/70 bg-slate-950 text-cyan-100 shadow-[0_5px_0_#164e63] hover:bg-cyan-950" : "border-sky-100 bg-white text-blue-800 shadow-[0_5px_0_rgba(14,116,144,.18)] hover:border-sky-200 hover:bg-sky-50"}`}>
             <BackArrowIcon />
           </button>
         )}
-        <h1 className="hidden truncate text-xl font-black leading-tight text-blue-950 sm:block md:text-2xl">{title}</h1>
+        <h1 className={`hidden truncate text-xl font-black leading-tight sm:block md:text-2xl ${cyber ? "text-cyan-50" : "text-blue-950"}`}>{title}</h1>
       </div>
       <div className="flex min-w-0 items-center gap-1 sm:gap-2">
         {NUMBER_AUDIO_ENABLED && (
@@ -1525,7 +1527,9 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
             aria-pressed={soundEnabled}
             aria-label={soundEnabled ? (lang === "en" ? "Sound is on" : "Bunyi dibuka") : (lang === "en" ? "Sound is off" : "Bunyi ditutup")}
             className={`flex shrink-0 items-center gap-1 rounded-2xl border-2 px-2 py-2 text-sm font-black shadow-[0_4px_0_rgba(0,0,0,.12)] sm:px-3 ${
-              soundEnabled ? "border-blue-200 bg-white/90 text-blue-800" : "border-slate-200 bg-slate-100 text-slate-500"
+              soundEnabled
+                ? cyber ? "border-cyan-300/70 bg-slate-950 text-cyan-100" : "border-blue-200 bg-white/90 text-blue-800"
+                : cyber ? "border-slate-600 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-100 text-slate-500"
             }`}
           >
             <SpeakerIcon />
@@ -1537,7 +1541,7 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
           onClick={onOpenGlossary}
           aria-label={lang === "en" ? "Open glossary" : "Buka glosari"}
           title={lang === "en" ? "Glossary" : "Glosari"}
-          className="flex shrink-0 items-center gap-1 rounded-2xl border-2 border-emerald-200 bg-white/90 px-2 py-2 text-sm font-black text-emerald-800 shadow-[0_4px_0_rgba(0,0,0,.12)] sm:px-3"
+          className={`flex shrink-0 items-center gap-1 rounded-2xl border-2 px-2 py-2 text-sm font-black shadow-[0_4px_0_rgba(0,0,0,.12)] sm:px-3 ${cyber ? "border-emerald-300/70 bg-emerald-950/70 text-emerald-100" : "border-emerald-200 bg-white/90 text-emerald-800"}`}
         >
           <BookOpen className="h-5 w-5" aria-hidden="true" />
           <span className="hidden md:inline">{lang === "en" ? "Glossary" : "Glosari"}</span>
@@ -1547,14 +1551,14 @@ function Header({ lang, onToggleLang, title, stars, t, soundEnabled, onToggleSou
           onClick={onToggleLang}
           aria-label={lang === "en" ? "Switch to Bahasa Melayu" : "Tukar kepada bahasa Inggeris"}
           title={lang === "en" ? "Switch to Bahasa Melayu" : "Tukar kepada bahasa Inggeris"}
-          className="flex min-h-12 shrink-0 items-center gap-1 rounded-2xl border-2 border-sky-200 bg-white/95 px-2 py-2.5 text-base font-black text-blue-900 shadow-[0_5px_0_rgba(14,116,144,.2)] transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300 active:translate-y-1 active:shadow-[0_2px_0_rgba(14,116,144,.2)] sm:gap-2 sm:px-4"
+          className={`flex min-h-12 shrink-0 items-center gap-1 rounded-2xl border-2 px-2 py-2.5 text-base font-black transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300 active:translate-y-1 sm:gap-2 sm:px-4 ${cyber ? "border-cyan-300/70 bg-[#09263b] text-cyan-50 shadow-[0_5px_0_#164e63] hover:bg-cyan-950 active:shadow-[0_2px_0_#164e63]" : "border-sky-200 bg-white/95 text-blue-900 shadow-[0_5px_0_rgba(14,116,144,.2)] hover:border-sky-300 hover:bg-sky-50 active:shadow-[0_2px_0_rgba(14,116,144,.2)]"}`}
         >
           <span>{lang === "en" ? "BM" : "EN"}</span>
-          <span className="grid h-7 w-7 place-items-center rounded-xl bg-sky-100 text-sky-700" aria-hidden="true">
+          <span className={`grid h-7 w-7 place-items-center rounded-xl ${cyber ? "bg-cyan-900 text-cyan-200" : "bg-sky-100 text-sky-700"}`} aria-hidden="true">
             <ArrowLeftRight className="h-4 w-4" strokeWidth={3} />
           </span>
         </button>
-        <div className="flex shrink-0 items-center gap-1 rounded-2xl border-2 border-yellow-300 bg-white px-2 py-2 font-black text-yellow-700 shadow-[0_4px_0_rgba(0,0,0,.14)] sm:gap-2 sm:px-3" aria-label={`${stars} stars`}>
+        <div className={`flex shrink-0 items-center gap-1 rounded-2xl border-2 px-2 py-2 font-black shadow-[0_4px_0_rgba(0,0,0,.14)] sm:gap-2 sm:px-3 ${cyber ? "border-yellow-300/80 bg-slate-950 text-yellow-200" : "border-yellow-300 bg-white text-yellow-700"}`} aria-label={lang === "en" ? `${stars} stars earned` : `${stars} bintang terkumpul`} title={lang === "en" ? `Stars earned: ${stars}` : `Bintang terkumpul: ${stars}`}>
           <StarBadgeIcon />
           <span className="text-base">{stars}</span>
         </div>
@@ -2123,7 +2127,7 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
       </section>
 
       <AdvancedMissionTile mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} icon="10-20" complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
-      <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} icon="><" complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
+      <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} icon="< >" complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
       <AdvancedMissionTile mission={3} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Fill a ten-basket to add bigger numbers" : "Isi bakul puluh untuk tambah nombor besar"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
       <AdvancedMissionTile mission={4} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
     </main>
@@ -2461,29 +2465,109 @@ const advancedCompareBiggerQuestions: AdvancedCompareQuestion[] = [
   { id: "ac-digits-symbol-teen", tier: "digits", kind: "symbol", a: 17, b: 15, options: [">", "<"], answer: ">" },
 ];
 
-function AdvancedComparePile({ count, object, lang, side }: { count: number; object: AdvancedCompareObject; lang: Lang; side: "left" | "right" }) {
+function AdvancedComparePile({
+  count,
+  object,
+  lang,
+  side,
+  visibleCount,
+  isCounting,
+}: {
+  count: number;
+  object: AdvancedCompareObject;
+  lang: Lang;
+  side: "left" | "right";
+  visibleCount: number;
+  isCounting: boolean;
+}) {
   const item = ADVANCED_COMPARE_OBJECTS[object];
   const word = lang === "en" ? (count === 1 ? item.en[0] : item.en[1]) : item.ms;
   return (
     <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="grid min-h-48 grid-cols-3 content-center gap-2 rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-4 sm:grid-cols-4">
       {Array.from({ length: count }, (_, index) => (
-        <span key={index} className="grid aspect-square place-items-center rounded-xl border-2 border-cyan-900 bg-slate-900 text-3xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] sm:text-4xl" aria-hidden="true">{item.emoji}</span>
+        <span
+          key={index}
+          className={`relative grid aspect-square place-items-center rounded-xl border-2 text-3xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] transition-colors sm:text-4xl ${
+            index < visibleCount
+              ? index === visibleCount - 1 && isCounting
+                ? "border-yellow-300 bg-yellow-200/20"
+                : "border-cyan-400 bg-cyan-950"
+              : "border-cyan-900 bg-slate-900"
+          }`}
+          aria-hidden="true"
+        >
+          {index < visibleCount && (
+            <span className={`absolute -top-3 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black text-white ${
+              index === visibleCount - 1 && isCounting ? "bg-yellow-500" : "bg-blue-600"
+            }`}>{index + 1}</span>
+          )}
+          {item.emoji}
+        </span>
       ))}
     </div>
   );
 }
 
-function AdvancedCompareVisual({ a, b, object, lang }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang }) {
+function AdvancedCompareVisual({ a, b, object, lang, symbol }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang; symbol?: ">" | "<" | "=" }) {
+  const [visibleCounts, setVisibleCounts] = useState({ left: 0, right: 0 });
+  const [countingSide, setCountingSide] = useState<"left" | "right" | null>(null);
+  const item = ADVANCED_COMPARE_OBJECTS[object];
+
+  const countPile = async (side: "left" | "right", count: number) => {
+    if (countingSide !== null) return;
+    setCountingSide(side);
+    setVisibleCounts((current) => ({ ...current, [side]: 0 }));
+    const reveal = (value: number) => setVisibleCounts((current) => ({ ...current, [side]: value }));
+
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakCountingSequence(count, lang, COUNTING_STEP_MS, reveal);
+    } else {
+      for (let value = 1; value <= count; value += 1) {
+        reveal(value);
+        await wait(COUNTING_STEP_MS);
+      }
+    }
+    setVisibleCounts((current) => ({ ...current, [side]: count }));
+    setCountingSide(null);
+  };
+
+  const pileSection = (side: "left" | "right", count: number) => {
+    const isCounting = countingSide === side;
+    const isComplete = visibleCounts[side] === count;
+    const sideLabel = lang === "en"
+      ? `Pile ${side === "left" ? "A" : "B"}`
+      : `Kumpulan ${side === "left" ? "A" : "B"}`;
+    const totalLabel = lang === "en"
+      ? `Total: ${count} ${count === 1 ? item.en[0] : item.en[1]}`
+      : `Jumlah: ${count} ${item.ms}`;
+    return (
+      <section className="rounded-[1.75rem] border-2 border-cyan-300 bg-cyan-950/70 p-4">
+        <h4 className="mb-3 text-center text-lg font-black text-cyan-100">{sideLabel}</h4>
+        <AdvancedComparePile count={count} object={object} lang={lang} side={side} visibleCount={visibleCounts[side]} isCounting={isCounting} />
+        {isComplete && (
+          <p className="mt-3 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-4 py-2 text-center text-lg font-black text-emerald-100">{totalLabel}</p>
+        )}
+        <button
+          type="button"
+          onClick={() => void countPile(side, count)}
+          disabled={countingSide !== null}
+          className="relative mx-auto mt-4 flex min-h-12 items-center justify-center rounded-2xl border-2 border-cyan-300 bg-blue-600 px-5 text-base font-black text-white shadow-[0_5px_0_#1e3a8a] transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-label={lang === "en" ? `Count the ${side} pile` : `Kira kumpulan ${side === "left" ? "kiri" : "kanan"}`}
+        >
+          {isCounting
+            ? (lang === "en" ? "Counting..." : "Mengira...")
+            : (lang === "en" ? `Count ${side} pile` : `Kira kumpulan ${side === "left" ? "kiri" : "kanan"}`)}
+          {!isCounting && <span className="pointer-events-none absolute -right-3 -top-3 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-amber-700 shadow-sm" aria-hidden="true"><PointerIcon /></span>}
+        </button>
+      </section>
+    );
+  };
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <section className="rounded-[1.75rem] border-2 border-cyan-300 bg-cyan-950/70 p-4">
-        <h4 className="mb-3 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Left pile" : "Kumpulan kiri"}</h4>
-        <AdvancedComparePile count={a} object={object} lang={lang} side="left" />
-      </section>
-      <section className="rounded-[1.75rem] border-2 border-cyan-300 bg-cyan-950/70 p-4">
-        <h4 className="mb-3 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Right pile" : "Kumpulan kanan"}</h4>
-        <AdvancedComparePile count={b} object={object} lang={lang} side="right" />
-      </section>
+    <div className={`grid gap-4 ${symbol ? "sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center" : "sm:grid-cols-2"}`}>
+      {pileSection("left", a)}
+      {symbol && <div className="grid h-20 w-20 place-items-center self-center justify-self-center rounded-3xl border-4 border-yellow-300 bg-slate-900 text-6xl font-black text-yellow-200 shadow-[0_6px_0_#a16207]" aria-label={lang === "en" ? `Comparison sign ${symbol}` : `Tanda banding ${symbol}`}>{symbol}</div>}
+      {pileSection("right", b)}
     </div>
   );
 }
@@ -2494,31 +2578,45 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   const slides = [
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "Look for more" : "Cari yang lebih banyak",
-      text: lang === "en" ? "Count both piles. One pile can have more." : "Kira dua-dua kumpulan. Satu kumpulan boleh ada lebih banyak.",
-      visual: <AdvancedCompareVisual a={8} b={3} object="apple" lang={lang} />,
-      note: lang === "en" ? "8 apples is more than 3 apples." : "8 epal lebih banyak daripada 3 epal.",
+      title: lang === "en" ? "Greater than: >" : "Lebih besar: >",
+      text: lang === "en" ? "Use > when the left group has more." : "Guna > apabila kumpulan kiri lebih banyak.",
+      visual: <AdvancedCompareVisual a={8} b={3} object="apple" lang={lang} symbol=">" />,
+      note: lang === "en" ? "8 apples are greater than 3 apples. 8 > 3." : "8 epal lebih besar daripada 3 epal. 8 > 3.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "The wide side faces more" : "Bahagian luas pandang lebih banyak",
-      text: lang === "en" ? "The wide side of > faces the bigger number." : "Bahagian luas tanda > pandang nombor yang lebih besar.",
-      visual: <div className="grid place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-8"><p className="text-7xl font-black text-yellow-200">8 &gt; 3</p></div>,
-      note: lang === "en" ? "8 is more than 3." : "8 lebih banyak daripada 3.",
+      title: lang === "en" ? "The wide side faces more" : "Bahagian luas menghadap lebih banyak",
+      text: lang === "en" ? "The open, wide side of > points to the bigger group." : "Bahagian terbuka tanda > menghadap kumpulan yang lebih besar.",
+      visual: <AdvancedCompareVisual a={7} b={4} object="cookie" lang={lang} symbol=">" />,
+      note: lang === "en" ? "7 cookies are greater than 4 cookies. 7 > 4." : "7 biskut lebih besar daripada 4 biskut. 7 > 4.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "The small side faces less" : "Bahagian kecil pandang kurang",
-      text: lang === "en" ? "The small side of < faces the smaller number." : "Bahagian kecil tanda < pandang nombor yang lebih kecil.",
-      visual: <div className="grid place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-8"><p className="text-7xl font-black text-yellow-200">3 &lt; 8</p></div>,
-      note: lang === "en" ? "3 is less than 8." : "3 kurang daripada 8.",
+      title: lang === "en" ? "Less than: <" : "Lebih kecil: <",
+      text: lang === "en" ? "Use < when the left group has fewer." : "Guna < apabila kumpulan kiri lebih sedikit.",
+      visual: <AdvancedCompareVisual a={3} b={6} object="apple" lang={lang} symbol="<" />,
+      note: lang === "en" ? "3 apples are less than 6 apples. 3 < 6." : "3 epal lebih kecil daripada 6 epal. 3 < 6.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "Equal means the same" : "Sama maksudnya sama banyak",
+      title: lang === "en" ? "The small side faces less" : "Bahagian kecil menghadap lebih sedikit",
+      text: lang === "en" ? "The small point of < looks at the smaller group." : "Bahagian kecil tanda < menghadap kumpulan yang lebih sedikit.",
+      visual: <AdvancedCompareVisual a={4} b={9} object="cookie" lang={lang} symbol="<" />,
+      note: lang === "en" ? "4 cookies are less than 9 cookies. 4 < 9." : "4 biskut lebih kecil daripada 9 biskut. 4 < 9.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Equals: =" : "Sama dengan: =",
       text: lang === "en" ? "Use = when both groups have the same amount." : "Guna = apabila dua-dua kumpulan ada jumlah yang sama.",
-      visual: <AdvancedCompareVisual a={5} b={5} object="cookie" lang={lang} />,
-      note: lang === "en" ? "5 cookies = 5 cookies." : "5 biskut = 5 biskut.",
+      visual: <AdvancedCompareVisual a={5} b={5} object="apple" lang={lang} symbol="=" />,
+      note: lang === "en" ? "5 apples equal 5 apples. 5 = 5." : "5 epal sama dengan 5 epal. 5 = 5.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Both sides are the same" : "Dua-dua belah sama",
+      text: lang === "en" ? "When both groups match, we use =." : "Apabila dua-dua kumpulan sama, kita guna =.",
+      visual: <AdvancedCompareVisual a={4} b={4} object="cookie" lang={lang} symbol="=" />,
+      note: lang === "en" ? "4 cookies equal 4 cookies. 4 = 4." : "4 biskut sama dengan 4 biskut. 4 = 4.",
     },
   ];
   const slide = slides[phase];
@@ -2529,7 +2627,7 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     <main className="mx-auto w-full max-w-6xl pb-8">
       <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3">
         <LessonShell lang={lang} title={t.advancedCompareBigger} helper={lang === "en" ? "Compare groups and numbers from 0 to 20." : "Banding kumpulan dan nombor dari 0 hingga 20."} variant="cyber">
-          <div className="mb-5 grid grid-cols-4 gap-2">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+          <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-6">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
           <CyberTeachingCard eyebrow={slide.eyebrow} title={slide.title} text={slide.text} />
           {slide.visual}
           <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>
