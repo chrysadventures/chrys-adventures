@@ -166,6 +166,11 @@
     outline-offset: 4px;
     box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.24);
   }
+  #access-pin:focus-visible {
+    outline: none;
+    outline-offset: 0;
+    box-shadow: none;
+  }
 }
 
 @layer utilities {

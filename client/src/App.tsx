@@ -1590,9 +1590,9 @@ function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: 
             <h1 className="mt-2 text-3xl font-black leading-tight text-blue-950 sm:text-4xl">{copy.title}</h1>
             <p className="mx-auto mt-3 max-w-md text-base font-bold leading-relaxed text-slate-600 sm:text-lg">{copy.help}</p>
 
-            <form onSubmit={(event) => void submit(event)} className="mx-auto mt-7 max-w-sm">
+            <form onSubmit={(event) => void submit(event)} className="mx-auto mt-7 max-w-md">
               <label htmlFor="access-pin" className="block text-left text-base font-black text-blue-900">{copy.label}</label>
-              <div className={`mt-2 flex items-center rounded-3xl border-4 bg-white px-4 transition-colors ${error ? "border-red-400" : "border-sky-200 focus-within:border-yellow-400"}`}>
+              <div className={`mt-2 flex min-h-24 items-center rounded-3xl border-4 bg-white px-5 transition-colors ${error ? "border-red-400" : "border-sky-200 focus-within:border-yellow-400"}`}>
                 <KeyRound className="h-7 w-7 shrink-0 text-emerald-600" aria-hidden="true" />
                 <input
                   id="access-pin"
@@ -1610,9 +1610,10 @@ function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: 
                   autoFocus
                   aria-invalid={error}
                   aria-describedby={error ? "access-pin-error access-pin-help" : "access-pin-help"}
-                  className="min-w-0 flex-1 bg-transparent py-4 pl-4 text-center text-3xl font-black tracking-[0.45em] text-blue-950 outline-none placeholder:text-slate-300"
+                  className="min-w-0 flex-1 bg-transparent px-5 py-5 text-center text-3xl font-black tracking-[0.45em] text-blue-950 outline-none focus-visible:outline-none focus-visible:shadow-none placeholder:text-slate-300"
                   placeholder="••••••"
                 />
+                <span className="h-7 w-7 shrink-0" aria-hidden="true" />
               </div>
               <p id="access-pin-help" className="mt-3 text-sm font-bold text-slate-500">{copy.privacy}</p>
               {error && <p id="access-pin-error" role="alert" className="mt-3 rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm font-black text-red-800">{copy.error}</p>}
@@ -3447,6 +3448,7 @@ function TeenValueObjects({
             counted
             visibleCount={visibleCount}
             showLabel={resultStage >= 1}
+            slowLabelReveal
             active={activelyCounting}
             cyber
             fixedColumns={balancedColumns}
@@ -3465,6 +3467,7 @@ function TeenValueObjects({
             counted
             visibleCount={visibleCount}
             showLabel={resultStage >= 2}
+            slowLabelReveal
             active={activelyCounting}
             cyber
             fixedColumns={balancedColumns}
@@ -3473,13 +3476,6 @@ function TeenValueObjects({
           />
         </section>
       </div>
-      {resultStage === 2 && (
-        <p className="mx-auto mt-5 w-fit rounded-full border-2 border-cyan-300 bg-cyan-950 px-6 py-3 text-center text-xl font-black text-cyan-50 shadow-[0_4px_0_#164e63]">
-          {lang === "en"
-            ? `Both groups show the same value: ${value}.`
-            : `Kedua-dua kumpulan menunjukkan nilai yang sama: ${value}.`}
-        </p>
-      )}
     </div>
   );
 }
@@ -3592,6 +3588,9 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
 }
 
 function DigitLengthComparison({ lang }: { lang: Lang }) {
+  const digitLabels = lang === "en"
+    ? ["First digit", "Second digit", "Third digit"]
+    : ["Digit pertama", "Digit kedua", "Digit ketiga"];
   const examples = lang === "en"
     ? [
         { value: "7", label: "1 digit" },
@@ -3605,26 +3604,30 @@ function DigitLengthComparison({ lang }: { lang: Lang }) {
       ];
 
   return (
-    <div className="mx-auto grid min-h-[24rem] max-w-4xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 text-center shadow-[inset_0_0_32px_rgba(34,211,238,.2)] sm:p-7">
+    <div className="mx-auto grid min-h-[24rem] max-w-6xl place-items-center rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 text-center shadow-[inset_0_0_32px_rgba(34,211,238,.2)] sm:p-7">
       <div className="w-full">
         <p className="text-xl font-black text-cyan-100">
           {lang === "en" ? "Look at how many digits each number uses." : "Lihat berapa digit yang digunakan oleh setiap nombor."}
         </p>
-        <div className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-3">
+        <div className="mx-auto mt-6 grid max-w-5xl gap-4 lg:grid-cols-[0.8fr_1.15fr_1.55fr]">
           {examples.map((example) => (
             <div key={example.value} className="rounded-[1.6rem] border-2 border-cyan-300 bg-slate-950/75 p-4 shadow-[0_5px_0_#164e63]">
-              <div className="flex min-h-24 items-center justify-center gap-2">
+              <div className="flex min-h-36 flex-wrap items-start justify-center gap-3">
                 {example.value.split("").map((digit, index) => (
-                  <span
-                    key={`${example.value}-${index}`}
-                    className="grid h-20 w-16 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-900 text-4xl font-black text-yellow-200 shadow-[0_5px_0_#a16207] sm:h-24 sm:w-20 sm:text-5xl"
-                    style={getNumberTextStyle(Number(digit))}
-                  >
-                    {digit}
-                  </span>
+                  <div key={`${example.value}-${index}`} className="flex flex-col items-center">
+                    <span
+                      className="grid h-20 w-16 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-900 text-4xl font-black text-yellow-200 shadow-[0_5px_0_#a16207] sm:h-24 sm:w-20 sm:text-5xl"
+                      style={getNumberTextStyle(Number(digit))}
+                    >
+                      {digit}
+                    </span>
+                    <span className="mt-4 whitespace-nowrap rounded-full border-2 border-cyan-300 bg-slate-900 px-3 py-2 text-sm font-black text-cyan-100 shadow-[0_4px_0_#155e75] sm:text-base">
+                      {digitLabels[index]}
+                    </span>
+                  </div>
                 ))}
               </div>
-              <p className="mx-auto mt-5 w-fit rounded-full border-2 border-cyan-300 bg-slate-900 px-5 py-2 text-lg font-black text-cyan-100 shadow-[0_4px_0_#155e75]">
+              <p className="mx-auto mt-4 w-fit rounded-full border-2 border-emerald-300 bg-emerald-950 px-5 py-2 text-lg font-black text-emerald-100 shadow-[0_4px_0_#065f46]">
                 {example.label}
               </p>
             </div>
@@ -3744,6 +3747,12 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
                     </div>
                   ))}
                 </div>
+                <div
+                  className="mx-auto mt-4 grid h-12 w-28 place-items-center rounded-xl border-3 border-emerald-300 bg-emerald-500 text-3xl font-black text-white shadow-[0_4px_0_#047857]"
+                  style={getNumberTextStyle(example.value)}
+                >
+                  {example.value}
+                </div>
                 <p className="mt-4 text-xl font-black text-white">
                   {lang === "en"
                     ? `${example.digits[0]} and ${example.digits[1]} make ${example.value}.`
@@ -3823,13 +3832,13 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     }
 
     if (countRunRef.current !== runId) return;
-    await wait(450);
+    await wait(1000);
     if (countRunRef.current !== runId) return;
     setResultStage(1);
-    await wait(900);
+    await wait(1800);
     if (countRunRef.current !== runId) return;
     setResultStage(2);
-    await wait(300);
+    await wait(900);
     if (countRunRef.current !== runId) return;
     setCounting(false);
     setCountComplete(true);
@@ -4760,7 +4769,7 @@ function ZeroContainerCard({ label, container, lang }: { label: string; containe
   );
 }
 
-function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, active = false, complete = false, cyber = false, fixedColumns, largeTiles = false, lang }: {
+function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, slowLabelReveal = false, active = false, complete = false, cyber = false, fixedColumns, largeTiles = false, lang }: {
   label: string;
   count: number;
   emoji: string;
@@ -4769,6 +4778,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
   visibleCount?: number;
   onCountProgress?: (value: number) => void;
   showLabel?: boolean;
+  slowLabelReveal?: boolean;
   active?: boolean;
   complete?: boolean;
   cyber?: boolean;
@@ -4803,7 +4813,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
         />
       ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
       <p
-        className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black transition-opacity ${showLabel ? (cyber ? "bg-cyan-950 text-cyan-50 opacity-100" : "bg-white text-emerald-950 opacity-100") : "opacity-0"}`}
+        className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black transition-opacity ease-out ${slowLabelReveal ? "duration-700" : "duration-200"} ${showLabel ? (cyber ? "bg-cyan-950 text-cyan-50 opacity-100" : "bg-white text-emerald-950 opacity-100") : "opacity-0"}`}
         aria-live="polite"
       >
         {showLabel ? label : "\u00a0"}
@@ -9060,18 +9070,21 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   useEffect(() => () => stopNumberAudio(), []);
 
   const displayedCount = visibleCount ?? visible;
-  const layoutClass = fixedColumns === 1
-    ? "grid grid-cols-[3rem] place-content-center"
-    : fixedColumns === 2
-      ? "grid grid-cols-[repeat(2,3rem)] place-content-center"
-      : fixedColumns === 5
-        ? "grid grid-cols-[repeat(5,3.5rem)] place-content-center"
-        : fixedColumns
-          ? "grid place-content-center"
-          : "flex flex-wrap justify-center";
-  const balancedTeenGrid = fixedColumns !== undefined && fixedColumns > 5;
-  const layoutStyle = balancedTeenGrid
-    ? { gridTemplateColumns: `repeat(${fixedColumns}, minmax(0, 1fr))` }
+  const teenColumnCount = fixedColumns ?? 1;
+  const balancedTeenGrid = teenColumnCount > 5;
+  const layoutClass = balancedTeenGrid
+    ? "flex flex-wrap justify-center"
+    : fixedColumns === 1
+      ? "grid grid-cols-[3rem] place-content-center"
+      : fixedColumns === 2
+        ? "grid grid-cols-[repeat(2,3rem)] place-content-center"
+        : fixedColumns === 5
+          ? "grid grid-cols-[repeat(5,3.5rem)] place-content-center"
+          : fixedColumns
+            ? "grid place-content-center"
+            : "flex flex-wrap justify-center";
+  const balancedTileStyle = balancedTeenGrid
+    ? { flex: `0 0 calc((100% - ${(teenColumnCount - 1) * 0.5}rem) / ${teenColumnCount})` }
     : undefined;
   const spacingClass = balancedTeenGrid
     ? "gap-2 px-3 pb-4 pt-7"
@@ -9081,7 +9094,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6"
       : "gap-x-3 gap-y-7 px-4 pb-4 pt-7";
   const tileSizeClass = balancedTeenGrid
-    ? "h-20 w-full max-w-14 text-3xl"
+    ? "h-20 min-w-0 text-3xl"
     : largeTiles ? "h-24 w-14 text-4xl" : compact ? "h-20 w-12 text-3xl" : "h-24 w-16 text-4xl";
   const iconSizeClass = balancedTeenGrid
     ? "h-11 w-full max-w-10"
@@ -9090,7 +9103,6 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   return (
     <div
       className={`${layoutClass} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
-      style={layoutStyle}
     >
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
@@ -9108,6 +9120,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
         return (
           <div
             key={i}
+            style={balancedTileStyle}
             className={`relative flex flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,box-shadow,transform] duration-300 ${
               isActiveCount
                 ? cyber
@@ -11443,16 +11456,17 @@ const DRAWING_COLORS = [
   { value: "#7c3aed", en: "Purple", ms: "Ungu" },
 ] as const;
 
-function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange }: {
+function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange, cyber = false }: {
   lang: Lang;
   color: string;
   tool: DrawingTool;
   onColorChange: (color: string) => void;
   onToolChange: (tool: DrawingTool) => void;
+  cyber?: boolean;
 }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-center gap-3 rounded-2xl border-2 border-slate-200 bg-slate-50 p-3">
-      <span className="font-black text-slate-700">{lang === "en" ? "Pen colour" : "Warna pen"}</span>
+    <div className={`flex flex-wrap items-center justify-center gap-3 rounded-2xl border-2 p-3 ${cyber ? "border-cyan-400/70 bg-slate-950/75 lg:flex-col lg:items-stretch lg:p-4" : "mt-3 border-slate-200 bg-slate-50"}`}>
+      <span className={`font-black ${cyber ? "text-center text-cyan-100 lg:text-left" : "text-slate-700"}`}>{lang === "en" ? "Pen colour" : "Warna pen"}</span>
       <div className="flex flex-wrap justify-center gap-2">
         {DRAWING_COLORS.map((option) => {
           const selected = tool === "pen" && color === option.value;
@@ -11466,7 +11480,9 @@ function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange }: {
               aria-pressed={selected}
               title={name}
               className={`grid h-11 w-11 place-items-center rounded-xl border-4 text-white shadow-sm transition active:scale-95 ${
-                selected ? "border-yellow-400 ring-2 ring-blue-700 ring-offset-2" : "border-white"
+                selected
+                  ? `border-yellow-400 ring-2 ring-blue-500 ring-offset-2 ${cyber ? "ring-offset-slate-950" : ""}`
+                  : cyber ? "border-cyan-100" : "border-white"
               }`}
               style={{ backgroundColor: option.value }}
             >
@@ -11481,8 +11497,12 @@ function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange }: {
         aria-pressed={tool === "eraser"}
         className={`flex min-h-11 items-center gap-2 rounded-xl border-2 px-4 py-2 font-black shadow-sm active:translate-y-0.5 ${
           tool === "eraser"
-            ? "border-blue-700 bg-blue-100 text-blue-900 ring-2 ring-yellow-300"
-            : "border-slate-300 bg-white text-slate-700"
+            ? cyber
+              ? "border-yellow-300 bg-cyan-900 text-yellow-100 ring-2 ring-yellow-300"
+              : "border-blue-700 bg-blue-100 text-blue-900 ring-2 ring-yellow-300"
+            : cyber
+              ? "border-cyan-400 bg-slate-900 text-cyan-50"
+              : "border-slate-300 bg-white text-slate-700"
         }`}
       >
         <Eraser className="h-5 w-5" aria-hidden="true" />
@@ -11553,58 +11573,63 @@ function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings;
   };
 
   return (
-    <div className="mx-auto w-full max-w-[27rem] rounded-3xl border-2 border-blue-100 bg-white p-4">
-      <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Trace ${value}` : `Ikut garisan ${value}`}</h3>
-      <p className="mb-3 text-center text-sm font-bold text-slate-500">
+    <div className="mx-auto w-full max-w-5xl rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 shadow-[inset_0_0_32px_rgba(34,211,238,.16)] sm:p-6">
+      <h3 className="mb-2 text-center text-3xl font-black text-yellow-200">{lang === "en" ? `Trace ${value}` : `Ikut garisan ${value}`}</h3>
+      <p className="mb-5 text-center text-base font-bold text-cyan-100">
         {lang === "en" ? "Follow the big number guide on the screen." : "Ikut panduan nombor besar pada skrin."}
       </p>
-      {confirmed && (
-        <p className="mb-2 rounded-2xl bg-emerald-50 px-3 py-2 text-center text-sm font-black text-emerald-800">
-          {lang === "en" ? "Watch the correct number shape slowly." : "Lihat bentuk nombor yang betul perlahan."}
-        </p>
-      )}
-      <div className="relative h-72 rounded-3xl border-2 border-sky-100 bg-sky-50">
-        <div
-          className="pointer-events-none absolute inset-0 grid place-items-center text-[12rem] font-black leading-none text-blue-200/45"
-          style={getNumberTextStyle(value)}
-        >
-          {value}
-        </div>
-        {confirmed && (
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-stretch">
+        <div className="relative h-80 overflow-hidden rounded-3xl border-3 border-cyan-400 bg-slate-950/80 shadow-[inset_0_0_28px_rgba(34,211,238,.15)] sm:h-[26rem]">
           <div
-            className="trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none text-blue-950"
-            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 grid place-items-center text-[12rem] font-black leading-none text-cyan-200/25 sm:text-[16rem]"
             style={getNumberTextStyle(value)}
           >
             {value}
           </div>
-        )}
-        <canvas
-          ref={canvasRef}
-          onPointerDown={start}
-          onPointerMove={move}
-          onPointerUp={stop}
-          onPointerLeave={stop}
-          className="relative h-full w-full touch-none rounded-3xl"
-        />
-      </div>
-      <DrawingToolPanel
-        lang={lang}
-        color={penColor}
-        tool={tool}
-        onColorChange={(color) => {
-          setPenColor(color);
-          setTool("pen");
-        }}
-        onToolChange={setTool}
-      />
-      <div className="mt-3 flex gap-2">
-        <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">
-          {lang === "en" ? "Clear all" : "Padamkan semua"}
-        </button>
-        <button onClick={confirmed ? onComplete : confirmTrace} className={`flex-1 rounded-2xl border-2 py-2 font-black text-white ${confirmed ? "border-emerald-700 bg-emerald-600" : "border-emerald-600 bg-emerald-500"}`}>
-          {confirmed ? (lang === "en" ? "Done!" : "Selesai!") : t.traced}
-        </button>
+          {confirmed && (
+            <div
+              className="trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none text-yellow-200 sm:text-[16rem]"
+              aria-hidden="true"
+              style={getNumberTextStyle(value)}
+            >
+              {value}
+            </div>
+          )}
+          <canvas
+            ref={canvasRef}
+            onPointerDown={start}
+            onPointerMove={move}
+            onPointerUp={stop}
+            onPointerLeave={stop}
+            className="relative h-full w-full touch-none rounded-3xl"
+          />
+        </div>
+        <aside className="flex flex-col gap-4 rounded-3xl border-2 border-cyan-400/70 bg-cyan-950/65 p-4 shadow-[0_5px_0_#164e63]">
+          {confirmed && (
+            <p className="rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-3 py-3 text-center text-sm font-black text-emerald-100">
+              {lang === "en" ? "Watch the correct number shape slowly." : "Lihat bentuk nombor yang betul perlahan."}
+            </p>
+          )}
+          <DrawingToolPanel
+            lang={lang}
+            color={penColor}
+            tool={tool}
+            cyber
+            onColorChange={(color) => {
+              setPenColor(color);
+              setTool("pen");
+            }}
+            onToolChange={setTool}
+          />
+          <div className="mt-auto grid gap-3">
+            <button onClick={clear} className="rounded-2xl border-2 border-cyan-300 bg-slate-900 px-4 py-3 font-black text-cyan-50 shadow-[0_4px_0_#164e63] active:translate-y-1 active:shadow-none">
+              {lang === "en" ? "Clear all" : "Padamkan semua"}
+            </button>
+            <button onClick={confirmed ? onComplete : confirmTrace} className={`rounded-2xl border-2 px-4 py-3 font-black text-white shadow-[0_4px_0_#047857] active:translate-y-1 active:shadow-none ${confirmed ? "border-emerald-300 bg-emerald-600" : "border-emerald-300 bg-emerald-500"}`}>
+              {confirmed ? (lang === "en" ? "Done!" : "Selesai!") : t.traced}
+            </button>
+          </div>
+        </aside>
       </div>
     </div>
   );
