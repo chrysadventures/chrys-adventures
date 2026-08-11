@@ -11,6 +11,7 @@ import {
   Eraser,
   Flag,
   Hash,
+  KeyRound,
   Layers3,
   ListOrdered,
   Map as MapIcon,
@@ -87,7 +88,7 @@ type Visual =
   | { kind: "sequence"; nums: Array<number | "?"> }
   | { kind: "compare"; a: number; b: number }
   | { kind: "add"; a: number; b: number; emoji?: string; container?: ContainerKind }
-  | { kind: "horizontalAdd"; a: number; b: number }
+  | { kind: "horizontalAdd"; a: number; b: number; display?: "equation" | "objects" | "none"; showLabels?: boolean }
   | { kind: "verticalAdd"; a: number; b: number }
   | { kind: "subtract"; a: number; b: number; emoji?: string; container?: ContainerKind }
   | { kind: "teenBundle"; tens: 1 | 2; ones: number };
@@ -118,6 +119,15 @@ type LessonAction = {
 };
 
 const STORE_KEY = "chrys_adventures_rebuild_state";
+const ACCESS_STORE_KEY = "chrys_adventures_pin_access_v1";
+const VALID_PIN_HASHES = new Set([
+  "5ef23d80f400e4575d6f2b5cdafcdc53b063dd7936149328fd186b0bd080648b",
+  "4b5bda09e8c24035af7e08415645266a4bf976ff743434e175ae2894219ff08b",
+  "ea220edc806115ae5c8a81d93ebcc4084bd189228662481ea4cf1b89f8031d8b",
+  "408d57bb25b3d4787701714a2d69983cfdc22cbb50ef684489454ee585ed338c",
+  "b4b840c837023f0b4084184a951695df5cf9af802d0e5f0c7437def95e147d03",
+  "bfcef0baa2b5975b5cb9b0fdad4b1a6addc49c11c621447361469a6236000175",
+]);
 const NUMBER_AUDIO_ENABLED = true;
 const WORD_AUDIO_ENABLED = false;
 const MATH_CUE_AUDIO_ENABLED = true;
@@ -1217,13 +1227,19 @@ const teenPracticeQuestions: Question[] = [
 ];
 
 const advancedAdditionPart1Questions: Question[] = [
-  q("adv-add-1-build-7-5", "advanced", { en: "Build 7 + 5 with the ten-basket.", ms: "Bina 7 + 5 dengan bakul puluh." }, [], 12, { kind: "horizontalAdd", a: 7, b: 5 }, "makeTenBuild"),
-  q("adv-add-1-choice-8-7", "advanced", { en: "What is 8 + 7?", ms: "Berapakah 8 + 7?" }, [13, 14, 15, 16], 15, { kind: "horizontalAdd", a: 8, b: 7 }),
-  q("adv-add-1-build-9-4", "advanced", { en: "Build 9 + 4 with the ten-basket.", ms: "Bina 9 + 4 dengan bakul puluh." }, [], 13, { kind: "horizontalAdd", a: 9, b: 4 }, "makeTenBuild"),
-  q("adv-add-1-choice-9-8", "advanced", { en: "What is 9 + 8?", ms: "Berapakah 9 + 8?" }, [15, 16, 17, 18], 17, { kind: "horizontalAdd", a: 9, b: 8 }),
-  q("adv-add-1-choice-6-6", "advanced", { en: "What is 6 + 6?", ms: "Berapakah 6 + 6?" }, [10, 11, 12, 13], 12, { kind: "horizontalAdd", a: 6, b: 6 }),
-  q("adv-add-1-choice-8-6", "advanced", { en: "What is 8 + 6?", ms: "Berapakah 8 + 6?" }, [12, 13, 14, 15], 14, { kind: "horizontalAdd", a: 8, b: 6 }),
-  q("adv-add-1-choice-7-9", "advanced", { en: "What is 7 + 9?", ms: "Berapakah 7 + 9?" }, [14, 15, 16, 17], 16, { kind: "horizontalAdd", a: 7, b: 9 }),
+  q("adv-add-1-labelled-9-1", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [8, 9, 10, 11], 10, { kind: "horizontalAdd", a: 9, b: 1, display: "objects", showLabels: true }),
+  q("adv-add-1-labelled-7-5", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [10, 11, 12, 13], 12, { kind: "horizontalAdd", a: 7, b: 5, display: "objects", showLabels: true }),
+  q("adv-add-1-labelled-8-6", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [12, 13, 14, 15], 14, { kind: "horizontalAdd", a: 8, b: 6, display: "objects", showLabels: true }),
+  q("adv-add-1-labelled-11-4", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [13, 14, 15, 16], 15, { kind: "horizontalAdd", a: 11, b: 4, display: "objects", showLabels: true }),
+  q("adv-add-1-visual-6-5", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [9, 10, 11, 12], 11, { kind: "horizontalAdd", a: 6, b: 5, display: "objects", showLabels: false }),
+  q("adv-add-1-visual-9-4", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [11, 12, 13, 14], 13, { kind: "horizontalAdd", a: 9, b: 4, display: "objects", showLabels: false }),
+  q("adv-add-1-visual-10-6", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [14, 15, 16, 17], 16, { kind: "horizontalAdd", a: 10, b: 6, display: "objects", showLabels: false }),
+  q("adv-add-1-visual-12-7", "advanced", { en: "Put the two banana groups together. How many bananas altogether?", ms: "Gabungkan dua kumpulan pisang. Berapa jumlah pisang?" }, [17, 18, 19, 20], 19, { kind: "horizontalAdd", a: 12, b: 7, display: "objects", showLabels: false }),
+  q("adv-add-1-numbers-12-4", "advanced", { en: "What is 12 + 4?", ms: "Berapakah 12 + 4?" }, [14, 15, 16, 17], 16, { kind: "horizontalAdd", a: 12, b: 4, display: "none" }),
+  q("adv-add-1-numbers-13-5", "advanced", { en: "What is 13 + 5?", ms: "Berapakah 13 + 5?" }, [16, 17, 18, 19], 18, { kind: "horizontalAdd", a: 13, b: 5, display: "none" }),
+  q("adv-add-1-numbers-14-6", "advanced", { en: "What is 14 + 6?", ms: "Berapakah 14 + 6?" }, [17, 18, 19, 20], 20, { kind: "horizontalAdd", a: 14, b: 6, display: "none" }),
+  q("adv-add-1-numbers-15-2", "advanced", { en: "What is 15 + 2?", ms: "Berapakah 15 + 2?" }, [15, 16, 17, 18], 17, { kind: "horizontalAdd", a: 15, b: 2, display: "none" }),
+  q("adv-add-1-numbers-11-8", "advanced", { en: "What is 11 + 8?", ms: "Berapakah 11 + 8?" }, [17, 18, 19, 20], 19, { kind: "horizontalAdd", a: 11, b: 8, display: "none" }),
 ];
 
 const advancedAdditionPart2Questions: Question[] = [
@@ -1283,9 +1299,32 @@ function saveState(player: Player | null, lang: Lang, soundEnabled: boolean) {
   localStorage.setItem(STORE_KEY, JSON.stringify({ player, lang, soundEnabled, numberSoundEnabled: soundEnabled }));
 }
 
+function loadAccessGranted() {
+  try {
+    return localStorage.getItem(ACCESS_STORE_KEY) === "granted";
+  } catch {
+    return false;
+  }
+}
+
+function rememberAccessGranted() {
+  try {
+    localStorage.setItem(ACCESS_STORE_KEY, "granted");
+  } catch {
+    // Access still works for this visit if browser storage is unavailable.
+  }
+}
+
+async function hashAccessPin(pin: string) {
+  const bytes = new TextEncoder().encode(pin);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 function App() {
   const initial = useMemo(() => loadState(), []);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const [accessGranted, setAccessGranted] = useState(loadAccessGranted);
   const [lang, setLang] = useState<Lang>(initial.lang);
   const [player, setPlayer] = useState<Player | null>(initial.player);
   const [screen, setScreen] = useState<Screen>(initial.player ? "menu" : "home");
@@ -1301,6 +1340,19 @@ function App() {
   }, []);
 
   const t = UI[lang];
+  if (!accessGranted) {
+    return (
+      <PinGate
+        lang={lang}
+        onToggleLang={() => setLang((current) => (current === "en" ? "ms" : "en"))}
+        onGranted={() => {
+          rememberAccessGranted();
+          setAccessGranted(true);
+        }}
+      />
+    );
+  }
+
   const isCyberBackground = screen.startsWith("advanced") || Boolean(completedLesson?.startsWith("advanced"));
   const backgroundStyle = isCyberBackground ? CYBER_BACKGROUND_STYLE : DEFAULT_BACKGROUND_STYLE;
   const go = (next: Screen) => {
@@ -1464,6 +1516,118 @@ function App() {
       </div>
       </div>
     </AudioEnabledContext.Provider>
+  );
+}
+
+function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: () => void; onGranted: () => void }) {
+  const [pin, setPin] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState(false);
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (pin.length !== 6 || checking) return;
+    setChecking(true);
+    setError(false);
+    try {
+      const pinHash = await hashAccessPin(pin);
+      if (VALID_PIN_HASHES.has(pinHash)) {
+        onGranted();
+        return;
+      }
+      setPin("");
+      setError(true);
+    } catch {
+      setError(true);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const copy = lang === "en"
+    ? {
+        eyebrow: "Private adventure",
+        title: "Enter your access PIN",
+        help: "Type the 6-digit PIN provided to you to open Chrys's Adventures.",
+        label: "6-digit PIN",
+        button: checking ? "Checking PIN..." : "Open the adventure",
+        error: "That PIN is not recognized. Check all 6 digits and try again.",
+        privacy: "You only need to enter the PIN once on this device.",
+        language: "BM",
+        languageLabel: "Switch to Bahasa Melayu",
+      }
+    : {
+        eyebrow: "Pengembaraan peribadi",
+        title: "Masukkan PIN akses",
+        help: "Taip PIN 6 digit yang diberikan kepada anda untuk membuka Pengembaraan Chrys.",
+        label: "PIN 6 digit",
+        button: checking ? "Sedang menyemak PIN..." : "Buka pengembaraan",
+        error: "PIN itu tidak dikenali. Semak kesemua 6 digit dan cuba lagi.",
+        privacy: "Anda hanya perlu memasukkan PIN sekali pada peranti ini.",
+        language: "EN",
+        languageLabel: "Switch to English",
+      };
+
+  return (
+    <div className="page-bg min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
+      <div className="jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
+        <header className="flex justify-end">
+          <button
+            type="button"
+            onClick={onToggleLang}
+            aria-label={copy.languageLabel}
+            className="rounded-2xl border-2 border-white/90 bg-white/90 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(0,0,0,.15)]"
+          >
+            {copy.language}
+          </button>
+        </header>
+        <main className="grid flex-1 place-items-center py-6">
+          <section className="lesson-panel w-full max-w-xl rounded-[2.25rem] p-5 text-center shadow-2xl md:p-9">
+            <div className="mx-auto grid h-24 w-24 place-items-center rounded-[1.75rem] border-4 border-yellow-300 bg-white shadow-[0_7px_0_#a86000]">
+              <img src={chrysThinking} alt="Chrys reading" className="h-20 w-20 object-contain" />
+            </div>
+            <p className="mt-6 text-sm font-black uppercase tracking-[0.18em] text-emerald-700">{copy.eyebrow}</p>
+            <h1 className="mt-2 text-3xl font-black leading-tight text-blue-950 sm:text-4xl">{copy.title}</h1>
+            <p className="mx-auto mt-3 max-w-md text-base font-bold leading-relaxed text-slate-600 sm:text-lg">{copy.help}</p>
+
+            <form onSubmit={(event) => void submit(event)} className="mx-auto mt-7 max-w-sm">
+              <label htmlFor="access-pin" className="block text-left text-base font-black text-blue-900">{copy.label}</label>
+              <div className={`mt-2 flex items-center rounded-3xl border-4 bg-white px-4 transition-colors ${error ? "border-red-400" : "border-sky-200 focus-within:border-yellow-400"}`}>
+                <KeyRound className="h-7 w-7 shrink-0 text-emerald-600" aria-hidden="true" />
+                <input
+                  id="access-pin"
+                  name="access-pin"
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  value={pin}
+                  onChange={(event) => {
+                    setPin(event.target.value.replace(/\D/g, "").slice(0, 6));
+                    setError(false);
+                  }}
+                  maxLength={6}
+                  autoFocus
+                  aria-invalid={error}
+                  aria-describedby={error ? "access-pin-error access-pin-help" : "access-pin-help"}
+                  className="min-w-0 flex-1 bg-transparent py-4 pl-4 text-center text-3xl font-black tracking-[0.45em] text-blue-950 outline-none placeholder:text-slate-300"
+                  placeholder="••••••"
+                />
+              </div>
+              <p id="access-pin-help" className="mt-3 text-sm font-bold text-slate-500">{copy.privacy}</p>
+              {error && <p id="access-pin-error" role="alert" className="mt-3 rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm font-black text-red-800">{copy.error}</p>}
+              <button
+                type="submit"
+                disabled={pin.length !== 6 || checking}
+                className="mt-5 w-full rounded-3xl border-2 border-yellow-500 bg-yellow-400 px-6 py-4 text-xl font-black text-yellow-950 shadow-[0_7px_0_#a86000] transition disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-[0_4px_0_#94a3b8] enabled:active:translate-y-1"
+              >
+                {copy.button}
+              </button>
+            </form>
+          </section>
+        </main>
+      </div>
+    </div>
   );
 }
 
@@ -2572,51 +2736,399 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol }: { a: number; b: n
   );
 }
 
+type AdvancedStoryObject = AdvancedCompareObject | "banana";
+
+function AdvancedStoryObjectIcon({ object }: { object: AdvancedStoryObject }) {
+  if (object === "banana") return <SpriteIcon value={BANANA} className="h-11 w-11 sm:h-12 sm:w-12" />;
+  return <span className="text-4xl sm:text-5xl" aria-hidden="true">{ADVANCED_COMPARE_OBJECTS[object].emoji}</span>;
+}
+
+function AdvancedStoryObjectWord({ object, count, lang }: { object: AdvancedStoryObject; count: number; lang: Lang }) {
+  if (object === "banana") {
+    return <>{lang === "en" ? (count === 1 ? "banana" : "bananas") : "pisang"}</>;
+  }
+  const item = ADVANCED_COMPARE_OBJECTS[object];
+  return <>{lang === "en" ? (count === 1 ? item.en[0] : item.en[1]) : item.ms}</>;
+}
+
+type AdvancedStoryOperation =
+  | { kind: "direct"; count: number }
+  | { kind: "add"; a: number; b: number }
+  | { kind: "subtract"; start: number; remove: number };
+
+type AdvancedStoryVisualState = {
+  counted: number;
+  crossed: number;
+  joined: boolean;
+  working: boolean;
+  complete: boolean;
+};
+
+const freshAdvancedStoryState = (): AdvancedStoryVisualState => ({
+  counted: 0,
+  crossed: 0,
+  joined: false,
+  working: false,
+  complete: false,
+});
+
+function advancedStoryResult(operation: AdvancedStoryOperation) {
+  if (operation.kind === "direct") return operation.count;
+  if (operation.kind === "add") return operation.a + operation.b;
+  return operation.start - operation.remove;
+}
+
+function advancedStoryObjectName(object: AdvancedStoryObject, count: number, lang: Lang) {
+  if (object === "banana") return lang === "en" ? (count === 1 ? "banana" : "bananas") : "pisang";
+  const names = ADVANCED_COMPARE_OBJECTS[object];
+  return lang === "en" ? (count === 1 ? names.en[0] : names.en[1]) : names.ms;
+}
+
+function AdvancedStoryOperationBox({
+  operation,
+  object,
+  label,
+  lang,
+  state,
+  active,
+}: {
+  operation: AdvancedStoryOperation;
+  object: AdvancedStoryObject;
+  label: string;
+  lang: Lang;
+  state: AdvancedStoryVisualState;
+  active: boolean;
+}) {
+  const result = advancedStoryResult(operation);
+  const isAddition = operation.kind === "add";
+  const isSubtraction = operation.kind === "subtract";
+  const startCount = isSubtraction ? operation.start : result;
+  const additionGroups = isAddition ? [operation.a, operation.b] : [startCount];
+
+  const renderObject = (index: number, layoutCount: number, layoutIndex: number) => {
+    const isCrossed = isSubtraction && index >= result && index < result + state.crossed;
+    const countedIndex = isSubtraction ? index + 1 : index + 1;
+    const isCounted = !isCrossed && countedIndex <= state.counted;
+    const isActive = state.working && isCounted && countedIndex === state.counted;
+    const isWaiting = !isSubtraction && !isCounted;
+
+    return (
+      <span
+        key={index}
+        className={`relative grid h-16 w-14 place-items-center rounded-2xl border-2 transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 sm:h-[4.6rem] sm:w-16 ${
+          isCrossed
+            ? "scale-95 border-red-400 bg-red-950/70 opacity-65 grayscale"
+            : isActive
+              ? "scale-105 border-yellow-300 bg-yellow-300/15 ring-4 ring-yellow-300/20 shadow-[0_0_18px_rgba(250,204,21,.25)]"
+              : isCounted || isSubtraction
+                ? "border-cyan-400 bg-cyan-950"
+                : "border-cyan-900 bg-slate-900"
+        } ${isWaiting ? "opacity-45 grayscale" : ""} ${!state.joined && layoutCount % 2 === 1 && layoutIndex === layoutCount - 1 ? "col-span-2 justify-self-center" : ""}`}
+      >
+        {isCounted && (
+          <span className={`absolute -top-3 left-1/2 z-20 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black text-white ${isActive ? "bg-yellow-500" : "bg-blue-600"}`}>
+            {countedIndex}
+          </span>
+        )}
+        <AdvancedStoryObjectIcon object={object} />
+        {isCrossed && (
+          <span className="absolute inset-0 grid place-items-center text-5xl font-black leading-none text-red-500" aria-label={lang === "en" ? "crossed out" : "dipangkah"}>×</span>
+        )}
+      </span>
+    );
+  };
+
+  let runningIndex = 0;
+  const expression = operation.kind === "add"
+    ? `${operation.a} + ${operation.b}`
+    : operation.kind === "subtract"
+      ? `${operation.start} − ${operation.remove}`
+      : String(operation.count);
+
+  return (
+    <section className={`h-full rounded-[1.6rem] border-2 p-3 shadow-[0_5px_0_#164e63] transition-[border-color,box-shadow,transform] duration-500 ${
+      active
+        ? "border-yellow-300 bg-slate-950/90 ring-4 ring-yellow-300/15"
+        : state.complete
+          ? "border-emerald-300 bg-emerald-950/35"
+          : "border-cyan-300 bg-slate-950/80"
+    }`}>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h4 className="text-lg font-black text-cyan-100">{label}</h4>
+        <span className="rounded-xl border-2 border-yellow-300 bg-slate-900 px-3 py-1 text-xl font-black text-yellow-200" style={NUMBER_TEXT_STYLE}>{expression}</span>
+      </div>
+      <div className={`relative min-h-52 rounded-2xl border-2 border-cyan-900 bg-slate-950 p-3 transition-[border-color,box-shadow] duration-700 ${state.joined ? "border-emerald-400 shadow-[inset_0_0_24px_rgba(16,185,129,.18)]" : ""}`}>
+        {isSubtraction && (
+          <p className="mb-3 rounded-xl border border-red-400/70 bg-red-950/70 px-3 py-2 text-center text-sm font-black text-red-100">
+            {lang === "en" ? `Cross out ${operation.remove}, then count what remains.` : `Pangkah ${operation.remove}, kemudian kira yang tinggal.`}
+          </p>
+        )}
+        <div className={`grid min-h-40 items-center transition-[gap] duration-1000 ${isAddition ? (state.joined ? "grid-cols-4 place-items-center gap-2" : "grid-cols-[1fr_auto_1fr] gap-3") : "grid-cols-1 gap-3"}`}>
+          {additionGroups.map((groupCount, groupIndex) => {
+            const offset = runningIndex;
+            runningIndex += groupCount;
+            return (
+              <React.Fragment key={`${groupIndex}-${groupCount}`}>
+                {groupIndex === 1 && (
+                  <span className={`place-items-center overflow-hidden font-black text-yellow-200 transition-[max-width,opacity,transform] duration-700 ${state.joined ? "hidden" : "grid max-w-12 text-3xl opacity-100"}`}>+</span>
+                )}
+                <div className={`${state.joined ? "contents" : "grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[border-color,background-color,border-radius,box-shadow] duration-1000"} ${
+                  state.joined
+                    ? ""
+                    : "border-cyan-700 bg-cyan-950/45"
+                }`}>
+                  {Array.from({ length: groupCount }, (_, groupObjectIndex) => renderObject(offset + groupObjectIndex, groupCount, groupObjectIndex))}
+                </div>
+              </React.Fragment>
+            );
+          })}
+          {state.joined && <span className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/20 ring-8 ring-yellow-300/10 motion-safe:animate-ping" aria-hidden="true" />}
+        </div>
+      </div>
+      <p className={`mx-auto mt-3 min-h-11 w-fit rounded-full border-2 px-4 py-2 text-center text-base font-black transition-colors ${state.complete ? "border-emerald-300 bg-emerald-950 text-emerald-100" : "border-slate-700 bg-slate-900 text-slate-500"}`} aria-live="polite">
+        {state.complete
+          ? `${lang === "en" ? "Total" : "Jumlah"}: ${result} ${advancedStoryObjectName(object, result, lang)}`
+          : (lang === "en" ? "Work out this side" : "Kira bahagian ini")}
+      </p>
+    </section>
+  );
+}
+
+function AdvancedComparisonStory({ lang, story, onComplete }: { lang: Lang; story: "greater" | "less" | "equal"; onComplete?: () => void }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [step, setStep] = useState(0);
+  const [leftState, setLeftState] = useState<AdvancedStoryVisualState>(freshAdvancedStoryState);
+  const [rightState, setRightState] = useState<AdvancedStoryVisualState>(freshAdvancedStoryState);
+
+  const storyData = {
+    greater: {
+      eyebrow: lang === "en" ? "Story example: greater than" : "Contoh cerita: lebih besar",
+      title: lang === "en" ? "Who ate more coconuts?" : "Siapa makan lebih banyak kelapa?",
+      text: lang === "en" ? "Chrys eats 5 coconuts, then 2 more. Alyse eats 6 coconuts. Who ate more?" : "Chrys makan 5 kelapa, kemudian 2 lagi. Alyse makan 6 kelapa. Siapa makan lebih banyak?",
+      leftLabel: "Chrys",
+      rightLabel: "Alyse",
+      leftObject: "coconut" as AdvancedStoryObject,
+      rightObject: "coconut" as AdvancedStoryObject,
+      leftOperation: { kind: "add", a: 5, b: 2 } as AdvancedStoryOperation,
+      rightOperation: { kind: "direct", count: 6 } as AdvancedStoryOperation,
+      leftAction: lang === "en" ? "Add and count Chrys's coconuts" : "Tambah dan kira kelapa Chrys",
+      rightAction: lang === "en" ? "Count Alyse's 6 coconuts" : "Kira 6 kelapa Alyse",
+      symbol: ">" as const,
+      explanation: lang === "en" ? "Chrys ate 7 coconuts. Alyse ate 6. Seven is greater than six." : "Chrys makan 7 kelapa. Alyse makan 6. Tujuh lebih besar daripada enam.",
+    },
+    less: {
+      eyebrow: lang === "en" ? "Story example: less than" : "Contoh cerita: lebih kecil",
+      title: lang === "en" ? "Which basket has fewer bananas?" : "Bakul mana ada lebih sedikit pisang?",
+      text: lang === "en" ? "Chrys puts 8 bananas in one basket. Alyse puts 15 in another, then gives away 2. Which basket has fewer?" : "Chrys letak 8 pisang dalam satu bakul. Alyse letak 15 dalam bakul lain, kemudian beri 2. Bakul mana ada lebih sedikit?",
+      leftLabel: lang === "en" ? "Chrys's basket" : "Bakul Chrys",
+      rightLabel: lang === "en" ? "Alyse's basket" : "Bakul Alyse",
+      leftObject: "banana" as AdvancedStoryObject,
+      rightObject: "banana" as AdvancedStoryObject,
+      leftOperation: { kind: "direct", count: 8 } as AdvancedStoryOperation,
+      rightOperation: { kind: "subtract", start: 15, remove: 2 } as AdvancedStoryOperation,
+      leftAction: lang === "en" ? "Count Chrys's 8 bananas" : "Kira 8 pisang Chrys",
+      rightAction: lang === "en" ? "Cross out 2, then count 13" : "Pangkah 2, kemudian kira 13",
+      symbol: "<" as const,
+      explanation: lang === "en" ? "Alyse has 13 bananas left. Eight is less than thirteen." : "Alyse ada 13 pisang lagi. Lapan lebih kecil daripada tiga belas.",
+    },
+    equal: {
+      eyebrow: lang === "en" ? "Story example: equals" : "Contoh cerita: sama dengan",
+      title: lang === "en" ? "Do Chrys and Alyse have the same number?" : "Adakah Chrys dan Alyse mempunyai jumlah yang sama?",
+      text: lang === "en" ? "Chrys picks 4 apples, then 3 more. Alyse has 9 apples and gives 2 away. Do their totals match?" : "Chrys petik 4 epal, kemudian 3 lagi. Alyse ada 9 epal dan beri 2. Adakah jumlah mereka sama?",
+      leftLabel: "Chrys",
+      rightLabel: "Alyse",
+      leftObject: "apple" as AdvancedStoryObject,
+      rightObject: "apple" as AdvancedStoryObject,
+      leftOperation: { kind: "add", a: 4, b: 3 } as AdvancedStoryOperation,
+      rightOperation: { kind: "subtract", start: 9, remove: 2 } as AdvancedStoryOperation,
+      leftAction: lang === "en" ? "Add and count Chrys's apples" : "Tambah dan kira epal Chrys",
+      rightAction: lang === "en" ? "Cross out 2, then count Alyse's apples" : "Pangkah 2, kemudian kira epal Alyse",
+      symbol: "=" as const,
+      explanation: lang === "en" ? "Chrys has 7 apples. Alyse has 7 apples. Both totals are equal." : "Chrys ada 7 epal. Alyse ada 7 epal. Kedua-dua jumlah adalah sama.",
+    },
+  }[story];
+
+  useEffect(() => {
+    setStep(0);
+    setLeftState(freshAdvancedStoryState());
+    setRightState(freshAdvancedStoryState());
+  }, [story]);
+
+  const countIntoState = async (count: number, update: React.Dispatch<React.SetStateAction<AdvancedStoryVisualState>>) => {
+    const reveal = (value: number) => update((current) => ({ ...current, counted: value }));
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakCountingSequence(count, lang, COUNTING_STEP_MS, reveal);
+    } else if (prefersReducedMotion) {
+      reveal(count);
+    } else {
+      for (let value = 1; value <= count; value += 1) {
+        reveal(value);
+        await wait(COUNTING_STEP_MS);
+      }
+    }
+  };
+
+  const runOperation = async (operation: AdvancedStoryOperation, update: React.Dispatch<React.SetStateAction<AdvancedStoryVisualState>>) => {
+    update({ ...freshAdvancedStoryState(), working: true });
+    if (operation.kind === "subtract") {
+      for (let value = 1; value <= operation.remove; value += 1) {
+        update((current) => ({ ...current, crossed: value }));
+        await wait(prefersReducedMotion ? 0 : 650);
+      }
+      await countIntoState(operation.start - operation.remove, update);
+    } else {
+      await countIntoState(advancedStoryResult(operation), update);
+      if (operation.kind === "add") {
+        await speakMathCue("plus", lang);
+        await wait(prefersReducedMotion ? 0 : 250);
+        update((current) => ({ ...current, joined: true }));
+        await wait(prefersReducedMotion ? 0 : 1000);
+      }
+    }
+    update((current) => ({ ...current, working: false, complete: true }));
+  };
+
+  const action = async () => {
+    if (leftState.working || rightState.working || step >= 2) return;
+    if (step === 0) {
+      await runOperation(storyData.leftOperation, setLeftState);
+      setStep(1);
+      return;
+    }
+    await runOperation(storyData.rightOperation, setRightState);
+    await speakMathCue("equals", lang);
+    setStep(2);
+    onComplete?.();
+  };
+
+  const busy = leftState.working || rightState.working;
+  const actionLabel = step === 0 ? storyData.leftAction : storyData.rightAction;
+  const leftResult = advancedStoryResult(storyData.leftOperation);
+  const rightResult = advancedStoryResult(storyData.rightOperation);
+
+  return (
+    <div className="rounded-[2rem] border-2 border-cyan-300 bg-slate-950/70 p-4 shadow-[0_6px_0_#164e63]">
+      <div className="mb-4 rounded-2xl border border-cyan-700 bg-cyan-950/70 p-3 text-center">
+        <p className="text-sm font-black uppercase tracking-wide text-cyan-300">{storyData.eyebrow}</p>
+        <p className="mt-1 text-xl font-black text-yellow-200">{storyData.title}</p>
+        <p className="mt-1 text-base font-black text-cyan-50">{storyData.text}</p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-stretch">
+        <AdvancedStoryOperationBox operation={storyData.leftOperation} object={storyData.leftObject} label={storyData.leftLabel} lang={lang} state={leftState} active={step === 0} />
+        <div className={`grid h-20 w-20 place-items-center self-center justify-self-center rounded-3xl border-4 text-6xl font-black shadow-[0_6px_0_#a16207] transition-[background-color,border-color,color,opacity,transform] duration-700 ${step === 2 ? "scale-110 border-yellow-300 bg-yellow-300 text-slate-950 opacity-100" : "border-slate-700 bg-slate-900 text-slate-600 opacity-60"}`} aria-live="polite" aria-label={step === 2 ? `${leftResult} ${storyData.symbol} ${rightResult}` : undefined}>
+          {step === 2 ? storyData.symbol : "?"}
+        </div>
+        <AdvancedStoryOperationBox operation={storyData.rightOperation} object={storyData.rightObject} label={storyData.rightLabel} lang={lang} state={rightState} active={step === 1} />
+      </div>
+      {step < 2 ? (
+        <button type="button" disabled={busy} onClick={() => void action()} className="relative mx-auto mt-5 flex min-h-14 items-center justify-center rounded-2xl border-2 border-cyan-300 bg-blue-600 px-6 text-lg font-black text-white shadow-[0_5px_0_#1e3a8a] disabled:cursor-not-allowed disabled:opacity-60">
+          {busy ? (lang === "en" ? "Working it out..." : "Sedang mengira...") : actionLabel}
+          {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-amber-700"><PointerIcon /></span>}
+        </button>
+      ) : (
+        <div className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-emerald-100">
+          <p className="text-4xl font-black" style={NUMBER_TEXT_STYLE}>{leftResult} {storyData.symbol} {rightResult}</p>
+          <p className="mt-2 text-lg font-black">{storyData.explanation}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
+  const [completedStories, setCompletedStories] = useState<Set<number>>(() => new Set());
+  const finishStory = (storyPhase: number) => setCompletedStories((current) => {
+    if (current.has(storyPhase)) return current;
+    const next = new Set(current);
+    next.add(storyPhase);
+    return next;
+  });
   const slides = [
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Greater than: >" : "Lebih besar: >",
-      text: lang === "en" ? "Use > when the left group has more." : "Guna > apabila kumpulan kiri lebih banyak.",
+      text: lang === "en" ? "Use > when the number on the left is greater." : "Guna > apabila nombor di kiri lebih besar.",
       visual: <AdvancedCompareVisual a={8} b={3} object="apple" lang={lang} symbol=">" />,
       note: lang === "en" ? "8 apples are greater than 3 apples. 8 > 3." : "8 epal lebih besar daripada 3 epal. 8 > 3.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "The wide side faces more" : "Bahagian luas menghadap lebih banyak",
-      text: lang === "en" ? "The open, wide side of > points to the bigger group." : "Bahagian terbuka tanda > menghadap kumpulan yang lebih besar.",
+      title: lang === "en" ? "Greater-than example 1" : "Contoh lebih besar 1",
+      text: lang === "en" ? "The wide side of > faces the bigger number." : "Bahagian luas > menghadap nombor yang lebih besar.",
       visual: <AdvancedCompareVisual a={7} b={4} object="cookie" lang={lang} symbol=">" />,
       note: lang === "en" ? "7 cookies are greater than 4 cookies. 7 > 4." : "7 biskut lebih besar daripada 4 biskut. 7 > 4.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Greater-than example 2" : "Contoh lebih besar 2",
+      text: lang === "en" ? "Count both piles. The larger amount gets the open side of >." : "Kira kedua-dua kumpulan. Jumlah lebih besar mendapat bahagian terbuka >.",
+      visual: <AdvancedCompareVisual a={12} b={9} object="coconut" lang={lang} symbol=">" />,
+      note: lang === "en" ? "12 coconuts are greater than 9 coconuts. 12 > 9." : "12 kelapa lebih besar daripada 9 kelapa. 12 > 9.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Less than: <" : "Lebih kecil: <",
-      text: lang === "en" ? "Use < when the left group has fewer." : "Guna < apabila kumpulan kiri lebih sedikit.",
+      text: lang === "en" ? "Use < when the number on the left is less." : "Guna < apabila nombor di kiri lebih kecil.",
       visual: <AdvancedCompareVisual a={3} b={6} object="apple" lang={lang} symbol="<" />,
       note: lang === "en" ? "3 apples are less than 6 apples. 3 < 6." : "3 epal lebih kecil daripada 6 epal. 3 < 6.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "The small side faces less" : "Bahagian kecil menghadap lebih sedikit",
-      text: lang === "en" ? "The small point of < looks at the smaller group." : "Bahagian kecil tanda < menghadap kumpulan yang lebih sedikit.",
+      title: lang === "en" ? "Less-than example 1" : "Contoh lebih kecil 1",
+      text: lang === "en" ? "The small point of < faces the smaller number." : "Bahagian kecil < menghadap nombor yang lebih kecil.",
       visual: <AdvancedCompareVisual a={4} b={9} object="cookie" lang={lang} symbol="<" />,
       note: lang === "en" ? "4 cookies are less than 9 cookies. 4 < 9." : "4 biskut lebih kecil daripada 9 biskut. 4 < 9.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Less-than example 2" : "Contoh lebih kecil 2",
+      text: lang === "en" ? "Count both piles. The smaller amount gets the pointed side of <." : "Kira kedua-dua kumpulan. Jumlah lebih kecil mendapat bahagian runcing <.",
+      visual: <AdvancedCompareVisual a={11} b={15} object="mushroom" lang={lang} symbol="<" />,
+      note: lang === "en" ? "11 mushrooms are less than 15 mushrooms. 11 < 15." : "11 cendawan lebih kecil daripada 15 cendawan. 11 < 15.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Equals: =" : "Sama dengan: =",
-      text: lang === "en" ? "Use = when both groups have the same amount." : "Guna = apabila dua-dua kumpulan ada jumlah yang sama.",
+      text: lang === "en" ? "Use = when both sides have the same amount." : "Guna = apabila dua-dua belah ada jumlah yang sama.",
       visual: <AdvancedCompareVisual a={5} b={5} object="apple" lang={lang} symbol="=" />,
       note: lang === "en" ? "5 apples equal 5 apples. 5 = 5." : "5 epal sama dengan 5 epal. 5 = 5.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "Both sides are the same" : "Dua-dua belah sama",
-      text: lang === "en" ? "When both groups match, we use =." : "Apabila dua-dua kumpulan sama, kita guna =.",
+      title: lang === "en" ? "Equals example 1" : "Contoh sama 1",
+      text: lang === "en" ? "When both amounts match, use =." : "Apabila dua-dua jumlah sama, guna =.",
       visual: <AdvancedCompareVisual a={4} b={4} object="cookie" lang={lang} symbol="=" />,
       note: lang === "en" ? "4 cookies equal 4 cookies. 4 = 4." : "4 biskut sama dengan 4 biskut. 4 = 4.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Equals example 2" : "Contoh sama 2",
+      text: lang === "en" ? "Count both piles. When they match, use =." : "Kira kedua-dua kumpulan. Apabila jumlah sama, guna =.",
+      visual: <AdvancedCompareVisual a={10} b={10} object="fish" lang={lang} symbol="=" />,
+      note: lang === "en" ? "10 fish equal 10 fish. 10 = 10." : "10 ikan sama dengan 10 ikan. 10 = 10.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Use > after adding" : "Guna > selepas tambah",
+      text: lang === "en" ? "First find each total. Then compare them." : "Mula-mula cari setiap jumlah. Kemudian bandingkan.",
+      visual: <AdvancedComparisonStory key="greater-story" lang={lang} story="greater" onComplete={() => finishStory(9)} />,
+      note: lang === "en" ? "Chrys has 7 coconuts. Alyse has 6. 7 > 6." : "Chrys ada 7 kelapa. Alyse ada 6. 7 > 6.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Use < after taking away" : "Guna < selepas ambil",
+      text: lang === "en" ? "Take away first. Then compare what is left." : "Ambil dahulu. Kemudian bandingkan yang tinggal.",
+      visual: <AdvancedComparisonStory key="less-story" lang={lang} story="less" onComplete={() => finishStory(10)} />,
+      note: lang === "en" ? "8 is less than 13. 8 < 13." : "8 lebih kecil daripada 13. 8 < 13.",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Use = when totals match" : "Guna = apabila jumlah sama",
+      text: lang === "en" ? "Both stories can make the same total." : "Dua cerita boleh dapat jumlah yang sama.",
+      visual: <AdvancedComparisonStory key="equal-story" lang={lang} story="equal" onComplete={() => finishStory(11)} />,
+      note: lang === "en" ? "Both totals are 7. 7 = 7." : "Dua-dua jumlah ialah 7. 7 = 7.",
     },
   ];
   const slide = slides[phase];
@@ -2627,11 +3139,11 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     <main className="mx-auto w-full max-w-6xl pb-8">
       <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3">
         <LessonShell lang={lang} title={t.advancedCompareBigger} helper={lang === "en" ? "Compare groups and numbers from 0 to 20." : "Banding kumpulan dan nombor dari 0 hingga 20."} variant="cyber">
-          <div className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-6">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+          <div className="mb-5 grid grid-cols-3 gap-2 md:grid-cols-6 xl:grid-cols-12">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
           <CyberTeachingCard eyebrow={slide.eyebrow} title={slide.title} text={slide.text} />
           {slide.visual}
-          <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>
-          <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={slides.length - 1} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === slides.length - 1 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
+          {phase < 9 && <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>}
+          <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={slides.length - 1} canNext={phase < 9 || completedStories.has(phase)} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === slides.length - 1 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
         </LessonShell>
       </div>
     </main>
@@ -2719,19 +3231,33 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
 function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
-  const [scenarioOneDone, setScenarioOneDone] = useState(false);
-  const [scenarioTwoDone, setScenarioTwoDone] = useState(false);
-  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 3: Make a Ten Practice" : "Misi Siber 3: Latihan Bina Sepuluh"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(2); }} onFinish={() => onDone()} />;
-  const titles = [lang === "en" ? "Mission briefing" : "Taklimat misi", lang === "en" ? "Chrys fills the ten-basket" : "Chrys isi bakul puluh", lang === "en" ? "Chrys and a friend combine piles" : "Chrys dan kawan gabungkan kumpulan"];
-  const texts = [lang === "en" ? "Time to add bigger numbers. We'll fill a ten-basket." : "Masa untuk tambah nombor besar. Kita isi bakul puluh.", lang === "en" ? "Chrys has 7 bananas. The basket fits 10." : "Chrys ada 7 pisang. Bakul muat 10.", lang === "en" ? "Chrys has 8. A friend has 4. Let's put them together!" : "Chrys ada 8. Kawan ada 4. Jom gabungkan!"];
+  const [bridgeDone, setBridgeDone] = useState(false);
+  const [teenExampleDone, setTeenExampleDone] = useState(false);
+  const [storyOneDone, setStoryOneDone] = useState(false);
+  const [storyTwoDone, setStoryTwoDone] = useState(false);
+  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 3: Adding Practice" : "Misi Siber 3: Latihan Tambah"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(3); }} onFinish={() => onDone()} />;
+  const titles = [
+    lang === "en" ? "From 9 to 10" : "Daripada 9 ke 10",
+    lang === "en" ? "Twelve and six more" : "Dua belas dan enam lagi",
+    lang === "en" ? "Mia's snack basket" : "Bakul snek Mia",
+    lang === "en" ? "Chrys's picnic bananas" : "Pisang piknik Chrys",
+  ];
+  const texts = [
+    lang === "en" ? "Nine is a one-digit number. Add 1 banana to make 10, a two-digit number." : "Sembilan ialah nombor satu digit. Tambah 1 pisang untuk jadi 10, nombor dua digit.",
+    lang === "en" ? "12 bananas and 6 more bananas make 18 bananas." : "12 pisang dan 6 lagi pisang jadi 18 pisang.",
+    lang === "en" ? "Mia packs 8 bananas. Her friend puts 3 more bananas in the basket." : "Mia letak 8 pisang dalam bakul. Kawannya masukkan 3 lagi pisang.",
+    lang === "en" ? "At a picnic, Chrys has 11 bananas. Alyse brings 5 more bananas." : "Di piknik, Chrys ada 11 pisang. Alyse bawa 5 lagi pisang.",
+  ];
+  const canNext = [bridgeDone, teenExampleDone, storyOneDone, storyTwoDone][phase];
   return (
     <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart1} helper={lang === "en" ? "Cyber Mission 3 - Fill a ten-basket to add bigger numbers." : "Misi Siber 3 - Isi bakul puluh untuk tambah nombor besar."} variant="cyber">
-      <div className="mb-5 grid grid-cols-3 gap-2">{Array.from({ length: 3 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+      <div className="mb-5 grid grid-cols-4 gap-2">{Array.from({ length: 4 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
       <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 3" : "Misi Siber 3"} title={titles[phase]} text={texts[phase]} />
-      {phase === 0 && <div className="grid min-h-80 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center"><img src={chrysExcited} alt="Chrys with bananas" className="h-40 w-40 object-contain" /><div><p className="text-5xl font-black text-yellow-200">7 + 5</p><p className="mt-3 text-xl font-black text-cyan-100">{lang === "en" ? "First make 10. Then count what is left." : "Mula-mula bina 10. Kemudian kira yang tinggal."}</p></div></div>}
-      {phase === 1 && <MakeTenInteraction key="story-7-5" a={7} b={5} lang={lang} onSolved={() => setScenarioOneDone(true)} />}
-      {phase === 2 && <MakeTenInteraction key="story-8-4" a={8} b={4} friend lang={lang} onSolved={() => setScenarioTwoDone(true)} />}
-      <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={2} canNext={phase === 0 || (phase === 1 ? scenarioOneDone : scenarioTwoDone)} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 2 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
+      {phase === 0 && <MakeTenInteraction key="bridge-9-1" a={9} b={1} lang={lang} onSolved={() => setBridgeDone(true)} />}
+      {phase === 1 && <MakeTenInteraction key="example-12-6" a={12} b={6} lang={lang} onSolved={() => setTeenExampleDone(true)} />}
+      {phase === 2 && <MakeTenInteraction key="story-8-3" a={8} b={3} lang={lang} onSolved={() => setStoryOneDone(true)} />}
+      {phase === 3 && <MakeTenInteraction key="story-11-5" a={11} b={5} lang={lang} onSolved={() => setStoryTwoDone(true)} />}
+      <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={3} canNext={canNext} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 3 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
     </LessonShell></div></main>
   );
 }
@@ -7515,12 +8041,14 @@ function AdditionBananaEquation({
   b = ADDITION_EQUATION_GROUPS[1],
   emoji = String.fromCodePoint(0x1f34c),
   autoStart = false,
+  cyber = false,
 }: {
   lang: Lang;
   a?: number;
   b?: number;
   emoji?: string;
   autoStart?: boolean;
+  cyber?: boolean;
 }) {
   const groups = [a, b, a + b];
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -7686,12 +8214,20 @@ function AdditionBananaEquation({
         key={`${groupIndex}-${countIndex}`}
         className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
           currentBanana
-            ? "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
+            ? cyber
+              ? "scale-105 border-yellow-300 bg-yellow-300/20 ring-4 ring-yellow-300/20 shadow-[0_0_20px_rgba(250,204,21,.28)]"
+              : "scale-105 border-yellow-500 bg-yellow-100 ring-4 ring-yellow-200 shadow-lg"
             : groupComplete
-              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+              ? cyber
+                ? "border-cyan-400 bg-cyan-950 ring-2 ring-cyan-700"
+                : "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
             : counted
-              ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
-              : "border-transparent bg-amber-50 opacity-55 grayscale"
+              ? cyber
+                ? "border-cyan-400 bg-cyan-950 ring-2 ring-cyan-700"
+                : "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+              : cyber
+                ? "border-cyan-900 bg-slate-900 opacity-45 grayscale"
+                : "border-transparent bg-amber-50 opacity-55 grayscale"
         } ${layoutCount % 2 === 1 && layoutIndex === layoutCount - 1 ? "col-span-2 justify-self-center" : ""}`}
       >
         <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity ${counted ? "opacity-100" : "opacity-0"}`}>
@@ -7709,7 +8245,7 @@ function AdditionBananaEquation({
           type="button"
           onClick={startCounting}
           disabled={isCounting}
-          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
+          className={`relative rounded-2xl border-2 px-7 py-3 text-xl font-black text-white active:translate-y-1 disabled:cursor-wait disabled:opacity-70 ${cyber ? "border-cyan-300 bg-cyan-700 shadow-[0_6px_0_#164e63,0_0_18px_rgba(34,211,238,.20)]" : "border-blue-700 bg-blue-600 shadow-[0_6px_0_#1e3a8a]"}`}
         >
           {isCounting
             ? (lang === "en" ? "Counting..." : "Mengira...")
@@ -7729,11 +8265,17 @@ function AdditionBananaEquation({
             {index > 0 && (
               <span
                 className={`grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow] duration-300 ${
-                  activeSign === index - 1
-                    ? "border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
+                   activeSign === index - 1
+                    ? cyber
+                      ? "border-yellow-300 bg-yellow-300 text-slate-950 ring-4 ring-yellow-300/20 shadow-[0_4px_0_#a16207]"
+                      : "border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
                     : completedSigns >= index
-                      ? "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_4px_0_#d97706]"
-                      : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
+                      ? cyber
+                        ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_4px_0_#a16207]"
+                        : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_4px_0_#d97706]"
+                      : cyber
+                        ? "border-slate-700 bg-slate-900 text-slate-600 shadow-[0_3px_0_#020617]"
+                        : "border-slate-200 bg-slate-100 text-slate-300 shadow-[0_3px_0_#cbd5e1]"
                 }`}
                 aria-hidden="true"
               >
@@ -7744,14 +8286,24 @@ function AdditionBananaEquation({
               aria-current={activeGroup === index ? "step" : undefined}
               className={`relative flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow,transform] duration-700 ease-out ${
                   index === 2 && resultMergeStage === "joining"
-                    ? "scale-[1.025] border-yellow-400 bg-yellow-50 ring-8 ring-yellow-200 shadow-[0_0_36px_rgba(250,204,21,.55)]"
+                    ? cyber
+                      ? "scale-[1.025] border-yellow-300 bg-yellow-300/10 ring-8 ring-yellow-300/20 shadow-[0_0_36px_rgba(250,204,21,.35)]"
+                      : "scale-[1.025] border-yellow-400 bg-yellow-50 ring-8 ring-yellow-200 shadow-[0_0_36px_rgba(250,204,21,.55)]"
                     : index === 2 && resultMergeStage === "joined"
-                      ? "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 shadow-[0_8px_24px_rgba(16,185,129,.24)]"
+                      ? cyber
+                        ? "border-emerald-300 bg-emerald-950/70 ring-4 ring-emerald-500/20 shadow-[0_8px_24px_rgba(16,185,129,.20)]"
+                        : "border-emerald-400 bg-emerald-50 ring-4 ring-emerald-200 shadow-[0_8px_24px_rgba(16,185,129,.24)]"
                       : activeGroup === index
-                    ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
+                    ? cyber
+                      ? "border-cyan-300 bg-cyan-950/70 ring-4 ring-cyan-500/20"
+                      : "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
                     : !hasStarted || (index > activeGroup && completedGroups <= index)
-                      ? "border-slate-200 bg-slate-100 opacity-50 grayscale"
-                      : "border-emerald-300 bg-white"
+                      ? cyber
+                        ? "border-slate-800 bg-slate-950 opacity-45 grayscale"
+                        : "border-slate-200 bg-slate-100 opacity-50 grayscale"
+                      : cyber
+                        ? "border-emerald-700 bg-slate-950/85"
+                        : "border-emerald-300 bg-white"
               }`}
             >
               <div className="flex flex-1 items-center justify-center">
@@ -7804,14 +8356,20 @@ function AdditionBananaEquation({
                             </div>
                           )}
                           <div
-                            className={`relative z-10 grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
-                              resultMergeStage === "joined"
-                                ? "border-transparent bg-transparent shadow-none"
-                                : subgroupHighlighted
-                                  ? "border-yellow-500 bg-yellow-50 ring-4 ring-yellow-200 shadow-lg"
-                                  : subgroupIsCurrent
-                                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
-                                    : "border-blue-400 bg-blue-50/60"
+                               className={`relative z-10 grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
+                               resultMergeStage === "joined"
+                                 ? "border-transparent bg-transparent shadow-none"
+                                 : subgroupHighlighted
+                                   ? cyber
+                                     ? "border-yellow-300 bg-yellow-300/10 ring-4 ring-yellow-300/20 shadow-lg"
+                                     : "border-yellow-500 bg-yellow-50 ring-4 ring-yellow-200 shadow-lg"
+                                   : subgroupIsCurrent
+                                     ? cyber
+                                       ? "border-cyan-300 bg-cyan-950/70 ring-2 ring-cyan-600/30"
+                                       : "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                                     : cyber
+                                       ? "border-cyan-800 bg-slate-950/60"
+                                       : "border-blue-400 bg-blue-50/60"
                             } ${
                               resultMergeStage === "joining"
                                 ? subgroupIndex === 0
@@ -7846,8 +8404,14 @@ function AdditionBananaEquation({
                   </div>
                 )}
               </div>
-              <div className={`mt-3 min-h-12 rounded-full px-4 py-2 text-center text-base font-black transition-colors sm:text-xl ${
-                completedGroups > index ? "bg-emerald-100 text-emerald-950" : "bg-slate-200 text-transparent"
+              <div className={`mt-3 min-h-12 rounded-full border px-4 py-2 text-center text-base font-black transition-colors sm:text-xl ${
+                completedGroups > index
+                  ? cyber
+                    ? "border-emerald-400 bg-emerald-950 text-emerald-100"
+                    : "border-transparent bg-emerald-100 text-emerald-950"
+                  : cyber
+                    ? "border-slate-800 bg-slate-900 text-transparent"
+                    : "border-transparent bg-slate-200 text-transparent"
               }`} aria-live="polite">
                 {completedGroups > index
                   ? `${lang === "en" ? "Total" : "Jumlah"}: ${labels[index]}`
@@ -7858,7 +8422,7 @@ function AdditionBananaEquation({
         ))}
       </div>
       {completedGroups === groups.length && completedSigns === 2 && (
-        <p className="text-center text-4xl font-black text-emerald-800" style={NUMBER_TEXT_STYLE}>{a} + {b} = {a + b}</p>
+        <p className={`text-center text-4xl font-black ${cyber ? "text-emerald-300" : "text-emerald-800"}`} style={NUMBER_TEXT_STYLE}>{a} + {b} = {a + b}</p>
       )}
     </div>
   );
@@ -8755,6 +9319,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isValueQuestion = qn.id.startsWith("val-");
   const isTeenValueCountQuestion = qn.id.startsWith("adv-teen-value-count-");
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
+  const hidesQuestionVisual = qn.visual.kind === "horizontalAdd" && qn.visual.display === "none";
   const isAnimatedCupQuestion = qn.id === "rt-sub-cups-5-5";
   const answersLockedForAnimation = isAnimatedCupQuestion && !cupAnimationComplete;
   const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen" || qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild";
@@ -8896,7 +9461,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
             </div>
           )}
           <h2 data-narration-read="true" className={`whitespace-pre-line text-center text-2xl font-black leading-snug ${cyber ? "text-yellow-200" : "text-slate-900"}`}>{qn.text[lang]}</h2>
-          {!groupChoiceVisual && !activePanelOwnsVisual && (
+          {!groupChoiceVisual && !activePanelOwnsVisual && !hidesQuestionVisual && (
             <div className={`my-4 rounded-3xl border-2 p-3 ${cyber ? "border-cyan-500 bg-gradient-to-br from-slate-950 to-cyan-950/80 shadow-[inset_0_0_28px_rgba(34,211,238,.10)]" : "border-sky-100 bg-sky-50"}`}>
               {isAnimatedCupQuestion ? (
                 <AnimatedCupSubtractionVisual
@@ -11261,6 +11826,22 @@ function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
 
 function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrossedLabels = false, cyber = false }: { visual: Visual; lang?: Lang; revealNumbers?: boolean; revealCrossedLabels?: boolean; cyber?: boolean }) {
   if (visual.kind === "horizontalAdd") {
+    if (visual.display === "none") return null;
+
+    if (visual.display === "objects") {
+      return (
+        <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
+            <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} cyber={cyber} lang={lang} />
+          </div>
+          <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
+          <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
+            <ObjectGroup count={visual.b} emoji={"\u{1F34C}"} numbered={visual.showLabels} cyber={cyber} lang={lang} />
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={`mx-auto max-w-xl rounded-[2rem] border-4 p-6 text-center ${cyber ? "border-cyan-300 bg-slate-950 shadow-[0_7px_0_#164e63]" : "border-yellow-300 bg-yellow-50"}`}>
         <p className={`text-5xl font-black sm:text-6xl ${cyber ? "text-yellow-200" : "text-blue-950"}`} style={getNumberTextStyle(visual.a)}>
@@ -11496,6 +12077,29 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     setStarted(false);
     setStepIndex(0);
   }, [q.id]);
+
+  const isAdvancedAdditionPart1 =
+    q.id.startsWith("adv-add-1-") && solutionVisual.kind === "horizontalAdd";
+
+  if (isAdvancedAdditionPart1) {
+    return (
+      <div className="rounded-3xl border-2 border-cyan-500 bg-slate-950/80 p-4">
+        <h4 className="mb-4 text-lg font-black text-yellow-200">
+          {lang === "en" ? "How to solve it" : "Cara selesaikan"}
+        </h4>
+        <div className="rounded-[2rem] border-2 border-cyan-600 bg-gradient-to-br from-slate-950 to-cyan-950/80 p-3 shadow-[inset_0_0_28px_rgba(34,211,238,.12)] sm:p-5">
+          <AdditionBananaEquation
+            key={q.id}
+            lang={lang}
+            a={solutionVisual.a}
+            b={solutionVisual.b}
+            emoji={String.fromCodePoint(0x1f34c)}
+            cyber
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (startsWithCounting && !started) {
     return (

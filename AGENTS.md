@@ -27,6 +27,20 @@ npm start         # Start Express without nodemon
 
 Both servers must run simultaneously during development. The Vite dev server proxies `/api/*` requests to `http://localhost:3001`, so no CORS handling is needed in the frontend.
 
+## Response handoff
+
+Every final response must include this project handoff block:
+
+```powershell
+cd "C:\Users\wanha\OneDrive\Dyscalculia App"
+git add -A
+git commit -m "Update Chrys dyscalculia app"
+git push
+```
+
+- Live app: https://jaredtehyh-cell.github.io/chrys-adventures/
+- GitHub repository: https://github.com/jaredtehyh-cell/chrys-adventures
+
 ## Architecture
 
 ### Monorepo structure
