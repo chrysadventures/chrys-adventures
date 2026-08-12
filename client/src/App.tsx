@@ -3448,7 +3448,7 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
   );
 }
 
-function SequencingBananaBox({ count, visibleCount = count, label, activeIndex = null, hiddenIndex = null, compact = false, showCountLabels = false, countLabelThrough = visibleCount, showFuture = false }: {
+function SequencingBananaBox({ count, visibleCount = count, label, activeIndex = null, hiddenIndex = null, compact = false, showCountLabels = false, countLabelThrough = visibleCount, showFuture = false, interleavedRows = false }: {
   count: number;
   visibleCount?: number;
   label?: string;
@@ -3458,45 +3458,52 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
   showCountLabels?: boolean;
   countLabelThrough?: number;
   showFuture?: boolean;
+  interleavedRows?: boolean;
 }) {
   const topCount = count <= 4 ? count : Math.ceil(count / 2);
   const bottomCount = count <= 4 ? 0 : Math.floor(count / 2);
+  const renderBanana = (index: number) => {
+    const visible = index < visibleCount && index !== hiddenIndex;
+    return (
+      <span
+        key={index}
+        className={`relative grid shrink-0 place-items-center rounded-xl border transition-[opacity,transform,filter,background-color,border-color] duration-300 ${compact ? "h-6 w-6 sm:h-11 sm:w-11" : "h-9 w-9 sm:h-14 sm:w-14"} ${
+          visible
+            ? index === activeIndex
+              ? "border-yellow-200 bg-cyan-950/65 opacity-100 ring-4 ring-yellow-300/80"
+              : "border-cyan-400/70 bg-cyan-950/65 opacity-100"
+            : showFuture && index !== hiddenIndex
+              ? "scale-95 border-slate-700 bg-slate-900 opacity-25 grayscale"
+              : "scale-75 border-slate-800 bg-slate-900/30 opacity-0"
+        }`}
+        aria-hidden="true"
+      >
+        <SpriteIcon value={BANANA} className={compact ? "h-5 w-5 sm:h-9 sm:w-9" : "h-8 w-8 sm:h-11 sm:w-11"} />
+        {showCountLabels && visible && index < countLabelThrough && (
+          <span className="absolute -right-2 -top-3 grid h-7 min-w-7 place-items-center rounded-full border-2 border-cyan-100 bg-blue-600 px-1 text-sm font-black leading-none text-white shadow-md">{index + 1}</span>
+        )}
+      </span>
+    );
+  };
   const renderRow = (rowCount: number, offset: number) => (
     <div className="flex min-h-10 items-center justify-center gap-0.5 sm:min-h-14 sm:gap-2" data-row-count={rowCount}>
-      {Array.from({ length: rowCount }, (_, rowIndex) => {
-        const index = offset + rowIndex;
-        const visible = index < visibleCount && index !== hiddenIndex;
-        return (
-          <span
-            key={index}
-            className={`relative grid shrink-0 place-items-center rounded-xl border transition-[opacity,transform,filter,background-color,border-color] duration-300 ${compact ? "h-6 w-6 sm:h-11 sm:w-11" : "h-9 w-9 sm:h-12 sm:w-12"} ${
-              visible
-                ? index === activeIndex
-                  ? "scale-110 border-yellow-200 bg-yellow-300/25 drop-shadow-[0_0_12px_rgba(250,204,21,.75)]"
-                  : "border-cyan-400/70 bg-cyan-950/65 opacity-100"
-                : showFuture && index !== hiddenIndex
-                  ? "scale-95 border-slate-700 bg-slate-900 opacity-25 grayscale"
-                  : "scale-75 border-slate-800 bg-slate-900/30 opacity-0"
-            }`}
-            aria-hidden="true"
-          >
-            <SpriteIcon value={BANANA} className={compact ? "h-5 w-5 sm:h-9 sm:w-9" : "h-8 w-8 sm:h-11 sm:w-11"} />
-            {showCountLabels && visible && index < countLabelThrough && (
-              <span className="absolute -right-1 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black text-white">{index + 1}</span>
-            )}
-          </span>
-        );
-      })}
+      {Array.from({ length: rowCount }, (_, rowIndex) => renderBanana(offset + rowIndex))}
     </div>
   );
 
   return (
     <div className="flex h-40 w-full min-w-0 flex-col justify-center rounded-[1.65rem] border-2 border-cyan-400 bg-slate-950/90 px-3 py-3 shadow-[inset_0_0_24px_rgba(34,211,238,.12),0_5px_0_#164e63] sm:h-44 sm:px-5">
-      {label && <p className="mb-1 text-center text-sm font-black uppercase tracking-wide text-cyan-200">{label}</p>}
-      <div className="grid content-center gap-1">
-        {renderRow(topCount, 0)}
-        {bottomCount > 0 && renderRow(bottomCount, topCount)}
-      </div>
+      {label && <p className="mb-2 text-center text-base font-black uppercase tracking-wide text-cyan-100">{label}</p>}
+      {interleavedRows ? (
+        <div className="mx-auto grid w-fit grid-flow-col grid-rows-2 content-center gap-x-0.5 gap-y-3 sm:gap-x-2 sm:gap-y-4">
+          {Array.from({ length: count }, (_, index) => renderBanana(index))}
+        </div>
+      ) : (
+        <div className="grid content-center gap-1">
+          {renderRow(topCount, 0)}
+          {bottomCount > 0 && renderRow(bottomCount, topCount)}
+        </div>
+      )}
     </div>
   );
 }
@@ -3556,26 +3563,58 @@ function SequencingAnchorPhase({ lang, onComplete }: { lang: Lang; onComplete: (
 
 function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang: Lang; onComplete: () => void }) {
   const total = base + 1;
-  const [stage, setStage] = useState<"ready" | "adding" | "merging" | "counting" | "done">("ready");
+  const [stage, setStage] = useState<"ready" | "countingBase" | "baseCounted" | "plus" | "one" | "equals" | "counting" | "combining" | "done">("ready");
+  const [visibleBase, setVisibleBase] = useState(0);
   const [visibleTotal, setVisibleTotal] = useState(0);
   const runRef = useRef(0);
-  const busy = stage !== "ready" && stage !== "done";
+  const busy = stage === "countingBase" || (stage !== "ready" && stage !== "baseCounted" && stage !== "done");
+  const showOne = stage === "one" || stage === "equals" || stage === "counting" || stage === "combining" || stage === "done";
+  const showBottomGroups = stage === "counting" || stage === "combining";
+  const countedInBase = Math.min(visibleTotal, base);
+  const countedInOne = visibleTotal > base ? 1 : 0;
 
   useEffect(() => () => {
     runRef.current += 1;
     stopNumberAudio();
   }, []);
 
+  const countStartingGroup = async () => {
+    if (stage !== "ready") return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setVisibleBase(0);
+    setStage("countingBase");
+    if (!audioMuted) {
+      await speakCountingSequence(base, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) setVisibleBase(value);
+      });
+    } else {
+      for (let value = 1; value <= base; value += 1) {
+        if (runRef.current !== runId) return;
+        setVisibleBase(value);
+        await wait(COUNTING_STEP_MS);
+      }
+    }
+    if (runRef.current !== runId) return;
+    setStage("baseCounted");
+  };
+
   const addOne = async () => {
-    if (busy) return;
+    if (stage !== "baseCounted") return;
     const runId = runRef.current + 1;
     runRef.current = runId;
     setVisibleTotal(0);
-    setStage("adding");
-    await wait(350);
+    setStage("plus");
+    await speakMathCue("plus", lang);
+    await wait(650);
     if (runRef.current !== runId) return;
-    setStage("merging");
-    await wait(600);
+    setStage("one");
+    speakNumber(1, lang);
+    await wait(COUNTING_STEP_MS);
+    if (runRef.current !== runId) return;
+    setStage("equals");
+    await speakMathCue("equals", lang);
+    await wait(700);
     if (runRef.current !== runId) return;
     setStage("counting");
     if (!audioMuted) {
@@ -3590,26 +3629,83 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
       }
     }
     if (runRef.current !== runId) return;
+    await wait(650);
+    setStage("combining");
+    await wait(1100);
+    if (runRef.current !== runId) return;
     setStage("done");
     onComplete();
   };
 
   return (
     <section className="rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-4 sm:p-5">
-      <div className={`grid items-center gap-3 transition-all duration-500 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,.65fr)] ${stage === "merging" || stage === "counting" || stage === "done" ? "scale-95 opacity-45" : "opacity-100"}`}>
-        <SequencingBananaBox count={base} label={lang === "en" ? `${base} bananas` : `${base} pisang`} compact />
-        <span className="text-center text-5xl font-black text-yellow-300" aria-hidden="true">+</span>
-        <SequencingBananaBox count={1} visibleCount={stage === "ready" ? 0 : 1} label={lang === "en" ? "1 more" : "1 lagi"} compact />
+      <div className={`grid items-center gap-4 transition-all duration-500 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,.65fr)] ${showBottomGroups || stage === "done" ? "scale-[.98] opacity-55" : "opacity-100"}`}>
+        <SequencingBananaBox
+          count={base}
+          visibleCount={visibleBase}
+          activeIndex={stage === "countingBase" ? visibleBase - 1 : null}
+          showFuture
+          showCountLabels
+          countLabelThrough={visibleBase}
+          label={lang === "en" ? `${base} bananas` : `${base} pisang`}
+        />
+        <span className={`grid h-16 w-16 place-items-center justify-self-center rounded-2xl border-2 text-5xl font-black transition-all duration-300 ${stage === "plus" ? "scale-125 border-yellow-200 bg-yellow-300 text-slate-950 shadow-[0_0_24px_rgba(250,204,21,.75)]" : "border-cyan-700 bg-slate-950 text-yellow-300"}`} aria-label={lang === "en" ? "plus" : "tambah"}>+</span>
+        <div className={`rounded-[1.8rem] transition-all duration-300 ${stage === "one" ? "scale-110 ring-4 ring-yellow-300/70 shadow-[0_0_28px_rgba(250,204,21,.6)]" : ""}`}>
+          <SequencingBananaBox count={1} visibleCount={showOne ? 1 : 0} showFuture label={lang === "en" ? "1 more" : "1 lagi"} />
+        </div>
       </div>
 
-      <button type="button" onClick={() => void addOne()} disabled={busy || stage === "done"} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
-        {stage === "done" ? (lang === "en" ? `${total} bananas!` : `${total} pisang!`) : busy ? (lang === "en" ? "Putting them together..." : "Sedang menggabungkan...") : (lang === "en" ? "Add 1 banana" : "Tambah 1 pisang")}
+      <button type="button" onClick={() => stage === "ready" ? void countStartingGroup() : void addOne()} disabled={busy || stage === "done"} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
+        {stage === "done"
+          ? (lang === "en" ? `${total} bananas!` : `${total} pisang!`)
+          : stage === "ready"
+            ? (lang === "en" ? "Start counting" : "Mula mengira")
+            : stage === "countingBase"
+              ? (lang === "en" ? `Counting ${visibleBase}...` : `Mengira ${visibleBase}...`)
+              : stage === "baseCounted"
+                ? (lang === "en" ? "Add 1 banana" : "Tambah 1 pisang")
+          : stage === "plus"
+            ? (lang === "en" ? "Plus..." : "Tambah...")
+            : stage === "one"
+              ? (lang === "en" ? "One banana" : "Satu pisang")
+              : stage === "equals"
+                ? (lang === "en" ? "Equals to..." : "Sama dengan...")
+                : stage === "counting"
+                  ? (lang === "en" ? `Counting ${visibleTotal}...` : `Mengira ${visibleTotal}...`)
+                  : stage === "combining"
+                    ? (lang === "en" ? "Combining both groups..." : "Menggabungkan kedua-dua kumpulan...")
+                    : (lang === "en" ? "Add 1 banana" : "Tambah 1 pisang")}
       </button>
 
-      {stage !== "ready" && stage !== "adding" && (
+      {(stage === "equals" || showBottomGroups || stage === "done") && (
         <div className="comparison-result-reveal mt-5 border-t-2 border-cyan-400/40 pt-5">
-          <p className="mb-3 text-center text-5xl font-black text-cyan-200" aria-hidden="true">=</p>
-          <div className="mx-auto max-w-4xl"><SequencingBananaBox count={total} visibleCount={total} activeIndex={stage === "counting" ? visibleTotal - 1 : null} showCountLabels={stage === "counting" || stage === "done"} countLabelThrough={visibleTotal} label={lang === "en" ? "Combined box" : "Kotak gabungan"} /></div>
+          <p className={`mx-auto mb-4 grid h-16 w-20 place-items-center rounded-2xl border-2 text-5xl font-black transition-all ${stage === "equals" ? "scale-125 border-cyan-100 bg-cyan-300 text-slate-950 shadow-[0_0_24px_rgba(103,232,249,.7)]" : "border-cyan-400 bg-slate-950 text-cyan-200"}`} aria-label={lang === "en" ? "equals to" : "sama dengan"}>=</p>
+
+          {showBottomGroups && (
+            <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border-2 border-cyan-400 bg-slate-950/80 p-4 sm:p-5">
+              <p className="mb-3 text-center text-sm font-black uppercase tracking-wide text-cyan-200">
+                {stage === "counting"
+                  ? (lang === "en" ? `Count both groups from 1 to ${total}` : `Kira kedua-dua kumpulan dari 1 hingga ${total}`)
+                  : (lang === "en" ? "Now combine both groups" : "Sekarang gabungkan kedua-dua kumpulan")}
+              </p>
+              <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,.55fr)]">
+                <div className={`transition-all duration-1000 ${stage === "combining" ? "translate-x-[24%] scale-95 opacity-30" : "translate-x-0 opacity-100"}`}>
+                  <SequencingBananaBox count={base} visibleCount={countedInBase} activeIndex={stage === "counting" && visibleTotal <= base ? visibleTotal - 1 : null} showFuture showCountLabels countLabelThrough={countedInBase} label={lang === "en" ? `Group of ${base}` : `Kumpulan ${base}`} />
+                </div>
+                <span className={`text-center text-4xl font-black text-yellow-300 transition-opacity duration-500 ${stage === "combining" ? "opacity-0" : "opacity-100"}`} aria-hidden="true">+</span>
+                <div className={`transition-all duration-1000 ${stage === "combining" ? "-translate-x-[70%] scale-95 opacity-30" : "translate-x-0 opacity-100"}`}>
+                  <SequencingBananaBox count={1} visibleCount={countedInOne} activeIndex={stage === "counting" && visibleTotal === total ? 0 : null} showFuture showCountLabels countLabelThrough={countedInOne} label={lang === "en" ? "Group of 1" : "Kumpulan 1"} />
+                </div>
+              </div>
+              {stage === "combining" && <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.25),transparent_42%)]" aria-hidden="true" />}
+            </div>
+          )}
+
+          {stage === "done" && (
+            <div className="comparison-result-reveal mx-auto max-w-4xl">
+              <SequencingBananaBox count={total} visibleCount={total} label={lang === "en" ? "One combined group" : "Satu kumpulan gabungan"} />
+            </div>
+          )}
         </div>
       )}
 
@@ -3686,38 +3782,61 @@ function SequencingTapCounter({ direction, lang, onComplete }: { direction: "up"
   const target = direction === "up" ? 20 : 9;
   const [count, setCount] = useState(start);
   const [flying, setFlying] = useState(false);
+  const [coolingDown, setCoolingDown] = useState(false);
+  const tapLockRef = useRef(false);
   const done = count === target;
+  const busy = flying || coolingDown;
 
   const moveOne = async () => {
-    if (flying || done) return;
+    if (tapLockRef.current || done) return;
+    tapLockRef.current = true;
     setFlying(true);
-    await wait(300);
+    await wait(600);
     const next = direction === "up" ? count + 1 : count - 1;
     setCount(next);
     speakNumber(next, lang);
+    setCoolingDown(next !== target);
     setFlying(false);
-    if (next === target) onComplete();
+    if (next === target) {
+      tapLockRef.current = false;
+      onComplete();
+      return;
+    }
+    await wait(800);
+    setCoolingDown(false);
+    tapLockRef.current = false;
   };
 
   return (
     <section className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-5">
       <style>{`@keyframes sequenceFlyIn{0%{transform:translateY(-70px) scale(.7);opacity:0}100%{transform:translateY(70px) scale(1);opacity:1}}@keyframes sequenceFlyOut{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-110px) translateX(80px) scale(.65);opacity:0}}`}</style>
-      <button type="button" onClick={() => void moveOne()} disabled={flying || done} className="mx-auto flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-70">
-        {done
+      <button type="button" onClick={() => void moveOne()} disabled={busy || done} className="group relative mx-auto flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-100 bg-yellow-400 px-8 text-lg font-black text-slate-950 shadow-[0_7px_0_#a16207,0_0_0_0_rgba(250,204,21,0)] transition-all duration-200 hover:-translate-y-1 hover:scale-105 hover:bg-yellow-300 hover:shadow-[0_9px_0_#a16207,0_0_24px_rgba(250,204,21,.45)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 active:translate-y-1 active:scale-95 active:shadow-[0_2px_0_#a16207] disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:scale-100">
+        {flying
+          ? direction === "up"
+            ? (lang === "en" ? "Adding a banana..." : "Menambah pisang...")
+            : (lang === "en" ? "Removing a banana..." : "Membuang pisang...")
+          : coolingDown
+            ? (lang === "en" ? "Get ready for the next one..." : "Bersedia untuk yang seterusnya...")
+          : done
           ? direction === "up"
             ? (lang === "en" ? "You reached 20!" : "Kamu dah sampai 20!")
             : (lang === "en" ? "You reached 9!" : "Kamu dah sampai 9!")
           : direction === "up"
-            ? (lang === "en" ? "Add one more" : "Tambah satu lagi")
+            ? (lang === "en" ? "Add to 20 bananas!" : "Tambah hingga 20 pisang!")
             : (lang === "en" ? "Remove one" : "Buang satu")}
+        {!busy && !done && (
+          <span className="pointer-events-none absolute -right-4 -top-4 grid h-11 w-11 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-amber-700 shadow-md transition-transform duration-200 motion-safe:animate-bounce group-hover:rotate-[-10deg] group-hover:scale-110" aria-hidden="true">
+            <PointerIcon />
+          </span>
+        )}
       </button>
       <div className="relative mx-auto mt-5 max-w-4xl">
         {flying && (
-          <span className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2" style={{ animation: `${direction === "up" ? "sequenceFlyIn" : "sequenceFlyOut"} 300ms ease-in-out both` }} aria-hidden="true">
+          <span className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2" style={{ animation: `${direction === "up" ? "sequenceFlyIn" : "sequenceFlyOut"} 600ms ease-in-out both` }} aria-hidden="true">
             <SpriteIcon value={BANANA} className="h-14 w-14 drop-shadow-[0_0_12px_rgba(250,204,21,.8)]" />
           </span>
         )}
-        <SequencingBananaBox count={count} hiddenIndex={direction === "down" && flying ? count - 1 : null} compact />
+        <SequencingBananaBox count={count} hiddenIndex={direction === "down" && flying ? count - 1 : null} compact showCountLabels countLabelThrough={count} interleavedRows />
       </div>
       <div className="mx-auto mt-4 grid h-24 w-32 place-items-center rounded-3xl border-4 border-yellow-300 bg-slate-950 text-6xl font-black text-yellow-200 shadow-[0_6px_0_#a16207]" style={NUMBER_TEXT_STYLE} aria-live="polite">{count}</div>
     </section>
@@ -3852,7 +3971,7 @@ function AdvancedSequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIString
     { title: lang === "en" ? "Count from 1 to 9" : "Kira dari 1 hingga 9", text: lang === "en" ? "Start with the numbers you already know." : "Mulakan dengan nombor yang kamu sudah kenal." },
     { title: lang === "en" ? "From 9 to 10" : "Daripada 9 ke 10", text: lang === "en" ? "Add one banana to cross from a one-digit number to a two-digit number." : "Tambah satu pisang untuk bergerak daripada nombor satu digit kepada nombor dua digit." },
     { title: lang === "en" ? "From 10 to 11" : "Daripada 10 ke 11", text: lang === "en" ? "Continue from 10. The same +1 rule makes 11." : "Sambung daripada 10. Peraturan +1 yang sama menghasilkan 11." },
-    { title: lang === "en" ? "Keep adding one" : "Terus tambah satu", text: lang === "en" ? "Tap quickly to grow the sequence from 11 to 20." : "Tekan untuk membina urutan daripada 11 hingga 20." },
+    { title: lang === "en" ? "Keep adding one" : "Terus tambah satu", text: lang === "en" ? "Tap once for each new banana as you grow the sequence from 11 to 20." : "Tekan sekali untuk setiap pisang baharu semasa membina urutan daripada 11 hingga 20." },
     { title: lang === "en" ? "Counting up is ascending" : "Kira naik ialah menaik", text: lang === "en" ? "Reveal how every number from 0 to 20 is connected by +1." : "Lihat bagaimana setiap nombor daripada 0 hingga 20 disambung dengan +1." },
     { title: lang === "en" ? "Count down with −1" : "Kira turun dengan −1", text: lang === "en" ? "Remove one banana at a time, then reveal the descending number line." : "Buang satu pisang setiap kali, kemudian lihat garisan nombor menurun." },
   ];
