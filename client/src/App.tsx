@@ -2164,7 +2164,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
     <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
       <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-200 p-5 text-white shadow-[0_10px_0_#075985] sm:p-7 md:p-8">
         <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
-          <div className="mx-auto grid h-32 w-32 place-items-center rounded-[1.75rem] border-4 border-white/70 bg-white/90 shadow-[0_7px_0_rgba(8,47,73,.28)] md:h-36 md:w-36">
+          <div className="mx-auto grid h-32 w-32 place-items-center md:h-36 md:w-36">
             <img src={chrysHappy} alt="Chrys" className="h-28 w-28 object-contain drop-shadow-xl md:h-32 md:w-32" />
           </div>
           <div className="text-center md:text-left">
@@ -2266,7 +2266,7 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
         <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(34,211,238,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.22)_1px,transparent_1px)] [background-size:28px_28px]" aria-hidden="true" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(250,204,21,.2),transparent_34%)]" aria-hidden="true" />
         <div className="relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-          <span className="grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-cyan-200 bg-white/95 shadow-[0_6px_0_#0891b2]">
+          <span className="grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-cyan-300 bg-slate-950/70 shadow-[0_6px_0_#0891b2,0_0_22px_rgba(34,211,238,.18)]">
             <img src={chrysRunning} alt="Chrys ready for an expedition" className="h-24 w-24 object-contain" />
           </span>
           <div>
@@ -2587,7 +2587,7 @@ function TeenPlaceValueCard({ value, lang, connectDigits = false }: { value: num
 function CyberTeachingCard({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
   return (
     <div className="mb-5 grid items-center gap-4 rounded-3xl border-2 border-cyan-300 bg-gradient-to-r from-slate-950 to-cyan-950 p-4 shadow-[0_6px_0_#164e63] sm:grid-cols-[auto_1fr]">
-      <span className="mx-auto grid h-24 w-24 place-items-center rounded-2xl border-2 border-cyan-300 bg-white/95 shadow-[0_5px_0_#0891b2]"><img src={chrysThinking} alt="Chrys teaching" className="h-20 w-20 object-contain" /></span>
+      <span className="mx-auto grid h-24 w-24 place-items-center rounded-2xl border-2 border-cyan-300 bg-slate-950/70 shadow-[0_5px_0_#0891b2,0_0_18px_rgba(34,211,238,.16)]"><img src={chrysThinking} alt="Chrys teaching" className="h-20 w-20 object-contain drop-shadow-lg" /></span>
       <div><p className="text-sm font-black uppercase tracking-wide text-cyan-300">{eyebrow}</p><h3 className="text-2xl font-black text-yellow-200">{title}</h3><p className="mt-1 text-lg font-black text-cyan-50">{text}</p></div>
     </div>
   );
@@ -3310,14 +3310,14 @@ function TenBananaBundle({ lang, active = false, compact = false }: { lang: Lang
   return (
     <div className={`relative rounded-[1.75rem] border-4 p-3 transition ${
       active
-        ? "border-yellow-300 bg-yellow-100 shadow-[0_0_0_6px_rgba(250,204,21,.24)]"
-        : "border-emerald-400 bg-emerald-50"
+        ? "border-yellow-300 bg-amber-950/80 shadow-[0_0_0_6px_rgba(250,204,21,.24)]"
+        : "border-emerald-400 bg-emerald-950/75"
     }`}>
-      <div className="grid grid-cols-5 gap-1.5 rounded-2xl border-2 border-emerald-200 bg-white/95 p-2">
+      <div className="grid grid-cols-5 gap-1.5 rounded-2xl border-2 border-emerald-400/80 bg-slate-950/85 p-2">
         {Array.from({ length: 10 }, (_, index) => (
           <span
             key={index}
-            className={`grid place-items-center rounded-xl bg-amber-50 shadow-inner ${compact ? "h-10 w-10" : "h-12 w-12 sm:h-14 sm:w-14"}`}
+            className={`grid place-items-center rounded-xl border border-amber-300/40 bg-slate-900 shadow-inner ${compact ? "h-10 w-10" : "h-12 w-12 sm:h-14 sm:w-14"}`}
           >
             <SpriteIcon value={BANANA} className={compact ? "h-8 w-8" : "h-10 w-10 sm:h-11 sm:w-11"} />
           </span>
@@ -3974,8 +3974,8 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
           </div>
 
           <div className="mb-5 grid items-center gap-4 rounded-3xl border-2 border-cyan-300 bg-gradient-to-r from-slate-950/95 to-cyan-950/90 p-4 shadow-[0_6px_0_#164e63] sm:grid-cols-[auto_1fr]">
-            <span className="mx-auto grid h-28 w-28 place-items-center rounded-2xl border-2 border-cyan-300 bg-white/95 shadow-[0_5px_0_#0891b2]">
-              <img src={chrysThinking} alt="Chrys teaching" className="h-24 w-24 object-contain" />
+            <span className="mx-auto grid h-28 w-28 place-items-center rounded-2xl border-2 border-cyan-300 bg-slate-950/70 shadow-[0_5px_0_#0891b2,0_0_20px_rgba(34,211,238,.16)]">
+              <img src={chrysThinking} alt="Chrys teaching" className="h-24 w-24 object-contain drop-shadow-lg" />
             </span>
             <div>
               <p className="mb-1 text-sm font-black uppercase tracking-wide text-cyan-300">{lang === "en" ? "Mission briefing" : "Taklimat misi"}</p>
@@ -4087,7 +4087,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                     onClick={() => goToNumber(number - 1)}
                     className="rounded-xl border-2 border-cyan-300 bg-slate-900 px-4 py-2 text-sm font-black text-cyan-100 shadow-[0_4px_0_#164e63] active:translate-y-1 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500 disabled:shadow-none"
                   >
-                    {skipPreviousNumberLabel(lang)}
+                    {goBackPreviousNumberLabel(lang)}
                   </button>
                   <button
                     type="button"
@@ -4222,8 +4222,8 @@ function skipNextNumberLabel(lang: Lang) {
   return lang === "en" ? "Skip to next number" : "Terus ke nombor seterusnya";
 }
 
-function skipPreviousNumberLabel(lang: Lang) {
-  return lang === "en" ? "Skip to previous number" : "Terus ke nombor sebelumnya";
+function goBackPreviousNumberLabel(lang: Lang) {
+  return lang === "en" ? "Go back to previous number" : "Kembali ke nombor sebelumnya";
 }
 
 function backToLearningLabel(lang: Lang) {
@@ -4455,7 +4455,7 @@ function RecognizeNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings;
               onClick={skipPreviousNumber}
               className="rounded-xl border-2 border-blue-200 bg-white/80 px-4 py-2 text-sm font-black text-blue-700 shadow-[0_3px_0_rgba(30,64,175,.14)] active:translate-y-1 disabled:border-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
-              {skipPreviousNumberLabel(lang)}
+              {goBackPreviousNumberLabel(lang)}
             </button>
             <button
               type="button"
@@ -9307,6 +9307,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
   const isTeenValueCountQuestion = qn.id.startsWith("adv-teen-value-count-");
+  const showsTeenCountingSolution = isTeenValueCountQuestion && (isCorrect || showSolution);
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
   const hidesQuestionVisual = qn.visual.kind === "horizontalAdd" && qn.visual.display === "none";
   const isAnimatedCupQuestion = qn.id === "rt-sub-cups-5-5";
@@ -9611,7 +9612,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                   </button>
                 </div>
               )}
-              {!isCorrect && showSolution && (
+              {((!isCorrect && showSolution && !isTeenValueCountQuestion) || showsTeenCountingSolution) && (
                 <WorkedMethod
                   q={qn}
                   lang={lang}
@@ -11640,8 +11641,22 @@ function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings;
             <button onClick={clear} className="rounded-2xl border-2 border-cyan-300 bg-slate-900 px-4 py-3 font-black text-cyan-50 shadow-[0_4px_0_#164e63] active:translate-y-1 active:shadow-none">
               {lang === "en" ? "Clear all" : "Padamkan semua"}
             </button>
-            <button onClick={confirmed ? onComplete : confirmTrace} className={`rounded-2xl border-2 px-4 py-3 font-black text-white shadow-[0_4px_0_#047857] active:translate-y-1 active:shadow-none ${confirmed ? "border-emerald-300 bg-emerald-600" : "border-emerald-300 bg-emerald-500"}`}>
-              {confirmed ? (lang === "en" ? "Done!" : "Selesai!") : t.traced}
+            <button
+              onClick={confirmed ? onComplete : confirmTrace}
+              className={`group relative isolate min-h-14 overflow-visible rounded-2xl border-2 px-4 py-3 font-black text-white transition-[transform,filter,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-yellow-300 hover:-translate-y-1 hover:brightness-110 active:translate-y-1 active:shadow-none ${
+                confirmed
+                  ? "border-yellow-200 bg-gradient-to-r from-emerald-600 to-cyan-600 shadow-[0_5px_0_#0e7490]"
+                  : "border-emerald-200 bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_6px_0_#047857,0_0_20px_rgba(52,211,153,.34)]"
+              }`}
+            >
+              {!confirmed && (
+                <span className="pointer-events-none absolute inset-0 z-0 rounded-2xl border-2 border-emerald-200/70 opacity-35 motion-safe:animate-ping" aria-hidden="true" />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <Check className={`h-6 w-6 transition-transform duration-200 ${confirmed ? "scale-110" : "group-hover:rotate-[-8deg] group-hover:scale-110"}`} strokeWidth={4} aria-hidden="true" />
+                <span>{confirmed ? (lang === "en" ? "Done!" : "Selesai!") : t.traced}</span>
+                {!confirmed && <Sparkles className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-125" aria-hidden="true" />}
+              </span>
             </button>
           </div>
         </aside>
@@ -12111,7 +12126,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     solutionVisual.kind === "groupCombine" ||
     solutionVisual.kind === "compareGroups";
   const startPrompt = lang === "en" ? "Ready to count?" : "Sedia untuk mengira?";
-  const startLabel = lang === "en" ? "Tap to start counting" : "Tekan untuk mula mengira";
+  const startLabel = lang === "en" ? "Start counting" : "Mula mengira";
 
   useEffect(() => {
     setStarted(false);

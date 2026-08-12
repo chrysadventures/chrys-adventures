@@ -73,6 +73,11 @@ Place PNG/SVG files in `client/public/assets/images/`. Pass the path as a `src` 
 ```
 Without `src`, it renders the 🐒 emoji placeholder.
 
+### Advanced Adventure visual rule
+- Advanced Adventure uses the dark cyber palette. Do not introduce `bg-white`, white image cards, or other white/light panel backgrounds in advanced menus, lessons, practice, feedback, or completion screens.
+- Chrys and Alyse assets ending in `_nobg` have transparent backgrounds. Keep them transparent and place them directly on dark slate/cyan/emerald cyber surfaces; never add a white plate behind them.
+- When reusing a shared component in Advanced Adventure, provide a cyber variant so its background, borders, text, and interaction states remain consistent with the dark theme.
+
 ### Backend (`server/`)
 - `server.js` — entry point, starts the HTTP server
 - `app.js` — Express app setup (CORS, JSON middleware, routes)
