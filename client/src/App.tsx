@@ -2710,6 +2710,7 @@ function AdvancedComparePile({
 }
 
 function ComparisonSymbolIntroduction({ lang, symbol }: { lang: Lang; symbol: ">" | "<" }) {
+  const [showSides, setShowSides] = useState(false);
   const isGreater = symbol === ">";
   const openX = isGreater ? 270 : 370;
   const pointX = isGreater ? 370 : 270;
@@ -2753,31 +2754,43 @@ function ComparisonSymbolIntroduction({ lang, symbol }: { lang: Lang; symbol: ">
             {symbol}
           </text>
 
-          <ellipse cx={openX} cy="160" rx="48" ry="88" fill="rgba(16,185,129,.08)" stroke="#6ee7b7" strokeWidth="6" />
-          <circle cx={pointX} cy="160" r="42" fill="rgba(6,182,212,.1)" stroke="#67e8f9" strokeWidth="6" />
+          {showSides && (
+            <g className="comparison-result-reveal">
+              <ellipse cx={openX} cy="160" rx="38" ry="72" fill="rgba(16,185,129,.04)" stroke="#6ee7b7" strokeWidth="3" />
+              <circle cx={pointX} cy="160" r="30" fill="rgba(6,182,212,.05)" stroke="#67e8f9" strokeWidth="3" />
 
-          <rect x={openLabelX} y="12" width="150" height="48" rx="20" fill="#064e3b" stroke="#6ee7b7" strokeWidth="3" />
-          <text x={openLabelX + 75} y="43" textAnchor="middle" fill="#d1fae5" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
-            {lang === "en" ? "OPEN SIDE" : "BAHAGIAN TERBUKA"}
-          </text>
-          <line x1={openLabelX + 75} y1="62" x2={openX} y2="90" stroke="#6ee7b7" strokeWidth="5" strokeLinecap="round" markerEnd={`url(#open-arrow-${isGreater ? "greater" : "less"})`} />
+              <rect x={openLabelX} y="12" width="150" height="48" rx="20" fill="#064e3b" stroke="#6ee7b7" strokeWidth="3" />
+              <text x={openLabelX + 75} y="43" textAnchor="middle" fill="#d1fae5" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
+                {lang === "en" ? "OPEN SIDE" : "BAHAGIAN TERBUKA"}
+              </text>
+              <line x1={openLabelX + 75} y1="62" x2={openX} y2="100" stroke="#6ee7b7" strokeWidth="3" strokeLinecap="round" markerEnd={`url(#open-arrow-${isGreater ? "greater" : "less"})`} />
 
-          <rect x={pointLabelX} y="260" width="150" height="48" rx="20" fill="#164e63" stroke="#67e8f9" strokeWidth="3" />
-          <text x={pointLabelX + 75} y="291" textAnchor="middle" fill="#cffafe" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
-            {lang === "en" ? "POINT SIDE" : "BAHAGIAN RUNCING"}
-          </text>
-          <line x1={pointLabelX + 75} y1="258" x2={pointX} y2="202" stroke="#67e8f9" strokeWidth="5" strokeLinecap="round" markerEnd={`url(#point-arrow-${isGreater ? "greater" : "less"})`} />
+              <rect x={pointLabelX} y="260" width="150" height="48" rx="20" fill="#164e63" stroke="#67e8f9" strokeWidth="3" />
+              <text x={pointLabelX + 75} y="291" textAnchor="middle" fill="#cffafe" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
+                {lang === "en" ? "POINT SIDE" : "BAHAGIAN RUNCING"}
+              </text>
+              <line x1={pointLabelX + 75} y1="258" x2={pointX} y2="190" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" markerEnd={`url(#point-arrow-${isGreater ? "greater" : "less"})`} />
+            </g>
+          )}
         </svg>
       </div>
 
-      <div className="mx-auto mt-5 grid max-w-4xl gap-3 sm:grid-cols-2">
-        <p className="rounded-2xl border-2 border-emerald-300 bg-emerald-950/80 px-4 py-3 font-black text-emerald-100">
-          {lang === "en" ? "The OPEN side faces the bigger number." : "Bahagian TERBUKA menghadap nombor yang lebih besar."}
-        </p>
-        <p className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 px-4 py-3 font-black text-cyan-100">
-          {lang === "en" ? "The POINT side faces the smaller number." : "Bahagian RUNCING menghadap nombor yang lebih kecil."}
-        </p>
-      </div>
+      <button type="button" onClick={() => setShowSides((current) => !current)} aria-expanded={showSides} className="mx-auto mt-5 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 hover:bg-yellow-300 active:translate-y-1 active:shadow-[0_2px_0_#a16207]">
+        {showSides
+          ? (lang === "en" ? "Hide the two sides" : "Sembunyikan dua bahagian")
+          : (lang === "en" ? "Show the open and point sides" : "Tunjukkan bahagian terbuka dan runcing")}
+      </button>
+
+      {showSides && (
+        <div className="comparison-result-reveal mx-auto mt-5 grid max-w-4xl gap-3 sm:grid-cols-2">
+          <p className="rounded-2xl border-2 border-emerald-300 bg-emerald-950/80 px-4 py-3 font-black text-emerald-100">
+            {lang === "en" ? "The OPEN side faces the bigger number." : "Bahagian TERBUKA menghadap nombor yang lebih besar."}
+          </p>
+          <p className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 px-4 py-3 font-black text-cyan-100">
+            {lang === "en" ? "The POINT side faces the smaller number." : "Bahagian RUNCING menghadap nombor yang lebih kecil."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -2820,6 +2833,8 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
   const countingRunRef = useRef(0);
   const item = ADVANCED_COMPARE_OBJECTS[object];
   const bothPilesCounted = visibleCounts.left === a && visibleCounts.right === b;
+  const leftObjectName = lang === "en" ? (a === 1 ? item.en[0] : item.en[1]) : item.ms;
+  const rightObjectName = lang === "en" ? (b === 1 ? item.en[0] : item.en[1]) : item.ms;
 
   useEffect(() => {
     countingRunRef.current += 1;
@@ -2923,13 +2938,17 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       {stagedReveal && revealStage >= 1 && (
         <p className="comparison-result-reveal mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100 sm:text-2xl" aria-live="polite">
           {lang === "en" ? symbol === "<" ? (
-            <>{a} apples is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LESS</span> than {b} apples.</>
+            <>{a} {leftObjectName} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LESS</span> than {b} {rightObjectName}.</>
+          ) : symbol === "=" ? (
+            <>{a} {leftObjectName} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">EQUAL TO</span> {b} {rightObjectName}.</>
           ) : (
-            <>{a} apples is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">MORE</span> than {b} apples.</>
+            <>{a} {leftObjectName} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">MORE</span> than {b} {rightObjectName}.</>
           ) : symbol === "<" ? (
-            <>{a} epal adalah <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LEBIH SEDIKIT</span> daripada {b} epal.</>
+            <>{a} {leftObjectName} adalah <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LEBIH SEDIKIT</span> daripada {b} {rightObjectName}.</>
+          ) : symbol === "=" ? (
+            <>{a} {leftObjectName} adalah <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">SAMA DENGAN</span> {b} {rightObjectName}.</>
           ) : (
-            <>{a} epal adalah <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LEBIH BANYAK</span> daripada {b} epal.</>
+            <>{a} {leftObjectName} adalah <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LEBIH BANYAK</span> daripada {b} {rightObjectName}.</>
           )}
         </p>
       )}
@@ -3272,15 +3291,15 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Greater-than example 1" : "Contoh lebih besar 1",
       text: lang === "en" ? "The wide side of > faces the bigger number." : "Bahagian luas > menghadap nombor yang lebih besar.",
-      visual: <AdvancedCompareVisual a={7} b={4} object="cookie" lang={lang} symbol=">" />,
-      note: lang === "en" ? "7 cookies are greater than 4 cookies. 7 > 4." : "7 biskut lebih besar daripada 4 biskut. 7 > 4.",
+      visual: <AdvancedCompareVisual a={7} b={4} object="cookie" lang={lang} symbol=">" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Greater-than example 2" : "Contoh lebih besar 2",
       text: lang === "en" ? "Count both piles. The larger amount gets the open side of >." : "Kira kedua-dua kumpulan. Jumlah lebih besar mendapat bahagian terbuka >.",
-      visual: <AdvancedCompareVisual a={12} b={9} object="coconut" lang={lang} symbol=">" />,
-      note: lang === "en" ? "12 coconuts are greater than 9 coconuts. 12 > 9." : "12 kelapa lebih besar daripada 9 kelapa. 12 > 9.",
+      visual: <AdvancedCompareVisual a={12} b={9} object="coconut" lang={lang} symbol=">" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
@@ -3300,36 +3319,36 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Less-than example 1" : "Contoh lebih kecil 1",
       text: lang === "en" ? "The small point of < faces the smaller number." : "Bahagian kecil < menghadap nombor yang lebih kecil.",
-      visual: <AdvancedCompareVisual a={4} b={9} object="cookie" lang={lang} symbol="<" />,
-      note: lang === "en" ? "4 cookies are less than 9 cookies. 4 < 9." : "4 biskut lebih kecil daripada 9 biskut. 4 < 9.",
+      visual: <AdvancedCompareVisual a={4} b={9} object="cookie" lang={lang} symbol="<" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Less-than example 2" : "Contoh lebih kecil 2",
       text: lang === "en" ? "Count both piles. The smaller amount gets the pointed side of <." : "Kira kedua-dua kumpulan. Jumlah lebih kecil mendapat bahagian runcing <.",
-      visual: <AdvancedCompareVisual a={11} b={15} object="mushroom" lang={lang} symbol="<" />,
-      note: lang === "en" ? "11 mushrooms are less than 15 mushrooms. 11 < 15." : "11 cendawan lebih kecil daripada 15 cendawan. 11 < 15.",
+      visual: <AdvancedCompareVisual a={11} b={15} object="mushroom" lang={lang} symbol="<" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Equals: =" : "Sama dengan: =",
       text: lang === "en" ? "Use = when both sides have the same amount." : "Guna = apabila dua-dua belah ada jumlah yang sama.",
-      visual: <AdvancedCompareVisual a={5} b={5} object="apple" lang={lang} symbol="=" />,
-      note: lang === "en" ? "5 apples equal 5 apples. 5 = 5." : "5 epal sama dengan 5 epal. 5 = 5.",
+      visual: <AdvancedCompareVisual a={5} b={5} object="apple" lang={lang} symbol="=" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Equals example 1" : "Contoh sama 1",
       text: lang === "en" ? "When both amounts match, use =." : "Apabila dua-dua jumlah sama, guna =.",
-      visual: <AdvancedCompareVisual a={4} b={4} object="cookie" lang={lang} symbol="=" />,
-      note: lang === "en" ? "4 cookies equal 4 cookies. 4 = 4." : "4 biskut sama dengan 4 biskut. 4 = 4.",
+      visual: <AdvancedCompareVisual a={4} b={4} object="cookie" lang={lang} symbol="=" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Equals example 2" : "Contoh sama 2",
       text: lang === "en" ? "Count both piles. When they match, use =." : "Kira kedua-dua kumpulan. Apabila jumlah sama, guna =.",
-      visual: <AdvancedCompareVisual a={10} b={10} object="fish" lang={lang} symbol="=" />,
-      note: lang === "en" ? "10 fish equal 10 fish. 10 = 10." : "10 ikan sama dengan 10 ikan. 10 = 10.",
+      visual: <AdvancedCompareVisual a={10} b={10} object="fish" lang={lang} symbol="=" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
@@ -3364,7 +3383,7 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
           <div className="mb-5 grid grid-cols-3 gap-2 md:grid-cols-8 xl:grid-cols-[repeat(15,minmax(0,1fr))]">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
           <CyberTeachingCard eyebrow={slide.eyebrow} title={slide.title} text={slide.text} />
           {slide.visual}
-          {slide.note && <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>}
+          {slide.note && (phase < 12 || completedStories.has(phase)) && <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>}
           <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={slides.length - 1} canNext={phase < 12 || completedStories.has(phase)} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === slides.length - 1 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
         </LessonShell>
       </div>
