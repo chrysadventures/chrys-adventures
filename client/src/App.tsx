@@ -144,7 +144,9 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
 const getNumberTextStyle = (_value: number | string): React.CSSProperties => NUMBER_TEXT_STYLE;
 const SPEECH_RATE = 0.68;
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
+const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
 const COUNTING_STEP_MS = 1400;
+const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
 const ADDITION_BANANA_STAGGER_MS = ADDITION_BANANA_TRAVEL_MS + ADDITION_BANANA_COUNT_PAUSE_MS;
@@ -3448,7 +3450,7 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
   );
 }
 
-function SequencingBananaBox({ count, visibleCount = count, label, activeIndex = null, hiddenIndex = null, compact = false, showCountLabels = false, countLabelThrough = visibleCount, showFuture = false, interleavedRows = false }: {
+function SequencingBananaBox({ count, visibleCount = count, label, activeIndex = null, hiddenIndex = null, compact = false, showCountLabels = false, countLabelThrough = visibleCount, countLabelStart = 1, showFuture = false, interleavedRows = false, enteringIndex = null }: {
   count: number;
   visibleCount?: number;
   label?: string;
@@ -3457,8 +3459,10 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
   compact?: boolean;
   showCountLabels?: boolean;
   countLabelThrough?: number;
+  countLabelStart?: number;
   showFuture?: boolean;
   interleavedRows?: boolean;
+  enteringIndex?: number | null;
 }) {
   const topCount = count <= 4 ? count : Math.ceil(count / 2);
   const bottomCount = count <= 4 ? 0 : Math.floor(count / 2);
@@ -3467,7 +3471,7 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
     return (
       <span
         key={index}
-        className={`relative grid shrink-0 place-items-center rounded-xl border transition-[opacity,transform,filter,background-color,border-color] duration-300 ${compact ? "h-6 w-6 sm:h-11 sm:w-11" : "h-9 w-9 sm:h-14 sm:w-14"} ${
+        className={`relative grid shrink-0 place-items-center rounded-xl border transition-[opacity,transform,filter,background-color,border-color] duration-300 ${enteringIndex === index ? "sequence-banana-join" : ""} ${compact ? "h-6 w-6 sm:h-11 sm:w-11" : "h-9 w-9 sm:h-14 sm:w-14"} ${
           visible
             ? index === activeIndex
               ? "border-yellow-200 bg-cyan-950/65 opacity-100 ring-4 ring-yellow-300/80"
@@ -3480,7 +3484,7 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
       >
         <SpriteIcon value={BANANA} className={compact ? "h-5 w-5 sm:h-9 sm:w-9" : "h-8 w-8 sm:h-11 sm:w-11"} />
         {showCountLabels && visible && index < countLabelThrough && (
-          <span className="absolute -right-2 -top-3 grid h-7 min-w-7 place-items-center rounded-full border-2 border-cyan-100 bg-blue-600 px-1 text-sm font-black leading-none text-white shadow-md">{index + 1}</span>
+          <span className="absolute -right-2 -top-3 grid h-7 min-w-7 place-items-center rounded-full border-2 border-cyan-100 bg-blue-600 px-1 text-sm font-black leading-none text-white shadow-md">{countLabelStart + index}</span>
         )}
       </span>
     );
@@ -3546,7 +3550,7 @@ function SequencingAnchorPhase({ lang, onComplete }: { lang: Lang; onComplete: (
   return (
     <section className="rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-5">
       <div className="mx-auto max-w-3xl"><SequencingBananaBox count={9} visibleCount={visibleCount} activeIndex={running ? visibleCount - 1 : null} showCountLabels countLabelThrough={visibleCount} showFuture /></div>
-      <p className="mt-4 text-center text-xl font-black text-cyan-50">
+      <p className="mt-5 text-center text-2xl font-black leading-relaxed text-cyan-50 sm:text-3xl">
         {lang === "en" ? "Count the bananas: 1, 2, 3, 4, 5, 6, 7, 8, 9." : "Kira pisang: 1, 2, 3, 4, 5, 6, 7, 8, 9."}
       </p>
       <button type="button" onClick={() => void startCount()} disabled={running} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
@@ -3569,7 +3573,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
   const runRef = useRef(0);
   const busy = stage === "countingBase" || (stage !== "ready" && stage !== "baseCounted" && stage !== "done");
   const showOne = stage === "one" || stage === "equals" || stage === "counting" || stage === "combining" || stage === "done";
-  const showBottomGroups = stage === "counting" || stage === "combining";
+  const showBottomGroups = stage === "counting";
   const countedInBase = Math.min(visibleTotal, base);
   const countedInOne = visibleTotal > base ? 1 : 0;
 
@@ -3606,32 +3610,32 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
     setVisibleTotal(0);
     setStage("plus");
     await speakMathCue("plus", lang);
-    await wait(650);
+    await wait(300);
     if (runRef.current !== runId) return;
     setStage("one");
     speakNumber(1, lang);
-    await wait(COUNTING_STEP_MS);
+    await wait(950);
     if (runRef.current !== runId) return;
     setStage("equals");
     await speakMathCue("equals", lang);
-    await wait(700);
+    await wait(350);
     if (runRef.current !== runId) return;
     setStage("counting");
     if (!audioMuted) {
-      await speakCountingSequence(total, lang, COUNTING_STEP_MS, (value) => {
+      await speakCountingSequence(total, lang, SEQUENCING_PLUS_ONE_COUNTING_STEP_MS, (value) => {
         if (runRef.current === runId) setVisibleTotal(value);
       });
     } else {
       for (let value = 1; value <= total; value += 1) {
         if (runRef.current !== runId) return;
         setVisibleTotal(value);
-        await wait(COUNTING_STEP_MS);
+        await wait(SEQUENCING_PLUS_ONE_COUNTING_STEP_MS);
       }
     }
     if (runRef.current !== runId) return;
-    await wait(650);
+    await wait(400);
     setStage("combining");
-    await wait(1100);
+    await wait(850);
     if (runRef.current !== runId) return;
     setStage("done");
     onComplete();
@@ -3639,7 +3643,8 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
 
   return (
     <section className="rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-4 sm:p-5">
-      <div className={`grid items-center gap-4 transition-all duration-500 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,.65fr)] ${showBottomGroups || stage === "done" ? "scale-[.98] opacity-55" : "opacity-100"}`}>
+      <style>{`@keyframes sequenceBananaJoin{0%{transform:translateX(180px) scale(.82);opacity:0}65%{transform:translateX(-8px) scale(1.08);opacity:1}100%{transform:translateX(0) scale(1);opacity:1}}.sequence-banana-join{animation:sequenceBananaJoin 850ms cubic-bezier(.2,.8,.25,1) both}@media (prefers-reduced-motion:reduce){.sequence-banana-join{animation:none}}`}</style>
+      <div className={`grid items-center gap-4 transition-all duration-500 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,.65fr)] ${showBottomGroups || stage === "combining" || stage === "done" ? "scale-[.98] opacity-55" : "opacity-100"}`}>
         <SequencingBananaBox
           count={base}
           visibleCount={visibleBase}
@@ -3677,7 +3682,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
                     : (lang === "en" ? "Add 1 banana" : "Tambah 1 pisang")}
       </button>
 
-      {(stage === "equals" || showBottomGroups || stage === "done") && (
+      {(stage === "equals" || showBottomGroups || stage === "combining" || stage === "done") && (
         <div className="comparison-result-reveal mt-5 border-t-2 border-cyan-400/40 pt-5">
           <p className={`mx-auto mb-4 grid h-16 w-20 place-items-center rounded-2xl border-2 text-5xl font-black transition-all ${stage === "equals" ? "scale-125 border-cyan-100 bg-cyan-300 text-slate-950 shadow-[0_0_24px_rgba(103,232,249,.7)]" : "border-cyan-400 bg-slate-950 text-cyan-200"}`} aria-label={lang === "en" ? "equals to" : "sama dengan"}>=</p>
 
@@ -3689,21 +3694,25 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
                   : (lang === "en" ? "Now combine both groups" : "Sekarang gabungkan kedua-dua kumpulan")}
               </p>
               <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,.55fr)]">
-                <div className={`transition-all duration-1000 ${stage === "combining" ? "translate-x-[24%] scale-95 opacity-30" : "translate-x-0 opacity-100"}`}>
+                <div>
                   <SequencingBananaBox count={base} visibleCount={countedInBase} activeIndex={stage === "counting" && visibleTotal <= base ? visibleTotal - 1 : null} showFuture showCountLabels countLabelThrough={countedInBase} label={lang === "en" ? `Group of ${base}` : `Kumpulan ${base}`} />
                 </div>
-                <span className={`text-center text-4xl font-black text-yellow-300 transition-opacity duration-500 ${stage === "combining" ? "opacity-0" : "opacity-100"}`} aria-hidden="true">+</span>
-                <div className={`transition-all duration-1000 ${stage === "combining" ? "-translate-x-[70%] scale-95 opacity-30" : "translate-x-0 opacity-100"}`}>
-                  <SequencingBananaBox count={1} visibleCount={countedInOne} activeIndex={stage === "counting" && visibleTotal === total ? 0 : null} showFuture showCountLabels countLabelThrough={countedInOne} label={lang === "en" ? "Group of 1" : "Kumpulan 1"} />
+                <span className="text-center text-4xl font-black text-yellow-300" aria-hidden="true">+</span>
+                <div>
+                  <SequencingBananaBox count={1} visibleCount={countedInOne} activeIndex={stage === "counting" && visibleTotal === total ? 0 : null} showFuture showCountLabels countLabelThrough={countedInOne} countLabelStart={base + 1} label={lang === "en" ? "Group of 1" : "Kumpulan 1"} />
                 </div>
               </div>
-              {stage === "combining" && <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.25),transparent_42%)]" aria-hidden="true" />}
             </div>
           )}
 
-          {stage === "done" && (
+          {(stage === "combining" || stage === "done") && (
             <div className="comparison-result-reveal mx-auto max-w-4xl">
-              <SequencingBananaBox count={total} visibleCount={total} label={lang === "en" ? "One combined group" : "Satu kumpulan gabungan"} />
+              <p className="mb-3 text-center text-base font-black uppercase tracking-wide text-cyan-100">
+                {stage === "combining"
+                  ? (lang === "en" ? `The last banana joins to make ${total}` : `Pisang terakhir bergabung untuk menjadi ${total}`)
+                  : (lang === "en" ? `One group of ${total}` : `Satu kumpulan ${total}`)}
+              </p>
+              <SequencingBananaBox count={total} visibleCount={total} showCountLabels countLabelThrough={total} enteringIndex={stage === "combining" ? total - 1 : null} label={lang === "en" ? `${total} bananas together` : `${total} pisang bersama`} />
             </div>
           )}
         </div>
@@ -3714,7 +3723,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
           <p className="text-5xl font-black text-yellow-200" style={NUMBER_TEXT_STYLE}>{base} + 1 = {total}</p>
           <p className="mx-auto mt-4 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/85 px-5 py-4 text-lg font-black text-emerald-100">
             {base === 9
-              ? (lang === "en" ? "9 has one digit. 10 has two digits. This is where numbers get bigger." : "9 satu digit. 10 dua digit. Di sini nombor mula jadi besar.")
+              ? (lang === "en" ? "9 is a one-digit number. After +1, the total value is 10, which is a two-digit number." : "9 ialah nombor satu digit. Selepas +1, jumlah nilainya ialah 10, iaitu nombor dua digit.")
               : (lang === "en" ? "Same rule: one more each time." : "Peraturan sama: satu lebih setiap kali.")}
           </p>
         </div>
@@ -13370,7 +13379,7 @@ async function speakMathCue(cue: MathCue, lang: Lang) {
       timeoutId = window.setTimeout(finish, 5000);
       activeNumberAudio = audio;
       audio.preload = "auto";
-      audio.playbackRate = NUMBER_AUDIO_PLAYBACK_RATE;
+      audio.playbackRate = MATH_CUE_AUDIO_PLAYBACK_RATE;
       audio.preservesPitch = true;
       audio.onended = finish;
       audio.onerror = finish;
