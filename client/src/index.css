@@ -399,10 +399,36 @@
     0%, 100% { transform: scale(0.96); }
     50%      { transform: scale(1.06); }
   }
+  @keyframes comparisonResultReveal {
+    0%   { transform: translateY(18px) scale(0.92); opacity: 0; }
+    70%  { transform: translateY(-3px) scale(1.03); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes comparisonSymbolPop {
+    0%   { transform: scale(0.05) rotate(-18deg); opacity: 0; filter: brightness(2.4); }
+    48%  { transform: scale(1.55) rotate(8deg); opacity: 1; filter: brightness(1.7); }
+    72%  { transform: scale(0.86) rotate(-4deg); filter: brightness(1.15); }
+    88%  { transform: scale(1.12) rotate(2deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
+  }
+  @keyframes comparisonSymbolRing {
+    0%   { transform: scale(0.45); opacity: 1; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
 
   .lesson-next-hint {
     transform-origin: center;
     animation: lessonNextHintPulse 1.25s ease-in-out infinite;
+  }
+  .comparison-result-reveal {
+    animation: comparisonResultReveal 0.62s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .comparison-symbol-pop {
+    transform-origin: center;
+    animation: comparisonSymbolPop 0.95s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .comparison-symbol-ring {
+    animation: comparisonSymbolRing 1.05s ease-out 0.18s both;
   }
   @keyframes blockBounce {
     0%   { transform: translateY(0) scale(1, 1); }
@@ -639,6 +665,9 @@
   .star-burst,
   .slide-in-up,
   .trace-model-zoom,
+  .comparison-result-reveal,
+  .comparison-symbol-pop,
+  .comparison-symbol-ring,
   .combo-anim,
   .level-clear,
   .shake-x,

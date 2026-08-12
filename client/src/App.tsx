@@ -2679,32 +2679,105 @@ function AdvancedComparePile({
               index === visibleCount - 1 && isCounting ? "bg-yellow-500" : "bg-blue-600"
             }`}>{index + 1}</span>
           )}
-          {item.emoji}
+          {object === "coconut" ? (
+            <img
+              src={`${SPRITE_BASE}coconut.png`}
+              alt=""
+              className="h-11 w-11 object-contain drop-shadow-md sm:h-14 sm:w-14"
+            />
+          ) : item.emoji}
         </span>
       ))}
     </div>
   );
 }
 
-function AdvancedCompareVisual({ a, b, object, lang, symbol }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang; symbol?: ">" | "<" | "=" }) {
+function GreaterThanSymbolTeaching({ lang }: { lang: Lang }) {
+  return (
+    <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950/80 to-emerald-950/70 p-5 text-center shadow-[inset_0_0_28px_rgba(34,211,238,.12)] sm:p-7">
+      <p className="text-xl font-black text-cyan-50">
+        {lang === "en" ? "The symbol > means greater than." : "Simbol > bermaksud lebih besar daripada."}
+      </p>
+      <div className="mx-auto mt-6 grid max-w-3xl grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-950/80 p-4 shadow-[0_6px_0_#065f46]">
+          <p className="text-6xl font-black text-yellow-200 sm:text-7xl" style={getNumberTextStyle(8)}>8</p>
+          <p className="mt-2 text-sm font-black uppercase text-emerald-200">{lang === "en" ? "Bigger" : "Lebih besar"}</p>
+        </div>
+        <div className="grid h-24 w-24 place-items-center rounded-[2rem] border-4 border-yellow-300 bg-slate-900 text-7xl font-black text-yellow-200 shadow-[0_7px_0_#a16207,0_0_24px_rgba(250,204,21,.24)]" aria-label={lang === "en" ? "Greater-than symbol" : "Simbol lebih besar daripada"}>
+          &gt;
+        </div>
+        <div className="rounded-3xl border-4 border-cyan-400 bg-slate-950/85 p-4 shadow-[0_6px_0_#164e63]">
+          <p className="text-6xl font-black text-cyan-100 sm:text-7xl" style={getNumberTextStyle(3)}>3</p>
+          <p className="mt-2 text-sm font-black uppercase text-cyan-200">{lang === "en" ? "Smaller" : "Lebih kecil"}</p>
+        </div>
+      </div>
+      <div className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-2">
+        <p className="rounded-2xl border-2 border-emerald-300 bg-emerald-950/70 px-4 py-3 font-black text-emerald-100">
+          {lang === "en" ? "The OPEN side faces the bigger number." : "Bahagian TERBUKA menghadap nombor yang lebih besar."}
+        </p>
+        <p className="rounded-2xl border-2 border-cyan-400 bg-cyan-950/70 px-4 py-3 font-black text-cyan-100">
+          {lang === "en" ? "The POINT faces the smaller number." : "Bahagian RUNCING menghadap nombor yang lebih kecil."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = false }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang; symbol?: ">" | "<" | "="; stagedReveal?: boolean }) {
   const [visibleCounts, setVisibleCounts] = useState({ left: 0, right: 0 });
   const [countingSide, setCountingSide] = useState<"left" | "right" | null>(null);
+  const [revealStage, setRevealStage] = useState<0 | 1 | 2>(stagedReveal ? 0 : 2);
+  const countingRunRef = useRef(0);
   const item = ADVANCED_COMPARE_OBJECTS[object];
+  const bothPilesCounted = visibleCounts.left === a && visibleCounts.right === b;
+
+  useEffect(() => {
+    countingRunRef.current += 1;
+    setVisibleCounts({ left: 0, right: 0 });
+    setCountingSide(null);
+    setRevealStage(stagedReveal ? 0 : 2);
+
+    return () => {
+      countingRunRef.current += 1;
+    };
+  }, [a, b, object, stagedReveal, symbol]);
+
+  useEffect(() => {
+    if (!stagedReveal) {
+      setRevealStage(2);
+      return;
+    }
+    if (!bothPilesCounted) {
+      setRevealStage(0);
+      return;
+    }
+    setRevealStage(1);
+    const symbolTimer = window.setTimeout(() => setRevealStage(2), 1100);
+    return () => window.clearTimeout(symbolTimer);
+  }, [bothPilesCounted, stagedReveal]);
 
   const countPile = async (side: "left" | "right", count: number) => {
     if (countingSide !== null) return;
+    const runId = countingRunRef.current + 1;
+    countingRunRef.current = runId;
     setCountingSide(side);
     setVisibleCounts((current) => ({ ...current, [side]: 0 }));
-    const reveal = (value: number) => setVisibleCounts((current) => ({ ...current, [side]: value }));
+    const reveal = (value: number) => {
+      if (countingRunRef.current === runId) {
+        setVisibleCounts((current) => ({ ...current, [side]: value }));
+      }
+    };
 
     if (NUMBER_AUDIO_ENABLED && !audioMuted) {
       await speakCountingSequence(count, lang, COUNTING_STEP_MS, reveal);
     } else {
       for (let value = 1; value <= count; value += 1) {
+        if (countingRunRef.current !== runId) return;
         reveal(value);
         await wait(COUNTING_STEP_MS);
       }
     }
+    if (countingRunRef.current !== runId) return;
     setVisibleCounts((current) => ({ ...current, [side]: count }));
     setCountingSide(null);
   };
@@ -2742,10 +2815,30 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol }: { a: number; b: n
   };
 
   return (
-    <div className={`grid gap-4 ${symbol ? "sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center" : "sm:grid-cols-2"}`}>
-      {pileSection("left", a)}
-      {symbol && <div className="grid h-20 w-20 place-items-center self-center justify-self-center rounded-3xl border-4 border-yellow-300 bg-slate-900 text-6xl font-black text-yellow-200 shadow-[0_6px_0_#a16207]" aria-label={lang === "en" ? `Comparison sign ${symbol}` : `Tanda banding ${symbol}`}>{symbol}</div>}
-      {pileSection("right", b)}
+    <div>
+      <div className={`grid gap-4 ${symbol ? "sm:grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] sm:items-center" : "sm:grid-cols-2"}`}>
+        {pileSection("left", a)}
+        {symbol && (
+          <div className="grid min-h-20 place-items-center self-center justify-self-center" aria-live="polite">
+            {revealStage >= 2 && (
+              <div className={`relative grid h-20 w-20 place-items-center rounded-3xl border-4 border-yellow-300 bg-slate-900 text-6xl font-black text-yellow-200 shadow-[0_6px_0_#a16207,0_0_28px_rgba(250,204,21,.55)] ${stagedReveal ? "comparison-symbol-pop" : ""}`} aria-label={lang === "en" ? `Comparison sign ${symbol}` : `Tanda banding ${symbol}`}>
+                {symbol}
+                {stagedReveal && <span className="comparison-symbol-ring pointer-events-none absolute inset-[-0.8rem] rounded-[2rem] border-4 border-yellow-300/70" aria-hidden="true" />}
+              </div>
+            )}
+          </div>
+        )}
+        {pileSection("right", b)}
+      </div>
+      {stagedReveal && revealStage >= 1 && (
+        <p className="comparison-result-reveal mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100 sm:text-2xl" aria-live="polite">
+          {lang === "en" ? (
+            <>{a} apples is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">MORE</span> than {b} apples.</>
+          ) : (
+            <>{a} epal adalah <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LEBIH BANYAK</span> daripada {b} epal.</>
+          )}
+        </p>
+      )}
     </div>
   );
 }
@@ -3063,9 +3156,16 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Greater than: >" : "Lebih besar: >",
-      text: lang === "en" ? "Use > when the number on the left is greater." : "Guna > apabila nombor di kiri lebih besar.",
-      visual: <AdvancedCompareVisual a={8} b={3} object="apple" lang={lang} symbol=">" />,
-      note: lang === "en" ? "8 apples are greater than 3 apples. 8 > 3." : "8 epal lebih besar daripada 3 epal. 8 > 3.",
+      text: lang === "en" ? "First, learn what the > symbol means and where each side points." : "Mula-mula, pelajari maksud simbol > dan arah setiap bahagiannya.",
+      visual: <GreaterThanSymbolTeaching lang={lang} />,
+      note: "",
+    },
+    {
+      eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
+      title: lang === "en" ? "Greater-than example" : "Contoh lebih besar",
+      text: lang === "en" ? "Count both apple piles to discover which pile has more." : "Kira kedua-dua kumpulan epal untuk mencari kumpulan yang lebih banyak.",
+      visual: <AdvancedCompareVisual a={8} b={3} object="apple" lang={lang} symbol=">" stagedReveal />,
+      note: "",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
@@ -3127,21 +3227,21 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Use > after adding" : "Guna > selepas tambah",
       text: lang === "en" ? "First find each total. Then compare them." : "Mula-mula cari setiap jumlah. Kemudian bandingkan.",
-      visual: <AdvancedComparisonStory key="greater-story" lang={lang} story="greater" onComplete={() => finishStory(9)} />,
+      visual: <AdvancedComparisonStory key="greater-story" lang={lang} story="greater" onComplete={() => finishStory(10)} />,
       note: lang === "en" ? "Chrys has 7 coconuts. Alyse has 6. 7 > 6." : "Chrys ada 7 kelapa. Alyse ada 6. 7 > 6.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Use < after taking away" : "Guna < selepas ambil",
       text: lang === "en" ? "Take away first. Then compare what is left." : "Ambil dahulu. Kemudian bandingkan yang tinggal.",
-      visual: <AdvancedComparisonStory key="less-story" lang={lang} story="less" onComplete={() => finishStory(10)} />,
+      visual: <AdvancedComparisonStory key="less-story" lang={lang} story="less" onComplete={() => finishStory(11)} />,
       note: lang === "en" ? "8 is less than 13. 8 < 13." : "8 lebih kecil daripada 13. 8 < 13.",
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
       title: lang === "en" ? "Use = when totals match" : "Guna = apabila jumlah sama",
       text: lang === "en" ? "Both stories can make the same total." : "Dua cerita boleh dapat jumlah yang sama.",
-      visual: <AdvancedComparisonStory key="equal-story" lang={lang} story="equal" onComplete={() => finishStory(11)} />,
+      visual: <AdvancedComparisonStory key="equal-story" lang={lang} story="equal" onComplete={() => finishStory(12)} />,
       note: lang === "en" ? "Both totals are 7. 7 = 7." : "Dua-dua jumlah ialah 7. 7 = 7.",
     },
   ];
@@ -3153,11 +3253,11 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     <main className="mx-auto w-full max-w-6xl pb-8">
       <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3">
         <LessonShell lang={lang} title={t.advancedCompareBigger} helper={lang === "en" ? "Compare groups and numbers from 0 to 20." : "Banding kumpulan dan nombor dari 0 hingga 20."} variant="cyber">
-          <div className="mb-5 grid grid-cols-3 gap-2 md:grid-cols-6 xl:grid-cols-12">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+          <div className="mb-5 grid grid-cols-3 gap-2 md:grid-cols-7 xl:grid-cols-[repeat(13,minmax(0,1fr))]">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
           <CyberTeachingCard eyebrow={slide.eyebrow} title={slide.title} text={slide.text} />
           {slide.visual}
-          {phase < 9 && <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>}
-          <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={slides.length - 1} canNext={phase < 9 || completedStories.has(phase)} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === slides.length - 1 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
+          {slide.note && <p className="mt-5 rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100">{slide.note}</p>}
+          <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={slides.length - 1} canNext={phase < 10 || completedStories.has(phase)} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === slides.length - 1 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
         </LessonShell>
       </div>
     </main>
