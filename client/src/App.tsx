@@ -228,6 +228,19 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
     7: "Tujuh.mp3",
     8: "Lapan.mp3",
     9: "Sembilan.mp3",
+    // The uploaded Malay advanced-mode recordings contain standalone
+    // number audio for 11-20. There is no standalone 10 recording in the
+    // archive, so 10 continues to use the existing TTS fallback.
+    11: "ms-number-11.mp3",
+    12: "ms-number-12.mp3",
+    13: "ms-number-13.mp3",
+    14: "ms-number-14.mp3",
+    15: "ms-number-15.mp3",
+    16: "ms-number-16.mp3",
+    17: "ms-number-17.mp3",
+    18: "ms-number-18.mp3",
+    19: "ms-number-19.mp3",
+    20: "ms-number-20.mp3",
   },
 };
 
@@ -235,7 +248,7 @@ const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Record<number, string>> = {
   // These two batches were exported with their numeric filenames in reverse order.
   // Map the displayed value to the recording whose spoken content matches it.
   en: Object.fromEntries(NUMBERS.map((value) => [value, `total ${9 - value} banana.mp3`])) as Record<number, string>,
-  ms: Object.fromEntries(NUMBERS.map((value) => [value, `jumlah ${9 - value} pisang.mp3`])) as Record<number, string>,
+  ms: Object.fromEntries(Array.from({ length: 21 }, (_, value) => [value, `ms-total-${value}-bananas.mp3`])) as Record<number, string>,
 };
 
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
@@ -4597,15 +4610,6 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
   const [pairedCount, setPairedCount] = useState(0);
   const [countRun, setCountRun] = useState(0);
   const [comparisonEmojiA, comparisonEmojiB] = VALUE_COMPARISON_PAIRS[(Math.max(1, n) - 1) % VALUE_COMPARISON_PAIRS.length];
-  const updatePairedCount = useCallback((value: number) => {
-    setPairedCount(value);
-    if (value >= n) setCounting(false);
-  }, [n]);
-  const finishSingleCount = useCallback(() => {
-    setSingleCountValue(n);
-    setSingleCountComplete(true);
-    setCounting(false);
-  }, [n]);
 
   useEffect(() => {
     setCounting(false);
@@ -4643,20 +4647,21 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     return (
       <div className="space-y-3">
         <button
-          onClick={() => {
-            setSingleCountValue(0);
-            setSingleCountComplete(false);
+          onClick={async () => {
+            if (counting) return;
             setCounting(true);
-            setCountRun((run) => run + 1);
+            const nextValue = singleCountComplete ? 1 : singleCountValue + 1;
+            await speakNumber(nextValue, lang);
+            setSingleCountValue(nextValue);
+            setSingleCountComplete(nextValue >= n);
+            setCounting(false);
           }}
           disabled={counting}
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
         >
-          {counting
-            ? (lang === "en" ? "Counting..." : "Mengira...")
-            : singleCountComplete
+          {singleCountComplete
               ? (lang === "en" ? "Count again" : "Kira lagi")
-              : (lang === "en" ? "Tap to count" : "Tekan untuk kira")}
+              : (lang === "en" ? "Count one" : "Kira satu")}
           <span
             className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
             aria-hidden="true"
@@ -4664,16 +4669,13 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             <PointerIcon />
           </span>
         </button>
-        {counting || singleCountComplete
+        {singleCountValue > 0
           ? <CountedObjectRow
-              key={`${n}-${emoji}-count-on-${countRun}`}
+              key={`${n}-${emoji}-count-on`}
               count={n}
               emoji={emoji}
               showCount
-              speakCount={counting}
-              visibleCount={singleCountComplete && !counting ? n : undefined}
-              onCountProgress={setSingleCountValue}
-              onCountComplete={finishSingleCount}
+              visibleCount={singleCountValue}
               lang={lang}
               intervalMs={COUNTING_STEP_MS}
             />
@@ -4689,23 +4691,30 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     );
   }
   if (phase === 3) {
-    const comparisonComplete = pairedCount >= n;
+    const firstGroupCount = Math.min(pairedCount, n);
+    const secondGroupCount = Math.max(0, pairedCount - n);
+    const comparisonComplete = pairedCount >= n * 2;
     const firstValueLabel = valueObjectLabel(n, comparisonEmojiA, lang);
     const secondValueLabel = valueObjectLabel(n, comparisonEmojiB, lang);
     return (
       <div className="space-y-4">
         <button
           type="button"
-          onClick={() => {
-            setPairedCount(0);
+          onClick={async () => {
+            if (counting) return;
             setCounting(true);
-            setCountRun((run) => run + 1);
+            const nextProgress = comparisonComplete ? 1 : pairedCount + 1;
+            const spokenValue = nextProgress <= n ? nextProgress : nextProgress - n;
+            await speakNumber(spokenValue, lang);
+            setPairedCount(nextProgress);
+            setCounting(false);
           }}
+          disabled={counting}
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1"
         >
-          {counting
+          {comparisonComplete
             ? (lang === "en" ? "Count again" : "Kira lagi")
-            : (lang === "en" ? "Tap to count both groups" : "Tekan untuk kira kedua-dua kumpulan")}
+            : (lang === "en" ? "Count one" : "Kira satu")}
           <span
             className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
             aria-hidden="true"
@@ -4719,22 +4728,21 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             label={lang === "en" ? `Total: ${firstValueLabel}` : `Jumlah: ${firstValueLabel}`}
             count={n}
             emoji={comparisonEmojiA}
-            counted={counting}
-            speakCount={counting}
-            onCountProgress={updatePairedCount}
-            showLabel={comparisonComplete}
-            active={counting}
-            complete={comparisonComplete}
+            counted={firstGroupCount > 0}
+            visibleCount={firstGroupCount}
+            showLabel={firstGroupCount >= n}
+            active={firstGroupCount > 0 && firstGroupCount < n}
+            complete={firstGroupCount >= n}
             lang={lang}
           />
           <LabeledValueGroup
             label={lang === "en" ? `Total: ${secondValueLabel}` : `Jumlah: ${secondValueLabel}`}
             count={n}
             emoji={comparisonEmojiB}
-            counted={counting}
-            visibleCount={pairedCount}
+            counted={secondGroupCount > 0}
+            visibleCount={secondGroupCount}
             showLabel={comparisonComplete}
-            active={counting}
+            active={secondGroupCount > 0 && !comparisonComplete}
             complete={comparisonComplete}
             lang={lang}
           />
@@ -6725,64 +6733,68 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
   const [startCountComplete, setStartCountComplete] = useState(false);
   const [crossedCount, setCrossedCount] = useState(0);
   const [remainingCount, setRemainingCount] = useState(0);
+  const [busy, setBusy] = useState(false);
   const runRef = useRef(0);
   const answer = start - takeAway;
-  const objectPlural = objectName(objectEmoji, 2, lang);
-  const isRunning = phase !== "ready" && phase !== "done";
 
   useEffect(() => () => {
     runRef.current += 1;
     stopNumberAudio();
   }, []);
 
-  const playCount = async (count: number, onCount: (value: number) => void, runId: number) => {
-    if (!audioMuted) {
-      await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
-        if (runRef.current === runId) onCount(value);
-      });
+  const startExplanation = async () => {
+    if (busy) return;
+    const runId = ++runRef.current;
+    setBusy(true);
+    stopNumberAudio();
+
+    if (phase === "done") {
+      setPhase("ready");
+      setStartCount(0);
+      setStartCountComplete(false);
+      setCrossedCount(0);
+      setRemainingCount(0);
+      setBusy(false);
       return;
     }
-    for (let value = 1; value <= count; value += 1) {
-      await wait(COUNTING_STEP_MS);
+
+    if (phase === "ready" || phase === "countingStart") {
+      const nextValue = startCount + 1;
+      setPhase("countingStart");
+      await speakNumber(nextValue, lang);
       if (runRef.current !== runId) return;
-      onCount(value);
+      setStartCount(nextValue);
+      if (nextValue >= start) {
+        setStartCountComplete(true);
+        await speakMathCue("minus", lang);
+        setPhase("crossing");
+      }
+    } else if (phase === "crossing") {
+      const nextValue = crossedCount + 1;
+      await speakNumber(nextValue, lang);
+      if (runRef.current !== runId) return;
+      setCrossedCount(nextValue);
+      if (nextValue >= takeAway) {
+        setPhase("removing");
+        await wait(prefersReducedMotion ? 0 : 350);
+        await speakMathCue("equals", lang);
+        if (answer === 0) {
+          await speakNumber(0, lang);
+          setPhase("done");
+        } else {
+          setPhase("counting");
+        }
+      }
+    } else if (phase === "removing") {
+      setPhase(answer === 0 ? "done" : "counting");
+    } else if (phase === "counting") {
+      const nextValue = remainingCount + 1;
+      await speakNumber(nextValue, lang);
+      if (runRef.current !== runId) return;
+      setRemainingCount(nextValue);
+      if (nextValue >= answer) setPhase("done");
     }
-  };
-
-  const startExplanation = async () => {
-    if (isRunning) return;
-    const runId = ++runRef.current;
-    stopNumberAudio();
-    setStartCount(0);
-    setStartCountComplete(false);
-    setCrossedCount(0);
-    setRemainingCount(0);
-
-    setPhase("countingStart");
-    await playCount(start, setStartCount, runId);
-    if (runRef.current !== runId) return;
-    setStartCountComplete(true);
-    await wait(prefersReducedMotion ? 20 : 650);
-    if (runRef.current !== runId) return;
-
-    setPhase("crossing");
-    await speakMathCue("minus", lang);
-    if (runRef.current !== runId) return;
-    await playCount(takeAway, setCrossedCount, runId);
-    if (runRef.current !== runId) return;
-    await wait(prefersReducedMotion ? 20 : 650);
-    if (runRef.current !== runId) return;
-
-    setPhase("removing");
-    await wait(prefersReducedMotion ? 20 : 1150);
-    if (runRef.current !== runId) return;
-
-    setPhase("counting");
-    await speakMathCue("equals", lang);
-    if (runRef.current !== runId) return;
-    await playCount(answer, setRemainingCount, runId);
-    if (runRef.current !== runId) return;
-    setPhase("done");
+    setBusy(false);
   };
 
   const renderBanana = (index: number, mode: "start" | "crossed" | "resultCrossed" | "remaining") => {
@@ -6835,17 +6847,17 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
         <button
           type="button"
           onClick={() => void startExplanation()}
-          disabled={isRunning}
+          disabled={busy}
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
         >
-          {phase === "countingStart"
-            ? (lang === "en" ? `Counting ${start} ${objectPlural}...` : `Mengira ${start} ${objectPlural}...`)
+          {phase === "countingStart" || phase === "ready"
+            ? (lang === "en" ? "Count one" : "Kira satu")
             : phase === "crossing"
-              ? (lang === "en" ? "Crossing out..." : "Memangkah...")
+              ? (lang === "en" ? "Remove one" : "Ambil satu")
               : phase === "removing"
-                ? (lang === "en" ? "Taking them away..." : "Mengambilnya...")
+                ? (lang === "en" ? "Continue" : "Teruskan")
                 : phase === "counting"
-                  ? (lang === "en" ? "Counting what is left..." : "Mengira yang tinggal...")
+                  ? (lang === "en" ? "Count one left" : "Kira satu yang tinggal")
                   : phase === "done"
                     ? (lang === "en" ? "Show it again" : "Lihat sekali lagi")
                     : (lang === "en" ? "Start the solution" : "Mula cara jawab")}
@@ -7429,7 +7441,6 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
   onStepChange: (step: 1 | 2 | 3) => void;
   lang: Lang;
 }) {
-  const prefersReducedMotion = usePrefersReducedMotion();
   const [alyseCounted, setAlyseCounted] = useState(step === 3 ? 4 : 0);
   const [alyseCounting, setAlyseCounting] = useState(false);
   const alyseCountRunRef = useRef(0);
@@ -7465,27 +7476,13 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
     if (alyseCounting) return;
     const runId = ++alyseCountRunRef.current;
     setAlyseCounting(true);
-    setAlyseCounted(0);
     stopNumberAudio();
-
-    if (!audioMuted) {
-      await speakCountingSequence(4, lang, COUNTING_STEP_MS, (value) => {
-        if (alyseCountRunRef.current === runId) setAlyseCounted(value);
-      });
-    } else if (prefersReducedMotion) {
-      setAlyseCounted(4);
-    } else {
-      for (let value = 1; value <= 4; value += 1) {
-        await wait(COUNTING_STEP_MS);
-        if (alyseCountRunRef.current !== runId) return;
-        setAlyseCounted(value);
-      }
-    }
-
+    const nextValue = alyseCounted >= 4 ? 1 : alyseCounted + 1;
+    if (!audioMuted) await speakNumber(nextValue, lang);
     if (alyseCountRunRef.current !== runId) return;
-    setAlyseCounted(4);
+    setAlyseCounted(nextValue);
     setAlyseCounting(false);
-    if (!audioMuted) {
+    if (!audioMuted && nextValue === 4) {
       speakText(
         lang === "en" ? "Alyse has 4 bananas." : "Alyse ada 4 pisang.",
         lang,
@@ -7548,7 +7545,7 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
                   ? (lang === "en" ? "Counting..." : "Mengira...")
                   : alyseCounted === 4
                     ? (lang === "en" ? "Count again" : "Kira lagi")
-                    : (lang === "en" ? "Tap to count" : "Tekan untuk mengira")}
+                    : (lang === "en" ? "Count one" : "Kira satu")}
                 <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
                   <PointerIcon />
                 </span>
@@ -7578,6 +7575,7 @@ function ZeroAdditionBeat({ step, onStepChange: _onStepChange, lang }: {
 }
 
 function ZeroAdditionEquation({ lang }: { lang: Lang }) {
+  const manualStepMode = true;
   const banana = String.fromCodePoint(0x1f34c);
   const prefersReducedMotion = usePrefersReducedMotion();
   const [sourceZeroVisible, setSourceZeroVisible] = useState(false);
@@ -7596,6 +7594,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
   const [countRun, setCountRun] = useState(0);
 
   useEffect(() => {
+    if (manualStepMode) return;
     if (!hasStarted) return;
     let cancelled = false;
     const intervalMs = 1400;
@@ -7730,11 +7729,59 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
     };
   }, [countRun, hasStarted, lang, prefersReducedMotion]);
 
-  const startCounting = () => {
+  const startCounting = async () => {
     if (isCounting) return;
     setIsCounting(true);
     setHasStarted(true);
-    setCountRun((current) => current + 1);
+    stopNumberAudio();
+
+    if (mergeStage === "joined") {
+      setSourceZeroVisible(false);
+      setSourceVisibleBananas(0);
+      setSourceActiveBanana(null);
+      setZeroVisible(false);
+      setVisibleBananas(0);
+      setActiveBanana(null);
+      setMergeStage("split");
+    }
+
+    if (!sourceZeroVisible || mergeStage === "joined") {
+      setActivePart("source-zero");
+      setSourceZeroVisible(true);
+      await speakNumber(0, lang);
+      setActivePart("source-plus");
+      await speakMathCue("plus", lang);
+      setActivePart("source-bananas");
+    } else if (sourceVisibleBananas < 4) {
+      const nextValue = sourceVisibleBananas + 1;
+      setActivePart("source-bananas");
+      setSourceActiveBanana(nextValue - 1);
+      await speakNumber(nextValue, lang);
+      setSourceVisibleBananas(nextValue);
+      setSourceActiveBanana(null);
+      if (nextValue === 4) {
+        setActivePart("source-equals");
+        await speakMathCue("equals", lang);
+        setZeroVisible(true);
+        setActivePart("bananas");
+      }
+    } else if (visibleBananas < 4) {
+      const nextValue = visibleBananas + 1;
+      setActivePart("bananas");
+      setActiveBanana(nextValue - 1);
+      await speakNumber(nextValue, lang);
+      setVisibleBananas(nextValue);
+      setActiveBanana(null);
+      if (nextValue === 4) {
+        setActivePart("merge");
+        setMergeStage("joining");
+        await wait(prefersReducedMotion ? 0 : 500);
+        setMergeStage("joined");
+        setActivePart(null);
+        if (!audioMuted) speakText(lang === "en" ? "The answer is 4." : "Jawapannya ialah 4.", lang);
+      }
+    }
+    setIsCounting(false);
   };
 
   return (
@@ -7742,15 +7789,13 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
       <div className="flex justify-center">
         <button
           type="button"
-          onClick={startCounting}
+          onClick={() => void startCounting()}
           disabled={isCounting}
           className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 text-xl font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1 disabled:cursor-wait disabled:opacity-70"
         >
-          {isCounting
-            ? (lang === "en" ? "Counting..." : "Mengira...")
-            : mergeStage === "joined"
+          {mergeStage === "joined"
               ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
-              : (lang === "en" ? "Start Counting!" : "Mula Mengira!")}
+              : (lang === "en" ? "Count one" : "Kira satu")}
           {!isCounting && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
               <PointerIcon />
@@ -8068,151 +8113,69 @@ function AdditionBananaEquation({
   const [completedSigns, setCompletedSigns] = useState(0);
   const [activeSign, setActiveSign] = useState(-1);
   const [activeBanana, setActiveBanana] = useState<{ groupIndex: number; objectIndex: number } | null>(null);
-  const [hasStarted, setHasStarted] = useState(autoStart);
-  const [isCounting, setIsCounting] = useState(autoStart);
-  const [countRun, setCountRun] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isCounting, setIsCounting] = useState(false);
   const [resultMergeStage, setResultMergeStage] = useState<"split" | "cue" | "joining" | "joined">("split");
   const labels = groups.map((count) => `${count} ${objectName(emoji, count, lang)}`);
 
   useEffect(() => {
-    if (!hasStarted) return;
-    let cancelled = false;
-    const intervalMs = 1400;
+    stopNumberAudio();
+    setVisibleCounts([0, 0, 0]);
+    setCompletedGroups(0);
+    setActiveGroup(-1);
+    setCompletedSigns(0);
+    setActiveSign(-1);
+    setActiveBanana(null);
+    setResultMergeStage("split");
+    setHasStarted(false);
+    setIsCounting(false);
+    return () => stopNumberAudio();
+  }, [a, b, emoji, lang]);
 
-    const runSequence = async () => {
-      setIsCounting(true);
-      stopNumberAudio();
-      setVisibleCounts([0, 0, 0]);
-      setCompletedGroups(0);
-      setActiveGroup(0);
-      setCompletedSigns(0);
-      setActiveSign(-1);
-      setActiveBanana(null);
-      setResultMergeStage("split");
-
-      for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
-        if (cancelled) return;
-        const count = groups[groupIndex];
-        setActiveGroup(groupIndex);
-
-        if (groupIndex === 2) {
-          const revealResultValues = async (values: number[]) => {
-            if (audioMuted) {
-              if (prefersReducedMotion) {
-                const lastValue = values.at(-1);
-                if (lastValue !== undefined) {
-                  setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? lastValue : shown));
-                }
-                return;
-              }
-              for (const value of values) {
-                if (cancelled) return;
-                setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-                setActiveBanana({ groupIndex, objectIndex: value - 1 });
-                await wait(intervalMs);
-                if (cancelled) return;
-                setActiveBanana(null);
-              }
-              return;
-            }
-
-            await speakNumberValuesSequence(values, lang, intervalMs, (value) => {
-              if (cancelled) return;
-              setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-              setActiveBanana({ groupIndex, objectIndex: value - 1 });
-            });
-            setActiveBanana(null);
-          };
-
-          // Count the combined result continuously: 1, 2, 3... There must not
-          // be another "plus" between the two original subgroups.
-          await revealResultValues(Array.from({ length: a + b }, (_, value) => value + 1));
-        } else if (audioMuted) {
-          if (prefersReducedMotion) {
-            setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? count : value));
-          } else {
-            for (let value = 1; value <= count; value += 1) {
-              if (cancelled) return;
-              setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-              setActiveBanana({ groupIndex, objectIndex: value - 1 });
-              await wait(intervalMs);
-              if (cancelled) return;
-              setActiveBanana(null);
-            }
-          }
-        } else {
-          await speakCountingSequence(
-            count,
-            lang,
-            intervalMs,
-            (value) => {
-              if (cancelled) return;
-              setVisibleCounts((current) => current.map((shown, index) => index === groupIndex ? value : shown));
-              setActiveBanana({ groupIndex, objectIndex: value - 1 });
-            },
-            (value) => {
-              if (cancelled) return;
-              setActiveBanana((current) => current?.groupIndex === groupIndex && current.objectIndex === value - 1 ? null : current);
-            },
-          );
-        }
-
-        if (cancelled) return;
-        setActiveBanana(null);
-
-        if (groupIndex === 2) {
-          await wait(prefersReducedMotion ? 0 : 350);
-          if (cancelled) return;
-          setResultMergeStage("joining");
-          await wait(prefersReducedMotion ? 0 : 1100);
-          if (cancelled) return;
-          setResultMergeStage("joined");
-          await wait(prefersReducedMotion ? 0 : 450);
-          if (cancelled) return;
-        }
-
-        setCompletedGroups(groupIndex + 1);
-        await wait(prefersReducedMotion ? 0 : 300);
-        if (cancelled) return;
-
-        if (groupIndex < groups.length - 1) {
-          if (cancelled) return;
-          setActiveSign(groupIndex);
-          await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
-          await wait(300);
-          if (cancelled) return;
-          setCompletedSigns(groupIndex + 1);
-          setActiveSign(-1);
-        }
-      }
-
-      if (cancelled) return;
-      setActiveGroup(-1);
-
-      if (!audioMuted) {
-        speakText(
-          lang === "en" ? `The answer is ${a + b}.` : `Jawapannya ialah ${a + b}.`,
-          lang,
-        );
-      }
-      await wait(WORD_AUDIO_ENABLED && !audioMuted ? 1800 : 300);
-      if (cancelled) return;
-
-      if (!cancelled) setIsCounting(false);
-    };
-
-    void runSequence();
-    return () => {
-      cancelled = true;
-      stopNumberAudio();
-    };
-  }, [a, b, countRun, emoji, hasStarted, lang, prefersReducedMotion]);
-
-  const startCounting = () => {
+  const startCounting = async () => {
     if (isCounting) return;
     setIsCounting(true);
     setHasStarted(true);
-    setCountRun((current) => current + 1);
+    stopNumberAudio();
+
+    let groupIndex = completedGroups;
+    let currentCounts = visibleCounts;
+    if (groupIndex >= groups.length) {
+      currentCounts = [0, 0, 0];
+      groupIndex = 0;
+      setVisibleCounts(currentCounts);
+      setCompletedGroups(0);
+      setCompletedSigns(0);
+      setResultMergeStage("split");
+    }
+
+    const nextValue = currentCounts[groupIndex] + 1;
+    setActiveGroup(groupIndex);
+    setActiveBanana({ groupIndex, objectIndex: nextValue - 1 });
+    if (!audioMuted) await speakNumber(nextValue, lang);
+    setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? nextValue : value));
+    setActiveBanana(null);
+
+    if (nextValue >= groups[groupIndex]) {
+      const nextCompletedGroups = groupIndex + 1;
+      setCompletedGroups(nextCompletedGroups);
+      if (groupIndex < groups.length - 1) {
+        setActiveSign(groupIndex);
+        await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+        setCompletedSigns(groupIndex + 1);
+        setActiveSign(-1);
+        setActiveGroup(groupIndex + 1);
+      } else {
+        setResultMergeStage("joining");
+        await wait(prefersReducedMotion ? 0 : 500);
+        setResultMergeStage("joined");
+        setActiveGroup(-1);
+        if (!audioMuted) {
+          speakText(lang === "en" ? `The answer is ${a + b}.` : `Jawapannya ialah ${a + b}.`, lang);
+        }
+      }
+    }
+    setIsCounting(false);
   };
 
   const renderBanana = (groupIndex: number, countIndex: number, layoutCount: number, layoutIndex: number) => {
@@ -8251,23 +8214,21 @@ function AdditionBananaEquation({
   return (
     <div className="space-y-4">
       <div className="flex justify-center">
-        {!autoStart && <button
+        <button
           type="button"
-          onClick={startCounting}
+          onClick={() => void startCounting()}
           disabled={isCounting}
           className={`relative rounded-2xl border-2 px-7 py-3 text-xl font-black text-white active:translate-y-1 disabled:cursor-wait disabled:opacity-70 ${cyber ? "border-cyan-300 bg-cyan-700 shadow-[0_6px_0_#164e63,0_0_18px_rgba(34,211,238,.20)]" : "border-blue-700 bg-blue-600 shadow-[0_6px_0_#1e3a8a]"}`}
         >
-          {isCounting
-            ? (lang === "en" ? "Counting..." : "Mengira...")
-            : completedGroups === groups.length
+          {completedGroups === groups.length
               ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
-              : (lang === "en" ? "Start Counting!" : "Mula Mengira!")}
+              : (lang === "en" ? "Count one" : "Kira satu")}
           {!isCounting && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
               <PointerIcon />
             </span>
           )}
-        </button>}
+        </button>
       </div>
       <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
         {groups.map((count, index) => (
@@ -8818,40 +8779,61 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
 }) {
   const [phase, setPhase] = useState<SubtractionPhase>("start");
   const [cuePlaying, setCuePlaying] = useState(false);
+  const [crossedCount, setCrossedCount] = useState(0);
   const [remainingCountValue, setRemainingCountValue] = useState(0);
   const left = start - takeAway;
-  const intervalMs = COUNTING_STEP_MS;
-  const crossed = phase === "start" ? 0 : takeAway;
   const showRemainingCount = phase === "counting" || phase === "done";
-  const showCrossCount = phase !== "start";
-
-  const finishCrossCount = useCallback(() => setPhase((current) => current === "crossing" ? "crossed" : current), []);
-  const finishRemainingCount = useCallback(() => {
-    setRemainingCountValue(left);
-    setPhase((current) => current === "counting" ? "done" : current);
-    onComplete?.();
-  }, [left, onComplete]);
+  const showCrossCount = crossedCount > 0;
 
   useEffect(() => {
     setPhase("start");
     setCuePlaying(false);
+    setCrossedCount(0);
     setRemainingCountValue(0);
   }, [emoji, start, takeAway]);
 
   const instruction = phase === "counting" && remainingCountValue > 0
     ? [lang === "en" ? `Counting what is left: ${remainingCountValue}` : `Mengira yang tinggal: ${remainingCountValue}`]
     : getSubtractionFlowInstruction(lang, phase, start, takeAway, left, emoji);
-  const actionLabel = phase === "start"
-    ? (lang === "en" ? "Tap to take away" : "Tekan untuk ambil")
-    : (lang === "en" ? "Tap to count what is left" : "Tekan untuk kira yang tinggal");
+  const removing = crossedCount < takeAway;
+  const actionLabel = removing
+    ? (lang === "en" ? "Remove one" : "Ambil satu")
+    : (lang === "en" ? "Count one" : "Kira satu");
 
   const advancePhase = async () => {
-    if (cuePlaying || (phase !== "start" && phase !== "crossed")) return;
+    if (cuePlaying || phase === "done") return;
     setCuePlaying(true);
-    if (phase === "crossed") setRemainingCountValue(0);
-    await speakMathCue(phase === "start" ? "minus" : "equals", lang);
+
+    if (removing) {
+      const nextCrossed = crossedCount + 1;
+      if (crossedCount === 0) await speakMathCue("minus", lang);
+      await speakNumber(nextCrossed, lang);
+      setCrossedCount(nextCrossed);
+      setPhase(nextCrossed >= takeAway ? "crossed" : "crossing");
+      setCuePlaying(false);
+      return;
+    }
+
+    if (left === 0) {
+      await speakMathCue("equals", lang);
+      await speakNumber(0, lang);
+      setPhase("done");
+      setCuePlaying(false);
+      onComplete?.();
+      return;
+    }
+
+    const nextRemaining = remainingCountValue + 1;
+    if (remainingCountValue === 0) await speakMathCue("equals", lang);
+    await speakNumber(nextRemaining, lang);
+    setRemainingCountValue(nextRemaining);
+    if (nextRemaining >= left) {
+      setPhase("done");
+      onComplete?.();
+    } else {
+      setPhase("counting");
+    }
     setCuePlaying(false);
-    setPhase(phase === "start" ? "crossing" : "counting");
   };
 
   return (
@@ -8860,22 +8842,16 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
         <CountedObjectRow
           count={start}
           emoji={emoji}
-          crossed={crossed}
+          crossed={crossedCount}
           showCount={showRemainingCount}
           countRemainingOnly
-          animateCrossOut={phase === "crossing"}
           showCrossCount={showCrossCount}
-          intervalMs={intervalMs}
-          speakCrossCount={phase === "crossing"}
-          speakCount={phase === "counting" || phase === "done"}
-          onCountProgress={setRemainingCountValue}
-          onCrossCountComplete={finishCrossCount}
-          onCountComplete={finishRemainingCount}
+          visibleCount={remainingCountValue}
           lang={lang}
         />
       </div>
 
-      {(phase === "start" || phase === "crossed") && (
+      {phase !== "done" && (
         <div className="flex justify-center">
           <button
             onClick={() => void advancePhase()}
@@ -10633,6 +10609,64 @@ function NumberLine({ marked }: { marked: number | number[] }) {
   return <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />;
 }
 
+function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, compact = false, fixedColumns, cyber = false }: {
+  count: number;
+  emoji: string;
+  lang: Lang;
+  onProgress?: (value: number) => void;
+  onComplete?: () => void;
+  compact?: boolean;
+  fixedColumns?: 1 | 2;
+  cyber?: boolean;
+}) {
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setVisibleCount(0);
+    setBusy(false);
+    stopNumberAudio();
+    return () => stopNumberAudio();
+  }, [count, emoji, lang]);
+
+  const countOne = async () => {
+    if (busy || visibleCount >= count) return;
+    setBusy(true);
+    const nextValue = visibleCount + 1;
+    await speakNumber(nextValue, lang);
+    setVisibleCount(nextValue);
+    onProgress?.(nextValue);
+    setBusy(false);
+    if (nextValue >= count) onComplete?.();
+  };
+
+  return (
+    <div className="space-y-3">
+      <CountedObjectRow
+        count={count}
+        emoji={emoji}
+        showCount
+        visibleCount={visibleCount}
+        compact={compact}
+        fixedColumns={fixedColumns}
+        cyber={cyber}
+        lang={lang}
+      />
+      {visibleCount < count && (
+        <button
+          type="button"
+          onClick={() => void countOne()}
+          disabled={busy}
+          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-5 py-2 font-black text-white shadow-[0_4px_0_#1e3a8a] active:translate-y-1 disabled:opacity-60"
+        >
+          {lang === "en" ? "Count one" : "Kira satu"}
+          {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<number | "?">; marked: number | number[]; arrow?: "left" | "right" }) {
   const compact = nums.length <= 5;
   const markedNumbers = Array.isArray(marked) ? marked : [marked];
@@ -10821,13 +10855,10 @@ function CountedGroupTwoSolution({ visual, lang }: {
       <div className="grid gap-4 md:grid-cols-2">
         <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 0 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"}`}>
           <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 1" : "Kumpulan 1"}</p>
-          <CountedObjectRow
+          <ManualCountedObjectRow
             count={visual.a}
             emoji={visual.emoji}
-            showCount
-            speakCount={stage === 0}
-            visibleCount={stage > 0 ? visual.a : undefined}
-            onCountComplete={finishFirstGroup}
+            onComplete={finishFirstGroup}
             lang={lang}
           />
           {stage >= 1 && <CountTotalBadge count={visual.a} lang={lang} unit={objectName(visual.emoji, visual.a, lang)} />}
@@ -10836,13 +10867,10 @@ function CountedGroupTwoSolution({ visual, lang }: {
         <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 1 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage === 0 ? "opacity-35 grayscale" : ""}`}>
           <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 2" : "Kumpulan 2"}</p>
           {stage >= 1 ? (
-            <CountedObjectRow
+            <ManualCountedObjectRow
               count={visual.b}
               emoji={visual.emoji}
-              showCount
-              speakCount={stage === 1}
-              visibleCount={stage > 1 ? visual.b : undefined}
-              onCountComplete={finishSecondGroup}
+              onComplete={finishSecondGroup}
               lang={lang}
             />
           ) : (
@@ -10879,13 +10907,11 @@ function CountedCompareGroupsSolution({ visual, lang }: {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 0 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"}`}>
           <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group A" : "Kumpulan A"}</p>
-          <CountedObjectRow
+          <ManualCountedObjectRow
             count={visual.a}
             emoji={visual.emojiA}
-            showCount
-            speakCount
             lang={lang}
-            onCountComplete={finishFirstGroup}
+            onComplete={finishFirstGroup}
           />
           {stage >= 1 && (
             <p className="mt-3 rounded-full bg-emerald-100 px-4 py-2 text-xl font-black text-emerald-900">
@@ -10897,13 +10923,11 @@ function CountedCompareGroupsSolution({ visual, lang }: {
         <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 1 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage === 0 ? "opacity-35 grayscale" : ""}`}>
           <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group B" : "Kumpulan B"}</p>
           {stage >= 1 ? (
-            <CountedObjectRow
+            <ManualCountedObjectRow
               count={visual.b}
               emoji={visual.emojiB}
-              showCount
-              speakCount
               lang={lang}
-              onCountComplete={finishSecondGroup}
+              onComplete={finishSecondGroup}
             />
           ) : (
             <ObjectGroup count={visual.b} emoji={visual.emojiB} lang={lang} />
@@ -10950,13 +10974,10 @@ function CountedGroupCombineSolution({ visual, lang }: {
       <div className="grid gap-4 md:grid-cols-2">
         <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 0 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"}`}>
           <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 1" : "Kumpulan 1"}</p>
-          <CountedObjectRow
+          <ManualCountedObjectRow
             count={visual.a}
             emoji={visual.emoji}
-            showCount
-            speakCount={stage === 0}
-            visibleCount={stage > 0 ? visual.a : undefined}
-            onCountComplete={finishFirstGroup}
+            onComplete={finishFirstGroup}
             lang={lang}
           />
           {stage >= 1 && <CountTotalBadge count={visual.a} lang={lang} unit={objectName(visual.emoji, visual.a, lang)} />}
@@ -10965,13 +10986,10 @@ function CountedGroupCombineSolution({ visual, lang }: {
         <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 1 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage === 0 ? "opacity-35 grayscale" : ""}`}>
           <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "Group 2" : "Kumpulan 2"}</p>
           {stage >= 1 ? (
-            <CountedObjectRow
+            <ManualCountedObjectRow
               count={visual.b}
               emoji={visual.emoji}
-              showCount
-              speakCount={stage === 1}
-              visibleCount={stage > 1 ? visual.b : undefined}
-              onCountComplete={finishSecondGroup}
+              onComplete={finishSecondGroup}
               lang={lang}
             />
           ) : (
@@ -10984,13 +11002,10 @@ function CountedGroupCombineSolution({ visual, lang }: {
       <div className={`rounded-3xl border-4 p-3 text-center transition-colors ${stage === 2 ? "border-blue-500 bg-blue-50" : "border-emerald-200 bg-white"} ${stage < 2 ? "opacity-35 grayscale" : ""}`}>
         <p className="mb-2 text-xl font-black text-blue-950">{lang === "en" ? "One big group" : "Satu kumpulan besar"}</p>
         {stage >= 2 ? (
-          <CountedObjectRow
+          <ManualCountedObjectRow
             count={total}
             emoji={visual.emoji}
-            showCount
-            speakCount={stage === 2}
-            visibleCount={stage > 2 ? total : undefined}
-            onCountComplete={finishTotal}
+            onComplete={finishTotal}
             lang={lang}
           />
         ) : (
@@ -12241,15 +12256,12 @@ function SequentialCountResult({ count, emoji, lang, cyber = false }: { count: n
 
   return (
     <div className="space-y-3">
-      <CountedObjectRow
+      <ManualCountedObjectRow
         count={count}
         emoji={emoji}
-        showCount
-        speakCount
         lang={lang}
-        intervalMs={COUNTING_STEP_MS}
-        onCountProgress={setCurrentCount}
-        onCountComplete={finishCounting}
+        onProgress={setCurrentCount}
+        onComplete={finishCounting}
         cyber={cyber}
       />
       <div className="min-h-16" aria-live="polite">
