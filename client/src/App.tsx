@@ -39,6 +39,7 @@ type Screen =
   | "advancedMenu"
   | "advancedTeenNumbers"
   | "advancedCompareBigger"
+  | "advancedSequencing"
   | "advancedAdditionPart1"
   | "advancedAdditionPart2"
   | "learnRecognize"
@@ -65,6 +66,7 @@ type LearningSectionKey =
   | "learnReal"
   | "advancedTeenNumbers"
   | "advancedCompareBigger"
+  | "advancedSequencing"
   | "advancedAdditionPart1"
   | "advancedAdditionPart2";
 
@@ -377,6 +379,8 @@ const UI = {
     advancedTeenNumbersShort: "Meet digits, then learn numbers 10-20",
     advancedCompareBigger: "Compare Bigger Numbers",
     advancedCompareBiggerShort: "Find which group has more",
+    advancedSequencing: "Count Up and Down",
+    advancedSequencingShort: "Build sequences with +1 and −1",
     advancedAdditionPart1: "Make a Ten",
     advancedAdditionPart2: "Write it Down",
     recognizeNumbers: "Recognize and Identify Numbers",
@@ -436,6 +440,8 @@ const UI = {
     advancedTeenNumbersShort: "Kenal digit, kemudian belajar nombor 10-20",
     advancedCompareBigger: "Banding Nombor Besar",
     advancedCompareBiggerShort: "Cari kumpulan yang lebih banyak",
+    advancedSequencing: "Kira Naik dan Turun",
+    advancedSequencingShort: "Bina urutan dengan +1 dan −1",
     advancedAdditionPart1: "Bina Sepuluh",
     advancedAdditionPart2: "Tulis Tambah",
     recognizeNumbers: "Kenal Nombor",
@@ -513,7 +519,7 @@ const GLOSSARY_ENTRIES: GlossaryEntry[] = [
 
   glossaryEntry(2, "Addition", "Tambah", "Put groups together to get more.", "Gabungkan kumpulan untuk mendapat lebih banyak.", "Addition uses the plus sign (+).", "Tambah menggunakan tanda tambah (+)."),
   glossaryEntry(2, "Subtraction", "Tolak", "Take some away to find what is still there.", "Ambil sebahagian untuk tahu apa yang masih ada.", "Subtraction uses the minus sign (-).", "Tolak menggunakan tanda tolak (-)."),
-  glossaryEntry(2, "Greater", "Lebih besar", "Bigger. It is a larger number.", "Lebih besar. Nombor itu lebih banyak.", "A number that is more than another number.", "Nombor yang lebih banyak daripada nombor lain."),
+  glossaryEntry(2, "Greater", "Lebih besar", "Greater than means bigger than.", "Lebih besar bermaksud nilainya lebih banyak.", "A greater number is bigger than another number.", "Nombor yang lebih besar mempunyai nilai lebih banyak daripada nombor lain."),
   glossaryEntry(2, "Total", "Jumlah", "How many there are when everything is together.", "Berapa banyak apabila semuanya digabungkan.", "The whole amount after counting all the parts.", "Jumlah penuh selepas semua bahagian dikira."),
   glossaryEntry(2, "Compare", "Banding", "Look at two things to see which has more or less.", "Lihat dua benda untuk tahu yang mana lebih atau kurang.", "Check how two numbers or groups are alike or different.", "Periksa bagaimana dua nombor atau kumpulan sama atau berbeza."),
   glossaryEntry(2, "Value", "Nilai", "How much a number is worth.", "Berapa banyak yang ditunjukkan oleh nombor.", "The number of things a numeral stands for.", "Bilangan benda yang diwakili oleh satu nombor."),
@@ -1419,7 +1425,7 @@ function App() {
           onToggleSound={() => setSoundEnabled((current) => !current)}
           onOpenGlossary={() => setGlossaryOpen(true)}
           onBack={screen === "home" ? undefined : () => go(
-            screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2"
+            screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedSequencing" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2"
               ? "advancedMenu"
               : screen === "advancedMenu"
                 ? "modeSelect"
@@ -1465,6 +1471,13 @@ function App() {
             lang={lang}
             t={t}
             onDone={() => finishLesson("advancedCompareBigger", "advancedCompareBigger")}
+          />
+        )}
+        {!completedLesson && screen === "advancedSequencing" && (
+          <AdvancedSequencingLesson
+            lang={lang}
+            t={t}
+            onDone={() => finishLesson("advancedSequencing", "advancedSequencing")}
           />
         )}
         {!completedLesson && screen === "advancedAdditionPart1" && (
@@ -2256,9 +2269,10 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
   const teenComplete = Boolean(player.progress.advancedTeenNumbers);
   const compareComplete = Boolean(player.progress.advancedCompareBigger);
+  const sequencingComplete = Boolean(player.progress.advancedSequencing);
   const part1Complete = Boolean(player.progress.advancedAdditionPart1);
   const part2Complete = Boolean(player.progress.advancedAdditionPart2);
-  const missionStates = [teenComplete, compareComplete, part1Complete, part2Complete];
+  const missionStates = [teenComplete, compareComplete, sequencingComplete, part1Complete, part2Complete];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
@@ -2281,7 +2295,7 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
           </div>
           <div className="flex gap-3 sm:flex-col">
             <span className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-4 py-3 text-center font-black text-slate-950 shadow-[0_5px_0_#a16207]">
-              {lang === "en" ? "4 missions" : "4 misi"}
+              {lang === "en" ? "5 missions" : "5 misi"}
             </span>
             <span className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 px-4 py-3 text-center font-black text-cyan-50 shadow-[0_5px_0_#155e75]">
               {lang === "en" ? "Numbers 10-20" : "Nombor 10-20"}
@@ -2294,11 +2308,11 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
         <div className="flex items-center gap-2 sm:gap-4">
           {missionStates.map((complete, index) => (
             <React.Fragment key={index}>
-              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : index === 1 || (index === 3 && !part1Complete) ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
+              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : index === 1 || (index === 4 && !part1Complete) ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
                 {index + 1}
                 {complete && <Check className="absolute -right-2 -top-2 h-7 w-7 rounded-full border-2 border-white bg-emerald-500 p-1" strokeWidth={4} aria-hidden="true" />}
               </span>
-              {index < 3 && <span className={`h-2 flex-1 rounded-full ${missionStates[index] ? "bg-emerald-400" : "bg-slate-700"}`} />}
+              {index < missionStates.length - 1 && <span className={`h-2 flex-1 rounded-full ${missionStates[index] ? "bg-emerald-400" : "bg-slate-700"}`} />}
             </React.Fragment>
           ))}
         </div>
@@ -2306,8 +2320,9 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
 
       <AdvancedMissionTile mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} icon="10-20" complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
       <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} icon="< >" complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
-      <AdvancedMissionTile mission={3} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Fill a ten-basket to add bigger numbers" : "Isi bakul puluh untuk tambah nombor besar"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
-      <AdvancedMissionTile mission={4} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
+      <AdvancedMissionTile mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} icon="+1 −1" complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
+      <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Fill a ten-basket to add bigger numbers" : "Isi bakul puluh untuk tambah nombor besar"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
+      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
     </main>
   );
 }
@@ -2694,11 +2709,10 @@ function AdvancedComparePile({
 
 function ComparisonSymbolIntroduction({ lang, symbol }: { lang: Lang; symbol: ">" | "<" }) {
   const isGreater = symbol === ">";
-  const openX = isGreater ? 205 : 435;
-  const pointX = isGreater ? 435 : 205;
-  const openLabelX = isGreater ? 70 : 420;
-  const pointLabelX = isGreater ? 420 : 70;
-  const symbolPath = isGreater ? "M 220 82 L 420 160 L 220 238" : "M 420 82 L 220 160 L 420 238";
+  const openX = isGreater ? 270 : 370;
+  const pointX = isGreater ? 370 : 270;
+  const openLabelX = isGreater ? 95 : 395;
+  const pointLabelX = isGreater ? 395 : 95;
   const symbolName = lang === "en"
     ? (isGreater ? "greater-than" : "less-than")
     : (isGreater ? "lebih besar daripada" : "lebih kecil daripada");
@@ -2722,7 +2736,7 @@ function ComparisonSymbolIntroduction({ lang, symbol }: { lang: Lang; symbol: ">
         <svg viewBox="0 0 640 320" role="img" aria-label={lang === "en" ? `The open side and point side of the ${symbol} symbol` : `Bahagian terbuka dan bahagian runcing simbol ${symbol}`} className="mx-auto h-auto w-full max-w-3xl">
           <defs>
             <filter id={`comparison-glow-${isGreater ? "greater" : "less"}`} x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
             <marker id={`open-arrow-${isGreater ? "greater" : "less"}`} markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
@@ -2733,22 +2747,24 @@ function ComparisonSymbolIntroduction({ lang, symbol }: { lang: Lang; symbol: ">
             </marker>
           </defs>
 
-          <path d={symbolPath} fill="none" stroke="#fde68a" strokeWidth="38" strokeLinecap="round" strokeLinejoin="round" filter={`url(#comparison-glow-${isGreater ? "greater" : "less"})`} />
+          <text x="320" y="166" textAnchor="middle" dominantBaseline="middle" fill="#fde68a" fontSize="190" fontWeight="900" fontFamily="Nunito, sans-serif" filter={`url(#comparison-glow-${isGreater ? "greater" : "less"})`}>
+            {symbol}
+          </text>
 
-          <ellipse cx={openX} cy="160" rx="72" ry="125" fill="rgba(16,185,129,.08)" stroke="#6ee7b7" strokeWidth="7" strokeDasharray="15 10" className="motion-safe:animate-pulse" />
-          <circle cx={pointX} cy="160" r="62" fill="rgba(6,182,212,.1)" stroke="#67e8f9" strokeWidth="7" className="motion-safe:animate-pulse" />
+          <ellipse cx={openX} cy="160" rx="48" ry="88" fill="rgba(16,185,129,.08)" stroke="#6ee7b7" strokeWidth="6" />
+          <circle cx={pointX} cy="160" r="42" fill="rgba(6,182,212,.1)" stroke="#67e8f9" strokeWidth="6" />
 
           <rect x={openLabelX} y="12" width="150" height="48" rx="20" fill="#064e3b" stroke="#6ee7b7" strokeWidth="3" />
           <text x={openLabelX + 75} y="43" textAnchor="middle" fill="#d1fae5" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
             {lang === "en" ? "OPEN SIDE" : "BAHAGIAN TERBUKA"}
           </text>
-          <line x1={openLabelX + 75} y1="62" x2={openX} y2="95" stroke="#6ee7b7" strokeWidth="5" strokeLinecap="round" markerEnd={`url(#open-arrow-${isGreater ? "greater" : "less"})`} />
+          <line x1={openLabelX + 75} y1="62" x2={openX} y2="90" stroke="#6ee7b7" strokeWidth="5" strokeLinecap="round" markerEnd={`url(#open-arrow-${isGreater ? "greater" : "less"})`} />
 
           <rect x={pointLabelX} y="260" width="150" height="48" rx="20" fill="#164e63" stroke="#67e8f9" strokeWidth="3" />
           <text x={pointLabelX + 75} y="291" textAnchor="middle" fill="#cffafe" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
             {lang === "en" ? "POINT SIDE" : "BAHAGIAN RUNCING"}
           </text>
-          <line x1={pointLabelX + 75} y1="258" x2={pointX} y2="215" stroke="#67e8f9" strokeWidth="5" strokeLinecap="round" markerEnd={`url(#point-arrow-${isGreater ? "greater" : "less"})`} />
+          <line x1={pointLabelX + 75} y1="258" x2={pointX} y2="202" stroke="#67e8f9" strokeWidth="5" strokeLinecap="round" markerEnd={`url(#point-arrow-${isGreater ? "greater" : "less"})`} />
         </svg>
       </div>
 
@@ -3432,6 +3448,436 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
   );
 }
 
+function SequencingBananaBox({ count, visibleCount = count, label, activeIndex = null, hiddenIndex = null, compact = false, showCountLabels = false, countLabelThrough = visibleCount, showFuture = false }: {
+  count: number;
+  visibleCount?: number;
+  label?: string;
+  activeIndex?: number | null;
+  hiddenIndex?: number | null;
+  compact?: boolean;
+  showCountLabels?: boolean;
+  countLabelThrough?: number;
+  showFuture?: boolean;
+}) {
+  const topCount = count <= 4 ? count : Math.ceil(count / 2);
+  const bottomCount = count <= 4 ? 0 : Math.floor(count / 2);
+  const renderRow = (rowCount: number, offset: number) => (
+    <div className="flex min-h-10 items-center justify-center gap-0.5 sm:min-h-14 sm:gap-2" data-row-count={rowCount}>
+      {Array.from({ length: rowCount }, (_, rowIndex) => {
+        const index = offset + rowIndex;
+        const visible = index < visibleCount && index !== hiddenIndex;
+        return (
+          <span
+            key={index}
+            className={`relative grid shrink-0 place-items-center rounded-xl border transition-[opacity,transform,filter,background-color,border-color] duration-300 ${compact ? "h-6 w-6 sm:h-11 sm:w-11" : "h-9 w-9 sm:h-12 sm:w-12"} ${
+              visible
+                ? index === activeIndex
+                  ? "scale-110 border-yellow-200 bg-yellow-300/25 drop-shadow-[0_0_12px_rgba(250,204,21,.75)]"
+                  : "border-cyan-400/70 bg-cyan-950/65 opacity-100"
+                : showFuture && index !== hiddenIndex
+                  ? "scale-95 border-slate-700 bg-slate-900 opacity-25 grayscale"
+                  : "scale-75 border-slate-800 bg-slate-900/30 opacity-0"
+            }`}
+            aria-hidden="true"
+          >
+            <SpriteIcon value={BANANA} className={compact ? "h-5 w-5 sm:h-9 sm:w-9" : "h-8 w-8 sm:h-11 sm:w-11"} />
+            {showCountLabels && visible && index < countLabelThrough && (
+              <span className="absolute -right-1 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black text-white">{index + 1}</span>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="flex h-40 w-full min-w-0 flex-col justify-center rounded-[1.65rem] border-2 border-cyan-400 bg-slate-950/90 px-3 py-3 shadow-[inset_0_0_24px_rgba(34,211,238,.12),0_5px_0_#164e63] sm:h-44 sm:px-5">
+      {label && <p className="mb-1 text-center text-sm font-black uppercase tracking-wide text-cyan-200">{label}</p>}
+      <div className="grid content-center gap-1">
+        {renderRow(topCount, 0)}
+        {bottomCount > 0 && renderRow(bottomCount, topCount)}
+      </div>
+    </div>
+  );
+}
+
+function SequencingAnchorPhase({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [done, setDone] = useState(false);
+  const runRef = useRef(0);
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const startCount = async () => {
+    if (running) return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setVisibleCount(0);
+    setDone(false);
+    setRunning(true);
+    if (!audioMuted) {
+      await speakCountingSequence(9, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) setVisibleCount(value);
+      });
+    } else {
+      for (let value = 1; value <= 9; value += 1) {
+        if (runRef.current !== runId) return;
+        setVisibleCount(value);
+        await wait(COUNTING_STEP_MS);
+      }
+    }
+    if (runRef.current !== runId) return;
+    setRunning(false);
+    setDone(true);
+    onComplete();
+  };
+
+  return (
+    <section className="rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-5">
+      <div className="mx-auto max-w-3xl"><SequencingBananaBox count={9} visibleCount={visibleCount} activeIndex={running ? visibleCount - 1 : null} showCountLabels countLabelThrough={visibleCount} showFuture /></div>
+      <p className="mt-4 text-center text-xl font-black text-cyan-50">
+        {lang === "en" ? "Count the bananas: 1, 2, 3, 4, 5, 6, 7, 8, 9." : "Kira pisang: 1, 2, 3, 4, 5, 6, 7, 8, 9."}
+      </p>
+      <button type="button" onClick={() => void startCount()} disabled={running} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
+        {running ? (lang === "en" ? `Counting ${visibleCount}...` : `Mengira ${visibleCount}...`) : (lang === "en" ? "Start counting" : "Mula mengira")}
+      </button>
+      {done && (
+        <p className="comparison-result-reveal mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/85 px-5 py-4 text-center text-lg font-black text-emerald-100 sm:text-xl">
+          {lang === "en" ? "Numbers keep going. Every number is one more than the last. Even bigger numbers work the same way." : "Nombor tak habis. Setiap nombor satu lebih dari sebelumnya. Nombor besar pun sama."}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang: Lang; onComplete: () => void }) {
+  const total = base + 1;
+  const [stage, setStage] = useState<"ready" | "adding" | "merging" | "counting" | "done">("ready");
+  const [visibleTotal, setVisibleTotal] = useState(0);
+  const runRef = useRef(0);
+  const busy = stage !== "ready" && stage !== "done";
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const addOne = async () => {
+    if (busy) return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setVisibleTotal(0);
+    setStage("adding");
+    await wait(350);
+    if (runRef.current !== runId) return;
+    setStage("merging");
+    await wait(600);
+    if (runRef.current !== runId) return;
+    setStage("counting");
+    if (!audioMuted) {
+      await speakCountingSequence(total, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) setVisibleTotal(value);
+      });
+    } else {
+      for (let value = 1; value <= total; value += 1) {
+        if (runRef.current !== runId) return;
+        setVisibleTotal(value);
+        await wait(COUNTING_STEP_MS);
+      }
+    }
+    if (runRef.current !== runId) return;
+    setStage("done");
+    onComplete();
+  };
+
+  return (
+    <section className="rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-4 sm:p-5">
+      <div className={`grid items-center gap-3 transition-all duration-500 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,.65fr)] ${stage === "merging" || stage === "counting" || stage === "done" ? "scale-95 opacity-45" : "opacity-100"}`}>
+        <SequencingBananaBox count={base} label={lang === "en" ? `${base} bananas` : `${base} pisang`} compact />
+        <span className="text-center text-5xl font-black text-yellow-300" aria-hidden="true">+</span>
+        <SequencingBananaBox count={1} visibleCount={stage === "ready" ? 0 : 1} label={lang === "en" ? "1 more" : "1 lagi"} compact />
+      </div>
+
+      <button type="button" onClick={() => void addOne()} disabled={busy || stage === "done"} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
+        {stage === "done" ? (lang === "en" ? `${total} bananas!` : `${total} pisang!`) : busy ? (lang === "en" ? "Putting them together..." : "Sedang menggabungkan...") : (lang === "en" ? "Add 1 banana" : "Tambah 1 pisang")}
+      </button>
+
+      {stage !== "ready" && stage !== "adding" && (
+        <div className="comparison-result-reveal mt-5 border-t-2 border-cyan-400/40 pt-5">
+          <p className="mb-3 text-center text-5xl font-black text-cyan-200" aria-hidden="true">=</p>
+          <div className="mx-auto max-w-4xl"><SequencingBananaBox count={total} visibleCount={total} activeIndex={stage === "counting" ? visibleTotal - 1 : null} showCountLabels={stage === "counting" || stage === "done"} countLabelThrough={visibleTotal} label={lang === "en" ? "Combined box" : "Kotak gabungan"} /></div>
+        </div>
+      )}
+
+      {stage === "done" && (
+        <div className="comparison-result-reveal mt-5 text-center">
+          <p className="text-5xl font-black text-yellow-200" style={NUMBER_TEXT_STYLE}>{base} + 1 = {total}</p>
+          <p className="mx-auto mt-4 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/85 px-5 py-4 text-lg font-black text-emerald-100">
+            {base === 9
+              ? (lang === "en" ? "9 has one digit. 10 has two digits. This is where numbers get bigger." : "9 satu digit. 10 dua digit. Di sini nombor mula jadi besar.")
+              : (lang === "en" ? "Same rule: one more each time." : "Peraturan sama: satu lebih setiap kali.")}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SequenceNumberLine({ direction, lang, onComplete }: { direction: "ascending" | "descending"; lang: Lang; onComplete: () => void }) {
+  const values = direction === "ascending" ? Array.from({ length: 21 }, (_, index) => index) : Array.from({ length: 21 }, (_, index) => 20 - index);
+  const [revealed, setRevealed] = useState(0);
+  const [running, setRunning] = useState(false);
+  const done = revealed === values.length;
+
+  const reveal = async () => {
+    if (running || done) return;
+    setRunning(true);
+    speakText(
+      direction === "ascending"
+        ? (lang === "en" ? "This is a number line. Every number is plus one from the one before. Counting up is called ascending." : "Ini garisan nombor. Setiap nombor tambah satu dari sebelumnya. Kira naik dipanggil menaik.")
+        : (lang === "en" ? "Counting down is called descending. Every number is minus one from the one before." : "Kira turun dipanggil menurun. Setiap nombor tolak satu dari sebelumnya."),
+      lang,
+      { allowWhenWordAudioDisabled: true },
+    );
+    for (let index = 1; index <= values.length; index += 1) {
+      setRevealed(index);
+      await wait(150);
+    }
+    setRunning(false);
+    onComplete();
+  };
+
+  return (
+    <section className="rounded-[2rem] border-2 border-cyan-300 bg-slate-950/85 p-4 sm:p-5">
+      <div className="overflow-x-auto pb-3" aria-label={lang === "en" ? `${direction} number line` : `garisan nombor ${direction === "ascending" ? "menaik" : "menurun"}`}>
+        <div className="mx-auto flex w-max min-w-full items-center justify-center gap-1">
+          {values.map((value, index) => (
+            <React.Fragment key={value}>
+              <span className={`grid h-12 w-12 place-items-center rounded-xl border-2 text-xl font-black transition-all duration-200 ${index < revealed ? "scale-100 border-yellow-300 bg-cyan-950 text-yellow-200 opacity-100" : "scale-75 border-slate-700 bg-slate-900 text-slate-700 opacity-30"}`} style={NUMBER_TEXT_STYLE}>{value}</span>
+              {index < values.length - 1 && (
+                <span className={`grid min-w-10 place-items-center text-xs font-black transition-opacity duration-200 ${index + 1 < revealed ? "text-cyan-300 opacity-100" : "text-slate-700 opacity-25"}`}>
+                  <span>{direction === "ascending" ? "+1" : "−1"}</span>
+                  <span aria-hidden="true">→</span>
+                </span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+      <button type="button" onClick={() => void reveal()} disabled={running || done} className="mx-auto mt-3 flex min-h-13 items-center justify-center rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 font-black text-white shadow-[0_5px_0_#1e3a8a] disabled:opacity-60">
+        {done
+          ? (lang === "en" ? "Number line complete!" : "Garisan nombor lengkap!")
+          : running
+            ? (lang === "en" ? "Revealing..." : "Sedang menunjukkan...")
+            : direction === "ascending"
+              ? (lang === "en" ? "Reveal the number line" : "Tunjukkan garisan nombor")
+              : (lang === "en" ? "Show the descending line" : "Tunjukkan garisan menurun")}
+      </button>
+    </section>
+  );
+}
+
+function SequencingTapCounter({ direction, lang, onComplete }: { direction: "up" | "down"; lang: Lang; onComplete: () => void }) {
+  const start = direction === "up" ? 11 : 20;
+  const target = direction === "up" ? 20 : 9;
+  const [count, setCount] = useState(start);
+  const [flying, setFlying] = useState(false);
+  const done = count === target;
+
+  const moveOne = async () => {
+    if (flying || done) return;
+    setFlying(true);
+    await wait(300);
+    const next = direction === "up" ? count + 1 : count - 1;
+    setCount(next);
+    speakNumber(next, lang);
+    setFlying(false);
+    if (next === target) onComplete();
+  };
+
+  return (
+    <section className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-5">
+      <style>{`@keyframes sequenceFlyIn{0%{transform:translateY(-70px) scale(.7);opacity:0}100%{transform:translateY(70px) scale(1);opacity:1}}@keyframes sequenceFlyOut{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-110px) translateX(80px) scale(.65);opacity:0}}`}</style>
+      <button type="button" onClick={() => void moveOne()} disabled={flying || done} className="mx-auto flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-70">
+        {done
+          ? direction === "up"
+            ? (lang === "en" ? "You reached 20!" : "Kamu dah sampai 20!")
+            : (lang === "en" ? "You reached 9!" : "Kamu dah sampai 9!")
+          : direction === "up"
+            ? (lang === "en" ? "Add one more" : "Tambah satu lagi")
+            : (lang === "en" ? "Remove one" : "Buang satu")}
+      </button>
+      <div className="relative mx-auto mt-5 max-w-4xl">
+        {flying && (
+          <span className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2" style={{ animation: `${direction === "up" ? "sequenceFlyIn" : "sequenceFlyOut"} 300ms ease-in-out both` }} aria-hidden="true">
+            <SpriteIcon value={BANANA} className="h-14 w-14 drop-shadow-[0_0_12px_rgba(250,204,21,.8)]" />
+          </span>
+        )}
+        <SequencingBananaBox count={count} hiddenIndex={direction === "down" && flying ? count - 1 : null} compact />
+      </div>
+      <div className="mx-auto mt-4 grid h-24 w-32 place-items-center rounded-3xl border-4 border-yellow-300 bg-slate-950 text-6xl font-black text-yellow-200 shadow-[0_6px_0_#a16207]" style={NUMBER_TEXT_STYLE} aria-live="polite">{count}</div>
+    </section>
+  );
+}
+
+function SequencingDescendingPhase({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
+  const [reachedNine, setReachedNine] = useState(false);
+  const [lineDone, setLineDone] = useState(false);
+  return (
+    <div className="space-y-5">
+      <SequencingTapCounter direction="down" lang={lang} onComplete={() => setReachedNine(true)} />
+      {reachedNine && (
+        <p className="comparison-result-reveal rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-4 text-center text-xl font-black text-slate-950">
+          {lang === "en" ? "9! Now we're back to one digit." : "9! Sekarang kita balik ke satu digit."}
+        </p>
+      )}
+      {reachedNine && <SequenceNumberLine direction="descending" lang={lang} onComplete={() => { setLineDone(true); onComplete(); }} />}
+      {lineDone && <p className="text-center text-lg font-black text-emerald-200">{lang === "en" ? "Every step down is −1." : "Setiap langkah turun ialah −1."}</p>}
+    </div>
+  );
+}
+
+type SequencingPracticeQuestion = {
+  id: string;
+  kind: "after" | "before" | "middle";
+  values: Array<number | null>;
+  answer: number;
+  options: number[];
+  direction: "up" | "down";
+};
+
+const ADVANCED_SEQUENCING_QUESTIONS: SequencingPracticeQuestion[] = [
+  { id: "seq-after-9", kind: "after", values: [8, 9, null], answer: 10, options: [10, 8, 9, 11], direction: "up" },
+  { id: "seq-after-13", kind: "after", values: [11, 12, 13, null], answer: 14, options: [14, 12, 13, 15], direction: "up" },
+  { id: "seq-after-19", kind: "after", values: [17, 18, 19, null], answer: 20, options: [20, 18, 17, 19], direction: "up" },
+  { id: "seq-before-10", kind: "before", values: [null, 10, 11], answer: 9, options: [9, 11, 8, 10], direction: "up" },
+  { id: "seq-before-15", kind: "before", values: [null, 15, 16, 17], answer: 14, options: [14, 16, 13, 15], direction: "up" },
+  { id: "seq-before-2", kind: "before", values: [null, 2, 3, 4], answer: 1, options: [1, 3, 0, 2], direction: "up" },
+  { id: "seq-middle-up", kind: "middle", values: [13, null, 15], answer: 14, options: [14, 12, 13, 16], direction: "up" },
+  { id: "seq-middle-down", kind: "middle", values: [18, null, 16], answer: 17, options: [17, 19, 16, 18], direction: "down" },
+  { id: "seq-middle-down-10", kind: "middle", values: [11, null, 9], answer: 10, options: [10, 12, 9, 11], direction: "down" },
+];
+
+function AdvancedSequencingPractice({ lang, t, onBack, onDone }: { lang: Lang; t: UIStrings; onBack: () => void; onDone: () => void }) {
+  const [index, setIndex] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const question = ADVANCED_SEQUENCING_QUESTIONS[index];
+  const correct = selected === question.answer;
+  const prompt = question.kind === "after"
+    ? (lang === "en" ? "What number comes next?" : "Nombor apa seterusnya?")
+    : question.kind === "before"
+      ? (lang === "en" ? "What number comes before?" : "Nombor apa sebelumnya?")
+      : (lang === "en" ? "Fill in the missing number." : "Isi nombor yang hilang.");
+  const ruleStart = question.kind === "before"
+    ? Number(question.values[1])
+    : Number(question.values[question.values.findIndex((value) => value === null) - 1]);
+  const feedbackCountsUp = question.kind !== "before" && question.direction === "up";
+  const feedback = selected == null ? "" : feedbackCountsUp
+    ? (lang === "en"
+      ? `${ruleStart} + 1 is ${question.answer}${correct ? ". Every number is one more than the last." : `, not ${selected}. Every number is one more than the last.`}`
+      : `${ruleStart} tambah 1 sama dengan ${question.answer}${correct ? ". Setiap nombor satu lebih dari sebelumnya." : `, bukan ${selected}. Setiap nombor satu lebih dari sebelumnya.`}`)
+    : (lang === "en"
+      ? `${ruleStart} − 1 is ${question.answer}${correct ? ". Every number is one less than the last." : `, not ${selected}. Every number is one less than the last.`}`
+      : `${ruleStart} tolak 1 sama dengan ${question.answer}${correct ? ". Setiap nombor satu kurang dari sebelumnya." : `, bukan ${selected}. Setiap nombor satu kurang dari sebelumnya.`}`);
+
+  const choose = (option: number) => {
+    if (selected !== null) return;
+    setSelected(option);
+    if (option === question.answer) setScore((value) => value + 1);
+  };
+
+  const next = () => {
+    if (index === ADVANCED_SEQUENCING_QUESTIONS.length - 1) {
+      onDone();
+      return;
+    }
+    setIndex((value) => value + 1);
+    setSelected(null);
+  };
+
+  return (
+    <main className="mx-auto w-full max-w-6xl pb-8">
+      <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-3 shadow-[0_10px_0_#083344]">
+        <LessonShell lang={lang} title={lang === "en" ? "Cyber Mission 3: Sequencing Practice" : "Misi Siber 3: Latihan Urutan"} helper={`${index + 1}/${ADVANCED_SEQUENCING_QUESTIONS.length} · ${t.score}: ${score}`} variant="cyber">
+          <button type="button" onClick={onBack} className="mb-5 rounded-2xl border-2 border-cyan-300 bg-slate-950 px-5 py-3 font-black text-cyan-100 shadow-[0_4px_0_#164e63]">{lang === "en" ? "Back to lesson" : "Kembali ke pelajaran"}</button>
+          <div className="rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/60 p-5 text-center">
+            <h3 className="text-3xl font-black text-yellow-200">{prompt}</h3>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3" aria-label={prompt}>
+              {question.values.map((value, valueIndex) => (
+                <React.Fragment key={valueIndex}>
+                  <span className={`grid h-20 min-w-20 place-items-center rounded-2xl border-4 px-3 text-4xl font-black shadow-[0_5px_0_#164e63] ${value === null ? "border-yellow-300 bg-slate-950 text-yellow-200" : "border-cyan-300 bg-cyan-950 text-cyan-100"}`} style={NUMBER_TEXT_STYLE}>{value ?? "?"}</span>
+                  {valueIndex < question.values.length - 1 && <span className="text-2xl font-black text-cyan-300" aria-hidden="true">→</span>}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {question.options.map((option) => {
+              const isPicked = selected === option;
+              const isAnswer = option === question.answer;
+              const stateClass = selected === null
+                ? "border-cyan-300 bg-slate-950 text-cyan-50 hover:bg-cyan-950"
+                : isAnswer
+                  ? "border-emerald-300 bg-emerald-800 text-white"
+                  : isPicked
+                    ? "border-orange-300 bg-orange-950 text-orange-100"
+                    : "border-slate-700 bg-slate-900 text-slate-500";
+              return <button key={option} type="button" onClick={() => choose(option)} disabled={selected !== null} className={`min-h-20 rounded-3xl border-2 text-4xl font-black shadow-[0_5px_0_rgba(0,0,0,.2)] ${stateClass}`} style={getNumberTextStyle(option)}>{option}</button>;
+            })}
+          </div>
+          {selected !== null && (
+            <div className={`comparison-result-reveal mt-5 rounded-2xl border-2 px-5 py-4 text-center text-lg font-black ${correct ? "border-emerald-300 bg-emerald-950 text-emerald-100" : "border-orange-300 bg-orange-950 text-orange-100"}`}>
+              <p className="text-2xl">{correct ? (lang === "en" ? "Correct!" : "Betul!") : (lang === "en" ? "Good try. Use the rule:" : "Cubaan baik. Guna peraturan:")}</p>
+              <p className="mt-2">{feedback}</p>
+              <button type="button" onClick={next} className="mt-4 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207]">{index === ADVANCED_SEQUENCING_QUESTIONS.length - 1 ? t.finish : t.nextQuestion}</button>
+            </div>
+          )}
+        </LessonShell>
+      </div>
+    </main>
+  );
+}
+
+function AdvancedSequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+  const [phase, setPhase] = useState(0);
+  const [showPractice, setShowPractice] = useState(false);
+  const [completed, setCompleted] = useState<boolean[]>(Array(6).fill(false));
+  const finishPhase = (phaseIndex: number) => setCompleted((current) => current.map((value, index) => index === phaseIndex ? true : value));
+  const phaseCopy = [
+    { title: lang === "en" ? "Count from 1 to 9" : "Kira dari 1 hingga 9", text: lang === "en" ? "Start with the numbers you already know." : "Mulakan dengan nombor yang kamu sudah kenal." },
+    { title: lang === "en" ? "From 9 to 10" : "Daripada 9 ke 10", text: lang === "en" ? "Add one banana to cross from a one-digit number to a two-digit number." : "Tambah satu pisang untuk bergerak daripada nombor satu digit kepada nombor dua digit." },
+    { title: lang === "en" ? "From 10 to 11" : "Daripada 10 ke 11", text: lang === "en" ? "Continue from 10. The same +1 rule makes 11." : "Sambung daripada 10. Peraturan +1 yang sama menghasilkan 11." },
+    { title: lang === "en" ? "Keep adding one" : "Terus tambah satu", text: lang === "en" ? "Tap quickly to grow the sequence from 11 to 20." : "Tekan untuk membina urutan daripada 11 hingga 20." },
+    { title: lang === "en" ? "Counting up is ascending" : "Kira naik ialah menaik", text: lang === "en" ? "Reveal how every number from 0 to 20 is connected by +1." : "Lihat bagaimana setiap nombor daripada 0 hingga 20 disambung dengan +1." },
+    { title: lang === "en" ? "Count down with −1" : "Kira turun dengan −1", text: lang === "en" ? "Remove one banana at a time, then reveal the descending number line." : "Buang satu pisang setiap kali, kemudian lihat garisan nombor menurun." },
+  ];
+
+  if (showPractice) return <AdvancedSequencingPractice lang={lang} t={t} onBack={() => { setShowPractice(false); setPhase(5); }} onDone={onDone} />;
+
+  return (
+    <main className="mx-auto w-full max-w-6xl pb-8">
+      <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3">
+        <LessonShell lang={lang} title={t.advancedSequencing} helper={lang === "en" ? "Cyber Mission 3 — Build sequences from 0 to 20 with +1 and −1." : "Misi Siber 3 — Bina urutan 0 hingga 20 dengan +1 dan −1."} variant="cyber">
+          <div className="mb-5 grid grid-cols-6 gap-2">{Array.from({ length: 6 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+          <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 3: Sequencing" : "Misi Siber 3: Urutan"} title={phaseCopy[phase].title} text={phaseCopy[phase].text} />
+          {phase === 0 && <SequencingAnchorPhase key="sequence-anchor" lang={lang} onComplete={() => finishPhase(0)} />}
+          {phase === 1 && <SequencingPlusOnePhase key="sequence-9-10" base={9} lang={lang} onComplete={() => finishPhase(1)} />}
+          {phase === 2 && <SequencingPlusOnePhase key="sequence-10-11" base={10} lang={lang} onComplete={() => finishPhase(2)} />}
+          {phase === 3 && <SequencingTapCounter key="sequence-up" direction="up" lang={lang} onComplete={() => finishPhase(3)} />}
+          {phase === 4 && <SequenceNumberLine key="sequence-line-up" direction="ascending" lang={lang} onComplete={() => finishPhase(4)} />}
+          {phase === 5 && <SequencingDescendingPhase key="sequence-down" lang={lang} onComplete={() => finishPhase(5)} />}
+          <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={5} canNext={completed[phase]} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 5 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
+        </LessonShell>
+      </div>
+    </main>
+  );
+}
+
 function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
@@ -3439,7 +3885,7 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   const [teenExampleDone, setTeenExampleDone] = useState(false);
   const [storyOneDone, setStoryOneDone] = useState(false);
   const [storyTwoDone, setStoryTwoDone] = useState(false);
-  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 3: Adding Practice" : "Misi Siber 3: Latihan Tambah"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(3); }} onFinish={() => onDone()} />;
+  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 4: Adding Practice" : "Misi Siber 4: Latihan Tambah"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(3); }} onFinish={() => onDone()} />;
   const titles = [
     lang === "en" ? "From 9 to 10" : "Daripada 9 ke 10",
     lang === "en" ? "Twelve and six more" : "Dua belas dan enam lagi",
@@ -3454,9 +3900,9 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   ];
   const canNext = [bridgeDone, teenExampleDone, storyOneDone, storyTwoDone][phase];
   return (
-    <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart1} helper={lang === "en" ? "Cyber Mission 3 - Fill a ten-basket to add bigger numbers." : "Misi Siber 3 - Isi bakul puluh untuk tambah nombor besar."} variant="cyber">
+    <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart1} helper={lang === "en" ? "Cyber Mission 4 - Fill a ten-basket to add bigger numbers." : "Misi Siber 4 - Isi bakul puluh untuk tambah nombor besar."} variant="cyber">
       <div className="mb-5 grid grid-cols-4 gap-2">{Array.from({ length: 4 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
-      <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 3" : "Misi Siber 3"} title={titles[phase]} text={texts[phase]} />
+      <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 4" : "Misi Siber 4"} title={titles[phase]} text={texts[phase]} />
       {phase === 0 && <MakeTenInteraction key="bridge-9-1" a={9} b={1} lang={lang} onSolved={() => setBridgeDone(true)} />}
       {phase === 1 && <MakeTenInteraction key="example-12-6" a={12} b={6} lang={lang} onSolved={() => setTeenExampleDone(true)} />}
       {phase === 2 && <MakeTenInteraction key="story-8-3" a={8} b={3} lang={lang} onSolved={() => setStoryOneDone(true)} />}
@@ -3471,7 +3917,7 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   const [showPractice, setShowPractice] = useState(false);
   const [mainCarryDone, setMainCarryDone] = useState(false);
   const [secondCarryDone, setSecondCarryDone] = useState(false);
-  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 4: Carrying Practice" : "Misi Siber 4: Latihan Bawa Puluh"} questions={advancedAdditionPart2Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(5); }} onFinish={() => onDone()} />;
+  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 5: Carrying Practice" : "Misi Siber 5: Latihan Bawa Puluh"} questions={advancedAdditionPart2Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(5); }} onFinish={() => onDone()} />;
   const phaseCopy = [
     { title: lang === "en" ? "Continue from Make a Ten" : "Sambung daripada Bina Sepuluh", text: lang === "en" ? "Remember 8 + 7 = 15? Now let's write it down like a mathematician." : "Ingat 8 + 7 = 15? Sekarang jom tulis macam ahli matematik." },
     { title: lang === "en" ? "Meet tens and ones" : "Kenal puluh dan sa", text: lang === "en" ? "Remember 14? It's ten and 4 more. The TEN is the tens. The 4 loose bananas are the ones." : "Ingat 14? Ia sepuluh dan 4 lagi. SEPULUH itu puluh. 4 pisang berselerak itu sa." },
@@ -3482,9 +3928,9 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   ];
   const canNext = phase < 4 || (phase === 4 ? mainCarryDone : secondCarryDone);
   return (
-    <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart2} helper={lang === "en" ? "Cyber Mission 4 - Write the make-a-ten idea in vertical form." : "Misi Siber 4 - Tulis idea bina sepuluh dalam bentuk menegak."} variant="cyber">
+    <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart2} helper={lang === "en" ? "Cyber Mission 5 - Write the make-a-ten idea in vertical form." : "Misi Siber 5 - Tulis idea bina sepuluh dalam bentuk menegak."} variant="cyber">
       <div className="mb-5 grid grid-cols-6 gap-2">{Array.from({ length: 6 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
-      <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 4" : "Misi Siber 4"} title={phaseCopy[phase].title} text={phaseCopy[phase].text} />
+      <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 5" : "Misi Siber 5"} title={phaseCopy[phase].title} text={phaseCopy[phase].text} />
       {phase === 0 && <div className="grid min-h-72 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center"><p className="text-6xl font-black text-yellow-200">8 + 7 = 15</p><p className="mt-4 text-xl font-black text-cyan-100">{lang === "en" ? "You already know how to make the ten. Now we record each place." : "Kamu sudah tahu cara bina sepuluh. Sekarang kita tulis setiap nilai tempat."}</p></div>}
       {phase === 1 && <TeenPlaceValueCard value={14} lang={lang} />}
       {phase === 2 && <div className="space-y-4"><TeenPlaceValueCard value={14} lang={lang} connectDigits /><p className="text-center text-xl font-black text-cyan-50">{lang === "en" ? "One more: 17 is 1 ten and 7 ones." : "Satu lagi: 17 ialah 1 puluh dan 7 sa."}</p><TeenPlaceValueCard value={17} lang={lang} connectDigits /></div>}
