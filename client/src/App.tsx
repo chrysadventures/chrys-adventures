@@ -8947,6 +8947,29 @@ function AdditionBananaEquation({
       setResultMergeStage("split");
     }
 
+    if (groups[groupIndex] === 0) {
+      setActiveGroup(groupIndex);
+      await speakNumber(0, lang);
+      const nextCompletedGroups = groupIndex + 1;
+      setCompletedGroups(nextCompletedGroups);
+      if (groupIndex < groups.length - 1) {
+        setActiveSign(groupIndex);
+        await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+        setCompletedSigns(groupIndex + 1);
+        setActiveSign(-1);
+        setActiveGroup(groupIndex + 1);
+      } else {
+        setResultMergeStage("joining");
+        await wait(prefersReducedMotion ? 0 : 500);
+        setResultMergeStage("joined");
+        setActiveGroup(-1);
+        await speakMalayBananaTotal(a + b, lang, emoji);
+        if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
+      }
+      setIsCounting(false);
+      return;
+    }
+
     const nextValue = currentCounts[groupIndex] + 1;
     setActiveGroup(groupIndex);
     setActiveBanana({ groupIndex, objectIndex: nextValue - 1 });
