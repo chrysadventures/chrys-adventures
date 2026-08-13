@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowLeft,
@@ -322,6 +322,7 @@ const OBJECT_SPRITES: Record<string, string> = {
 
 let activeNumberAudio: HTMLAudioElement | null = null;
 let activeCelebrationAudio: HTMLAudioElement | null = null;
+let successFanfareAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
 let queuedAudioAfterCounting: (() => void) | null = null;
@@ -2408,10 +2409,9 @@ function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: numbe
   const fullTen = total >= 10;
   const finished = moved === b;
 
-  const finishSolution = async () => {
+  const finishSolution = () => {
     if (submitted) return;
     setSubmitted(true);
-    await speakMalayBananaTotal(target, lang);
     onSolved();
   };
 
@@ -2482,7 +2482,7 @@ function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: numbe
         <div className="mt-5 text-center">
           <p className="text-4xl font-black text-yellow-200" style={getNumberTextStyle(target)}>{a} + {b} = {target}</p>
           <p className="mt-2 font-black text-cyan-100">{lang === "en" ? `One ten and ${target - 10} ones.` : `Satu puluh dan ${target - 10} sa.`}</p>
-          <button type="button" disabled={submitted} onClick={() => void finishSolution()} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1 disabled:opacity-60">
+          <button type="button" disabled={submitted} onClick={finishSolution} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1 disabled:opacity-60">
             {submitted ? (lang === "en" ? "Complete!" : "Selesai!") : (lang === "en" ? "Check total" : "Semak jumlah")}
           </button>
         </div>
@@ -2528,10 +2528,9 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
   const frameFull = filledMoves === need;
   const counter = frameFull ? 10 + placedLoose : a + filledMoves;
 
-  const finishSolution = async () => {
+  const finishSolution = () => {
     if (submitted) return;
     setSubmitted(true);
-    await speakMalayBananaTotal(total, lang);
     onSolved();
   };
 
@@ -2591,7 +2590,7 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
           {tensWritten && (
             <div className="mt-5 text-center">
               <p className="text-4xl font-black text-yellow-200">{a} + {b} = {total}</p>
-              <button type="button" disabled={submitted} onClick={() => void finishSolution()} className="mt-3 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] disabled:opacity-60">{submitted ? (lang === "en" ? "Complete!" : "Selesai!") : teaching ? (lang === "en" ? "Finish example" : "Selesaikan contoh") : (lang === "en" ? "Check carry" : "Semak bawa")}</button>
+              <button type="button" disabled={submitted} onClick={finishSolution} className="mt-3 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] disabled:opacity-60">{submitted ? (lang === "en" ? "Complete!" : "Selesai!") : teaching ? (lang === "en" ? "Finish example" : "Selesaikan contoh") : (lang === "en" ? "Check carry" : "Semak bawa")}</button>
             </div>
           )}
         </div>
@@ -10961,7 +10960,7 @@ function CorrectCelebration() {
     { left: "91%", color: "#38bdf8", delay: "40ms" },
   ];
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cancelled = false;
     const finishCelebration = () => {
       if (!cancelled) setIsVisible(false);
@@ -13328,8 +13327,11 @@ function stopCelebrationAudio() {
 
 function playSuccessFanfare(onFinished?: () => void) {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
+  stopNumberAudio();
   stopCelebrationAudio();
-  const audio = new Audio(`${import.meta.env.BASE_URL}audio/${SUCCESS_FANFARE_FILE}`);
+  const audio = getSuccessFanfareAudio();
+  audio.pause();
+  audio.currentTime = 0;
   audio.preload = "auto";
   audio.volume = 0.72;
   activeCelebrationAudio = audio;
@@ -13344,6 +13346,13 @@ function playSuccessFanfare(onFinished?: () => void) {
   audio.onerror = clear;
   void audio.play().catch(clear);
   return true;
+}
+
+function getSuccessFanfareAudio() {
+  if (successFanfareAudio) return successFanfareAudio;
+  successFanfareAudio = new Audio(`${import.meta.env.BASE_URL}audio/${SUCCESS_FANFARE_FILE}`);
+  successFanfareAudio.preload = "auto";
+  return successFanfareAudio;
 }
 
 function playNumberFile(value: number, lang: Lang, runId: number) {
@@ -13413,6 +13422,7 @@ function getNumberAudio(value: number, lang: Lang) {
 }
 
 function preloadNumberAudioFiles() {
+  getSuccessFanfareAudio().load();
   (Object.keys(NUMBER_AUDIO_FILES) as Lang[]).forEach((lang) => {
     Object.keys(NUMBER_AUDIO_FILES[lang]).forEach((value) => {
       getNumberAudio(Number(value), lang).load();
