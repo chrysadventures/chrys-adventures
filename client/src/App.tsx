@@ -2646,7 +2646,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
             key={index}
             className={`relative grid h-9 w-7 shrink-0 place-items-center rounded-lg border transition-all duration-200 sm:h-12 sm:w-11 sm:rounded-xl ${
               active
-                ? "z-10 scale-110 border-yellow-300 ring-2 ring-yellow-400 shadow-[0_0_18px_rgba(250,204,21,.65)]"
+                ? "z-10 scale-110 border-blue-300 ring-2 ring-blue-400 shadow-[0_0_18px_rgba(59,130,246,.65)]"
                 : counted
                   ? "border-cyan-400 bg-cyan-950/65"
                   : "border-cyan-900 bg-slate-950/80 opacity-30"
@@ -2654,7 +2654,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
           >
             <SpriteIcon value={emoji} className={isCookie ? "h-8 w-8 sm:h-11 sm:w-11" : "h-6 w-6 sm:h-9 sm:w-9"} />
             {showCountLabels && counted && (
-              <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black text-white shadow sm:-top-2.5 sm:h-6 sm:min-w-6 sm:text-xs ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600"}`}>
+              <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black text-white shadow sm:-top-2.5 sm:h-6 sm:min-w-6 sm:text-xs ${active ? "bg-blue-400 text-slate-950" : "bg-blue-600"}`}>
                 {index + 1}
               </span>
             )}
