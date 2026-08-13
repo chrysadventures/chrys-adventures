@@ -2643,7 +2643,7 @@ function AdvancedLessonNavigation({ lang, t, phase, lastPhase, canNext = true, o
   );
 }
 
-function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, label }: { count: number; countedThrough?: number; showCountLabels?: boolean; label?: string }) {
+function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, label, splitOnDesktop = false, emoji = BANANA }: { count: number; countedThrough?: number; showCountLabels?: boolean; label?: string; splitOnDesktop?: boolean; emoji?: string }) {
   const renderBananas = (start: number, amount: number) => (
     <div className="flex items-center justify-center gap-1 sm:gap-1.5">
       {Array.from({ length: amount }, (_, offset) => {
@@ -2661,7 +2661,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
                   : "border-cyan-900 bg-slate-950/80 opacity-30"
             }`}
           >
-            <SpriteIcon value={BANANA} className="h-6 w-6 sm:h-9 sm:w-9" />
+            <SpriteIcon value={emoji} className="h-6 w-6 sm:h-9 sm:w-9" />
             {showCountLabels && counted && (
               <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black text-white shadow sm:-top-2.5 sm:h-6 sm:min-w-6 sm:text-xs ${active ? "bg-yellow-500 text-slate-950" : "bg-blue-600"}`}>
                 {index + 1}
@@ -2677,7 +2677,14 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
 
   return (
     <div className="w-full" aria-label={label}>
-      <div className="hidden min-h-14 items-center justify-center sm:flex">{renderBananas(0, count)}</div>
+      <div className={`hidden min-h-14 items-center justify-center sm:flex ${splitOnDesktop ? "flex-col gap-2" : ""}`}>
+        {splitOnDesktop ? (
+          <>
+            {renderBananas(0, topCount)}
+            {bottomCount > 0 && renderBananas(topCount, bottomCount)}
+          </>
+        ) : renderBananas(0, count)}
+      </div>
       <div className="flex min-h-14 flex-col items-center justify-center gap-2 sm:hidden">
         {renderBananas(0, topCount)}
         {bottomCount > 0 && renderBananas(topCount, bottomCount)}
@@ -2697,13 +2704,18 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
   const [flyingBanana, setFlyingBanana] = useState<{ left: number; top: number; x: number; y: number; moving: boolean } | null>(null);
   const destinationRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<HTMLDivElement>(null);
+  const combinedRef = useRef<HTMLDivElement>(null);
+  const animationRunRef = useRef(0);
   const soundEnabled = React.useContext(AudioEnabledContext);
   const prefersReducedMotion = usePrefersReducedMotion();
   const total = base + extra;
   const currentTotal = base + moved;
   const remaining = extra - moved;
 
-  useEffect(() => () => stopNumberAudio(), []);
+  useEffect(() => () => {
+    animationRunRef.current += 1;
+    stopNumberAudio();
+  }, []);
 
   const speakOneValue = async (value: number) => {
     if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
@@ -2713,38 +2725,44 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
     }
   };
 
-  const addOneBanana = async () => {
+  const addAllBananas = async () => {
     if (busy || stage !== "moving" || remaining <= 0) return;
+    const runId = animationRunRef.current + 1;
+    animationRunRef.current = runId;
     setBusy(true);
-    const sourceBounds = sourceRef.current?.getBoundingClientRect();
-    const destinationBounds = destinationRef.current?.getBoundingClientRect();
-    if (sourceBounds && destinationBounds && !prefersReducedMotion) {
-      const left = sourceBounds.left + (sourceBounds.width / 2) - 18;
-      const top = sourceBounds.top + (sourceBounds.height / 2) - 18;
-      setFlyingBanana({
-        left,
-        top,
-        x: (destinationBounds.left + (destinationBounds.width / 2) - 18) - left,
-        y: (destinationBounds.top + (destinationBounds.height / 2) - 18) - top,
-        moving: false,
-      });
-      await wait(20);
-      setFlyingBanana((current) => current ? { ...current, moving: true } : current);
-      await wait(300);
+    for (let nextMoved = moved + 1; nextMoved <= extra; nextMoved += 1) {
+      if (animationRunRef.current !== runId) return;
+      const sourceBounds = sourceRef.current?.getBoundingClientRect();
+      const destinationBounds = destinationRef.current?.getBoundingClientRect();
+      if (sourceBounds && destinationBounds && !prefersReducedMotion) {
+        const left = sourceBounds.left + (sourceBounds.width / 2) - 18;
+        const top = sourceBounds.top + (sourceBounds.height / 2) - 18;
+        setFlyingBanana({
+          left,
+          top,
+          x: (destinationBounds.left + (destinationBounds.width / 2) - 18) - left,
+          y: (destinationBounds.top + (destinationBounds.height / 2) - 18) - top,
+          moving: false,
+        });
+        await wait(40);
+        if (animationRunRef.current !== runId) return;
+        setFlyingBanana((current) => current ? { ...current, moving: true } : current);
+        await wait(850);
+      }
+      if (animationRunRef.current !== runId) return;
+      const nextTotal = base + nextMoved;
+      setMoved(nextMoved);
+      setFlyingBanana(null);
+      await speakOneValue(nextTotal);
+      if (animationRunRef.current !== runId) return;
     }
 
-    const nextMoved = moved + 1;
-    const nextTotal = base + nextMoved;
-    setMoved(nextMoved);
-    setFlyingBanana(null);
-    await speakOneValue(nextTotal);
-
-    if (nextMoved === extra) {
-      setStage("merging");
-      await wait(prefersReducedMotion ? 80 : 500);
-      setStage("combined");
-    }
+    setStage("merging");
+    await wait(prefersReducedMotion ? 100 : 900);
+    if (animationRunRef.current !== runId) return;
+    setStage("combined");
     setBusy(false);
+    window.requestAnimationFrame(() => combinedRef.current?.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" }));
   };
 
   const countAllBananas = async () => {
@@ -2770,7 +2788,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
     : (lang === "en" ? "Chrys has 7 bananas. He finds 8 more on a low branch. Let's put them together." : "Chrys ada 7 pisang. Dia jumpa 8 lagi di dahan rendah. Jom gabungkan.");
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-3 shadow-[inset_0_0_35px_rgba(34,211,238,.12)] sm:p-5">
+    <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 shadow-[inset_0_0_35px_rgba(34,211,238,.12)] sm:p-7">
       {flyingBanana && (
         <span
           className="pointer-events-none fixed z-[80] grid h-10 w-10 place-items-center rounded-xl border-2 border-yellow-300 bg-amber-950 shadow-[0_0_20px_rgba(250,204,21,.65)]"
@@ -2778,7 +2796,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
             left: flyingBanana.left,
             top: flyingBanana.top,
             transform: flyingBanana.moving ? `translate(${flyingBanana.x}px, ${flyingBanana.y}px) scale(.9)` : "translate(0, 0) scale(1.1)",
-            transition: "transform 300ms ease-out",
+            transition: "transform 850ms cubic-bezier(.22,.8,.3,1)",
           }}
           aria-hidden="true"
         >
@@ -2797,25 +2815,25 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
       <CyberCounter value={stage === "moving" || stage === "merging" ? currentTotal : total} label={lang === "en" ? "Banana count" : "Kiraan pisang"} celebrate={currentTotal === total} />
 
       {(stage === "moving" || stage === "merging") && (
-        <div className={`mt-5 grid items-stretch gap-3 transition-all duration-500 min-[700px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] min-[700px]:items-center ${stage === "merging" ? "scale-95 opacity-0" : "scale-100 opacity-100"}`}>
-          <div ref={destinationRef} className="min-w-0 rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-3">
-            <p className="mb-3 text-center text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Chrys: ${currentTotal} bananas` : `Chrys: ${currentTotal} pisang`}</p>
-            <AdvancedBananaRow count={currentTotal} label={lang === "en" ? `${currentTotal} bananas with Chrys` : `${currentTotal} pisang dengan Chrys`} />
+        <div className={`mt-6 grid items-stretch gap-4 transition-all duration-700 min-[850px]:grid-cols-[minmax(0,1.15fr)_auto_minmax(0,.85fr)] min-[850px]:items-center ${stage === "merging" ? "scale-95 opacity-0" : "scale-100 opacity-100"}`}>
+          <div ref={destinationRef} className="flex min-h-48 min-w-0 flex-col justify-center rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-5 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]">
+            <p className="mb-5 text-center text-base font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Chrys: ${currentTotal} bananas` : `Chrys: ${currentTotal} pisang`}</p>
+            <AdvancedBananaRow count={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas with Chrys` : `${currentTotal} pisang dengan Chrys`} />
           </div>
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-3xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
-          <div ref={sourceRef} className="min-w-0 rounded-[1.75rem] border-2 border-emerald-300 bg-slate-950/75 p-3">
-            <p className="mb-3 text-center text-sm font-black uppercase tracking-wide text-emerald-200">
+          <div ref={sourceRef} className="flex min-h-48 min-w-0 flex-col justify-center rounded-[1.75rem] border-2 border-emerald-300 bg-slate-950/75 p-5 shadow-[inset_0_0_24px_rgba(52,211,153,.10)]">
+            <p className="mb-5 text-center text-base font-black uppercase tracking-wide text-emerald-200">
               {source === "alyse"
                 ? (lang === "en" ? `Alyse: ${remaining} left` : `Alyse: ${remaining} tinggal`)
                 : (lang === "en" ? `Low branch: ${remaining} left` : `Dahan rendah: ${remaining} tinggal`)}
             </p>
-            {remaining > 0 ? <AdvancedBananaRow count={remaining} label={lang === "en" ? `${remaining} bananas left to add` : `${remaining} pisang lagi untuk ditambah`} /> : <div className="grid min-h-14 place-items-center text-2xl font-black text-emerald-300">0</div>}
+            {remaining > 0 ? <AdvancedBananaRow count={remaining} countedThrough={remaining} showCountLabels splitOnDesktop label={lang === "en" ? `${remaining} bananas left to add` : `${remaining} pisang lagi untuk ditambah`} /> : <div className="grid min-h-14 place-items-center text-3xl font-black text-emerald-300">0</div>}
           </div>
         </div>
       )}
 
       {(stage === "combined" || stage === "counting" || stage === "equation") && (
-        <div className="mt-5 animate-[fadeIn_.5s_ease-out]">
+        <div ref={combinedRef} className="mt-5 animate-[fadeIn_.5s_ease-out]">
           <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
           <div className="rounded-[1.75rem] border-2 border-cyan-300 bg-slate-950/85 px-2 pb-4 pt-6 sm:px-4">
             <p className="mb-4 text-center text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? "Combined banana row" : "Baris pisang gabungan"}</p>
@@ -2826,8 +2844,8 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
 
       <div className="mt-5 text-center">
         {stage === "moving" && (
-          <button type="button" disabled={busy} onClick={() => void addOneBanana()} className="relative rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-7 py-4 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-50">
-            {busy ? (lang === "en" ? "Adding..." : "Menambah...") : (lang === "en" ? "Add a banana" : "Tambah pisang")}
+          <button type="button" disabled={busy} onClick={() => void addAllBananas()} className="relative rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 py-4 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-50">
+            {busy ? (lang === "en" ? `Adding ${extra} bananas...` : `Menambah ${extra} pisang...`) : (lang === "en" ? `Add ${extra} bananas` : `Tambah ${extra} pisang`)}
             {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
           </button>
         )}
@@ -2847,6 +2865,221 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+type AdvancedCookieAdditionStage = "story" | "countFirst" | "countSecond" | "readyJoin" | "joining" | "countTotal" | "done";
+
+function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolved: () => void }) {
+  const cookie = String.fromCodePoint(0x1f36a);
+  const [stage, setStage] = useState<AdvancedCookieAdditionStage>("story");
+  const [storyMoved, setStoryMoved] = useState(0);
+  const [firstCount, setFirstCount] = useState(0);
+  const [secondCount, setSecondCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [flyingCookie, setFlyingCookie] = useState<{ left: number; top: number; x: number; y: number; moving: boolean } | null>(null);
+  const chrysTrayRef = useRef<HTMLDivElement>(null);
+  const alyseTrayRef = useRef<HTMLDivElement>(null);
+  const methodRef = useRef<HTMLDivElement>(null);
+  const combinedRef = useRef<HTMLDivElement>(null);
+  const runRef = useRef(0);
+  const soundEnabled = React.useContext(AudioEnabledContext);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const speakOneValue = async (value: number) => {
+    if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakCountingSequence(value, lang, COUNTING_STEP_MS, undefined, undefined, value);
+    } else {
+      await wait(prefersReducedMotion ? 80 : 300);
+    }
+  };
+
+  const giveCookies = async () => {
+    if (busy || stage !== "story") return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setBusy(true);
+    for (let moved = 1; moved <= 5; moved += 1) {
+      if (runRef.current !== runId) return;
+      const sourceBounds = chrysTrayRef.current?.getBoundingClientRect();
+      const destinationBounds = alyseTrayRef.current?.getBoundingClientRect();
+      if (sourceBounds && destinationBounds && !prefersReducedMotion) {
+        const left = sourceBounds.left + (sourceBounds.width / 2) - 20;
+        const top = sourceBounds.top + (sourceBounds.height / 2) - 20;
+        setFlyingCookie({
+          left,
+          top,
+          x: (destinationBounds.left + (destinationBounds.width / 2) - 20) - left,
+          y: (destinationBounds.top + (destinationBounds.height / 2) - 20) - top,
+          moving: false,
+        });
+        await wait(50);
+        if (runRef.current !== runId) return;
+        setFlyingCookie((current) => current ? { ...current, moving: true } : current);
+        await wait(900);
+      }
+      if (runRef.current !== runId) return;
+      setStoryMoved(moved);
+      setFlyingCookie(null);
+      await speakOneValue(8 + moved);
+    }
+    if (runRef.current !== runId) return;
+    await wait(prefersReducedMotion ? 100 : 900);
+    setStage("countFirst");
+    setBusy(false);
+    window.requestAnimationFrame(() => methodRef.current?.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" }));
+  };
+
+  const countRow = async (count: number, update: (value: number) => void, nextStage: AdvancedCookieAdditionStage) => {
+    if (busy) return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setBusy(true);
+    update(0);
+    if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) update(value);
+      });
+    } else {
+      for (let value = 1; value <= count; value += 1) {
+        await wait(prefersReducedMotion ? 80 : Math.max(420, COUNTING_STEP_MS));
+        if (runRef.current !== runId) return;
+        update(value);
+      }
+    }
+    if (runRef.current !== runId) return;
+    update(count);
+    setStage(nextStage);
+    setBusy(false);
+  };
+
+  const joinTrays = async () => {
+    if (busy || stage !== "readyJoin") return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setBusy(true);
+    setStage("joining");
+    await wait(prefersReducedMotion ? 120 : 1000);
+    if (runRef.current !== runId) return;
+    setStage("countTotal");
+    setTotalCount(0);
+    window.requestAnimationFrame(() => combinedRef.current?.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" }));
+    if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakCountingSequence(13, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) setTotalCount(value);
+      });
+    } else {
+      for (let value = 1; value <= 13; value += 1) {
+        await wait(prefersReducedMotion ? 80 : Math.max(420, COUNTING_STEP_MS));
+        if (runRef.current !== runId) return;
+        setTotalCount(value);
+      }
+    }
+    if (runRef.current !== runId) return;
+    setTotalCount(13);
+    setStage("done");
+    setBusy(false);
+  };
+
+  const trayClass = "flex min-h-52 min-w-0 flex-col justify-center rounded-[1.75rem] border-2 bg-slate-950/80 p-5 shadow-[inset_0_0_26px_rgba(34,211,238,.10)]";
+
+  if (stage === "story") {
+    return (
+      <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 sm:p-7">
+        {flyingCookie && (
+          <span
+            className="pointer-events-none fixed z-[80] grid h-11 w-11 place-items-center rounded-xl border-2 border-yellow-300 bg-amber-950 text-3xl shadow-[0_0_22px_rgba(250,204,21,.65)]"
+            style={{
+              left: flyingCookie.left,
+              top: flyingCookie.top,
+              transform: flyingCookie.moving ? `translate(${flyingCookie.x}px, ${flyingCookie.y}px) scale(.92)` : "translate(0,0) scale(1.12)",
+              transition: "transform 900ms cubic-bezier(.22,.8,.3,1)",
+            }}
+            aria-hidden="true"
+          >
+            {cookie}
+          </span>
+        )}
+        <h4 className="text-center text-2xl font-black text-yellow-200">{lang === "en" ? "Chrys shares his cookies with Alyse" : "Chrys berkongsi biskut dengan Alyse"}</h4>
+        <p className="mx-auto mt-2 max-w-3xl text-center text-lg font-black text-cyan-50">{lang === "en" ? "Alyse already has 8 cookies. Chrys gives her 5 more from his tray." : "Alyse sudah ada 8 biskut. Chrys memberinya 5 lagi dari dulangnya."}</p>
+        <div className="mt-6 grid items-center gap-4 md:grid-cols-[minmax(0,.8fr)_auto_minmax(0,1.2fr)]">
+          <div ref={chrysTrayRef} className={`${trayClass} border-yellow-400`}>
+            <div className="mb-4 flex items-center justify-center gap-3"><img src={chrysHappy} alt="Chrys" className="h-20 w-20 object-contain" /><p className="text-lg font-black text-yellow-200">{lang === "en" ? `Chrys's tray: ${5 - storyMoved}` : `Dulang Chrys: ${5 - storyMoved}`}</p></div>
+            {5 - storyMoved > 0 ? <AdvancedBananaRow count={5 - storyMoved} countedThrough={5 - storyMoved} showCountLabels emoji={cookie} /> : <p className="text-center text-3xl font-black text-yellow-200">0</p>}
+          </div>
+          <div className="grid place-items-center text-5xl font-black text-yellow-300" aria-hidden="true">&#8594;</div>
+          <div ref={alyseTrayRef} className={`${trayClass} border-emerald-300`}>
+            <div className="mb-4 flex items-center justify-center gap-3"><img src={alyseGuide} alt="Alyse" className="h-20 w-20 object-contain" /><p className="text-lg font-black text-emerald-200">{lang === "en" ? `Alyse's tray: ${8 + storyMoved}` : `Dulang Alyse: ${8 + storyMoved}`}</p></div>
+            <AdvancedBananaRow count={8 + storyMoved} countedThrough={8 + storyMoved} showCountLabels splitOnDesktop emoji={cookie} />
+          </div>
+        </div>
+        <button type="button" disabled={busy} onClick={() => void giveCookies()} className="relative mx-auto mt-6 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-60">
+          {busy ? (lang === "en" ? "Giving 5 cookies..." : "Memberi 5 biskut...") : (lang === "en" ? "Give Alyse 5 cookies" : "Beri Alyse 5 biskut")}
+          {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
+        </button>
+      </div>
+    );
+  }
+
+  const firstFinished = stage !== "countFirst";
+  const secondVisible = stage !== "countFirst";
+  const secondFinished = !["countFirst", "countSecond"].includes(stage);
+  const showJoinArea = ["readyJoin", "joining", "countTotal", "done"].includes(stage);
+  const joined = stage === "countTotal" || stage === "done";
+
+  return (
+    <div ref={methodRef} className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 sm:p-7">
+      <h4 className="text-center text-2xl font-black text-yellow-200">{lang === "en" ? "Now count the two parts" : "Sekarang kira dua bahagian"}</h4>
+      <div className="mx-auto mt-6 grid max-w-6xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div className={`${trayClass} border-cyan-400`}>
+          <p className="mb-5 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Alyse's tray at the beginning" : "Dulang Alyse pada awalnya"}</p>
+          <AdvancedBananaRow count={8} countedThrough={firstCount} showCountLabels emoji={cookie} />
+          {!firstFinished && <button type="button" disabled={busy} onClick={() => void countRow(8, setFirstCount, "countSecond")} className="relative mx-auto mt-5 rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#164e63]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 8 cookies" : "Kira 8 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
+        </div>
+        <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-all duration-500 ${secondVisible ? "scale-100 border-yellow-300 bg-yellow-300 text-slate-950 opacity-100 shadow-[0_5px_0_#a16207]" : "scale-75 border-slate-700 bg-slate-900 text-slate-700 opacity-30"}`} aria-hidden="true">+</span>
+        <div className={`${trayClass} border-emerald-300 transition-all duration-500 ${secondVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-30"}`}>
+          <p className="mb-5 text-center text-lg font-black text-emerald-100">{lang === "en" ? "After Chrys gives 5 cookies" : "Selepas Chrys memberi 5 biskut"}</p>
+          <AdvancedBananaRow count={5} countedThrough={secondCount} showCountLabels emoji={cookie} />
+          {stage === "countSecond" && <button type="button" disabled={busy} onClick={() => void countRow(5, setSecondCount, "readyJoin")} className="relative mx-auto mt-5 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 5 cookies" : "Kira 5 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
+          {secondFinished && <p className="mt-4 text-center text-3xl font-black text-emerald-200">5</p>}
+        </div>
+      </div>
+
+      {showJoinArea && (
+        <div className="mt-7 border-t-2 border-cyan-700 pt-6">
+          <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
+          {!joined && (
+            <div className={`mx-auto grid max-w-5xl gap-4 md:grid-cols-2 ${stage === "joining" ? "pointer-events-none" : ""}`}>
+              <div className={`${trayClass} border-cyan-400 transition-all duration-1000 ${stage === "joining" ? "translate-x-[12%] scale-95 opacity-20" : "translate-x-0 opacity-100"}`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} /></div>
+              <div className={`${trayClass} border-emerald-300 transition-all duration-1000 ${stage === "joining" ? "-translate-x-[28%] scale-95 opacity-20" : "translate-x-0 opacity-100"}`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} /></div>
+            </div>
+          )}
+          {stage === "readyJoin" && <button type="button" onClick={() => void joinTrays()} className="relative mx-auto mt-5 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Join the two trays" : "Gabungkan dua dulang"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
+          {stage === "joining" && <p className="mt-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Joining the trays smoothly..." : "Menggabungkan dulang dengan lancar..."}</p>}
+          {joined && (
+            <div ref={combinedRef} className="comparison-result-reveal mx-auto max-w-5xl rounded-[1.75rem] border-2 border-yellow-300 bg-slate-950/90 p-6 shadow-[0_0_28px_rgba(250,204,21,.16)]">
+              <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
+              <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels emoji={cookie} />
+              <p className="mt-5 text-center text-2xl font-black text-cyan-100">{stage === "done" ? (lang === "en" ? "Total: 13 cookies" : "Jumlah: 13 biskut") : (lang === "en" ? `Counting: ${totalCount}` : `Mengira: ${totalCount}`)}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {stage === "done" && (
+        <div className="mt-6 text-center">
+          <p className="text-5xl font-black text-yellow-200">8 + 5 = 13</p>
+          <button type="button" disabled={submitted} onClick={() => { setSubmitted(true); onSolved(); }} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] disabled:opacity-60">{submitted ? (lang === "en" ? "Example complete!" : "Contoh selesai!") : (lang === "en" ? "Finish example" : "Selesaikan contoh")}</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -4300,13 +4533,13 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 4: Banana Row Practice" : "Misi Siber 4: Latihan Baris Pisang"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(3); }} onFinish={() => onDone()} />;
   const titles = [
     lang === "en" ? "Add bigger numbers" : "Tambah nombor besar",
-    lang === "en" ? "Chrys and Alyse combine piles" : "Chrys dan Alyse gabungkan kumpulan",
+    lang === "en" ? "Chrys shares cookies with Alyse" : "Chrys berkongsi biskut dengan Alyse",
     lang === "en" ? "More bananas on a branch" : "Lebih pisang di atas dahan",
     lang === "en" ? "Count every banana together" : "Kira setiap pisang sekali",
   ];
   const texts = [
     lang === "en" ? "Time to add bigger numbers - up to 20. We'll count all the bananas together." : "Masa untuk tambah nombor besar - sampai 20. Kita kira semua pisang sekali.",
-    lang === "en" ? "Move Alyse's bananas one at a time. Watch the count grow from 8 to 13." : "Gerakkan pisang Alyse satu demi satu. Lihat kiraan bertambah daripada 8 hingga 13.",
+    lang === "en" ? "Alyse has 8 cookies. Watch Chrys give her 5 more, then count the two parts and their total." : "Alyse ada 8 biskut. Lihat Chrys memberinya 5 lagi, kemudian kira dua bahagian dan jumlahnya.",
     lang === "en" ? "Move each banana from the low branch. Watch the count grow from 7 to 15." : "Gerakkan setiap pisang dari dahan rendah. Lihat kiraan bertambah daripada 7 hingga 15.",
     lang === "en" ? "First put the rows together. Then count every banana from left to right." : "Mula-mula gabungkan baris. Kemudian kira setiap pisang dari kiri ke kanan.",
   ];
@@ -4316,21 +4549,32 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
       <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 4" : "Misi Siber 4"} title={titles[phase]} text={texts[phase]} />
       {phase === 0 && (
         <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 text-center">
-          <div className="mx-auto grid max-w-3xl items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-            <img src={chrysThinking} alt="Chrys ready to add" className="mx-auto h-24 w-24 object-contain sm:h-28 sm:w-28" />
-            <div>
-              <p className="text-5xl font-black text-yellow-200 sm:text-6xl">8 + 5</p>
-              <p className="mt-3 text-lg font-black text-cyan-100">{lang === "en" ? "See the bananas. Join the rows. Count them all." : "Lihat pisang. Gabungkan baris. Kira semuanya."}</p>
+          <div className="mx-auto grid max-w-5xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+            <div className="rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-4">
+              <div className="mb-3 flex items-center justify-center gap-3">
+                <img src={chrysThinking} alt="Chrys with 8 bananas" className="h-16 w-16 object-contain" />
+                <p className="text-xl font-black text-cyan-100">{lang === "en" ? "Chrys has 8" : "Chrys ada 8"}</p>
+              </div>
+              <AdvancedBananaRow count={8} label={lang === "en" ? "Chrys has 8 bananas" : "Chrys ada 8 pisang"} />
             </div>
-            <img src={alyseGuide} alt="Alyse ready to add" className="mx-auto h-24 w-24 object-contain sm:h-28 sm:w-28" />
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
+            <div className="rounded-[1.75rem] border-2 border-emerald-300 bg-slate-950/75 p-4">
+              <div className="mb-3 flex items-center justify-center gap-3">
+                <img src={alyseGuide} alt="Alyse with 5 bananas" className="h-16 w-16 object-contain" />
+                <p className="text-xl font-black text-emerald-100">{lang === "en" ? "Alyse has 5" : "Alyse ada 5"}</p>
+              </div>
+              <AdvancedBananaRow count={5} label={lang === "en" ? "Alyse has 5 bananas" : "Alyse ada 5 pisang"} />
+            </div>
           </div>
+          <p className="mt-5 text-5xl font-black text-yellow-200 sm:text-6xl">8 + 5</p>
+          <p className="mt-3 text-lg font-black text-cyan-100">{lang === "en" ? "See the bananas. Join the rows. Count them all." : "Lihat pisang. Gabungkan baris. Kira semuanya."}</p>
           <button type="button" disabled={completed[0]} onClick={() => finishPhase(0)} className="relative mt-6 rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-7 py-4 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-60">
             {completed[0] ? (lang === "en" ? "Ready!" : "Sedia!") : (lang === "en" ? "Start the banana mission" : "Mulakan misi pisang")}
             {!completed[0] && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
           </button>
         </div>
       )}
-      {phase === 1 && <AdvancedAdditionRowScenario key="row-story-8-5" base={8} extra={5} lang={lang} source="alyse" onSolved={() => finishPhase(1)} />}
+      {phase === 1 && <AdvancedCookieAdditionScenario key="cookie-story-8-5" lang={lang} onSolved={() => finishPhase(1)} />}
       {phase === 2 && <AdvancedAdditionRowScenario key="row-story-7-8" base={7} extra={8} lang={lang} source="branch" onSolved={() => finishPhase(2)} />}
       {phase === 3 && (
         <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 text-center sm:p-6">
