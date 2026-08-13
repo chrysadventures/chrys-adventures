@@ -2408,6 +2408,13 @@ function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: numbe
   const fullTen = total >= 10;
   const finished = moved === b;
 
+  const finishSolution = async () => {
+    if (submitted) return;
+    setSubmitted(true);
+    await speakMalayBananaTotal(target, lang);
+    onSolved();
+  };
+
   const moveOne = async () => {
     if (busy || finished) return;
     const nextMoved = moved + 1;
@@ -2475,7 +2482,7 @@ function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: numbe
         <div className="mt-5 text-center">
           <p className="text-4xl font-black text-yellow-200" style={getNumberTextStyle(target)}>{a} + {b} = {target}</p>
           <p className="mt-2 font-black text-cyan-100">{lang === "en" ? `One ten and ${target - 10} ones.` : `Satu puluh dan ${target - 10} sa.`}</p>
-          <button type="button" disabled={submitted} onClick={() => { setSubmitted(true); onSolved(); }} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1 disabled:opacity-60">
+          <button type="button" disabled={submitted} onClick={() => void finishSolution()} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1 disabled:opacity-60">
             {submitted ? (lang === "en" ? "Complete!" : "Selesai!") : (lang === "en" ? "Check total" : "Semak jumlah")}
           </button>
         </div>
@@ -2520,6 +2527,13 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
   const soundEnabled = React.useContext(AudioEnabledContext);
   const frameFull = filledMoves === need;
   const counter = frameFull ? 10 + placedLoose : a + filledMoves;
+
+  const finishSolution = async () => {
+    if (submitted) return;
+    setSubmitted(true);
+    await speakMalayBananaTotal(total, lang);
+    onSolved();
+  };
 
   const countOne = async (nextValue: number, update: () => void) => {
     setBusy(true);
@@ -2577,7 +2591,7 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
           {tensWritten && (
             <div className="mt-5 text-center">
               <p className="text-4xl font-black text-yellow-200">{a} + {b} = {total}</p>
-              <button type="button" disabled={submitted} onClick={() => { setSubmitted(true); onSolved(); }} className="mt-3 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] disabled:opacity-60">{submitted ? (lang === "en" ? "Complete!" : "Selesai!") : teaching ? (lang === "en" ? "Finish example" : "Selesaikan contoh") : (lang === "en" ? "Check carry" : "Semak bawa")}</button>
+              <button type="button" disabled={submitted} onClick={() => void finishSolution()} className="mt-3 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] disabled:opacity-60">{submitted ? (lang === "en" ? "Complete!" : "Selesai!") : teaching ? (lang === "en" ? "Finish example" : "Selesaikan contoh") : (lang === "en" ? "Check carry" : "Semak bawa")}</button>
             </div>
           )}
         </div>
@@ -7562,6 +7576,7 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
         if (answer === 0) {
           await speakNumber(0, lang);
           setPhase("done");
+          await speakMalayBananaTotal(0, lang, objectEmoji);
         } else {
           setPhase("counting");
         }
@@ -9601,6 +9616,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
       await speakMathCue("equals", lang);
       await speakNumber(0, lang);
       setPhase("done");
+      await speakMalayBananaTotal(0, lang, emoji);
       setCuePlaying(false);
       onComplete?.();
       return;
@@ -9969,6 +9985,7 @@ function AnimatedCupSubtractionVisual({ lang, onComplete }: { lang: Lang; onComp
         lang === "en" ? "Five minus five equals zero." : "Lima tolak lima sama dengan sifar.",
         lang,
       );
+      await speakMalayBananaTotal(0, lang);
     };
 
     void runAnimation();
@@ -10946,24 +10963,18 @@ function CorrectCelebration() {
 
   useEffect(() => {
     let cancelled = false;
-    let postAudioTimer: number | null = null;
     const finishCelebration = () => {
       if (!cancelled) setIsVisible(false);
     };
-    const finishAfterThreeSeconds = () => {
-      if (cancelled || postAudioTimer !== null) return;
-      postAudioTimer = window.setTimeout(finishCelebration, 3000);
-    };
-    const audioStarted = playSuccessFanfare(finishAfterThreeSeconds);
+    const audioStarted = playSuccessFanfare(finishCelebration);
     const hideTimer = window.setTimeout(
       finishCelebration,
-      prefersReducedMotion ? 100 : audioStarted ? 13000 : 6800,
+      prefersReducedMotion ? 100 : audioStarted ? 13000 : 3000,
     );
 
     return () => {
       cancelled = true;
       window.clearTimeout(hideTimer);
-      if (postAudioTimer !== null) window.clearTimeout(postAudioTimer);
       stopCelebrationAudio();
     };
   }, [prefersReducedMotion]);
@@ -12900,6 +12911,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
 }) {
   const [started, setStarted] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const announcedStaticTotalRef = useRef<string | null>(null);
   const spokenSteps = q.method[lang].join(". ");
   const solutionVisual: Visual =
     q.inputMode === "tapObjects" && typeof q.answer === "number" && q.answer > 0
@@ -12916,14 +12928,41 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     solutionVisual.kind === "compareGroups";
   const startPrompt = lang === "en" ? "Ready to count?" : "Sedia untuk mengira?";
   const startLabel = lang === "en" ? "Start counting" : "Mula mengira";
+  const lastStep = stepIndex >= q.method[lang].length - 1;
+  const isAdvancedAdditionPart1 =
+    q.id.startsWith("adv-add-1-") && solutionVisual.kind === "horizontalAdd";
+  const staticBananaCalculation =
+    q.inputMode !== "carryBuild" &&
+    q.inputMode !== "makeTenBuild" &&
+    !isAdvancedAdditionPart1 &&
+    (
+      solutionVisual.kind === "verticalAdd" ||
+      solutionVisual.kind === "horizontalAdd" ||
+      (solutionVisual.kind === "count" && solutionVisual.count === 0 && (solutionVisual.emoji ?? BANANA) === BANANA)
+    );
 
   useEffect(() => {
     setStarted(false);
     setStepIndex(0);
+    announcedStaticTotalRef.current = null;
   }, [q.id]);
 
-  const isAdvancedAdditionPart1 =
-    q.id.startsWith("adv-add-1-") && solutionVisual.kind === "horizontalAdd";
+  useEffect(() => {
+    const answer = typeof q.answer === "number" ? q.answer : Number(q.answer);
+    const announcementKey = `${q.id}:${lang}:${answer}`;
+    if (
+      lang !== "ms" ||
+      !staticBananaCalculation ||
+      !lastStep ||
+      !Number.isInteger(answer) ||
+      answer < 0 ||
+      answer > 20 ||
+      announcedStaticTotalRef.current === announcementKey
+    ) return;
+
+    announcedStaticTotalRef.current = announcementKey;
+    void speakMalayBananaTotal(answer, lang);
+  }, [lang, lastStep, q.answer, q.id, staticBananaCalculation]);
 
   if (isAdvancedAdditionPart1) {
     return (
@@ -13006,7 +13045,6 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     );
   }
 
-  const lastStep = stepIndex >= q.method[lang].length - 1;
   return (
     <div className={`rounded-3xl border-2 p-4 ${cyber ? "border-cyan-500 bg-slate-950/80" : "border-emerald-100 bg-emerald-50"}`}>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -13174,7 +13212,7 @@ async function speakNumber(value: number, lang: Lang, onStart?: (value: number) 
 }
 
 async function speakMalayBananaTotal(value: number, lang: Lang, emoji: string = BANANA) {
-  if (lang !== "ms" || emoji !== BANANA || value < 1 || value > 20) return false;
+  if (lang !== "ms" || emoji !== BANANA || value < 0 || value > 20) return false;
   return speakBananaTotal(value, lang);
 }
 
