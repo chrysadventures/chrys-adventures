@@ -28,6 +28,8 @@ import chrysThinking from "@assets/chrys_reading_new_user_nobg.png";
 import chrysRunning from "@assets/chrys_running_new_user_hd_nobg.png";
 import alyseGuide from "@assets/alyse_guide_new_user_nobg.png";
 import trayPhoto from "@assets/tray_photo.png";
+import trayImage from "@assets/generated_images/Tray.png";
+import forestFloor from "@assets/generated_images/Forestfloor.png";
 
 type Lang = "en" | "ms";
 type MathCue = "plus" | "equals" | "minus";
@@ -2409,7 +2411,7 @@ function CyberCounter({ value, label, celebrate = false }: { value: number; labe
 function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: number; b: number; lang: Lang; friend?: boolean; onSolved: () => void }) {
   const [moved, setMoved] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const completionReportedRef = useRef(false);
   const soundEnabled = React.useContext(AudioEnabledContext);
   const total = a + moved;
   const target = a + b;
@@ -2418,12 +2420,6 @@ function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: numbe
   const remaining = b - moved;
   const fullTen = total >= 10;
   const finished = moved === b;
-
-  const finishSolution = () => {
-    if (submitted) return;
-    setSubmitted(true);
-    onSolved();
-  };
 
   const moveOne = async () => {
     if (busy || finished) return;
@@ -2443,6 +2439,10 @@ function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: numbe
       setMoved(nextMoved);
     }
     setBusy(false);
+    if (nextMoved === b && !completionReportedRef.current) {
+      completionReportedRef.current = true;
+      onSolved();
+    }
   };
 
   const message = finished
@@ -2492,9 +2492,6 @@ function MakeTenInteraction({ a, b, lang, friend = false, onSolved }: { a: numbe
         <div className="mt-5 text-center">
           <p className="text-4xl font-black text-yellow-200" style={getNumberTextStyle(target)}>{a} + {b} = {target}</p>
           <p className="mt-2 font-black text-cyan-100">{lang === "en" ? `One ten and ${target - 10} ones.` : `Satu puluh dan ${target - 10} sa.`}</p>
-          <button type="button" disabled={submitted} onClick={finishSolution} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1 disabled:opacity-60">
-            {submitted ? (lang === "en" ? "Complete!" : "Selesai!") : (lang === "en" ? "Check total" : "Semak jumlah")}
-          </button>
         </div>
       )}
     </div>
@@ -2533,16 +2530,10 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
   const [onesWritten, setOnesWritten] = useState(false);
   const [tensWritten, setTensWritten] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const completionReportedRef = useRef(false);
   const soundEnabled = React.useContext(AudioEnabledContext);
   const frameFull = filledMoves === need;
   const counter = frameFull ? 10 + placedLoose : a + filledMoves;
-
-  const finishSolution = () => {
-    if (submitted) return;
-    setSubmitted(true);
-    onSolved();
-  };
 
   const countOne = async (nextValue: number, update: () => void) => {
     setBusy(true);
@@ -2589,7 +2580,7 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
             {frameFull && !liftStarted && <button type="button" onClick={() => void liftTen()} className="relative rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#164e63]">{lang === "en" ? "Move TEN up" : "Naikkan PULUH"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
             {lifted && placedLoose < remainder && <button type="button" disabled={busy} onClick={() => void countOne(10 + placedLoose + 1, () => setPlacedLoose((value) => value + 1))} className="relative rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-50">{lang === "en" ? "Place one loose banana" : "Letak satu pisang berasingan"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
             {lifted && placedLoose === remainder && !onesWritten && <button type="button" onClick={() => setOnesWritten(true)} className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207]">{lang === "en" ? `Write ${remainder} in ONES` : `Tulis ${remainder} di SA`}</button>}
-            {onesWritten && !tensWritten && <button type="button" onClick={() => setTensWritten(true)} className="rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#065f46]">{lang === "en" ? "Write 1 in TENS" : "Tulis 1 di PULUH"}</button>}
+            {onesWritten && !tensWritten && <button type="button" onClick={() => { setTensWritten(true); if (!completionReportedRef.current) { completionReportedRef.current = true; onSolved(); } }} className="rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#065f46]">{lang === "en" ? "Write 1 in TENS" : "Tulis 1 di PULUH"}</button>}
           </div>
           {lifted && remainder > 0 && (
             <div className="mx-auto mt-4 grid max-w-lg grid-cols-2 gap-3">
@@ -2600,7 +2591,6 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
           {tensWritten && (
             <div className="mt-5 text-center">
               <p className="text-4xl font-black text-yellow-200">{a} + {b} = {total}</p>
-              <button type="button" disabled={submitted} onClick={finishSolution} className="mt-3 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] disabled:opacity-60">{submitted ? (lang === "en" ? "Complete!" : "Selesai!") : teaching ? (lang === "en" ? "Finish example" : "Selesaikan contoh") : (lang === "en" ? "Check carry" : "Semak bawa")}</button>
             </div>
           )}
         </div>
@@ -2643,27 +2633,28 @@ function AdvancedLessonNavigation({ lang, t, phase, lastPhase, canNext = true, o
   );
 }
 
-function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, label, splitOnDesktop = false, emoji = BANANA }: { count: number; countedThrough?: number; showCountLabels?: boolean; label?: string; splitOnDesktop?: boolean; emoji?: string }) {
+function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string }) {
+  const isCookie = emoji === String.fromCodePoint(0x1f36a);
   const renderBananas = (start: number, amount: number) => (
     <div className="flex items-center justify-center gap-1 sm:gap-1.5">
       {Array.from({ length: amount }, (_, offset) => {
         const index = start + offset;
         const counted = !showCountLabels || index < countedThrough;
-        const active = showCountLabels && index === countedThrough - 1;
+        const active = showCountLabels && isCounting && index === countedThrough - 1;
         return (
           <span
             key={index}
             className={`relative grid h-9 w-7 shrink-0 place-items-center rounded-lg border transition-all duration-200 sm:h-12 sm:w-11 sm:rounded-xl ${
               active
-                ? "z-10 scale-110 border-yellow-200 ring-2 ring-yellow-300 shadow-[0_0_18px_rgba(250,204,21,.55)]"
+                ? "z-10 scale-110 border-blue-300 ring-2 ring-blue-400 shadow-[0_0_18px_rgba(59,130,246,.65)]"
                 : counted
                   ? "border-cyan-400 bg-cyan-950/65"
                   : "border-cyan-900 bg-slate-950/80 opacity-30"
             }`}
           >
-            <SpriteIcon value={emoji} className="h-6 w-6 sm:h-9 sm:w-9" />
+            <SpriteIcon value={emoji} className={isCookie ? "h-8 w-8 sm:h-11 sm:w-11" : "h-6 w-6 sm:h-9 sm:w-9"} />
             {showCountLabels && counted && (
-              <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black text-white shadow sm:-top-2.5 sm:h-6 sm:min-w-6 sm:text-xs ${active ? "bg-yellow-500 text-slate-950" : "bg-blue-600"}`}>
+              <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black text-white shadow sm:-top-2.5 sm:h-6 sm:min-w-6 sm:text-xs ${active ? "bg-blue-400 text-slate-950" : "bg-blue-600"}`}>
                 {index + 1}
               </span>
             )}
@@ -2676,7 +2667,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
   const bottomCount = count > 7 ? Math.floor(count / 2) : 0;
 
   return (
-    <div className="w-full" aria-label={label}>
+    <div className={compact ? "w-fit shrink-0" : "w-full"} aria-label={label}>
       <div className={`hidden min-h-14 items-center justify-center sm:flex ${splitOnDesktop ? "flex-col gap-2" : ""}`}>
         {splitOnDesktop ? (
           <>
@@ -2700,7 +2691,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
   const [stage, setStage] = useState<AdvancedAdditionRowStage>("moving");
   const [busy, setBusy] = useState(false);
   const [countedThrough, setCountedThrough] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
+  const completionReportedRef = useRef(false);
   const [flyingBanana, setFlyingBanana] = useState<{ left: number; top: number; x: number; y: number; moving: boolean } | null>(null);
   const destinationRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<HTMLDivElement>(null);
@@ -2781,11 +2772,15 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
     setCountedThrough(total);
     setStage("equation");
     setBusy(false);
+    if (!completionReportedRef.current) {
+      completionReportedRef.current = true;
+      onSolved();
+    }
   };
 
   const movingText = source === "alyse"
     ? (lang === "en" ? "Chrys has 8 bananas. Alyse has 5. Let's put them together." : "Chrys ada 8 pisang. Alyse ada 5. Jom gabungkan.")
-    : (lang === "en" ? "Chrys has 7 bananas. He finds 8 more on a low branch. Let's put them together." : "Chrys ada 7 pisang. Dia jumpa 8 lagi di dahan rendah. Jom gabungkan.");
+    : (lang === "en" ? "Chrys has 7 bananas in his basket. He finds 8 more on the forest floor. Move them into his basket." : "Chrys ada 7 pisang di dalam bakulnya. Dia jumpa 8 lagi di lantai hutan. Pindahkan semuanya ke dalam bakulnya.");
 
   return (
     <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 shadow-[inset_0_0_35px_rgba(34,211,238,.12)] sm:p-7">
@@ -2808,7 +2803,9 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
         {stage === "moving"
           ? movingText
           : stage === "merging"
-            ? (lang === "en" ? "The two groups are joining..." : "Dua kumpulan sedang bergabung...")
+            ? source === "branch"
+              ? (lang === "en" ? "All the bananas are now in Chrys's basket..." : "Semua pisang kini berada di dalam bakul Chrys...")
+              : (lang === "en" ? "The two groups are joining..." : "Dua kumpulan sedang bergabung...")
             : (lang === "en" ? "Count all the bananas together." : "Kira semua pisang sekali.")}
       </p>
 
@@ -2817,17 +2814,29 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
       {(stage === "moving" || stage === "merging") && (
         <div className={`mt-6 grid items-stretch gap-4 transition-all duration-700 min-[850px]:grid-cols-[minmax(0,1.15fr)_auto_minmax(0,.85fr)] min-[850px]:items-center ${stage === "merging" ? "scale-95 opacity-0" : "scale-100 opacity-100"}`}>
           <div ref={destinationRef} className="flex min-h-48 min-w-0 flex-col justify-center rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-5 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]">
-            <p className="mb-5 text-center text-base font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Chrys: ${currentTotal} bananas` : `Chrys: ${currentTotal} pisang`}</p>
-            <AdvancedBananaRow count={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas with Chrys` : `${currentTotal} pisang dengan Chrys`} />
+            <p className="mb-3 text-center text-base font-black uppercase tracking-wide text-cyan-200">{source === "branch" ? (lang === "en" ? `Chrys's basket: ${currentTotal}` : `Bakul Chrys: ${currentTotal}`) : (lang === "en" ? `Chrys: ${currentTotal} bananas` : `Chrys: ${currentTotal} pisang`)}</p>
+            {source === "branch" ? (
+              <div className="relative mx-auto aspect-square w-full max-w-[22rem]">
+                <img src={BASKET_SPRITE} alt={lang === "en" ? "Chrys's basket" : "Bakul Chrys"} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_12px_12px_rgba(0,0,0,.38)]" />
+                <div className="absolute inset-x-[7%] inset-y-[22%] grid place-items-center scale-[.86]">
+                  <AdvancedBananaRow count={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas in Chrys's basket` : `${currentTotal} pisang di dalam bakul Chrys`} />
+                </div>
+              </div>
+            ) : (
+              <AdvancedBananaRow count={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas with Chrys` : `${currentTotal} pisang dengan Chrys`} />
+            )}
           </div>
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-3xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
-          <div ref={sourceRef} className="flex min-h-48 min-w-0 flex-col justify-center rounded-[1.75rem] border-2 border-emerald-300 bg-slate-950/75 p-5 shadow-[inset_0_0_24px_rgba(52,211,153,.10)]">
-            <p className="mb-5 text-center text-base font-black uppercase tracking-wide text-emerald-200">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-3xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">{source === "branch" ? "←" : "+"}</span>
+          <div ref={sourceRef} className={`relative flex min-h-48 min-w-0 flex-col justify-center overflow-hidden rounded-[1.75rem] border-2 border-emerald-300 p-5 shadow-[inset_0_0_24px_rgba(52,211,153,.10)] ${source === "branch" ? "min-h-[22rem] bg-slate-950" : "bg-slate-950/75"}`}>
+            {source === "branch" && <><img src={forestFloor} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" /><span className="absolute inset-0 bg-slate-950/10" aria-hidden="true" /></>}
+            <p className={`relative z-10 mx-auto mb-5 rounded-full px-4 py-2 text-center text-base font-black uppercase tracking-wide ${source === "branch" ? "bg-slate-950/80 text-white shadow-lg" : "text-emerald-200"}`}>
               {source === "alyse"
                 ? (lang === "en" ? `Alyse: ${remaining} left` : `Alyse: ${remaining} tinggal`)
-                : (lang === "en" ? `Low branch: ${remaining} left` : `Dahan rendah: ${remaining} tinggal`)}
+                : (lang === "en" ? `Forest floor: ${remaining} bananas left` : `Lantai hutan: ${remaining} pisang tinggal`)}
             </p>
-            {remaining > 0 ? <AdvancedBananaRow count={remaining} countedThrough={remaining} showCountLabels splitOnDesktop label={lang === "en" ? `${remaining} bananas left to add` : `${remaining} pisang lagi untuk ditambah`} /> : <div className="grid min-h-14 place-items-center text-3xl font-black text-emerald-300">0</div>}
+            <div className="relative z-10 rounded-3xl bg-slate-950/25 py-4">
+              {remaining > 0 ? <AdvancedBananaRow count={remaining} countedThrough={remaining} showCountLabels splitOnDesktop label={lang === "en" ? `${remaining} bananas on the forest floor` : `${remaining} pisang di lantai hutan`} /> : <div className="grid min-h-14 place-items-center text-3xl font-black text-white">0</div>}
+            </div>
           </div>
         </div>
       )}
@@ -2837,7 +2846,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
           <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
           <div className="rounded-[1.75rem] border-2 border-cyan-300 bg-slate-950/85 px-2 pb-4 pt-6 sm:px-4">
             <p className="mb-4 text-center text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? "Combined banana row" : "Baris pisang gabungan"}</p>
-            <AdvancedBananaRow count={total} countedThrough={countedThrough} showCountLabels={stage === "counting" || stage === "equation"} label={lang === "en" ? `${total} bananas together` : `${total} pisang sekali`} />
+            <AdvancedBananaRow count={total} countedThrough={countedThrough} showCountLabels={stage === "counting" || stage === "equation"} isCounting={stage === "counting"} label={lang === "en" ? `${total} bananas together` : `${total} pisang sekali`} />
           </div>
         </div>
       )}
@@ -2845,7 +2854,13 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
       <div className="mt-5 text-center">
         {stage === "moving" && (
           <button type="button" disabled={busy} onClick={() => void addAllBananas()} className="relative rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 py-4 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-50">
-            {busy ? (lang === "en" ? `Adding ${extra} bananas...` : `Menambah ${extra} pisang...`) : (lang === "en" ? `Add ${extra} bananas` : `Tambah ${extra} pisang`)}
+            {source === "branch"
+              ? busy
+                ? (lang === "en" ? `Moving ${extra} bananas...` : `Memindahkan ${extra} pisang...`)
+                : (lang === "en" ? `Move ${extra} bananas into Chrys's basket` : `Pindahkan ${extra} pisang ke dalam bakul Chrys`)
+              : busy
+                ? (lang === "en" ? `Adding ${extra} bananas...` : `Menambah ${extra} pisang...`)
+                : (lang === "en" ? `Add ${extra} bananas` : `Tambah ${extra} pisang`)}
             {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
           </button>
         )}
@@ -2859,9 +2874,6 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
         {stage === "equation" && (
           <div>
             <p className="text-4xl font-black text-yellow-200 sm:text-5xl" style={getNumberTextStyle(total)}>{base} + {extra} = {total}</p>
-            <button type="button" disabled={submitted} onClick={() => { setSubmitted(true); onSolved(); }} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] active:translate-y-1 disabled:opacity-60">
-              {submitted ? (lang === "en" ? "Example complete!" : "Contoh selesai!") : (lang === "en" ? "Finish example" : "Selesaikan contoh")}
-            </button>
           </div>
         )}
       </div>
@@ -2879,7 +2891,7 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
   const [secondCount, setSecondCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const completionReportedRef = useRef(false);
   const [flyingCookie, setFlyingCookie] = useState<{ left: number; top: number; x: number; y: number; moving: boolean } | null>(null);
   const chrysTrayRef = useRef<HTMLDivElement>(null);
   const alyseTrayRef = useRef<HTMLDivElement>(null);
@@ -2987,6 +2999,10 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
     setTotalCount(13);
     setStage("done");
     setBusy(false);
+    if (!completionReportedRef.current) {
+      completionReportedRef.current = true;
+      onSolved();
+    }
   };
 
   const trayClass = "flex min-h-52 min-w-0 flex-col justify-center rounded-[1.75rem] border-2 bg-slate-950/80 p-5 shadow-[inset_0_0_26px_rgba(34,211,238,.10)]";
@@ -2996,7 +3012,7 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
       <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 sm:p-7">
         {flyingCookie && (
           <span
-            className="pointer-events-none fixed z-[80] grid h-11 w-11 place-items-center rounded-xl border-2 border-yellow-300 bg-amber-950 text-3xl shadow-[0_0_22px_rgba(250,204,21,.65)]"
+            className="pointer-events-none fixed z-[80] grid h-11 w-11 place-items-center rounded-xl border-2 border-cyan-300 bg-slate-950 text-3xl shadow-[0_0_22px_rgba(34,211,238,.45)]"
             style={{
               left: flyingCookie.left,
               top: flyingCookie.top,
@@ -3041,13 +3057,13 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
       <div className="mx-auto mt-6 grid max-w-6xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <div className={`${trayClass} border-cyan-400`}>
           <p className="mb-5 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Alyse's tray at the beginning" : "Dulang Alyse pada awalnya"}</p>
-          <AdvancedBananaRow count={8} countedThrough={firstCount} showCountLabels emoji={cookie} />
+          <AdvancedBananaRow count={8} countedThrough={firstCount} showCountLabels isCounting={stage === "countFirst" && busy} emoji={cookie} />
           {!firstFinished && <button type="button" disabled={busy} onClick={() => void countRow(8, setFirstCount, "countSecond")} className="relative mx-auto mt-5 rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#164e63]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 8 cookies" : "Kira 8 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
         </div>
         <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-all duration-500 ${secondVisible ? "scale-100 border-yellow-300 bg-yellow-300 text-slate-950 opacity-100 shadow-[0_5px_0_#a16207]" : "scale-75 border-slate-700 bg-slate-900 text-slate-700 opacity-30"}`} aria-hidden="true">+</span>
         <div className={`${trayClass} border-emerald-300 transition-all duration-500 ${secondVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-30"}`}>
           <p className="mb-5 text-center text-lg font-black text-emerald-100">{lang === "en" ? "After Chrys gives 5 cookies" : "Selepas Chrys memberi 5 biskut"}</p>
-          <AdvancedBananaRow count={5} countedThrough={secondCount} showCountLabels emoji={cookie} />
+          <AdvancedBananaRow count={5} countedThrough={secondCount} showCountLabels isCounting={stage === "countSecond" && busy} emoji={cookie} />
           {stage === "countSecond" && <button type="button" disabled={busy} onClick={() => void countRow(5, setSecondCount, "readyJoin")} className="relative mx-auto mt-5 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 5 cookies" : "Kira 5 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
           {secondFinished && <p className="mt-4 text-center text-3xl font-black text-emerald-200">5</p>}
         </div>
@@ -3057,17 +3073,27 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
         <div className="mt-7 border-t-2 border-cyan-700 pt-6">
           <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
           {!joined && (
-            <div className={`mx-auto grid max-w-5xl gap-4 md:grid-cols-2 ${stage === "joining" ? "pointer-events-none" : ""}`}>
-              <div className={`${trayClass} border-cyan-400 transition-all duration-1000 ${stage === "joining" ? "translate-x-[12%] scale-95 opacity-20" : "translate-x-0 opacity-100"}`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} /></div>
-              <div className={`${trayClass} border-emerald-300 transition-all duration-1000 ${stage === "joining" ? "-translate-x-[28%] scale-95 opacity-20" : "translate-x-0 opacity-100"}`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} /></div>
-            </div>
+            stage === "joining" ? (
+              <div className="comparison-result-reveal mx-auto max-w-5xl rounded-[1.75rem] border-2 border-yellow-300 bg-slate-950/90 p-6 shadow-[0_0_28px_rgba(250,204,21,.16)]">
+                <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
+                <div className="flex items-center justify-center gap-1 overflow-hidden">
+                  <AdvancedBananaRow count={8} countedThrough={8} showCountLabels compact emoji={cookie} />
+                  <AdvancedBananaRow count={5} countedThrough={5} showCountLabels compact emoji={cookie} />
+                </div>
+              </div>
+            ) : (
+              <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
+                <div className={`${trayClass} border-cyan-400`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} /></div>
+                <div className={`${trayClass} border-emerald-300`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} /></div>
+              </div>
+            )
           )}
           {stage === "readyJoin" && <button type="button" onClick={() => void joinTrays()} className="relative mx-auto mt-5 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Join the two trays" : "Gabungkan dua dulang"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
           {stage === "joining" && <p className="mt-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Joining the trays smoothly..." : "Menggabungkan dulang dengan lancar..."}</p>}
           {joined && (
             <div ref={combinedRef} className="comparison-result-reveal mx-auto max-w-5xl rounded-[1.75rem] border-2 border-yellow-300 bg-slate-950/90 p-6 shadow-[0_0_28px_rgba(250,204,21,.16)]">
               <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
-              <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels emoji={cookie} />
+              <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels isCounting={stage === "countTotal"} emoji={cookie} />
               <p className="mt-5 text-center text-2xl font-black text-cyan-100">{stage === "done" ? (lang === "en" ? "Total: 13 cookies" : "Jumlah: 13 biskut") : (lang === "en" ? `Counting: ${totalCount}` : `Mengira: ${totalCount}`)}</p>
             </div>
           )}
@@ -3077,7 +3103,6 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
       {stage === "done" && (
         <div className="mt-6 text-center">
           <p className="text-5xl font-black text-yellow-200">8 + 5 = 13</p>
-          <button type="button" disabled={submitted} onClick={() => { setSubmitted(true); onSolved(); }} className="mt-4 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#065f46] disabled:opacity-60">{submitted ? (lang === "en" ? "Example complete!" : "Contoh selesai!") : (lang === "en" ? "Finish example" : "Selesaikan contoh")}</button>
         </div>
       )}
     </div>
@@ -4179,10 +4204,8 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
         </div>
       </div>
 
-      <button type="button" onClick={() => stage === "ready" ? void countStartingGroup() : void addOne()} disabled={busy || stage === "done"} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
-        {stage === "done"
-          ? (lang === "en" ? `${total} bananas!` : `${total} pisang!`)
-          : stage === "ready"
+      {stage !== "done" && <button type="button" onClick={() => stage === "ready" ? void countStartingGroup() : void addOne()} disabled={busy} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
+        {stage === "ready"
             ? (lang === "en" ? "Start counting" : "Mula mengira")
             : stage === "countingBase"
               ? (lang === "en" ? `Counting ${visibleBase}...` : `Mengira ${visibleBase}...`)
@@ -4199,7 +4222,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
                   : stage === "combining"
                     ? (lang === "en" ? "Combining both groups..." : "Menggabungkan kedua-dua kumpulan...")
                     : (lang === "en" ? "Add 1 banana" : "Tambah 1 pisang")}
-      </button>
+      </button>}
 
       {(stage === "equals" || showBottomGroups || stage === "combining" || stage === "done") && (
         <div className="comparison-result-reveal mt-5 border-t-2 border-cyan-400/40 pt-5">
@@ -4292,15 +4315,13 @@ function SequenceNumberLine({ direction, lang, onComplete }: { direction: "ascen
           ))}
         </div>
       </div>
-      <button type="button" onClick={() => void reveal()} disabled={running || done} className="mx-auto mt-3 flex min-h-13 items-center justify-center rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 font-black text-white shadow-[0_5px_0_#1e3a8a] disabled:opacity-60">
-        {done
-          ? (lang === "en" ? "Number line complete!" : "Garisan nombor lengkap!")
-          : running
+      {!done && <button type="button" onClick={() => void reveal()} disabled={running} className="mx-auto mt-3 flex min-h-13 items-center justify-center rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 font-black text-white shadow-[0_5px_0_#1e3a8a] disabled:opacity-60">
+        {running
             ? (lang === "en" ? "Revealing..." : "Sedang menunjukkan...")
             : direction === "ascending"
               ? (lang === "en" ? "Reveal the number line" : "Tunjukkan garisan nombor")
               : (lang === "en" ? "Show the descending line" : "Tunjukkan garisan menurun")}
-      </button>
+      </button>}
     </section>
   );
 }
@@ -4338,17 +4359,13 @@ function SequencingTapCounter({ direction, lang, onComplete }: { direction: "up"
   return (
     <section className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-cyan-950/55 p-5">
       <style>{`@keyframes sequenceFlyIn{0%{transform:translateY(-70px) scale(.7);opacity:0}100%{transform:translateY(70px) scale(1);opacity:1}}@keyframes sequenceFlyOut{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-110px) translateX(80px) scale(.65);opacity:0}}`}</style>
-      <button type="button" onClick={() => void moveOne()} disabled={busy || done} className="group relative mx-auto flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-100 bg-yellow-400 px-8 text-lg font-black text-slate-950 shadow-[0_7px_0_#a16207,0_0_0_0_rgba(250,204,21,0)] transition-all duration-200 hover:-translate-y-1 hover:scale-105 hover:bg-yellow-300 hover:shadow-[0_9px_0_#a16207,0_0_24px_rgba(250,204,21,.45)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 active:translate-y-1 active:scale-95 active:shadow-[0_2px_0_#a16207] disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:scale-100">
+      {!done && <button type="button" onClick={() => void moveOne()} disabled={busy} className="group relative mx-auto flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-100 bg-yellow-400 px-8 text-lg font-black text-slate-950 shadow-[0_7px_0_#a16207,0_0_0_0_rgba(250,204,21,0)] transition-all duration-200 hover:-translate-y-1 hover:scale-105 hover:bg-yellow-300 hover:shadow-[0_9px_0_#a16207,0_0_24px_rgba(250,204,21,.45)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 active:translate-y-1 active:scale-95 active:shadow-[0_2px_0_#a16207] disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:scale-100">
         {flying
           ? direction === "up"
             ? (lang === "en" ? "Adding a banana..." : "Menambah pisang...")
             : (lang === "en" ? "Removing a banana..." : "Membuang pisang...")
           : coolingDown
             ? (lang === "en" ? "Get ready for the next one..." : "Bersedia untuk yang seterusnya...")
-          : done
-          ? direction === "up"
-            ? (lang === "en" ? "You reached 20!" : "Kamu dah sampai 20!")
-            : (lang === "en" ? "You reached 9!" : "Kamu dah sampai 9!")
           : direction === "up"
             ? (lang === "en" ? "Add to 20 bananas!" : "Tambah hingga 20 pisang!")
             : (lang === "en" ? "Remove one" : "Buang satu")}
@@ -4357,7 +4374,7 @@ function SequencingTapCounter({ direction, lang, onComplete }: { direction: "up"
             <PointerIcon />
           </span>
         )}
-      </button>
+      </button>}
       <div className="relative mx-auto mt-5 max-w-4xl">
         {flying && (
           <span className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2" style={{ animation: `${direction === "up" ? "sequenceFlyIn" : "sequenceFlyOut"} 600ms ease-in-out both` }} aria-hidden="true">
@@ -4525,6 +4542,100 @@ function AdvancedSequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIString
   );
 }
 
+function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
+  const cookie = String.fromCodePoint(0x1f36a);
+  const [leftCount, setLeftCount] = useState(0);
+  const [rightCount, setRightCount] = useState(0);
+  const [countingTray, setCountingTray] = useState<"left" | "right" | null>(null);
+  const [showTotal, setShowTotal] = useState(false);
+  const runRef = useRef(0);
+  const soundEnabled = React.useContext(AudioEnabledContext);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const countTray = async (side: "left" | "right", count: number) => {
+    if (countingTray || showTotal || (side === "left" ? leftCount === count : rightCount === count)) return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    stopNumberAudio();
+    setCountingTray(side);
+    const update = side === "left" ? setLeftCount : setRightCount;
+    update(0);
+    if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) update(value);
+      });
+    } else {
+      for (let value = 1; value <= count; value += 1) {
+        await wait(prefersReducedMotion ? 80 : Math.max(420, COUNTING_STEP_MS));
+        if (runRef.current !== runId) return;
+        update(value);
+      }
+    }
+    if (runRef.current !== runId) return;
+    update(count);
+    setCountingTray(null);
+    const bothCounted = side === "left" ? rightCount === 5 : leftCount === 8;
+    if (bothCounted) {
+      setShowTotal(true);
+      onComplete();
+    }
+  };
+
+  const tray = ({ side, count, countedThrough, name, character, borderClass, textClass }: { side: "left" | "right"; count: number; countedThrough: number; name: string; character: string; borderClass: string; textClass: string }) => {
+    const finished = countedThrough === count;
+    const busy = countingTray === side;
+    return (
+      <div className={`rounded-[1.75rem] border-2 bg-slate-950/75 p-4 ${borderClass}`}>
+        <div className="mb-2 flex items-center justify-center gap-3">
+          <img src={character} alt="" className="h-14 w-14 object-contain" />
+          <p className={`text-xl font-black ${textClass}`}>{name}</p>
+        </div>
+        <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[25rem]" aria-label={lang === "en" ? `${count} cookies in ${name}` : `${count} biskut di ${name}`}>
+          <img src={trayImage} alt="" className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_10px_8px_rgba(0,0,0,.28)]" />
+          <div className="absolute inset-x-[13%] inset-y-[16%] grid place-items-center">
+            <AdvancedBananaRow count={count} countedThrough={countedThrough} showCountLabels isCounting={countingTray === side} splitOnDesktop emoji={cookie} />
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={countingTray !== null || finished}
+          onClick={() => void countTray(side, count)}
+          className="relative mt-3 rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63] active:translate-y-1 disabled:opacity-60"
+        >
+          {busy
+            ? (lang === "en" ? "Counting..." : "Sedang mengira...")
+            : finished
+              ? (lang === "en" ? `Total: ${count} cookies` : `Jumlah: ${count} biskut`)
+              : (lang === "en" ? `Count ${name}` : `Kira ${name}`)}
+          {!finished && !countingTray && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 text-center">
+      <h4 className="text-2xl font-black text-cyan-50">{lang === "en" ? "Count the cookies in each tray." : "Kira biskut di dalam setiap dulang."}</h4>
+      <div className="mx-auto mt-5 grid max-w-5xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        {tray({ side: "left", count: 8, countedThrough: leftCount, name: lang === "en" ? "Chrys's tray" : "Dulang Chrys", character: chrysThinking, borderClass: "border-cyan-400", textClass: "text-cyan-100" })}
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
+        {tray({ side: "right", count: 5, countedThrough: rightCount, name: lang === "en" ? "Alyse's tray" : "Dulang Alyse", character: alyseGuide, borderClass: "border-emerald-300", textClass: "text-emerald-100" })}
+      </div>
+      {showTotal && (
+        <div className="comparison-result-reveal mx-auto mt-6 max-w-2xl rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-6 py-4 text-slate-950 shadow-[0_6px_0_#a16207]" role="status">
+          <p className="text-xl font-black uppercase tracking-wide">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
+          <p className="mt-1 text-5xl font-black" style={NUMBER_TEXT_STYLE}>8 + 5 = 13</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
@@ -4532,48 +4643,22 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   const finishPhase = (phaseIndex: number) => setCompleted((current) => current.map((value, index) => index === phaseIndex ? true : value));
   if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 4: Banana Row Practice" : "Misi Siber 4: Latihan Baris Pisang"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(3); }} onFinish={() => onDone()} />;
   const titles = [
-    lang === "en" ? "Add bigger numbers" : "Tambah nombor besar",
+    lang === "en" ? "Count the cookies in each tray" : "Kira biskut di dalam setiap dulang",
     lang === "en" ? "Chrys shares cookies with Alyse" : "Chrys berkongsi biskut dengan Alyse",
-    lang === "en" ? "More bananas on a branch" : "Lebih pisang di atas dahan",
+    lang === "en" ? "Bananas on the forest floor" : "Pisang di lantai hutan",
     lang === "en" ? "Count every banana together" : "Kira setiap pisang sekali",
   ];
   const texts = [
-    lang === "en" ? "Time to add bigger numbers - up to 20. We'll count all the bananas together." : "Masa untuk tambah nombor besar - sampai 20. Kita kira semua pisang sekali.",
+    lang === "en" ? "Count each tray separately. After both trays are counted, we can find the total." : "Kira setiap dulang secara berasingan. Selepas kedua-duanya dikira, kita boleh mencari jumlah.",
     lang === "en" ? "Alyse has 8 cookies. Watch Chrys give her 5 more, then count the two parts and their total." : "Alyse ada 8 biskut. Lihat Chrys memberinya 5 lagi, kemudian kira dua bahagian dan jumlahnya.",
-    lang === "en" ? "Move each banana from the low branch. Watch the count grow from 7 to 15." : "Gerakkan setiap pisang dari dahan rendah. Lihat kiraan bertambah daripada 7 hingga 15.",
+    lang === "en" ? "Move each banana from the forest floor into Chrys's basket. Watch the count grow from 7 to 15." : "Pindahkan setiap pisang dari lantai hutan ke dalam bakul Chrys. Lihat kiraan bertambah daripada 7 hingga 15.",
     lang === "en" ? "First put the rows together. Then count every banana from left to right." : "Mula-mula gabungkan baris. Kemudian kira setiap pisang dari kiri ke kanan.",
   ];
   return (
-    <main className="mx-auto w-full max-w-7xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart1} helper={lang === "en" ? "Cyber Mission 4 - Join banana rows and count totals up to 20." : "Misi Siber 4 - Gabungkan baris pisang dan kira jumlah hingga 20."} variant="cyber">
+    <main className="mx-auto w-full max-w-7xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart1} helper={lang === "en" ? "Cyber Mission 4 - Count cookie trays and banana rows to find totals up to 20." : "Misi Siber 4 - Kira dulang biskut dan baris pisang untuk mencari jumlah hingga 20."} variant="cyber">
       <div className="mb-5 grid grid-cols-4 gap-2">{Array.from({ length: 4 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
       <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 4" : "Misi Siber 4"} title={titles[phase]} text={texts[phase]} />
-      {phase === 0 && (
-        <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 text-center">
-          <div className="mx-auto grid max-w-5xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-            <div className="rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-4">
-              <div className="mb-3 flex items-center justify-center gap-3">
-                <img src={chrysThinking} alt="Chrys with 8 bananas" className="h-16 w-16 object-contain" />
-                <p className="text-xl font-black text-cyan-100">{lang === "en" ? "Chrys has 8" : "Chrys ada 8"}</p>
-              </div>
-              <AdvancedBananaRow count={8} label={lang === "en" ? "Chrys has 8 bananas" : "Chrys ada 8 pisang"} />
-            </div>
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
-            <div className="rounded-[1.75rem] border-2 border-emerald-300 bg-slate-950/75 p-4">
-              <div className="mb-3 flex items-center justify-center gap-3">
-                <img src={alyseGuide} alt="Alyse with 5 bananas" className="h-16 w-16 object-contain" />
-                <p className="text-xl font-black text-emerald-100">{lang === "en" ? "Alyse has 5" : "Alyse ada 5"}</p>
-              </div>
-              <AdvancedBananaRow count={5} label={lang === "en" ? "Alyse has 5 bananas" : "Alyse ada 5 pisang"} />
-            </div>
-          </div>
-          <p className="mt-5 text-5xl font-black text-yellow-200 sm:text-6xl">8 + 5</p>
-          <p className="mt-3 text-lg font-black text-cyan-100">{lang === "en" ? "See the bananas. Join the rows. Count them all." : "Lihat pisang. Gabungkan baris. Kira semuanya."}</p>
-          <button type="button" disabled={completed[0]} onClick={() => finishPhase(0)} className="relative mt-6 rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-7 py-4 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-60">
-            {completed[0] ? (lang === "en" ? "Ready!" : "Sedia!") : (lang === "en" ? "Start the banana mission" : "Mulakan misi pisang")}
-            {!completed[0] && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
-          </button>
-        </div>
-      )}
+      {phase === 0 && <AdvancedCookieTrayCountingIntro key="cookie-tray-counting-intro" lang={lang} onComplete={() => finishPhase(0)} />}
       {phase === 1 && <AdvancedCookieAdditionScenario key="cookie-story-8-5" lang={lang} onSolved={() => finishPhase(1)} />}
       {phase === 2 && <AdvancedAdditionRowScenario key="row-story-7-8" base={7} extra={8} lang={lang} source="branch" onSolved={() => finishPhase(2)} />}
       {phase === 3 && (
@@ -4583,13 +4668,9 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
             <div className="rounded-3xl border-2 border-cyan-500 bg-slate-950/75 p-4"><AdvancedBananaRow count={13} /><p className="mt-3 text-3xl font-black text-yellow-200">8 + 5 = 13</p></div>
             <div className="rounded-3xl border-2 border-emerald-400 bg-slate-950/75 p-4"><AdvancedBananaRow count={15} /><p className="mt-3 text-3xl font-black text-yellow-200">7 + 8 = 15</p></div>
           </div>
-          <button type="button" disabled={completed[3]} onClick={() => finishPhase(3)} className="relative mt-6 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-7 py-4 text-xl font-black text-white shadow-[0_6px_0_#065f46] active:translate-y-1 disabled:opacity-60">
-            {completed[3] ? (lang === "en" ? "Ready for practice!" : "Sedia untuk latihan!") : (lang === "en" ? "I can count the total" : "Saya boleh kira jumlah")}
-            {!completed[3] && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
-          </button>
         </div>
       )}
-      <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={3} canNext={completed[phase]} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 3 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
+      <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={3} canNext={phase === 3 || completed[phase]} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 3 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
     </LessonShell></div></main>
   );
 }
