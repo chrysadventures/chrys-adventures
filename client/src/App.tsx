@@ -232,9 +232,7 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
     7: "Tujuh.mp3",
     8: "Lapan.mp3",
     9: "Sembilan.mp3",
-    // The uploaded Malay advanced-mode recordings contain standalone
-    // number audio for 11-20. There is no standalone 10 recording in the
-    // archive, so 10 continues to use the existing TTS fallback.
+    10: "ms-number-10.mp3",
     11: "ms-number-11.mp3",
     12: "ms-number-12.mp3",
     13: "ms-number-13.mp3",
@@ -7575,7 +7573,10 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
       await speakNumber(nextValue, lang);
       if (runRef.current !== runId) return;
       setRemainingCount(nextValue);
-      if (nextValue >= answer) setPhase("done");
+      if (nextValue >= answer) {
+        setPhase("done");
+        await speakMalayBananaTotal(answer, lang, objectEmoji);
+      }
     }
     setBusy(false);
   };
@@ -8953,9 +8954,8 @@ function AdditionBananaEquation({
         await wait(prefersReducedMotion ? 0 : 500);
         setResultMergeStage("joined");
         setActiveGroup(-1);
-        if (!audioMuted) {
-          speakText(lang === "en" ? `The answer is ${a + b}.` : `Jawapannya ialah ${a + b}.`, lang);
-        }
+        await speakMalayBananaTotal(a + b, lang, emoji);
+        if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
       }
     }
     setIsCounting(false);
@@ -9612,6 +9612,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
     setRemainingCountValue(nextRemaining);
     if (nextRemaining >= left) {
       setPhase("done");
+      await speakMalayBananaTotal(left, lang, emoji);
       onComplete?.();
     } else {
       setPhase("counting");
@@ -11393,12 +11394,13 @@ function NumberLine({ marked }: { marked: number | number[] }) {
   return <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />;
 }
 
-function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, compact = false, fixedColumns, cyber = false }: {
+function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, announceTotal = false, compact = false, fixedColumns, cyber = false }: {
   count: number;
   emoji: string;
   lang: Lang;
   onProgress?: (value: number) => void;
   onComplete?: () => void;
+  announceTotal?: boolean;
   compact?: boolean;
   fixedColumns?: 1 | 2;
   cyber?: boolean;
@@ -11421,7 +11423,10 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, co
     setVisibleCount(nextValue);
     onProgress?.(nextValue);
     setBusy(false);
-    if (nextValue >= count) onComplete?.();
+    if (nextValue >= count) {
+      if (announceTotal) await speakMalayBananaTotal(count, lang, emoji);
+      onComplete?.();
+    }
   };
 
   return (
@@ -11789,6 +11794,7 @@ function CountedGroupCombineSolution({ visual, lang }: {
           <ManualCountedObjectRow
             count={total}
             emoji={visual.emoji}
+            announceTotal
             onComplete={finishTotal}
             lang={lang}
           />
@@ -13058,6 +13064,7 @@ function SequentialCountResult({ count, emoji, lang, cyber = false }: { count: n
         count={count}
         emoji={emoji}
         lang={lang}
+        announceTotal
         onProgress={setCurrentCount}
         onComplete={finishCounting}
         cyber={cyber}
@@ -13151,19 +13158,24 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
   return <VisualDisplay visual={visual} lang={lang} cyber={cyber} />;
 }
 
-function speakNumber(value: number, lang: Lang, onStart?: (value: number) => void) {
+async function speakNumber(value: number, lang: Lang, onStart?: (value: number) => void): Promise<boolean> {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) {
     onStart?.(value);
-    return;
+    return false;
   }
   if (activeCountingRunId !== null) {
-    queuedAudioAfterCounting = () => speakNumber(value, lang, onStart);
-    return;
+    queuedAudioAfterCounting = () => { void speakNumber(value, lang, onStart); };
+    return false;
   }
   stopNumberAudio();
   const runId = audioRunId;
   onStart?.(value);
-  void playNumberFile(value, lang, runId);
+  return playNumberFile(value, lang, runId);
+}
+
+async function speakMalayBananaTotal(value: number, lang: Lang, emoji: string = BANANA) {
+  if (lang !== "ms" || emoji !== BANANA || value < 1 || value > 20) return false;
+  return speakBananaTotal(value, lang);
 }
 
 async function speakBananaTotal(value: number, lang: Lang) {
