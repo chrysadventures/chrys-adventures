@@ -2841,7 +2841,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
             {source === "branch" ? (
               <div className="relative mx-auto aspect-square w-full max-w-[22rem]">
                 <img src={BASKET_SPRITE} alt={lang === "en" ? "Chrys's basket" : "Bakul Chrys"} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_12px_12px_rgba(0,0,0,.38)]" />
-                <div className="absolute inset-x-[18%] inset-y-[20%] grid place-items-center">
+                <div className="absolute inset-x-[18%] inset-y-[20%] grid -translate-x-[4%] place-items-center">
                   <AdvancedBananaRow count={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas in Chrys's basket` : `${currentTotal} pisang di dalam bakul Chrys`} />
                 </div>
               </div>
@@ -7171,13 +7171,15 @@ function MiniAppleBasket({ count }: { count: number }) {
   return (
     <div className="relative mx-auto h-40 max-w-64">
       <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" />
-      {Array.from({ length: count }, (_, index) => (
-        <span key={index} className={`absolute ${positions[index]}`}>
-          <SceneCountObject number={index + 1} compact>
-            <SpriteIcon value="🍎" className="h-8 w-8 drop-shadow-md" />
-          </SceneCountObject>
-        </span>
-      ))}
+      <div className="absolute inset-0 -translate-x-[4%]">
+        {Array.from({ length: count }, (_, index) => (
+          <span key={index} className={`absolute ${positions[index]}`}>
+            <SceneCountObject number={index + 1} compact>
+              <SpriteIcon value="🍎" className="h-8 w-8 drop-shadow-md" />
+            </SceneCountObject>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -8032,7 +8034,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, objectKind
                 <p className="mb-3 text-sm font-black uppercase text-amber-800">{butterflies ? (lang === "en" ? "Butterflies near Chrys" : "Rama-rama dekat Chrys") : (lang === "en" ? "Chrys's basket" : "Bakul Chrys")}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
                   {!butterflies && <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />}
-                  <div className="relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 px-7 pb-10 pt-12 sm:gap-x-2 sm:px-9">
+                  <div className={`relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 px-7 pb-10 pt-12 sm:gap-x-2 sm:px-9 ${butterflies ? "" : "-translate-x-[4%]"}`}>
                     {Array.from({ length: start }, (_, index) => {
                       const inBasket = index < left;
                       const isFlying = flight?.some((item) => item.sourceIndex === index);
@@ -8080,7 +8082,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, objectKind
                 <p className="mb-4 text-base font-black text-emerald-900">{butterflies ? (lang === "en" ? `${takeAway} butterflies fly away.` : `${takeAway} rama-rama terbang pergi.`) : (lang === "en" ? `Alyse gets ${takeAway} bananas.` : `Alyse dapat ${takeAway} pisang.`)}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-emerald-100 bg-white">
                   {!butterflies && <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />}
-                  <div className="relative z-10 grid min-h-[21rem] grid-cols-3 place-content-center gap-4 px-8 py-12">
+                  <div className={`relative z-10 grid min-h-[21rem] grid-cols-3 place-content-center gap-4 px-8 py-12 ${butterflies ? "" : "-translate-x-[4%]"}`}>
                     {Array.from({ length: takeAway }, (_, index) => (
                       <div
                         key={index}
@@ -8657,7 +8659,7 @@ function MangoTraySubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             </h4>
             <div className="relative mx-auto min-h-[18rem] max-w-sm overflow-hidden rounded-[2rem] bg-amber-50/60 p-5">
               <img src={BASKET_SPRITE} alt={lang === "en" ? "Basket" : "Bakul"} className="absolute inset-0 h-full w-full object-contain" />
-              <div className="relative z-10 mx-auto mt-12 grid max-w-[15rem] grid-cols-3 justify-items-center gap-3">
+              <div className="relative z-10 mx-auto mt-12 grid max-w-[15rem] -translate-x-[4%] grid-cols-3 justify-items-center gap-3">
                 {Array.from({ length: 6 }, (_, index) => {
                   const packed = index < packedCount;
                   const current = index + 1 === packedCount && phase === "packing";
@@ -9538,30 +9540,32 @@ function BasketBananaScene({ count, counted, isCounting, label }: {
     <div className="mx-auto max-w-xl rounded-3xl border-4 border-amber-200 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={BASKET_SPRITE} alt="basket" className="absolute inset-0 h-full w-full object-contain" />
-        {Array.from({ length: count }, (_, index) => {
-          const [x, y, rotation] = positions[index];
-          const isCounted = index < counted;
-          const isActiveCount = isCounting && counted > 0 && index === counted - 1;
-          return (
-            <div
-              key={index}
-              className={`absolute ${x} ${y} ${rotation} grid h-24 w-24 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,box-shadow,transform] duration-300 ${
-                isActiveCount
-                  ? "border-yellow-400 bg-yellow-100/70 ring-4 ring-yellow-200"
-                  : isCounted
-                    ? "border-blue-600 bg-blue-100/60 ring-4 ring-blue-200 shadow-md"
-                  : "border-white/90 bg-white/80 shadow-lg"
-              }`}
-            >
-              <SpriteIcon value={banana} className="h-20 w-20 drop-shadow-lg" />
-              {isCounted && (
-                <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-md">
-                  {index + 1}
-                </span>
-              )}
-            </div>
-          );
-        })}
+        <div className="absolute inset-0 -translate-x-[4%]">
+          {Array.from({ length: count }, (_, index) => {
+            const [x, y, rotation] = positions[index];
+            const isCounted = index < counted;
+            const isActiveCount = isCounting && counted > 0 && index === counted - 1;
+            return (
+              <div
+                key={index}
+                className={`absolute ${x} ${y} ${rotation} grid h-24 w-24 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 transition-[border-color,background-color,box-shadow,transform] duration-300 ${
+                  isActiveCount
+                    ? "border-yellow-400 bg-yellow-100/70 ring-4 ring-yellow-200"
+                    : isCounted
+                      ? "border-blue-600 bg-blue-100/60 ring-4 ring-blue-200 shadow-md"
+                    : "border-white/90 bg-white/80 shadow-lg"
+                }`}
+              >
+                <SpriteIcon value={banana} className="h-20 w-20 drop-shadow-lg" />
+                {isCounted && (
+                  <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-md">
+                    {index + 1}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
       <p className="mt-3 text-center text-xl font-black text-amber-900">{label}</p>
     </div>
@@ -12139,7 +12143,7 @@ function ContainerScene({
     <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 z-0 h-full w-full object-contain" />
-        <div className={`absolute z-10 flex flex-wrap content-center items-center justify-center ${container === "basket" ? "inset-x-[19%] inset-y-[20%] gap-x-2 gap-y-3" : "inset-[12%] gap-x-2 gap-y-5"}`}>
+        <div className={`absolute z-10 flex flex-wrap content-center items-center justify-center ${container === "basket" ? "inset-x-[19%] inset-y-[20%] -translate-x-[4%] gap-x-2 gap-y-3" : "inset-[12%] gap-x-2 gap-y-5"}`}>
           {Array.from({ length: count }, (_, i) => (
             <div
               key={i}
