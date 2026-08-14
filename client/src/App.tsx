@@ -2692,16 +2692,17 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
       return <React.Fragment key={rowIndex}>{row}</React.Fragment>;
     });
   };
-  const standardRows = count > 7 ? balancedRows(7) : [renderBananas(0, count)];
+  const mobileRows = count > 7 ? balancedRows(7) : [renderBananas(0, count)];
+  const desktopRows = count > 8 ? balancedRows(8) : [renderBananas(0, count)];
   const splitRows = balancedRows(5);
 
   return (
     <div className={compact ? "w-fit shrink-0" : "w-full"} aria-label={label}>
-      <div className={`hidden min-h-14 items-center justify-center sm:flex ${splitOnDesktop ? "flex-col gap-2" : ""}`}>
-        {splitOnDesktop ? splitRows : renderBananas(0, count)}
+      <div className={`hidden min-h-14 items-center justify-center sm:flex ${splitOnDesktop || count > 8 ? "flex-col gap-2" : ""}`}>
+        {splitOnDesktop ? splitRows : desktopRows}
       </div>
       <div className="flex min-h-14 flex-col items-center justify-center gap-2 sm:hidden">
-        {splitOnDesktop ? splitRows : standardRows}
+        {splitOnDesktop ? splitRows : mobileRows}
       </div>
     </div>
   );
