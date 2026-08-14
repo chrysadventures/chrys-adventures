@@ -2679,22 +2679,29 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
       })}
     </div>
   );
-  const topCount = count > 7 ? Math.ceil(count / 2) : count;
-  const bottomCount = count > 7 ? Math.floor(count / 2) : 0;
+  const balancedRows = (maxPerRow: number) => {
+    const rowCount = Math.max(1, Math.ceil(count / maxPerRow));
+    const smallestRow = Math.floor(count / rowCount);
+    const largerRows = count % rowCount;
+    let start = 0;
+
+    return Array.from({ length: rowCount }, (_, rowIndex) => {
+      const amount = smallestRow + (rowIndex < largerRows ? 1 : 0);
+      const row = renderBananas(start, amount);
+      start += amount;
+      return <React.Fragment key={rowIndex}>{row}</React.Fragment>;
+    });
+  };
+  const standardRows = count > 7 ? balancedRows(7) : [renderBananas(0, count)];
+  const splitRows = balancedRows(5);
 
   return (
     <div className={compact ? "w-fit shrink-0" : "w-full"} aria-label={label}>
       <div className={`hidden min-h-14 items-center justify-center sm:flex ${splitOnDesktop ? "flex-col gap-2" : ""}`}>
-        {splitOnDesktop ? (
-          <>
-            {renderBananas(0, topCount)}
-            {bottomCount > 0 && renderBananas(topCount, bottomCount)}
-          </>
-        ) : renderBananas(0, count)}
+        {splitOnDesktop ? splitRows : renderBananas(0, count)}
       </div>
       <div className="flex min-h-14 flex-col items-center justify-center gap-2 sm:hidden">
-        {renderBananas(0, topCount)}
-        {bottomCount > 0 && renderBananas(topCount, bottomCount)}
+        {splitOnDesktop ? splitRows : standardRows}
       </div>
     </div>
   );
@@ -2834,7 +2841,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
             {source === "branch" ? (
               <div className="relative mx-auto aspect-square w-full max-w-[22rem]">
                 <img src={BASKET_SPRITE} alt={lang === "en" ? "Chrys's basket" : "Bakul Chrys"} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_12px_12px_rgba(0,0,0,.38)]" />
-                <div className="absolute inset-x-[7%] inset-y-[22%] grid place-items-center scale-[.86]">
+                <div className="absolute inset-x-[18%] inset-y-[20%] grid place-items-center">
                   <AdvancedBananaRow count={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas in Chrys's basket` : `${currentTotal} pisang di dalam bakul Chrys`} />
                 </div>
               </div>
@@ -3507,8 +3514,8 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         </p>
       )}
       {stagedReveal && revealStage >= 3 && (
-        <div className="comparison-result-reveal mx-auto mt-3 max-w-3xl text-center">
-          <p className="rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-5 py-4 text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
+        <div className="comparison-result-reveal mx-auto mt-3 grid max-w-3xl items-center gap-3 rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5">
+          <p className="text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
             {lang === "en" ? symbol === "<" ? (
               <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">less than</span> {b}.</>
             ) : symbol === "=" ? (
@@ -3527,7 +3534,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
             type="button"
             onClick={() => void replayComparison()}
             disabled={comparisonAudioPlaying}
-            className="mx-auto mt-3 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-5 font-black text-slate-950 shadow-[0_5px_0_#0e7490] transition hover:bg-cyan-400 active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
+            className="mx-auto inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-4 font-black text-slate-950 shadow-[0_5px_0_#0e7490] transition hover:bg-cyan-400 active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
           >
             <SpeakerIcon />
             {comparisonAudioPlaying
@@ -12132,15 +12139,15 @@ function ContainerScene({
     <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 z-0 h-full w-full object-contain" />
-        <div className="absolute inset-[12%] z-10 flex flex-wrap content-center items-center justify-center gap-x-2 gap-y-5">
+        <div className={`absolute z-10 flex flex-wrap content-center items-center justify-center ${container === "basket" ? "inset-x-[19%] inset-y-[20%] gap-x-2 gap-y-3" : "inset-[12%] gap-x-2 gap-y-5"}`}>
           {Array.from({ length: count }, (_, i) => (
             <div
               key={i}
-              className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 pt-3 shadow-md ${
+              className={`relative grid shrink-0 place-items-center rounded-2xl border-2 pt-3 shadow-md ${container === "basket" ? "h-12 w-12 sm:h-14 sm:w-14" : "h-14 w-14"} ${
                 numbered ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100" : "border-white/70 bg-white/90"
               }`}
             >
-              <SpriteIcon value={emoji} className="h-11 w-11" />
+              <SpriteIcon value={emoji} className={container === "basket" ? "h-9 w-9 sm:h-11 sm:w-11" : "h-11 w-11"} />
               {numbered && <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1.5 text-xs font-black leading-none text-white shadow-sm">{i + 1}</span>}
             </div>
           ))}
