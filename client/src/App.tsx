@@ -3357,6 +3357,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
   const [visibleCounts, setVisibleCounts] = useState({ left: 0, right: 0 });
   const [countingSide, setCountingSide] = useState<"left" | "right" | null>(null);
   const [revealStage, setRevealStage] = useState<0 | 1 | 2 | 3>(stagedReveal ? 0 : 3);
+  const [comparisonAudioPlaying, setComparisonAudioPlaying] = useState(false);
   const countingRunRef = useRef(0);
   const item = ADVANCED_COMPARE_OBJECTS[object];
   const bothPilesCounted = visibleCounts.left === a && visibleCounts.right === b;
@@ -3368,6 +3369,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     setVisibleCounts({ left: 0, right: 0 });
     setCountingSide(null);
     setRevealStage(stagedReveal ? 0 : 2);
+    setComparisonAudioPlaying(false);
 
     return () => {
       countingRunRef.current += 1;
@@ -3393,7 +3395,11 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       await wait(prefersReducedMotion ? 0 : 350);
       if (cancelled) return;
       setRevealStage(3);
-      if (symbol) await speakComparisonSentence(a, b, symbol, lang);
+      if (symbol) {
+        setComparisonAudioPlaying(true);
+        await speakComparisonSentence(a, b, symbol, lang);
+        if (!cancelled) setComparisonAudioPlaying(false);
+      }
     };
     void revealComparison();
     return () => {
@@ -3401,6 +3407,13 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       stopNumberAudio();
     };
   }, [a, b, bothPilesCounted, lang, prefersReducedMotion, stagedReveal, symbol]);
+
+  const replayComparison = async () => {
+    if (!symbol || comparisonAudioPlaying) return;
+    setComparisonAudioPlaying(true);
+    await speakComparisonSentence(a, b, symbol, lang);
+    setComparisonAudioPlaying(false);
+  };
 
   const countPile = async (side: "left" | "right", count: number) => {
     if (countingSide !== null) return;
@@ -3494,21 +3507,34 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         </p>
       )}
       {stagedReveal && revealStage >= 3 && (
-        <p className="comparison-result-reveal mx-auto mt-3 max-w-3xl rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-5 py-4 text-center text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
-          {lang === "en" ? symbol === "<" ? (
-            <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">less than</span> {b}.</>
-          ) : symbol === "=" ? (
-            <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">equal to</span> {b}.</>
-          ) : (
-            <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">greater than</span> {b}.</>
-          ) : symbol === "<" ? (
-            <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">lebih kecil daripada</span> {b}.</>
-          ) : symbol === "=" ? (
-            <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">sama dengan</span> {b}.</>
-          ) : (
-            <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">lebih besar daripada</span> {b}.</>
-          )}
-        </p>
+        <div className="comparison-result-reveal mx-auto mt-3 max-w-3xl text-center">
+          <p className="rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-5 py-4 text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
+            {lang === "en" ? symbol === "<" ? (
+              <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">less than</span> {b}.</>
+            ) : symbol === "=" ? (
+              <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">equal to</span> {b}.</>
+            ) : (
+              <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">greater than</span> {b}.</>
+            ) : symbol === "<" ? (
+              <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">lebih kecil daripada</span> {b}.</>
+            ) : symbol === "=" ? (
+              <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">sama dengan</span> {b}.</>
+            ) : (
+              <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">lebih besar daripada</span> {b}.</>
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={() => void replayComparison()}
+            disabled={comparisonAudioPlaying}
+            className="mx-auto mt-3 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-5 font-black text-slate-950 shadow-[0_5px_0_#0e7490] transition hover:bg-cyan-400 active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
+          >
+            <SpeakerIcon />
+            {comparisonAudioPlaying
+              ? (lang === "en" ? "Playing..." : "Sedang dimainkan...")
+              : (lang === "en" ? "Hear again" : "Dengar sekali lagi")}
+          </button>
+        </div>
       )}
     </div>
   );
