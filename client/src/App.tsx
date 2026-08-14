@@ -268,6 +268,22 @@ const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>
   },
 };
 
+const DIGIT_LABELS: Record<Lang, readonly [string, string, string]> = {
+  en: ["First digit", "Second digit", "Third digit"],
+  ms: ["Digit pertama", "Digit kedua", "Digit ketiga"],
+};
+
+const MALAY_DIGIT_LABEL_AUDIO_FILES = [
+  "ms-digit-pertama.mp3",
+  "ms-digit-kedua.mp3",
+  "ms-digit-ketiga.mp3",
+] as const;
+
+const MALAY_COMPARISON_AUDIO_FILES = {
+  greater: "ms-lebih-besar-daripada.mp3",
+  less: "ms-lebih-kecil-daripada.mp3",
+} as const;
+
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
 // These URLs are consumed inside index.css's .page-bg::before rule. The CSS
 // bundle lives in /assets/, so this parent-relative path resolves to
@@ -3337,6 +3353,7 @@ function GreaterThanSymbolTeaching({ lang }: { lang: Lang }) {
 }
 
 function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = false }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang; symbol?: ">" | "<" | "="; stagedReveal?: boolean }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [visibleCounts, setVisibleCounts] = useState({ left: 0, right: 0 });
   const [countingSide, setCountingSide] = useState<"left" | "right" | null>(null);
   const [revealStage, setRevealStage] = useState<0 | 1 | 2 | 3>(stagedReveal ? 0 : 3);
@@ -3367,14 +3384,23 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       setRevealStage(0);
       return;
     }
-    setRevealStage(1);
-    const symbolTimer = window.setTimeout(() => setRevealStage(2), 2000);
-    const numberSentenceTimer = window.setTimeout(() => setRevealStage(3), 3000);
-    return () => {
-      window.clearTimeout(symbolTimer);
-      window.clearTimeout(numberSentenceTimer);
+    let cancelled = false;
+    const revealComparison = async () => {
+      setRevealStage(1);
+      await wait(prefersReducedMotion ? 0 : 450);
+      if (cancelled) return;
+      setRevealStage(2);
+      await wait(prefersReducedMotion ? 0 : 350);
+      if (cancelled) return;
+      setRevealStage(3);
+      if (symbol) await speakComparisonSentence(a, b, symbol, lang);
     };
-  }, [bothPilesCounted, stagedReveal]);
+    void revealComparison();
+    return () => {
+      cancelled = true;
+      stopNumberAudio();
+    };
+  }, [a, b, bothPilesCounted, lang, prefersReducedMotion, stagedReveal, symbol]);
 
   const countPile = async (side: "left" | "right", count: number) => {
     if (countingSide !== null) return;
@@ -3748,8 +3774,8 @@ function AdvancedComparisonStory({ lang, story, onComplete }: { lang: Lang; stor
       return;
     }
     await runOperation(storyData.rightOperation, setRightState);
-    await speakMathCue("equals", lang);
     setStep(2);
+    await speakComparisonSentence(leftResult, rightResult, storyData.symbol, lang);
     onComplete?.();
   };
 
@@ -3920,6 +3946,7 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<AdvancedCompareChoice | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
+  const spokenFeedbackRef = useRef<string | null>(null);
   const question = advancedCompareBiggerQuestions[index];
   const isCorrect = selected === question.answer;
   const isVisual = question.tier === "visual";
@@ -3949,6 +3976,18 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
     : (lang === "en"
       ? isVisual ? `The wide side faces the bigger pile. The ${largerSide} pile has ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. The ${smallerSide} pile has ${Math.min(question.a, question.b)}. So ${Math.max(question.a, question.b)} ${comparisonSymbol} ${Math.min(question.a, question.b)}.` : `${Math.max(question.a, question.b)} is bigger than ${Math.min(question.a, question.b)}. So ${question.a} ${comparisonSymbol} ${question.b}.`
       : isVisual ? `Bahagian luas tanda ini menghadap kumpulan yang lebih banyak. Kumpulan ${largerSide === "left" ? "kiri" : "kanan"} ada ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. Kumpulan ${smallerSide === "left" ? "kiri" : "kanan"} ada ${Math.min(question.a, question.b)}. Jadi ${Math.max(question.a, question.b)} ${comparisonSymbol} ${Math.min(question.a, question.b)}.` : `${Math.max(question.a, question.b)} lebih besar daripada ${Math.min(question.a, question.b)}. Jadi ${question.a} ${comparisonSymbol} ${question.b}.`);
+
+  useEffect(() => {
+    spokenFeedbackRef.current = null;
+  }, [lang, question.id]);
+
+  useEffect(() => {
+    if (selected === null) return;
+    const key = `${question.id}:${lang}:${question.a}:${comparisonSymbol}:${question.b}`;
+    if (spokenFeedbackRef.current === key) return;
+    spokenFeedbackRef.current = key;
+    void speakComparisonSentence(question.a, question.b, comparisonSymbol, lang);
+  }, [comparisonSymbol, lang, question.a, question.b, question.id, selected]);
 
   const goNext = () => {
     if (isCorrect) setCorrectCount((value) => value + 1);
@@ -4896,7 +4935,7 @@ type DigitIntroStep = 0 | 1 | 2 | 3 | 4;
 
 function DigitLabelSequence({ lang }: { lang: Lang }) {
   const digits = [2, 5, 8];
-  const labels = lang === "en" ? ["First digit", "Second digit", "Third digit"] : ["Digit pertama", "Digit kedua", "Digit ketiga"];
+  const labels = DIGIT_LABELS[lang];
   const [activeIndex, setActiveIndex] = useState(-1);
   const [completedIndex, setCompletedIndex] = useState(-1);
   const [running, setRunning] = useState(false);
@@ -4919,8 +4958,8 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
     for (let index = 0; index < labels.length; index += 1) {
       if (runRef.current !== runId) return;
       setActiveIndex(index);
-      speakText(labels[index], lang, { allowWhenWordAudioDisabled: true });
-      await wait(prefersReducedMotion ? 700 : 1700);
+      await speakDigitLabel(index, lang);
+      await wait(prefersReducedMotion ? 250 : 650);
       if (runRef.current !== runId) return;
       setCompletedIndex(index);
     }
@@ -5000,9 +5039,7 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
 }
 
 function DigitLengthComparison({ lang }: { lang: Lang }) {
-  const digitLabels = lang === "en"
-    ? ["First digit", "Second digit", "Third digit"]
-    : ["Digit pertama", "Digit kedua", "Digit ketiga"];
+  const digitLabels = DIGIT_LABELS[lang];
   const examples = lang === "en"
     ? [
         { value: "7", label: "1 digit" },
@@ -5033,9 +5070,14 @@ function DigitLengthComparison({ lang }: { lang: Lang }) {
                     >
                       {digit}
                     </span>
-                    <span className="mt-4 whitespace-nowrap rounded-full border-2 border-cyan-300 bg-slate-900 px-3 py-2 text-sm font-black text-cyan-100 shadow-[0_4px_0_#155e75] sm:text-base">
+                    <button
+                      type="button"
+                      onClick={() => void speakDigitLabel(index, lang)}
+                      className="mt-4 whitespace-nowrap rounded-full border-2 border-cyan-300 bg-slate-900 px-3 py-2 text-sm font-black text-cyan-100 shadow-[0_4px_0_#155e75] transition hover:border-yellow-300 hover:text-yellow-200 active:translate-y-1 sm:text-base"
+                      aria-label={lang === "en" ? `Hear ${digitLabels[index]}` : `Dengar ${digitLabels[index]}`}
+                    >
                       {digitLabels[index]}
-                    </span>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -12382,12 +12424,25 @@ function CountedCompareGroupsSolution({ visual, lang }: {
   lang: Lang;
 }) {
   const [stage, setStage] = useState(0);
+  const spokenComparisonRef = useRef<string | null>(null);
   const finishFirstGroup = useCallback(() => setStage((current) => Math.max(current, 1)), []);
   const finishSecondGroup = useCallback(() => setStage(2), []);
   const smaller = Math.min(visual.a, visual.b);
   const larger = Math.max(visual.a, visual.b);
 
-  useEffect(() => setStage(0), [visual.a, visual.b]);
+  useEffect(() => {
+    setStage(0);
+    spokenComparisonRef.current = null;
+  }, [visual.a, visual.b]);
+
+  useEffect(() => {
+    if (stage < 2) return;
+    const symbol = visual.a === visual.b ? "=" : visual.a > visual.b ? ">" : "<";
+    const key = `${lang}:${visual.a}:${symbol}:${visual.b}`;
+    if (spokenComparisonRef.current === key) return;
+    spokenComparisonRef.current = key;
+    void speakComparisonSentence(visual.a, visual.b, symbol, lang);
+  }, [lang, stage, visual.a, visual.b]);
 
   return (
     <div className="space-y-4">
@@ -13898,6 +13953,72 @@ async function speakNumber(value: number, lang: Lang, onStart?: (value: number) 
   return playNumberFile(value, lang, runId);
 }
 
+async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
+  const label = DIGIT_LABELS[lang][index];
+  if (!label) return false;
+  if (lang !== "ms") {
+    speakText(label, lang, { allowWhenWordAudioDisabled: true });
+    await wait(1100);
+    return true;
+  }
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
+
+  const file = MALAY_DIGIT_LABEL_AUDIO_FILES[index];
+  if (!file) return false;
+  return playRecordedVoiceFile(file);
+}
+
+async function playRecordedVoiceFile(file: string): Promise<boolean> {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
+  stopNumberAudio();
+  return new Promise<boolean>((resolve) => {
+    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
+    let settled = false;
+    let timeoutId: number | null = null;
+    const finish = (played: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (activeNumberAudio === audio) activeNumberAudio = null;
+      resolve(played);
+    };
+
+    activeNumberAudio = audio;
+    audio.preload = "auto";
+    audio.playbackRate = 1;
+    audio.preservesPitch = true;
+    audio.onended = () => finish(true);
+    audio.onerror = () => finish(false);
+    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 5000);
+    void audio.play().catch(() => finish(false));
+  });
+}
+
+async function speakComparisonSentence(
+  left: number,
+  right: number,
+  symbol: ">" | "<" | "=",
+  lang: Lang,
+): Promise<void> {
+  if (left < 0 || left > 20 || right < 0 || right > 20) return;
+  if (lang !== "ms") {
+    const phrase = symbol === ">" ? "is greater than" : symbol === "<" ? "is less than" : "equals";
+    speakText(`${left} ${phrase} ${right}.`, lang, { allowWhenWordAudioDisabled: true });
+    return;
+  }
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+
+  await speakNumber(left, lang);
+  await wait(220);
+  if (symbol === "=") {
+    await speakMathCue("equals", lang);
+  } else {
+    await playRecordedVoiceFile(MALAY_COMPARISON_AUDIO_FILES[symbol === ">" ? "greater" : "less"]);
+  }
+  await wait(220);
+  await speakNumber(right, lang);
+}
+
 async function speakMalayBananaTotal(value: number, lang: Lang, emoji: string = BANANA) {
   if (lang !== "ms" || emoji !== BANANA || value < 0 || value > 20) return false;
   return speakBananaTotal(value, lang);
@@ -14111,6 +14232,14 @@ function getNumberAudio(value: number, lang: Lang) {
 
 function preloadNumberAudioFiles() {
   getSuccessFanfareAudio().load();
+  [
+    ...MALAY_DIGIT_LABEL_AUDIO_FILES,
+    ...Object.values(MALAY_COMPARISON_AUDIO_FILES),
+  ].forEach((file) => {
+    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
+    audio.preload = "auto";
+    audio.load();
+  });
   (Object.keys(NUMBER_AUDIO_FILES) as Lang[]).forEach((lang) => {
     Object.keys(NUMBER_AUDIO_FILES[lang]).forEach((value) => {
       getNumberAudio(Number(value), lang).load();
