@@ -2677,8 +2677,12 @@ function AdvancedLessonNavigation({ lang, t, phase, lastPhase, canNext = true, o
   );
 }
 
-function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string }) {
+function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA, largeObjects = false, rowPattern }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string; largeObjects?: boolean; rowPattern?: number[] }) {
   const isCookie = emoji === String.fromCodePoint(0x1f36a);
+  const tileSizeClass = largeObjects ? "h-11 w-10 sm:h-16 sm:w-14 sm:rounded-2xl" : "h-10 w-9 sm:h-14 sm:w-12 sm:rounded-2xl";
+  const objectSizeClass = isCookie
+    ? largeObjects ? "h-10 w-10 sm:h-14 sm:w-14" : "h-9 w-9 sm:h-12 sm:w-12"
+    : largeObjects ? "h-9 w-9 sm:h-12 sm:w-12" : "h-8 w-8 sm:h-11 sm:w-11";
   const renderBananas = (start: number, amount: number) => (
     <div className="flex items-center justify-center gap-1 sm:gap-1.5">
       {Array.from({ length: amount }, (_, offset) => {
@@ -2688,7 +2692,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
         return (
           <span
             key={index}
-            className={`relative grid h-9 w-7 shrink-0 place-items-center rounded-lg border transition-all duration-200 sm:h-12 sm:w-11 sm:rounded-xl ${
+            className={`relative grid shrink-0 place-items-center rounded-lg border transition-all duration-200 ${tileSizeClass} ${
               active
                 ? "z-10 scale-110 border-blue-300 ring-2 ring-blue-400 shadow-[0_0_18px_rgba(59,130,246,.65)]"
                 : counted
@@ -2696,7 +2700,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
                   : "border-cyan-900 bg-slate-950/80 opacity-30"
             }`}
           >
-            <SpriteIcon value={emoji} className={isCookie ? "h-8 w-8 sm:h-11 sm:w-11" : "h-6 w-6 sm:h-9 sm:w-9"} />
+            <SpriteIcon value={emoji} className={objectSizeClass} />
             {showCountLabels && counted && (
               <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black text-white shadow sm:-top-2.5 sm:h-6 sm:min-w-6 sm:text-xs ${active ? "bg-blue-400 text-slate-950" : "bg-blue-600"}`}>
                 {index + 1}
@@ -2723,14 +2727,19 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
   const mobileRows = count > 7 ? balancedRows(7) : [renderBananas(0, count)];
   const desktopRows = count > 8 ? balancedRows(8) : [renderBananas(0, count)];
   const splitRows = balancedRows(5);
+  const customRows = rowPattern?.reduce<{ rows: React.ReactNode[]; start: number }>((result, amount, rowIndex) => {
+    result.rows.push(<React.Fragment key={rowIndex}>{renderBananas(result.start, amount)}</React.Fragment>);
+    result.start += amount;
+    return result;
+  }, { rows: [], start: 0 }).rows;
 
   return (
     <div className={compact ? "w-fit shrink-0" : "w-full"} aria-label={label}>
-      <div className={`hidden min-h-14 items-center justify-center sm:flex ${splitOnDesktop || count > 8 ? "flex-col gap-2" : ""}`}>
-        {splitOnDesktop ? splitRows : desktopRows}
+      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > 8 ? "flex-col gap-2" : ""}`}>
+        {customRows ?? (splitOnDesktop ? splitRows : desktopRows)}
       </div>
       <div className="flex min-h-14 flex-col items-center justify-center gap-2 sm:hidden">
-        {splitOnDesktop ? splitRows : mobileRows}
+        {customRows ?? (splitOnDesktop ? splitRows : mobileRows)}
       </div>
     </div>
   );
@@ -4648,7 +4657,14 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
   const [leftCount, setLeftCount] = useState(0);
   const [rightCount, setRightCount] = useState(0);
   const [countingTray, setCountingTray] = useState<"left" | "right" | null>(null);
-  const [showTotal, setShowTotal] = useState(false);
+  const [readyToTransfer, setReadyToTransfer] = useState(false);
+  const [transferred, setTransferred] = useState(0);
+  const [transferring, setTransferring] = useState(false);
+  const [transferComplete, setTransferComplete] = useState(false);
+  const [flyingCookie, setFlyingCookie] = useState<{ left: number; top: number; x: number; y: number; moving: boolean } | null>(null);
+  const chrysTrayRef = useRef<HTMLDivElement>(null);
+  const alyseTrayRef = useRef<HTMLDivElement>(null);
+  const completionReportedRef = useRef(false);
   const runRef = useRef(0);
   const soundEnabled = React.useContext(AudioEnabledContext);
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -4659,7 +4675,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
   }, []);
 
   const countTray = async (side: "left" | "right", count: number) => {
-    if (countingTray || showTotal || (side === "left" ? leftCount === count : rightCount === count)) return;
+    if (countingTray || readyToTransfer || transferring || (side === "left" ? leftCount === count : rightCount === count)) return;
     const runId = runRef.current + 1;
     runRef.current = runId;
     stopNumberAudio();
@@ -4680,38 +4696,92 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
     if (runRef.current !== runId) return;
     update(count);
     setCountingTray(null);
-    const bothCounted = side === "left" ? rightCount === 5 : leftCount === 8;
+    const bothCounted = side === "left" ? rightCount === 8 : leftCount === 5;
     if (bothCounted) {
-      setShowTotal(true);
+      setReadyToTransfer(true);
+    }
+  };
+
+  const transferCookies = async () => {
+    if (!readyToTransfer || transferring || transferComplete) return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    stopNumberAudio();
+    setTransferring(true);
+
+    for (let moved = 1; moved <= 5; moved += 1) {
+      if (runRef.current !== runId) return;
+      const sourceBounds = chrysTrayRef.current?.getBoundingClientRect();
+      const destinationBounds = alyseTrayRef.current?.getBoundingClientRect();
+      if (sourceBounds && destinationBounds && !prefersReducedMotion) {
+        const left = sourceBounds.left + (sourceBounds.width / 2) - 24;
+        const top = sourceBounds.top + (sourceBounds.height / 2) - 24;
+        setFlyingCookie({
+          left,
+          top,
+          x: (destinationBounds.left + (destinationBounds.width / 2) - 24) - left,
+          y: (destinationBounds.top + (destinationBounds.height / 2) - 24) - top,
+          moving: false,
+        });
+        await wait(80);
+        if (runRef.current !== runId) return;
+        setFlyingCookie((current) => current ? { ...current, moving: true } : current);
+        await wait(1050);
+      }
+      if (runRef.current !== runId) return;
+      setTransferred(moved);
+      setFlyingCookie(null);
+      if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
+        await speakCountingSequence(8 + moved, lang, COUNTING_STEP_MS, undefined, undefined, 8 + moved);
+      } else {
+        await wait(prefersReducedMotion ? 80 : 260);
+      }
+    }
+
+    if (runRef.current !== runId) return;
+    setTransferring(false);
+    setTransferComplete(true);
+    if (!completionReportedRef.current) {
+      completionReportedRef.current = true;
       onComplete();
     }
   };
 
-  const tray = ({ side, count, countedThrough, name, character, borderClass, textClass }: { side: "left" | "right"; count: number; countedThrough: number; name: string; character: string; borderClass: string; textClass: string }) => {
-    const finished = countedThrough === count;
+  const chrysCookieCount = 5 - transferred;
+  const alyseCookieCount = 8 + transferred;
+  const alyseRowPattern = transferred === 0
+    ? undefined
+    : alyseCookieCount <= 10
+      ? [5, alyseCookieCount - 5]
+      : [5, 5, alyseCookieCount - 10];
+
+  const tray = ({ side, initialCount, displayCount, countedThrough, name, character, borderClass, textClass, trayRef, rowPattern }: { side: "left" | "right"; initialCount: number; displayCount: number; countedThrough: number; name: string; character: string; borderClass: string; textClass: string; trayRef: React.RefObject<HTMLDivElement | null>; rowPattern?: number[] }) => {
+    const finished = countedThrough === initialCount;
     const busy = countingTray === side;
     return (
-      <div className={`rounded-[1.75rem] border-2 bg-slate-950/75 p-4 ${borderClass}`}>
+      <div ref={trayRef} className={`rounded-[1.75rem] border-2 bg-slate-950/75 p-4 ${borderClass}`}>
         <div className="mb-2 flex items-center justify-center gap-3">
           <img src={character} alt="" className="h-14 w-14 object-contain" />
           <p className={`text-xl font-black ${textClass}`}>{name}</p>
         </div>
-        <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[25rem]" aria-label={lang === "en" ? `${count} cookies in ${name}` : `${count} biskut di ${name}`}>
+        <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[25rem]" aria-label={lang === "en" ? `${displayCount} cookies in ${name}` : `${displayCount} biskut di ${name}`}>
           <img src={trayImage} alt="" className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_10px_8px_rgba(0,0,0,.28)]" />
           <div className="absolute inset-x-[13%] inset-y-[16%] grid place-items-center">
-            <AdvancedBananaRow count={count} countedThrough={countedThrough} showCountLabels isCounting={countingTray === side} splitOnDesktop emoji={cookie} />
+            {displayCount > 0
+              ? <AdvancedBananaRow count={displayCount} countedThrough={readyToTransfer ? displayCount : countedThrough} showCountLabels isCounting={countingTray === side || (transferring && side === "right")} splitOnDesktop={!rowPattern} rowPattern={rowPattern} emoji={cookie} largeObjects />
+              : <span className="text-5xl font-black text-slate-400">0</span>}
           </div>
         </div>
         <button
           type="button"
           disabled={countingTray !== null || finished}
-          onClick={() => void countTray(side, count)}
+          onClick={() => void countTray(side, initialCount)}
           className="relative mt-3 rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63] active:translate-y-1 disabled:opacity-60"
         >
           {busy
             ? (lang === "en" ? "Counting..." : "Sedang mengira...")
             : finished
-              ? (lang === "en" ? `Total: ${count} cookies` : `Jumlah: ${count} biskut`)
+              ? (lang === "en" ? `Total: ${displayCount} cookies` : `Jumlah: ${displayCount} biskut`)
               : (lang === "en" ? `Count ${name}` : `Kira ${name}`)}
           {!finished && !countingTray && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
         </button>
@@ -4720,17 +4790,44 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
   };
 
   return (
-    <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 text-center">
-      <h4 className="text-2xl font-black text-cyan-50">{lang === "en" ? "Count the cookies in each tray." : "Kira biskut di dalam setiap dulang."}</h4>
+    <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 text-center">
+      {flyingCookie && (
+        <span
+          className="pointer-events-none fixed z-[80] grid h-12 w-12 place-items-center rounded-2xl border-2 border-cyan-300 bg-slate-950 shadow-[0_0_22px_rgba(34,211,238,.45)]"
+          style={{
+            left: flyingCookie.left,
+            top: flyingCookie.top,
+            transform: flyingCookie.moving ? `translate(${flyingCookie.x}px, ${flyingCookie.y}px) scale(.94)` : "translate(0,0) scale(1.12)",
+            transition: "transform 1050ms cubic-bezier(.22,.8,.3,1)",
+          }}
+          aria-hidden="true"
+        >
+          <SpriteIcon value={cookie} className="h-11 w-11" />
+        </span>
+      )}
+      <h4 className="text-2xl font-black text-cyan-50">{lang === "en" ? "Count the cookies, then help Chrys share them." : "Kira biskut, kemudian bantu Chrys berkongsi."}</h4>
+      <p className="mx-auto mt-2 max-w-4xl text-lg font-black text-cyan-100">
+        {lang === "en"
+          ? "Alyse begins with 8 cookies. Chrys has 5 cookies and wants to give all 5 to Alyse. Count both trays first, then move Chrys's cookies across."
+          : "Alyse bermula dengan 8 biskut. Chrys mempunyai 5 biskut dan mahu memberikan kesemuanya kepada Alyse. Kira kedua-dua dulang dahulu, kemudian pindahkan biskut Chrys."}
+      </p>
       <div className="mx-auto mt-5 grid max-w-5xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-        {tray({ side: "left", count: 8, countedThrough: leftCount, name: lang === "en" ? "Chrys's tray" : "Dulang Chrys", character: chrysThinking, borderClass: "border-cyan-400", textClass: "text-cyan-100" })}
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
-        {tray({ side: "right", count: 5, countedThrough: rightCount, name: lang === "en" ? "Alyse's tray" : "Dulang Alyse", character: alyseGuide, borderClass: "border-emerald-300", textClass: "text-emerald-100" })}
+        {tray({ side: "left", initialCount: 5, displayCount: chrysCookieCount, countedThrough: leftCount, name: lang === "en" ? "Chrys's tray" : "Dulang Chrys", character: chrysThinking, borderClass: "border-cyan-400", textClass: "text-cyan-100", trayRef: chrysTrayRef })}
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">{readyToTransfer ? "→" : "+"}</span>
+        {tray({ side: "right", initialCount: 8, displayCount: alyseCookieCount, countedThrough: rightCount, name: lang === "en" ? "Alyse's tray" : "Dulang Alyse", character: alyseGuide, borderClass: "border-emerald-300", textClass: "text-emerald-100", trayRef: alyseTrayRef, rowPattern: alyseRowPattern })}
       </div>
-      {showTotal && (
-        <div className="comparison-result-reveal mx-auto mt-6 max-w-2xl rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-6 py-4 text-slate-950 shadow-[0_6px_0_#a16207]" role="status">
-          <p className="text-xl font-black uppercase tracking-wide">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
-          <p className="mt-1 text-5xl font-black" style={NUMBER_TEXT_STYLE}>8 + 5 = 13</p>
+      {readyToTransfer && !transferComplete && (
+        <button type="button" disabled={transferring} onClick={() => void transferCookies()} className="relative mx-auto mt-6 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-60">
+          {transferring
+            ? (lang === "en" ? `Giving cookie ${Math.min(5, transferred + 1)} of 5...` : `Memberi biskut ${Math.min(5, transferred + 1)} daripada 5...`)
+            : (lang === "en" ? "Give Alyse 5 cookies" : "Beri Alyse 5 biskut")}
+          {!transferring && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
+        </button>
+      )}
+      {transferComplete && (
+        <div className="comparison-result-reveal mx-auto mt-6 max-w-2xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/80 px-6 py-4 text-emerald-100" role="status">
+          <p className="text-2xl font-black">{lang === "en" ? "Alyse now has all 13 cookies." : "Alyse kini mempunyai kesemua 13 biskut."}</p>
+          <p className="mt-2 text-xl font-black text-cyan-100">{lang === "en" ? "Chrys gave her 5 cookies, so 8 + 5 = 13." : "Chrys memberinya 5 biskut, jadi 8 + 5 = 13."}</p>
         </div>
       )}
     </div>
@@ -4740,29 +4837,26 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
 function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
-  const [completed, setCompleted] = useState<boolean[]>(Array(4).fill(false));
+  const [completed, setCompleted] = useState<boolean[]>(Array(3).fill(false));
   const finishPhase = (phaseIndex: number) => setCompleted((current) => current.map((value, index) => index === phaseIndex ? true : value));
-  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 4: Banana Row Practice" : "Misi Siber 4: Latihan Baris Pisang"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(3); }} onFinish={() => onDone()} />;
+  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 4: Banana Row Practice" : "Misi Siber 4: Latihan Baris Pisang"} questions={advancedAdditionPart1Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(2); }} onFinish={() => onDone()} />;
   const titles = [
-    lang === "en" ? "Count the cookies in each tray" : "Kira biskut di dalam setiap dulang",
-    lang === "en" ? "Chrys shares cookies with Alyse" : "Chrys berkongsi biskut dengan Alyse",
+    lang === "en" ? "Chrys gives Alyse 5 cookies" : "Chrys memberi Alyse 5 biskut",
     lang === "en" ? "Bananas on the forest floor" : "Pisang di lantai hutan",
     lang === "en" ? "Count every banana together" : "Kira setiap pisang sekali",
   ];
   const texts = [
-    lang === "en" ? "Count each tray separately. After both trays are counted, we can find the total." : "Kira setiap dulang secara berasingan. Selepas kedua-duanya dikira, kita boleh mencari jumlah.",
-    lang === "en" ? "Alyse has 8 cookies. Watch Chrys give her 5 more, then count the two parts and their total." : "Alyse ada 8 biskut. Lihat Chrys memberinya 5 lagi, kemudian kira dua bahagian dan jumlahnya.",
+    lang === "en" ? "Alyse has 8 cookies. Chrys has 5 cookies and gives all 5 to Alyse. Count both trays, then move the cookies to see Alyse's new total." : "Alyse mempunyai 8 biskut. Chrys mempunyai 5 biskut dan memberikan kesemuanya kepada Alyse. Kira kedua-dua dulang, kemudian pindahkan biskut untuk melihat jumlah baharu Alyse.",
     lang === "en" ? "Move each banana from the forest floor into Chrys's basket. Watch the count grow from 7 to 15." : "Pindahkan setiap pisang dari lantai hutan ke dalam bakul Chrys. Lihat kiraan bertambah daripada 7 hingga 15.",
     lang === "en" ? "First put the rows together. Then count every banana from left to right." : "Mula-mula gabungkan baris. Kemudian kira setiap pisang dari kiri ke kanan.",
   ];
   return (
     <main className="mx-auto w-full max-w-7xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart1} helper={lang === "en" ? "Cyber Mission 4 - Count cookie trays and banana rows to find totals up to 20." : "Misi Siber 4 - Kira dulang biskut dan baris pisang untuk mencari jumlah hingga 20."} variant="cyber">
-      <div className="mb-5 grid grid-cols-4 gap-2">{Array.from({ length: 4 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+      <div className="mb-5 grid grid-cols-3 gap-2">{Array.from({ length: 3 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
       <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 4" : "Misi Siber 4"} title={titles[phase]} text={texts[phase]} />
       {phase === 0 && <AdvancedCookieTrayCountingIntro key="cookie-tray-counting-intro" lang={lang} onComplete={() => finishPhase(0)} />}
-      {phase === 1 && <AdvancedCookieAdditionScenario key="cookie-story-8-5" lang={lang} onSolved={() => finishPhase(1)} />}
-      {phase === 2 && <AdvancedAdditionRowScenario key="row-story-7-8" base={7} extra={8} lang={lang} source="branch" onSolved={() => finishPhase(2)} />}
-      {phase === 3 && (
+      {phase === 1 && <AdvancedAdditionRowScenario key="row-story-7-8" base={7} extra={8} lang={lang} source="branch" onSolved={() => finishPhase(1)} />}
+      {phase === 2 && (
         <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 text-center sm:p-6">
           <p className="text-xl font-black text-cyan-50">{lang === "en" ? "You joined two banana rows and counted every banana." : "Kamu gabungkan dua baris pisang dan kira setiap pisang."}</p>
           <div className="mx-auto mt-5 grid max-w-4xl gap-4 md:grid-cols-2">
@@ -4771,7 +4865,7 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
           </div>
         </div>
       )}
-      <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={3} canNext={phase === 3 || completed[phase]} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 3 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
+      <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={2} canNext={phase === 2 || completed[phase]} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 2 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
     </LessonShell></div></main>
   );
 }
