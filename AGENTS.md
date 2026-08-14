@@ -73,6 +73,11 @@ Place PNG/SVG files in `client/public/assets/images/`. Pass the path as a `src` 
 ```
 Without `src`, it renders the 🐒 emoji placeholder.
 
+### Existing recorded math-cue audio
+- English: `client/public/audio/plus.wav`, `equals-to.wav`, and `minus.wav`.
+- Malay: `client/public/audio/Tambah.mp3`, `Sama dengan.mp3`, and `tolak.mp3`.
+- Reuse these recordings through `MATH_CUE_AUDIO_FILES` and `speakMathCue`. Always inspect `client/public/audio/` before using text-to-speech or creating audio, because the required recording may already exist.
+
 ### Advanced Adventure visual rule
 - Advanced Adventure uses the dark cyber palette. Do not introduce `bg-white`, white image cards, or other white/light panel backgrounds in advanced menus, lessons, practice, feedback, or completion screens.
 - Chrys and Alyse assets ending in `_nobg` have transparent backgrounds. Keep them transparent and place them directly on dark slate/cyan/emerald cyber surfaces; never add a white plate behind them.

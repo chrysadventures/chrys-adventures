@@ -4144,7 +4144,7 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
     );
   };
   const renderRow = (rowCount: number, offset: number) => (
-    <div className="flex min-h-10 items-center justify-center gap-0.5 sm:min-h-14 sm:gap-2" data-row-count={rowCount}>
+    <div className="flex min-h-10 items-center justify-center gap-1.5 sm:min-h-14 sm:gap-3" data-row-count={rowCount}>
       {Array.from({ length: rowCount }, (_, rowIndex) => renderBanana(offset + rowIndex))}
     </div>
   );
@@ -4153,11 +4153,11 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
     <div className="flex h-40 w-full min-w-0 flex-col justify-center rounded-[1.65rem] border-2 border-cyan-400 bg-slate-950/90 px-3 py-3 shadow-[inset_0_0_24px_rgba(34,211,238,.12),0_5px_0_#164e63] sm:h-44 sm:px-5">
       {label && <p className="mb-2 text-center text-base font-black uppercase tracking-wide text-cyan-100">{label}</p>}
       {interleavedRows ? (
-        <div className="mx-auto grid w-fit grid-flow-col grid-rows-2 content-center gap-x-0.5 gap-y-3 sm:gap-x-2 sm:gap-y-4">
+        <div className="mx-auto grid w-fit grid-flow-col grid-rows-2 content-center gap-x-1.5 gap-y-4 sm:gap-x-3 sm:gap-y-5">
           {Array.from({ length: count }, (_, index) => renderBanana(index))}
         </div>
       ) : (
-        <div className="grid content-center gap-1">
+        <div className="grid content-center gap-2 sm:gap-3">
           {renderRow(topCount, 0)}
           {bottomCount > 0 && renderRow(bottomCount, topCount)}
         </div>
@@ -4264,7 +4264,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
     setVisibleTotal(0);
     setStage("plus");
     await speakMathCue("plus", lang);
-    await wait(300);
+    await wait(100);
     if (runRef.current !== runId) return;
     setStage("one");
     speakNumber(1, lang);
