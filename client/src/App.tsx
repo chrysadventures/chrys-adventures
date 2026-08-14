@@ -4104,7 +4104,7 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
   );
 }
 
-function SequencingBananaBox({ count, visibleCount = count, label, activeIndex = null, hiddenIndex = null, compact = false, showCountLabels = false, countLabelThrough = visibleCount, countLabelStart = 1, showFuture = false, interleavedRows = false, enteringIndex = null }: {
+function SequencingBananaBox({ count, visibleCount = count, label, activeIndex = null, hiddenIndex = null, compact = false, showCountLabels = false, countLabelThrough = visibleCount, countLabelStart = 1, showFuture = false, interleavedRows = false, enteringIndex = null, lastItemOnTopRow = false }: {
   count: number;
   visibleCount?: number;
   label?: string;
@@ -4117,9 +4117,16 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
   showFuture?: boolean;
   interleavedRows?: boolean;
   enteringIndex?: number | null;
+  lastItemOnTopRow?: boolean;
 }) {
   const topCount = count <= 4 ? count : Math.ceil(count / 2);
   const bottomCount = count <= 4 ? 0 : Math.floor(count / 2);
+  const topIndices = lastItemOnTopRow && bottomCount > 0
+    ? [...Array.from({ length: topCount - 1 }, (_, index) => index), count - 1]
+    : Array.from({ length: topCount }, (_, index) => index);
+  const bottomIndices = lastItemOnTopRow && bottomCount > 0
+    ? Array.from({ length: bottomCount }, (_, index) => topCount - 1 + index)
+    : Array.from({ length: bottomCount }, (_, index) => topCount + index);
   const renderBanana = (index: number) => {
     const visible = index < visibleCount && index !== hiddenIndex;
     return (
@@ -4143,9 +4150,9 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
       </span>
     );
   };
-  const renderRow = (rowCount: number, offset: number) => (
-    <div className="flex min-h-10 items-center justify-center gap-1.5 sm:min-h-14 sm:gap-3" data-row-count={rowCount}>
-      {Array.from({ length: rowCount }, (_, rowIndex) => renderBanana(offset + rowIndex))}
+  const renderRow = (indices: number[]) => (
+    <div className="flex min-h-10 items-center justify-center gap-1.5 sm:min-h-14 sm:gap-3" data-row-count={indices.length}>
+      {indices.map((index) => renderBanana(index))}
     </div>
   );
 
@@ -4158,8 +4165,8 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
         </div>
       ) : (
         <div className="grid content-center gap-2 sm:gap-3">
-          {renderRow(topCount, 0)}
-          {bottomCount > 0 && renderRow(bottomCount, topCount)}
+          {renderRow(topIndices)}
+          {bottomCount > 0 && renderRow(bottomIndices)}
         </div>
       )}
     </div>
@@ -4208,11 +4215,11 @@ function SequencingAnchorPhase({ lang, onComplete }: { lang: Lang; onComplete: (
         {lang === "en" ? "Count the bananas: 1, 2, 3, 4, 5, 6, 7, 8, 9." : "Kira pisang: 1, 2, 3, 4, 5, 6, 7, 8, 9."}
       </p>
       <button type="button" onClick={() => void startCount()} disabled={running} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
-        {running ? (lang === "en" ? `Counting ${visibleCount}...` : `Mengira ${visibleCount}...`) : (lang === "en" ? "Start counting" : "Mula mengira")}
+        {running ? (lang === "en" ? `Counting ${visibleCount}...` : `Mengira ${visibleCount}...`) : done ? (lang === "en" ? "Count again" : "Kira lagi") : (lang === "en" ? "Start counting" : "Mula mengira")}
       </button>
       {done && (
         <p className="comparison-result-reveal mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/85 px-5 py-4 text-center text-lg font-black text-emerald-100 sm:text-xl">
-          {lang === "en" ? "Numbers keep going. Every number is one more than the last. Even bigger numbers work the same way." : "Nombor tak habis. Setiap nombor satu lebih dari sebelumnya. Nombor besar pun sama."}
+          {lang === "en" ? "Each new number is one more than the last." : "Setiap nombor baru adalah satu lebih daripada nombor sebelumnya."}
         </p>
       )}
     </section>
@@ -4237,10 +4244,11 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
   }, []);
 
   const countStartingGroup = async () => {
-    if (stage !== "ready") return;
+    if (stage !== "ready" && stage !== "done") return;
     const runId = runRef.current + 1;
     runRef.current = runId;
     setVisibleBase(0);
+    setVisibleTotal(0);
     setStage("countingBase");
     if (!audioMuted) {
       await speakCountingSequence(base, lang, COUNTING_STEP_MS, (value) => {
@@ -4309,12 +4317,12 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
           label={lang === "en" ? `${base} bananas` : `${base} pisang`}
         />
         <span className={`grid h-16 w-16 place-items-center justify-self-center rounded-2xl border-2 text-5xl font-black transition-all duration-300 ${stage === "plus" ? "scale-125 border-yellow-200 bg-yellow-300 text-slate-950 shadow-[0_0_24px_rgba(250,204,21,.75)]" : "border-cyan-700 bg-slate-950 text-yellow-300"}`} aria-label={lang === "en" ? "plus" : "tambah"}>+</span>
-        <div className={`rounded-[1.8rem] transition-all duration-300 ${stage === "one" ? "scale-110 ring-4 ring-yellow-300/70 shadow-[0_0_28px_rgba(250,204,21,.6)]" : ""}`}>
-          <SequencingBananaBox count={1} visibleCount={showOne ? 1 : 0} showFuture label={lang === "en" ? "1 more" : "1 lagi"} />
+        <div>
+          <SequencingBananaBox count={1} visibleCount={showOne ? 1 : 0} activeIndex={stage === "one" ? 0 : null} showFuture label={lang === "en" ? "1 more" : "1 lagi"} />
         </div>
       </div>
 
-      {stage !== "done" && <button type="button" onClick={() => stage === "ready" ? void countStartingGroup() : void addOne()} disabled={busy} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
+      <button type="button" onClick={() => stage === "ready" || stage === "done" ? void countStartingGroup() : void addOne()} disabled={busy} className="mx-auto mt-4 flex min-h-14 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 text-lg font-black text-slate-950 shadow-[0_5px_0_#a16207] transition hover:-translate-y-0.5 disabled:opacity-60">
         {stage === "ready"
             ? (lang === "en" ? "Start counting" : "Mula mengira")
             : stage === "countingBase"
@@ -4331,8 +4339,8 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
                   ? (lang === "en" ? `Counting ${visibleTotal}...` : `Mengira ${visibleTotal}...`)
                   : stage === "combining"
                     ? (lang === "en" ? "Combining both groups..." : "Menggabungkan kedua-dua kumpulan...")
-                    : (lang === "en" ? "Add 1 banana" : "Tambah 1 pisang")}
-      </button>}
+                    : (lang === "en" ? "Count again" : "Kira lagi")}
+      </button>
 
       {(stage === "equals" || showBottomGroups || stage === "combining" || stage === "done") && (
         <div className="comparison-result-reveal mt-5 border-t-2 border-cyan-400/40 pt-5">
@@ -4364,7 +4372,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
                   ? (lang === "en" ? `The last banana joins to make ${total}` : `Pisang terakhir bergabung untuk menjadi ${total}`)
                   : (lang === "en" ? `One group of ${total}` : `Satu kumpulan ${total}`)}
               </p>
-              <SequencingBananaBox count={total} visibleCount={total} showCountLabels countLabelThrough={total} enteringIndex={stage === "combining" ? total - 1 : null} label={lang === "en" ? `${total} bananas together` : `${total} pisang bersama`} />
+              <SequencingBananaBox count={total} visibleCount={total} showCountLabels countLabelThrough={total} enteringIndex={stage === "combining" ? total - 1 : null} lastItemOnTopRow label={lang === "en" ? `${total} bananas together` : `${total} pisang bersama`} />
             </div>
           )}
         </div>
