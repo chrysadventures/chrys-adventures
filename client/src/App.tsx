@@ -2395,22 +2395,22 @@ function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false,
   );
 }
 
-function AdvancedTenFrame({ filled, celebrate = false, compact = false }: { filled: number; celebrate?: boolean; compact?: boolean }) {
+function AdvancedTenFrame({ filled, celebrate = false, compact = false, emoji = BANANA }: { filled: number; celebrate?: boolean; compact?: boolean; emoji?: string }) {
   return (
     <div className={`grid grid-cols-5 gap-2 rounded-3xl border-4 p-3 transition ${celebrate ? "border-yellow-300 bg-yellow-300/20 shadow-[0_0_28px_rgba(250,204,21,.48)]" : "border-cyan-400 bg-slate-950"}`}>
       {Array.from({ length: 10 }, (_, index) => (
         <span key={index} className={`grid place-items-center rounded-xl border-2 ${compact ? "h-9 w-9" : "h-12 w-12 sm:h-14 sm:w-14"} ${index < filled ? "border-yellow-300 bg-amber-100" : "border-cyan-900 bg-slate-900"}`}>
-          {index < filled && <SpriteIcon value={BANANA} className={compact ? "h-7 w-7" : "h-9 w-9 sm:h-11 sm:w-11"} />}
+          {index < filled && <SpriteIcon value={emoji} className={compact ? "h-7 w-7" : "h-9 w-9 sm:h-11 sm:w-11"} />}
         </span>
       ))}
     </div>
   );
 }
 
-function BananaPile({ count, dim = false }: { count: number; dim?: boolean }) {
+function BananaPile({ count, dim = false, emoji = BANANA }: { count: number; dim?: boolean; emoji?: string }) {
   return (
     <div className={`flex min-h-20 flex-wrap items-center justify-center gap-2 rounded-2xl border-2 border-cyan-700 bg-slate-950/80 p-3 ${dim ? "opacity-50" : ""}`}>
-      {count === 0 ? <span className="font-black text-cyan-300">0</span> : Array.from({ length: count }, (_, index) => <SpriteIcon key={index} value={BANANA} className="h-10 w-10" />)}
+      {count === 0 ? <span className="font-black text-cyan-300">0</span> : Array.from({ length: count }, (_, index) => <SpriteIcon key={index} value={emoji} className="h-10 w-10" />)}
     </div>
   );
 }
@@ -2535,7 +2535,35 @@ function VerticalAdditionCard({ a, b, answer, carried, lang }: { a: number; b: n
   );
 }
 
-function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: number; b: number; lang: Lang; onSolved: () => void; teaching?: boolean }) {
+type CarryObject = {
+  emoji: string;
+  enSingular: string;
+  enPlural: string;
+  ms: string;
+};
+
+const BANANA_CARRY_OBJECT: CarryObject = {
+  emoji: BANANA,
+  enSingular: "banana",
+  enPlural: "bananas",
+  ms: "pisang",
+};
+
+const SHELL_CARRY_OBJECT: CarryObject = {
+  emoji: String.fromCodePoint(0x1f41a),
+  enSingular: "shell",
+  enPlural: "shells",
+  ms: "cangkerang",
+};
+
+const FLOWER_CARRY_OBJECT: CarryObject = {
+  emoji: String.fromCodePoint(0x1f338),
+  enSingular: "flower",
+  enPlural: "flowers",
+  ms: "bunga",
+};
+
+function CarryInteraction({ a, b, lang, onSolved, teaching = false, object = BANANA_CARRY_OBJECT }: { a: number; b: number; lang: Lang; onSolved: () => void; teaching?: boolean; object?: CarryObject }) {
   const need = 10 - a;
   const remainder = b - need;
   const total = a + b;
@@ -2575,10 +2603,10 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
       <div className="grid gap-5 lg:grid-cols-[.7fr_1.3fr] lg:items-center">
         <VerticalAdditionCard a={a} b={b} answer={tensWritten ? total : onesWritten ? `?${remainder}` : undefined} carried={lifted} lang={lang} />
         <div>
-          <CyberCounter value={counter} label={lang === "en" ? "Ones count" : "Kiraan sa"} celebrate={frameFull && !lifted} />
+          <CyberCounter value={counter} label={lang === "en" ? `${object.enPlural} count` : `Kiraan ${object.ms}`} celebrate={frameFull && !lifted} />
           <div className="relative mx-auto mt-4 min-h-40 max-w-xl overflow-visible rounded-3xl border border-cyan-700 bg-slate-950/60 p-3">
             <div className={`origin-center transition-transform ease-in-out [transition-duration:1800ms] ${liftStarted ? "-translate-x-[34%] -translate-y-14 scale-[.42]" : "translate-x-0 translate-y-0 scale-100"}`}>
-              <AdvancedTenFrame filled={a + filledMoves} celebrate={frameFull && !liftStarted} compact />
+              <AdvancedTenFrame filled={a + filledMoves} celebrate={frameFull && !liftStarted} compact emoji={object.emoji} />
             </div>
             {lifted && <span className="absolute left-[18%] top-3 grid h-14 w-14 place-items-center rounded-2xl border-2 border-emerald-300 bg-emerald-700 text-3xl font-black text-white shadow-[0_0_20px_rgba(52,211,153,.5)]">1</span>}
           </div>
@@ -2586,22 +2614,22 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false }: { a: numbe
             {!frameFull ? (lang === "en" ? `Add the ones: ${a} + ${b}. Fill the ten-frame.` : `Tambah sa: ${a} + ${b}. Isi bakul puluh.`)
               : !liftStarted ? (lang === "en" ? "Ten! The ten-frame is full!" : "Sepuluh! Bakul puluh penuh!")
                 : !lifted ? (lang === "en" ? "The ten is moving slowly to the TENS column..." : "Puluh sedang naik perlahan ke lajur PULUH...")
-                  : placedLoose < remainder ? (lang === "en" ? `Place the ${remainder} bananas left in ONES, one at a time.` : `Letak ${remainder} pisang yang tinggal di SA, satu demi satu.`)
-                    : !onesWritten ? remainder === 0 ? (lang === "en" ? "No loose bananas remain. Write 0 in ones—even though 0 can feel like nothing." : "Tiada pisang berasingan tinggal. Tulis 0 di sa walaupun 0 rasa seperti tiada.") : (lang === "en" ? `${remainder} bananas are left in ones. Write ${remainder}.` : `${remainder} pisang tinggal di sa. Tulis ${remainder}.`)
+                  : placedLoose < remainder ? (lang === "en" ? `Place the ${remainder} ${object.enPlural} left in ONES, one at a time.` : `Letak ${remainder} ${object.ms} yang tinggal di SA, satu demi satu.`)
+                    : !onesWritten ? remainder === 0 ? (lang === "en" ? `No loose ${object.enPlural} remain. Write 0 in ones—even though 0 can feel like nothing.` : `Tiada ${object.ms} berasingan tinggal. Tulis 0 di sa walaupun 0 rasa seperti tiada.`) : (lang === "en" ? `${remainder} ${object.enPlural} are left in ones. Write ${remainder}.` : `${remainder} ${object.ms} tinggal di sa. Tulis ${remainder}.`)
                       : !tensWritten ? (lang === "en" ? "Add the carried ten. Write 1 in tens." : "Tambah puluh yang dibawa. Tulis 1 di puluh.")
                         : (lang === "en" ? `${a} plus ${b} equals ${total}. One ten and ${remainder} ones.` : `${a} tambah ${b} sama dengan ${total}. Satu puluh dan ${remainder} sa.`)}
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
-            {!frameFull && <button type="button" disabled={busy} onClick={() => void countOne(a + filledMoves + 1, () => setFilledMoves((value) => value + 1))} className="relative rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-50">{lang === "en" ? "Add one banana" : "Tambah satu pisang"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
+            {!frameFull && <button type="button" disabled={busy} onClick={() => void countOne(a + filledMoves + 1, () => setFilledMoves((value) => value + 1))} className="relative rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-50">{lang === "en" ? `Add one ${object.enSingular}` : `Tambah satu ${object.ms}`}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
             {frameFull && !liftStarted && <button type="button" onClick={() => void liftTen()} className="relative rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#164e63]">{lang === "en" ? "Move TEN up" : "Naikkan PULUH"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
-            {lifted && placedLoose < remainder && <button type="button" disabled={busy} onClick={() => void countOne(10 + placedLoose + 1, () => setPlacedLoose((value) => value + 1))} className="relative rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-50">{lang === "en" ? "Place one loose banana" : "Letak satu pisang berasingan"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
+            {lifted && placedLoose < remainder && <button type="button" disabled={busy} onClick={() => void countOne(10 + placedLoose + 1, () => setPlacedLoose((value) => value + 1))} className="relative rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-50">{lang === "en" ? `Place one loose ${object.enSingular}` : `Letak satu ${object.ms} berasingan`}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
             {lifted && placedLoose === remainder && !onesWritten && <button type="button" onClick={() => setOnesWritten(true)} className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-5 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207]">{lang === "en" ? `Write ${remainder} in ONES` : `Tulis ${remainder} di SA`}</button>}
             {onesWritten && !tensWritten && <button type="button" onClick={() => { setTensWritten(true); if (!completionReportedRef.current) { completionReportedRef.current = true; onSolved(); } }} className="rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-5 py-3 font-black text-white shadow-[0_5px_0_#065f46]">{lang === "en" ? "Write 1 in TENS" : "Tulis 1 di PULUH"}</button>}
           </div>
           {lifted && remainder > 0 && (
             <div className="mx-auto mt-4 grid max-w-lg grid-cols-2 gap-3">
-              <div><p className="mb-1 text-center text-xs font-black uppercase text-cyan-300">{lang === "en" ? "Waiting" : "Menunggu"}</p><BananaPile count={remainder - placedLoose} /></div>
-              <div><p className="mb-1 text-center text-xs font-black uppercase text-yellow-200">{lang === "en" ? "Placed in ones" : "Diletak di sa"}</p><BananaPile count={placedLoose} /></div>
+              <div><p className="mb-1 text-center text-xs font-black uppercase text-cyan-300">{lang === "en" ? "Waiting" : "Menunggu"}</p><BananaPile count={remainder - placedLoose} emoji={object.emoji} /></div>
+              <div><p className="mb-1 text-center text-xs font-black uppercase text-yellow-200">{lang === "en" ? "Placed in ones" : "Diletak di sa"}</p><BananaPile count={placedLoose} emoji={object.emoji} /></div>
             </div>
           )}
           {tensWritten && (
@@ -4748,6 +4776,34 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   );
 }
 
+function AdvancedVerticalAdditionStory({ lang, character, characterName, story, a, b, object }: { lang: Lang; character: string; characterName: string; story: string; a: number; b: number; object: CarryObject }) {
+  return (
+    <section className="rounded-[2rem] border-2 border-emerald-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 shadow-[0_6px_0_#065f46]">
+      <div className="grid items-center gap-5 md:grid-cols-[auto_1fr]">
+        <img src={character} alt={characterName} className="mx-auto h-28 w-28 object-contain drop-shadow-lg" />
+        <div>
+          <p className="text-sm font-black uppercase tracking-wide text-emerald-300">{lang === "en" ? "Story example" : "Contoh cerita"}</p>
+          <p className="mt-2 text-xl font-black leading-relaxed text-white">{story}</p>
+        </div>
+      </div>
+      <div className="mx-auto mt-5 grid max-w-4xl items-center gap-3 md:grid-cols-[1fr_auto_1fr]">
+        <div className="rounded-3xl border-2 border-cyan-400 bg-slate-950/80 p-4">
+          <AdvancedBananaRow count={a} emoji={object.emoji} label={lang === "en" ? `${a} ${object.enPlural}` : `${a} ${object.ms}`} />
+          <p className="mt-2 text-center text-lg font-black text-cyan-100">{lang === "en" ? `${a} ${object.enPlural}` : `${a} ${object.ms}`}</p>
+        </div>
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
+        <div className="rounded-3xl border-2 border-emerald-400 bg-slate-950/80 p-4">
+          <AdvancedBananaRow count={b} emoji={object.emoji} label={lang === "en" ? `${b} ${object.enPlural}` : `${b} ${object.ms}`} />
+          <p className="mt-2 text-center text-lg font-black text-emerald-100">{lang === "en" ? `${b} ${object.enPlural}` : `${b} ${object.ms}`}</p>
+        </div>
+      </div>
+      <p className="mt-5 text-center text-xl font-black text-cyan-100">
+        {lang === "en" ? `Write ${a} + ${b} vertically, then add the ones.` : `Tulis ${a} + ${b} secara menegak, kemudian tambah sa.`}
+      </p>
+    </section>
+  );
+}
+
 function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
@@ -4755,24 +4811,24 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   const [secondCarryDone, setSecondCarryDone] = useState(false);
   if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 5: Carrying Practice" : "Misi Siber 5: Latihan Bawa Puluh"} questions={advancedAdditionPart2Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(5); }} onFinish={() => onDone()} />;
   const phaseCopy = [
-    { title: lang === "en" ? "From banana rows to written maths" : "Daripada baris pisang kepada matematik bertulis", text: lang === "en" ? "Remember counting all 13 bananas together? Now let's write it down like a mathematician." : "Ingat kira semua 13 pisang sekali? Sekarang jom tulis macam ahli matematik." },
+    { title: lang === "en" ? "From objects to written maths" : "Daripada objek kepada matematik bertulis", text: lang === "en" ? "We know how to join two groups. Now let's learn to write addition vertically." : "Kita sudah tahu cara gabungkan dua kumpulan. Sekarang mari belajar menulis tambah secara menegak." },
     { title: lang === "en" ? "Meet tens and ones" : "Kenal puluh dan sa", text: lang === "en" ? "Look, we can group ten together to see the tens. In 14, the TEN is the tens and the 4 loose bananas are the ones." : "Lihat, kita boleh kumpulkan sepuluh untuk nampak puluh. Dalam 14, SEPULUH itu puluh dan 4 pisang berasingan itu sa." },
     { title: lang === "en" ? "Digits show place value" : "Digit tunjuk nilai tempat", text: lang === "en" ? "When we write 14, the 1 means the ten. The 4 means the ones." : "Bila kita tulis 14, 1 itu puluh. 4 itu sa." },
     { title: lang === "en" ? "Meet vertical addition" : "Kenal tambah menegak", text: lang === "en" ? "In vertical addition, ones line up with ones, tens line up with tens." : "Dalam tambah menegak, sa dengan sa, puluh dengan puluh." },
-    { title: lang === "en" ? "Carry the ten: 8 + 7" : "Bawa puluh: 8 + 7", text: lang === "en" ? "Add the ones. When the ten-frame fills, move that ten up to the tens column." : "Tambah sa. Bila bakul puluh penuh, naikkan puluh itu ke lajur puluh." },
-    { title: lang === "en" ? "Try another: 9 + 6" : "Cuba lagi: 9 + 6", text: lang === "en" ? "Use the same steps with less help." : "Guna langkah yang sama dengan kurang bantuan." },
+    { title: lang === "en" ? "Chrys's shell story: 8 + 7" : "Cerita cangkerang Chrys: 8 + 7", text: lang === "en" ? "Write the numbers vertically. Add the ones, make a ten, then carry it to the tens column." : "Tulis nombor secara menegak. Tambah sa, jadikan satu puluh, kemudian bawa ke lajur puluh." },
+    { title: lang === "en" ? "Alyse's flower story: 9 + 4" : "Cerita bunga Alyse: 9 + 4", text: lang === "en" ? "Use the same vertical method again: line up the ones, make a ten, and carry it." : "Guna kaedah menegak yang sama: susun sa, jadikan satu puluh, dan bawa puluh itu." },
   ];
   const canNext = phase < 4 || (phase === 4 ? mainCarryDone : secondCarryDone);
   return (
-    <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart2} helper={lang === "en" ? "Cyber Mission 5 - Write the banana totals in vertical form." : "Misi Siber 5 - Tulis jumlah pisang dalam bentuk menegak."} variant="cyber">
+    <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart2} helper={lang === "en" ? "Cyber Mission 5 - Solve simple stories using vertical addition." : "Misi Siber 5 - Selesaikan cerita mudah menggunakan tambah menegak."} variant="cyber">
       <div className="mb-5 grid grid-cols-6 gap-2">{Array.from({ length: 6 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
       <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 5" : "Misi Siber 5"} title={phaseCopy[phase].title} text={phaseCopy[phase].text} />
-      {phase === 0 && <div className="grid min-h-72 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center"><p className="text-6xl font-black text-yellow-200">8 + 5 = 13</p><p className="mt-4 text-xl font-black text-cyan-100">{lang === "en" ? "You counted all 13 bananas. Now we record the same total with digits." : "Kamu sudah kira semua 13 pisang. Sekarang kita tulis jumlah yang sama dengan digit."}</p></div>}
+      {phase === 0 && <div className="grid min-h-72 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center"><div><div className="mx-auto grid w-64 grid-cols-2 gap-3 rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-5 text-xl font-black uppercase text-cyan-100"><span>{lang === "en" ? "Tens" : "Puluh"}</span><span>{lang === "en" ? "Ones" : "Sa"}</span></div><p className="mt-6 text-2xl font-black text-white">{lang === "en" ? "Vertical addition keeps each place-value column lined up." : "Tambah menegak memastikan setiap lajur nilai tempat tersusun."}</p></div></div>}
       {phase === 1 && <TeenPlaceValueCard value={14} lang={lang} />}
       {phase === 2 && <div className="space-y-4"><TeenPlaceValueCard value={14} lang={lang} connectDigits /><p className="text-center text-xl font-black text-cyan-50">{lang === "en" ? "One more: 17 is 1 ten and 7 ones." : "Satu lagi: 17 ialah 1 puluh dan 7 sa."}</p><TeenPlaceValueCard value={17} lang={lang} connectDigits /></div>}
       {phase === 3 && <div className="rounded-[2rem] border-2 border-cyan-300 bg-slate-950/70 p-6 text-center"><VerticalAdditionCard a={5} b={3} answer={8} lang={lang} /><p className="mt-5 text-xl font-black text-cyan-50">{lang === "en" ? "5 + 3 = 8. That was easy. What if the ones don't fit? Let's see." : "5 + 3 = 8. Itu mudah. Kalau sa tak muat? Jom tengok."}</p></div>}
-      {phase === 4 && <CarryInteraction key="teach-carry-8-7" a={8} b={7} lang={lang} teaching onSolved={() => setMainCarryDone(true)} />}
-      {phase === 5 && <CarryInteraction key="teach-carry-9-6" a={9} b={6} lang={lang} teaching onSolved={() => setSecondCarryDone(true)} />}
+      {phase === 4 && <div className="space-y-5"><AdvancedVerticalAdditionStory lang={lang} character={chrysHappy} characterName="Chrys" story={lang === "en" ? "Chrys finds 8 shells beside the river. Then he finds 7 more. How many shells does he have altogether?" : "Chrys jumpa 8 cangkerang di tepi sungai. Kemudian dia jumpa 7 lagi. Berapa jumlah cangkerang Chrys?"} a={8} b={7} object={SHELL_CARRY_OBJECT} /><CarryInteraction key="teach-carry-8-7" a={8} b={7} lang={lang} teaching object={SHELL_CARRY_OBJECT} onSolved={() => setMainCarryDone(true)} /></div>}
+      {phase === 5 && <div className="space-y-5"><AdvancedVerticalAdditionStory lang={lang} character={alyseGuide} characterName="Alyse" story={lang === "en" ? "Alyse picks 9 flowers in one garden. Then she picks 4 more in another garden. How many flowers does she pick altogether?" : "Alyse petik 9 bunga di sebuah taman. Kemudian dia petik 4 lagi di taman lain. Berapa jumlah bunga yang Alyse petik?"} a={9} b={4} object={FLOWER_CARRY_OBJECT} /><CarryInteraction key="teach-carry-9-4" a={9} b={4} lang={lang} teaching object={FLOWER_CARRY_OBJECT} onSolved={() => setSecondCarryDone(true)} /></div>}
       <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={5} canNext={canNext} onPrevious={() => setPhase((value) => Math.max(0, value - 1))} onNext={() => phase === 5 ? setShowPractice(true) : setPhase((value) => value + 1)} onPractice={() => setShowPractice(true)} />
     </LessonShell></div></main>
   );
