@@ -1,0 +1,3 @@
+insert into public.access_pins (pin_hash)
+values ('91b4d142823f7d20c5f08df69122de43f35f057a988d9619f6d3138485c9a203')
+on conflict (pin_hash) do nothing;
