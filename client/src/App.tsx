@@ -30,6 +30,15 @@ import alyseGuide from "@assets/alyse_guide_new_user_nobg.png";
 import trayPhoto from "@assets/tray_photo.png";
 import trayImage from "@assets/generated_images/Tray.png";
 import forestFloor from "@assets/generated_images/Forestfloor.png";
+import {
+  createGameSave,
+  GameSaveApiError,
+  type GameSave,
+  type GameSaveSummary,
+  listGameSaves,
+  loadGameSave,
+  saveGameProgress,
+} from "./lib/gameSaves";
 
 type Lang = "en" | "ms";
 type MathCue = "plus" | "equals" | "minus";
@@ -123,15 +132,6 @@ type LessonAction = {
 };
 
 const STORE_KEY = "chrys_adventures_rebuild_state";
-const ACCESS_STORE_KEY = "chrys_adventures_pin_access_v1";
-const VALID_PIN_HASHES = new Set([
-  "5ef23d80f400e4575d6f2b5cdafcdc53b063dd7936149328fd186b0bd080648b",
-  "4b5bda09e8c24035af7e08415645266a4bf976ff743434e175ae2894219ff08b",
-  "ea220edc806115ae5c8a81d93ebcc4084bd189228662481ea4cf1b89f8031d8b",
-  "408d57bb25b3d4787701714a2d69983cfdc22cbb50ef684489454ee585ed338c",
-  "b4b840c837023f0b4084184a951695df5cf9af802d0e5f0c7437def95e147d03",
-  "bfcef0baa2b5975b5cb9b0fdad4b1a6addc49c11c621447361469a6236000175",
-]);
 const NUMBER_AUDIO_ENABLED = true;
 const WORD_AUDIO_ENABLED = false;
 const MATH_CUE_AUDIO_ENABLED = true;
@@ -1334,68 +1334,98 @@ function getReducedMotionPreference() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function loadState(): { player: Player | null; lang: Lang; soundEnabled: boolean } {
+function loadState(): { lang: Lang; soundEnabled: boolean } {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
-    return { player: parsed.player ?? null, lang: parsed.lang === "ms" ? "ms" : "en", soundEnabled: parsed.numberSoundEnabled !== false };
+    return { lang: parsed.lang === "ms" ? "ms" : "en", soundEnabled: parsed.numberSoundEnabled !== false };
   } catch {
-    return { player: null, lang: "en", soundEnabled: true };
+    return { lang: "en", soundEnabled: true };
   }
 }
 
-function saveState(player: Player | null, lang: Lang, soundEnabled: boolean) {
-  localStorage.setItem(STORE_KEY, JSON.stringify({ player, lang, soundEnabled, numberSoundEnabled: soundEnabled }));
-}
-
-function loadAccessGranted() {
+function saveState(lang: Lang, soundEnabled: boolean) {
   try {
-    return localStorage.getItem(ACCESS_STORE_KEY) === "granted";
+    localStorage.setItem(STORE_KEY, JSON.stringify({ lang, soundEnabled, numberSoundEnabled: soundEnabled }));
   } catch {
-    return false;
+    // Language and sound preferences simply reset if browser storage is unavailable.
   }
-}
-
-function rememberAccessGranted() {
-  try {
-    localStorage.setItem(ACCESS_STORE_KEY, "granted");
-  } catch {
-    // Access still works for this visit if browser storage is unavailable.
-  }
-}
-
-async function hashAccessPin(pin: string) {
-  const bytes = new TextEncoder().encode(pin);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function App() {
   const initial = useMemo(() => loadState(), []);
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [accessGranted, setAccessGranted] = useState(loadAccessGranted);
+  const [accessPin, setAccessPin] = useState<string | null>(null);
+  const [availableSaves, setAvailableSaves] = useState<GameSaveSummary[]>([]);
+  const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
   const [lang, setLang] = useState<Lang>(initial.lang);
-  const [player, setPlayer] = useState<Player | null>(initial.player);
-  const [screen, setScreen] = useState<Screen>(initial.player ? "menu" : "home");
+  const [player, setPlayer] = useState<Player | null>(null);
+  const [screen, setScreen] = useState<Screen>("modeSelect");
   const [soundEnabled, setSoundEnabled] = useState(NUMBER_AUDIO_ENABLED && initial.soundEnabled);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
   const [completedLesson, setCompletedLesson] = useState<LearningSectionKey | null>(null);
 
-  useEffect(() => saveState(player, lang, soundEnabled), [player, lang, soundEnabled]);
+  useEffect(() => saveState(lang, soundEnabled), [lang, soundEnabled]);
+  useEffect(() => {
+    if (!accessPin || !activeSaveId || !player) return;
+    setSaveStatus("saving");
+    const timeout = window.setTimeout(() => {
+      void saveGameProgress(accessPin, activeSaveId, player, lang, soundEnabled)
+        .then((saved) => {
+          setAvailableSaves((current) => current.map((item) => item.id === saved.id ? {
+            id: saved.id,
+            fileName: saved.fileName,
+            playerName: saved.playerName,
+            stars: saved.stars,
+            updatedAt: saved.updatedAt,
+          } : item));
+          setSaveStatus("saved");
+        })
+        .catch(() => setSaveStatus("error"));
+    }, 700);
+    return () => window.clearTimeout(timeout);
+  }, [accessPin, activeSaveId, player, lang, soundEnabled]);
   useEffect(() => setGlobalAudioMuted(!soundEnabled), [soundEnabled]);
   useEffect(() => {
     if (NUMBER_AUDIO_ENABLED) preloadNumberAudioFiles();
   }, []);
 
   const t = UI[lang];
-  if (!accessGranted) {
+  const openGameSave = (save: GameSave) => {
+    setPlayer(save.player);
+    setLang(save.lang);
+    setSoundEnabled(NUMBER_AUDIO_ENABLED && save.soundEnabled);
+    setActiveSaveId(save.id);
+    setScreen("modeSelect");
+    setSaveStatus("saved");
+  };
+
+  if (!accessPin) {
     return (
       <PinGate
         lang={lang}
         onToggleLang={() => setLang((current) => (current === "en" ? "ms" : "en"))}
-        onGranted={() => {
-          rememberAccessGranted();
-          setAccessGranted(true);
+        onGranted={(pin, saves) => {
+          setAccessPin(pin);
+          setAvailableSaves(saves);
+        }}
+      />
+    );
+  }
+
+  if (!activeSaveId || !player) {
+    return (
+      <GameFileScreen
+        lang={lang}
+        pin={accessPin}
+        initialSaves={availableSaves}
+        soundEnabled={soundEnabled}
+        onToggleLang={() => setLang((current) => (current === "en" ? "ms" : "en"))}
+        onOpen={openGameSave}
+        onChangePin={() => {
+          setAccessPin(null);
+          setAvailableSaves([]);
         }}
       />
     );
@@ -1433,6 +1463,26 @@ function App() {
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
+  const leaveCurrentGame = () => {
+    if (accessPin && activeSaveId && player) {
+      void saveGameProgress(accessPin, activeSaveId, player, lang, soundEnabled)
+        .then((saved) => {
+          setAvailableSaves((current) => current.map((item) => item.id === saved.id ? {
+            id: saved.id,
+            fileName: saved.fileName,
+            playerName: saved.playerName,
+            stars: saved.stars,
+            updatedAt: saved.updatedAt,
+          } : item));
+        })
+        .catch(() => undefined);
+    }
+    setLastScore(null);
+    setCompletedLesson(null);
+    setActiveSaveId(null);
+    setPlayer(null);
+  };
+
   return (
     <AudioEnabledContext.Provider value={soundEnabled}>
       <div
@@ -1453,7 +1503,7 @@ function App() {
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled((current) => !current)}
           onOpenGlossary={() => setGlossaryOpen(true)}
-          onBack={screen === "home" ? undefined : () => go(
+          onBack={screen === "home" ? undefined : screen === "modeSelect" ? leaveCurrentGame : () => go(
             screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedSequencing" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2"
               ? "advancedMenu"
               : screen === "advancedMenu"
@@ -1462,11 +1512,18 @@ function App() {
                   ? "testMenu"
                   : screen === "menu"
                     ? "modeSelect"
-                    : screen === "modeSelect"
-                      ? "home"
                     : "menu",
           )}
         />
+        <div className="mb-2 flex justify-end px-1 text-xs font-black" aria-live="polite">
+          <span className={saveStatus === "error" ? "text-red-600" : screen.startsWith("advanced") ? "text-cyan-100" : "text-emerald-800"}>
+            {saveStatus === "saving"
+              ? (lang === "en" ? "Saving..." : "Menyimpan...")
+              : saveStatus === "error"
+                ? (lang === "en" ? "Progress could not be saved. Check your internet." : "Kemajuan tidak dapat disimpan. Semak internet.")
+                : (lang === "en" ? "Progress saved" : "Kemajuan disimpan")}
+          </span>
+        </div>
         <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} />
 
         {screen === "home" && (
@@ -1574,26 +1631,32 @@ function App() {
   );
 }
 
-function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: () => void; onGranted: () => void }) {
+function PinGate({ lang, onToggleLang, onGranted }: {
+  lang: Lang;
+  onToggleLang: () => void;
+  onGranted: (pin: string, saves: GameSaveSummary[]) => void;
+}) {
   const [pin, setPin] = useState("");
   const [checking, setChecking] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (pin.length !== 6 || checking) return;
     setChecking(true);
-    setError(false);
+    setError("");
     try {
-      const pinHash = await hashAccessPin(pin);
-      if (VALID_PIN_HASHES.has(pinHash)) {
-        onGranted();
-        return;
+      const saves = await listGameSaves(pin);
+      onGranted(pin, saves);
+    } catch (caught) {
+      if (caught instanceof GameSaveApiError && caught.status === 401) {
+        setPin("");
+        setError(lang === "en"
+          ? "That PIN is not recognized. Check all 6 digits and try again."
+          : "PIN itu tidak dikenali. Semak kesemua 6 digit dan cuba lagi.");
+      } else {
+        setError(caught instanceof Error ? caught.message : "Could not check the PIN.");
       }
-      setPin("");
-      setError(true);
-    } catch {
-      setError(true);
     } finally {
       setChecking(false);
     }
@@ -1606,8 +1669,7 @@ function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: 
         help: "Type the 6-digit PIN provided to you to open Chrys's Adventures.",
         label: "6-digit PIN",
         button: checking ? "Checking PIN..." : "Open the adventure",
-        error: "That PIN is not recognized. Check all 6 digits and try again.",
-        privacy: "You only need to enter the PIN once on this device.",
+        privacy: "For privacy, enter the PIN each time you open or refresh the app.",
         language: "BM",
         languageLabel: "Switch to Bahasa Melayu",
       }
@@ -1617,8 +1679,7 @@ function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: 
         help: "Taip PIN 6 digit yang diberikan kepada anda untuk membuka Pengembaraan Chrys.",
         label: "PIN 6 digit",
         button: checking ? "Sedang menyemak PIN..." : "Buka pengembaraan",
-        error: "PIN itu tidak dikenali. Semak kesemua 6 digit dan cuba lagi.",
-        privacy: "Anda hanya perlu memasukkan PIN sekali pada peranti ini.",
+        privacy: "Untuk privasi, masukkan PIN setiap kali aplikasi dibuka atau dimuat semula.",
         language: "EN",
         languageLabel: "Switch to English",
       };
@@ -1659,11 +1720,11 @@ function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: 
                   value={pin}
                   onChange={(event) => {
                     setPin(event.target.value.replace(/\D/g, "").slice(0, 6));
-                    setError(false);
+                    setError("");
                   }}
                   maxLength={6}
                   autoFocus
-                  aria-invalid={error}
+                  aria-invalid={Boolean(error)}
                   aria-describedby={error ? "access-pin-error access-pin-help" : "access-pin-help"}
                   className="min-w-0 flex-1 bg-transparent px-5 py-5 text-center text-3xl font-black tracking-[0.45em] text-blue-950 outline-none focus-visible:outline-none focus-visible:shadow-none placeholder:text-slate-300"
                   placeholder="••••••"
@@ -1671,7 +1732,7 @@ function PinGate({ lang, onToggleLang, onGranted }: { lang: Lang; onToggleLang: 
                 <span className="h-7 w-7 shrink-0" aria-hidden="true" />
               </div>
               <p id="access-pin-help" className="mt-3 text-sm font-bold text-slate-500">{copy.privacy}</p>
-              {error && <p id="access-pin-error" role="alert" className="mt-3 rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm font-black text-red-800">{copy.error}</p>}
+              {error && <p id="access-pin-error" role="alert" className="mt-3 rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm font-black text-red-800">{error}</p>}
               <button
                 type="submit"
                 disabled={pin.length !== 6 || checking}
@@ -1714,6 +1775,184 @@ function LessonCompletionScreen({ lang, sectionName, onContinue }: {
         </button>
       </section>
     </main>
+  );
+}
+
+function GameFileScreen({
+  lang,
+  pin,
+  initialSaves,
+  soundEnabled,
+  onToggleLang,
+  onOpen,
+  onChangePin,
+}: {
+  lang: Lang;
+  pin: string;
+  initialSaves: GameSaveSummary[];
+  soundEnabled: boolean;
+  onToggleLang: () => void;
+  onOpen: (save: GameSave) => void;
+  onChangePin: () => void;
+}) {
+  const [saves, setSaves] = useState(initialSaves);
+  const [createStep, setCreateStep] = useState<0 | 1 | 2>(0);
+  const [fileName, setFileName] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const [busySaveId, setBusySaveId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => setSaves(initialSaves), [initialSaves]);
+
+  const copy = lang === "en"
+    ? {
+        eyebrow: "Your saved adventures",
+        title: "Choose a game file",
+        help: "Continue your own game, or begin a new one.",
+        empty: "No games have been saved with this PIN yet.",
+        continue: "Continue game",
+        newGame: "Start a new game",
+        fileLabel: "Name this game file",
+        fileHelp: "Use a name you will recognize on another device.",
+        playerLabel: "What is the player's name?",
+        next: "Next: player name",
+        create: "Create game",
+        back: "Back",
+        changePin: "Use a different PIN",
+        stars: "stars",
+        lastPlayed: "Last played",
+        language: "BM",
+      }
+    : {
+        eyebrow: "Pengembaraan tersimpan",
+        title: "Pilih fail permainan",
+        help: "Sambung permainan kamu atau mulakan permainan baharu.",
+        empty: "Belum ada permainan yang disimpan dengan PIN ini.",
+        continue: "Sambung permainan",
+        newGame: "Mulakan permainan baharu",
+        fileLabel: "Namakan fail permainan ini",
+        fileHelp: "Gunakan nama yang mudah dikenal pada peranti lain.",
+        playerLabel: "Siapakah nama pemain?",
+        next: "Seterusnya: nama pemain",
+        create: "Cipta permainan",
+        back: "Kembali",
+        changePin: "Gunakan PIN lain",
+        stars: "bintang",
+        lastPlayed: "Kali terakhir dimainkan",
+        language: "EN",
+      };
+
+  const openExisting = async (saveId: string) => {
+    if (busySaveId) return;
+    setBusySaveId(saveId);
+    setError("");
+    try {
+      onOpen(await loadGameSave(pin, saveId));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not load the game file.");
+    } finally {
+      setBusySaveId(null);
+    }
+  };
+
+  const createNew = async () => {
+    const cleanFileName = fileName.trim();
+    const cleanPlayerName = playerName.trim();
+    if (!cleanFileName || !cleanPlayerName || busySaveId) return;
+    setBusySaveId("new");
+    setError("");
+    try {
+      const save = await createGameSave(pin, cleanFileName, cleanPlayerName, lang, soundEnabled);
+      setSaves((current) => [{
+        id: save.id,
+        fileName: save.fileName,
+        playerName: save.playerName,
+        stars: save.stars,
+        updatedAt: save.updatedAt,
+      }, ...current]);
+      onOpen(save);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not create the game file.");
+    } finally {
+      setBusySaveId(null);
+    }
+  };
+
+  return (
+    <div className="page-bg min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
+      <div className="jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
+        <header className="flex items-center justify-between gap-3">
+          <button type="button" onClick={onChangePin} className="rounded-2xl border-2 border-white/90 bg-white/90 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(0,0,0,.15)]">
+            <ArrowLeft className="mr-1 inline h-4 w-4" aria-hidden="true" /> {copy.changePin}
+          </button>
+          <button type="button" onClick={onToggleLang} className="rounded-2xl border-2 border-white/90 bg-white/90 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(0,0,0,.15)]">
+            {copy.language}
+          </button>
+        </header>
+
+        <main className="mx-auto w-full max-w-4xl flex-1 py-6">
+          <section className="lesson-panel rounded-[2.25rem] p-5 shadow-2xl md:p-8">
+            <div className="text-center">
+              <img src={chrysHappy} alt="Chrys" className="mx-auto h-24 w-24 object-contain drop-shadow-xl" />
+              <p className="mt-2 text-sm font-black uppercase tracking-[0.18em] text-emerald-700">{copy.eyebrow}</p>
+              <h1 className="mt-2 text-3xl font-black text-blue-950 sm:text-4xl">{copy.title}</h1>
+              <p className="mt-2 text-base font-bold text-slate-600 sm:text-lg">{copy.help}</p>
+            </div>
+
+            {error && <p role="alert" className="mx-auto mt-5 max-w-2xl rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-center text-sm font-black text-red-800">{error}</p>}
+
+            {createStep === 0 && (
+              <>
+                <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                  {saves.map((save) => (
+                    <article key={save.id} className="rounded-3xl border-3 border-sky-200 bg-white p-5 shadow-[0_5px_0_#7dd3fc]">
+                      <h2 className="truncate text-2xl font-black text-blue-950">{save.fileName}</h2>
+                      <p className="mt-1 text-lg font-black text-emerald-800">{save.playerName}</p>
+                      <p className="mt-2 text-sm font-bold text-slate-500">⭐ {save.stars} {copy.stars}</p>
+                      <p className="mt-1 text-xs font-bold text-slate-500">{copy.lastPlayed}: {new Date(save.updatedAt).toLocaleDateString(lang === "ms" ? "ms-MY" : "en-MY")}</p>
+                      <button type="button" disabled={Boolean(busySaveId)} onClick={() => void openExisting(save.id)} className="mt-4 w-full rounded-2xl border-2 border-emerald-500 bg-emerald-400 px-4 py-3 text-base font-black text-emerald-950 shadow-[0_5px_0_#047857] disabled:opacity-60 enabled:active:translate-y-1">
+                        {busySaveId === save.id ? "..." : copy.continue}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+                {saves.length === 0 && <p className="mt-7 rounded-3xl border-2 border-dashed border-sky-300 bg-sky-50 p-6 text-center font-black text-slate-600">{copy.empty}</p>}
+                <button type="button" onClick={() => { setCreateStep(1); setError(""); }} className="mx-auto mt-7 block rounded-3xl border-2 border-yellow-500 bg-yellow-400 px-7 py-4 text-xl font-black text-yellow-950 shadow-[0_7px_0_#a86000] active:translate-y-1">
+                  <Plus className="mr-2 inline h-5 w-5" aria-hidden="true" /> {copy.newGame}
+                </button>
+              </>
+            )}
+
+            {createStep > 0 && (
+              <div className="mx-auto mt-7 max-w-lg rounded-3xl border-3 border-sky-200 bg-white p-5 shadow-[0_6px_0_#7dd3fc] sm:p-7">
+                {createStep === 1 ? (
+                  <label className="block">
+                    <span className="block text-lg font-black text-blue-950">{copy.fileLabel}</span>
+                    <span className="mt-1 block text-sm font-bold text-slate-500">{copy.fileHelp}</span>
+                    <input autoFocus value={fileName} maxLength={24} onChange={(event) => setFileName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && fileName.trim()) setCreateStep(2); }} className="mt-3 w-full rounded-2xl border-3 border-sky-200 bg-sky-50 px-4 py-3 text-xl font-black text-blue-950 outline-none focus:border-yellow-400" />
+                    <span className="mt-1 block text-right text-xs font-black text-slate-500">{fileName.length}/24</span>
+                  </label>
+                ) : (
+                  <label className="block">
+                    <span className="block text-lg font-black text-blue-950">{copy.playerLabel}</span>
+                    <input autoFocus value={playerName} maxLength={20} onChange={(event) => setPlayerName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void createNew(); }} className="mt-3 w-full rounded-2xl border-3 border-sky-200 bg-sky-50 px-4 py-3 text-xl font-black text-blue-950 outline-none focus:border-yellow-400" />
+                    <span className="mt-1 block text-right text-xs font-black text-slate-500">{playerName.length}/20</span>
+                  </label>
+                )}
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <button type="button" onClick={() => { setCreateStep(createStep === 2 ? 1 : 0); setError(""); }} className="rounded-2xl border-2 border-sky-300 bg-white px-4 py-3 font-black text-blue-900 shadow-[0_4px_0_#7dd3fc] active:translate-y-1">{copy.back}</button>
+                  {createStep === 1 ? (
+                    <button type="button" disabled={!fileName.trim()} onClick={() => setCreateStep(2)} className="rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-4 py-3 font-black text-yellow-950 shadow-[0_4px_0_#a86000] disabled:opacity-50 enabled:active:translate-y-1">{copy.next}</button>
+                  ) : (
+                    <button type="button" disabled={!playerName.trim() || Boolean(busySaveId)} onClick={() => void createNew()} className="rounded-2xl border-2 border-emerald-500 bg-emerald-400 px-4 py-3 font-black text-emerald-950 shadow-[0_4px_0_#047857] disabled:opacity-50 enabled:active:translate-y-1">{busySaveId === "new" ? "..." : copy.create}</button>
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
+        </main>
+      </div>
+    </div>
   );
 }
 
@@ -2672,12 +2911,12 @@ function TeenPlaceValueCard({ value, lang, connectDigits = false }: { value: num
 function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
   const examples = [
     {
-      display: "07",
+      display: "03",
       tens: [0],
-      ones: [1, 1, 1, 1, 1, 1, 1],
+      ones: [1, 1, 1],
       tensLabel: lang === "en" ? "0 tens" : "0 puluh",
-      onesLabel: lang === "en" ? "7 ones" : "7 sa",
-      equation: "07 = 1 + 1 + 1 + 1 + 1 + 1 + 1 = 7",
+      onesLabel: lang === "en" ? "3 ones" : "3 sa",
+      equation: "03 = 1 + 1 + 1 = 3",
     },
     {
       display: "12",
@@ -2724,7 +2963,16 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
       <div className="grid gap-5 lg:grid-cols-3">
         {examples.map((example) => (
           <article key={example.display} className="rounded-[1.75rem] border-2 border-cyan-400 bg-gradient-to-br from-slate-950 to-cyan-950 p-4 shadow-[0_5px_0_#164e63]">
-            <p className="mb-4 text-center text-5xl font-black text-yellow-200">{example.display}</p>
+            <div className="mx-auto mb-5 grid max-w-52 grid-cols-2 gap-4 text-center" aria-label={example.display}>
+              <div>
+                <p className="mb-2 text-sm font-black text-cyan-200">{lang === "en" ? "TENS DIGIT" : "DIGIT PULUH"}</p>
+                <span className="mx-auto grid h-20 w-16 place-items-center rounded-2xl border-4 border-cyan-300 bg-cyan-950 text-4xl font-black text-cyan-100 shadow-[0_5px_0_#164e63]">{example.display[0]}</span>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-black text-yellow-200">{lang === "en" ? "ONES DIGIT" : "DIGIT SA"}</p>
+                <span className="mx-auto grid h-20 w-16 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-950 text-4xl font-black text-yellow-100 shadow-[0_5px_0_#a16207]">{example.display[1]}</span>
+              </div>
+            </div>
             <div className="flex items-end gap-2">
               {valueGroup(example.tens, example.tensLabel, "cyan")}
               <span className="mb-5 text-2xl font-black text-white">+</span>
@@ -4295,7 +4543,7 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
     return (
       <span
         key={index}
-        className={`relative grid shrink-0 place-items-center rounded-xl border transition-[opacity,transform,filter,background-color,border-color] duration-300 ${enteringIndex === index ? "sequence-banana-join" : ""} ${compact ? "h-6 w-6 sm:h-11 sm:w-11" : "h-9 w-9 sm:h-14 sm:w-14"} ${
+        className={`relative grid shrink-0 place-items-center rounded-xl border transition-[opacity,transform,filter,background-color,border-color] duration-300 ${enteringIndex === index ? "sequence-banana-join" : ""} ${compact ? "h-6 w-6 sm:h-12 sm:w-12" : "h-9 w-9 sm:h-14 sm:w-14"} ${
           visible
             ? index === activeIndex
               ? "border-yellow-200 bg-cyan-950/65 opacity-100 ring-4 ring-yellow-300/80"
@@ -4306,7 +4554,7 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
         }`}
         aria-hidden="true"
       >
-        <SpriteIcon value={BANANA} className={compact ? "h-5 w-5 sm:h-9 sm:w-9" : "h-8 w-8 sm:h-11 sm:w-11"} />
+        <SpriteIcon value={BANANA} className={compact ? "h-5 w-5 sm:h-10 sm:w-10" : "h-8 w-8 sm:h-11 sm:w-11"} />
         {showCountLabels && visible && index < countLabelThrough && (
           <span className={`absolute -right-2 -top-3 grid h-7 min-w-7 place-items-center rounded-full border-2 px-1 text-sm font-black leading-none shadow-md ${index === activeIndex ? "border-yellow-100 bg-yellow-400 text-slate-950" : "border-cyan-100 bg-blue-600 text-white"}`}>{countLabelStart + index}</span>
         )}
@@ -4588,9 +4836,9 @@ function SequenceNumberLine({ direction, lang, onComplete }: { direction: "ascen
             <React.Fragment key={value}>
               <span className={`grid h-12 w-12 place-items-center rounded-xl border-2 text-xl font-black transition-all duration-200 ${index < revealed ? "scale-100 border-yellow-300 bg-cyan-950 text-yellow-200 opacity-100" : "scale-75 border-slate-700 bg-slate-900 text-slate-700 opacity-30"}`} style={NUMBER_TEXT_STYLE}>{value}</span>
               {index < values.length - 1 && (
-                <span className={`grid min-w-10 place-items-center text-xs font-black transition-opacity duration-200 ${index + 1 < revealed ? "text-cyan-300 opacity-100" : "text-slate-700 opacity-25"}`}>
-                  <span>{direction === "ascending" ? "+1" : "−1"}</span>
-                  <span aria-hidden="true">→</span>
+                <span className={`grid min-w-12 place-items-center font-black transition-opacity duration-200 ${index + 1 < revealed ? "text-cyan-300 opacity-100" : "text-slate-700 opacity-25"}`}>
+                  <span className="text-lg leading-none">{direction === "ascending" ? "+1" : "−1"}</span>
+                  <span className="mt-1 text-2xl leading-none" aria-hidden="true">→</span>
                 </span>
               )}
             </React.Fragment>
@@ -5177,7 +5425,7 @@ function AdvancedPart2CountableTen({ lang, countedThrough = 0, counting = false,
   return (
     <div className="relative mx-auto w-fit max-w-full">
       <TenBananaBundle lang={lang} compact />
-      <div className="pointer-events-none absolute left-3 right-3 top-3 grid grid-cols-5 gap-1.5">
+      <div className="pointer-events-none absolute left-[1.625rem] top-[1.625rem] grid grid-cols-5 gap-1.5">
         {Array.from({ length: 10 }, (_, index) => {
           const counted = index < countedThrough;
           const active = counting && counted && index === countedThrough - 1;
@@ -5315,16 +5563,16 @@ function AdvancedPart2MethodPanel({ beat, lang, onComplete }: { beat: AdvancedPa
   return (
     <section className="slide-in-up rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-cyan-950 p-5 shadow-[0_6px_0_#164e63] sm:p-6">
       <p className="mb-5 text-center text-sm font-black uppercase tracking-[.2em] text-cyan-300">{lang === "en" ? "Vertical method" : "Kaedah menegak"}</p>
-      <div className="relative mx-auto max-w-md rounded-[2rem] border-4 border-cyan-300 bg-slate-950/95 p-5 shadow-[0_8px_0_#164e63]">
+      <div className="relative mx-auto w-full max-w-lg rounded-[2rem] border-4 border-cyan-300 bg-slate-950/95 p-6 shadow-[0_8px_0_#164e63] sm:p-8">
         <div className="mb-4 grid grid-cols-2 gap-3 text-center text-sm font-black uppercase tracking-wider text-cyan-100">
           <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
           <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
         </div>
         {beat === 0 && step >= 3 && <span className={`absolute left-[18%] top-[5.9rem] z-20 grid h-9 w-8 place-items-center rounded-xl border-2 border-yellow-200 bg-yellow-400 text-xl font-black text-slate-950 shadow-[0_0_16px_rgba(250,204,21,.7)] ${step === 3 || step === 5 ? "animate-pulse" : ""}`}>1</span>}
         {beat === 0 && step === 2 && <span className="absolute -right-2 top-1/2 rounded-xl border border-cyan-400 bg-cyan-950 px-2 py-1 text-lg font-black text-cyan-200 opacity-80">13</span>}
-        <div className="grid grid-cols-2 gap-2 text-center" style={getNumberTextStyle(problem.total)}>
+        <div className="grid grid-cols-2 gap-4 text-center" style={getNumberTextStyle(problem.total)}>
           <span className={digitClass(tensOperandsActive)}>{aDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{aDigits[1]}</span>
-          <span className={`relative ${digitClass(tensOperandsActive)}`}><span className="absolute -left-4 text-cyan-300">+</span>{bDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{bDigits[1]}</span>
+          <span className={`relative ${digitClass(tensOperandsActive)}`}><span className="absolute left-3 text-cyan-300 sm:left-5">+</span>{bDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{bDigits[1]}</span>
           <span className="col-span-2 my-2 border-t-4 border-cyan-300" />
           <span className={`${digitClass(tensResultVisible && (beat === 0 ? step === 6 || finalGlow : step === 4 || finalGlow))} ${tensResultVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
           <span className={`${digitClass(onesResultVisible && (beat === 0 ? step === 4 || finalGlow : step === 2 || finalGlow))} ${onesResultVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[1]}</span>
