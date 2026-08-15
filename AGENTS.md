@@ -85,7 +85,9 @@ Without `src`, it renders the 🐒 emoji placeholder.
 - Keep English and Malay instructions equally concise without changing the mathematical meaning.
 
 ### Object counting and transfer animation rules
+- **Mandatory reference:** Read and follow `COUNTING_INTERACTION_RULES.md` whenever creating, changing, or reviewing any object-counting interaction.
 - In every mode and lesson, only the object currently being counted uses a yellow border, yellow ring, and yellow number badge. Previously counted objects stay blue/cyan and uncounted objects stay faded. Never use blue for the active counting highlight, and never highlight the entire tray, basket, box, or group.
+- Every count must be started by a visible button, every counted object must have a number label, and number audio must advance from the same `speakCountingSequence` `onCount` callback as the visual highlight.
 - When an object moves between containers, hide its source copy as the movement begins, animate it along a smooth curved path, and target the exact object slot where it will land. Do not fly objects to the centre of a tray, basket, or box.
 - Keep the flying copy visible over its destination until the landed object has rendered, then remove it so the handoff looks continuous. Object positions must not collide or overlap during the movement.
 

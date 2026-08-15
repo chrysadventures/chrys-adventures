@@ -2669,6 +2669,164 @@ function TeenPlaceValueCard({ value, lang, connectDigits = false }: { value: num
   );
 }
 
+function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
+  const examples = [
+    { number: 12, tens: 1, tensValue: 10, ones: 2 },
+    { number: 27, tens: 2, tensValue: 20, ones: 7 },
+  ];
+  return (
+    <section className="space-y-5 rounded-[2rem] border-2 border-cyan-300 bg-slate-950/85 p-4 shadow-[0_6px_0_#164e63] sm:p-6">
+      <div className="rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-5 text-center">
+        <h4 className="text-2xl font-black text-yellow-200">{lang === "en" ? "What do the digits mean?" : "Apakah maksud digit?"}</h4>
+        <p className="mt-2 text-lg font-black text-cyan-50">{lang === "en" ? "The tens digit counts groups of 10. The ones digit counts single ones." : "Digit puluh mengira kumpulan 10. Digit sa mengira satu-satu."}</p>
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        {examples.map((example) => (
+          <article key={example.number} className="rounded-[1.75rem] border-2 border-cyan-400 bg-gradient-to-br from-slate-950 to-cyan-950 p-5 shadow-[0_5px_0_#164e63]">
+            <p className="mb-4 text-center text-5xl font-black text-yellow-200" style={getNumberTextStyle(example.number)}>{example.number}</p>
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 p-4">
+                <p className="text-sm font-black uppercase tracking-wider text-cyan-200">{lang === "en" ? "Tens digit" : "Digit puluh"}</p>
+                <span className="mx-auto my-3 grid h-20 w-16 place-items-center rounded-2xl border-4 border-cyan-300 bg-slate-950 text-5xl font-black text-cyan-100 shadow-[0_5px_0_#164e63]">{example.tens}</span>
+                <p className="font-black text-cyan-50">{lang === "en" ? `${example.tens} means ${example.tensValue}` : `${example.tens} bermaksud ${example.tensValue}`}</p>
+              </div>
+              <div className="rounded-2xl border-2 border-yellow-300 bg-slate-950 p-4">
+                <p className="text-sm font-black uppercase tracking-wider text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p>
+                <span className="mx-auto my-3 grid h-20 w-16 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-950 text-5xl font-black text-yellow-100 shadow-[0_5px_0_#a16207]">{example.ones}</span>
+                <p className="font-black text-yellow-50">{lang === "en" ? `${example.ones} means ${example.ones} single ones` : `${example.ones} bermaksud ${example.ones} sa`}</p>
+              </div>
+            </div>
+            <p className="mt-5 rounded-2xl border border-emerald-300 bg-emerald-950/70 px-4 py-3 text-center text-3xl font-black text-emerald-100" style={getNumberTextStyle(example.number)}>{example.number} = {example.tensValue} + {example.ones}</p>
+          </article>
+        ))}
+      </div>
+      <p className="rounded-2xl border-2 border-yellow-300/70 bg-yellow-300/10 px-5 py-4 text-center text-xl font-black text-yellow-100">{lang === "en" ? "1 in TENS means 10. 2 in TENS means 20. Each ONE is one banana." : "1 dalam PULUH bermaksud 10. 2 dalam PULUH bermaksud 20. Setiap SA ialah satu pisang."}</p>
+    </section>
+  );
+}
+
+type SeventeenPlaceValueStage = "ready" | "countingTen" | "groupingTen" | "basket" | "movingTens" | "tensPlaced" | "countingOnes" | "complete";
+
+function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [stage, setStage] = useState<SeventeenPlaceValueStage>("ready");
+  const [countedToTen, setCountedToTen] = useState(0);
+  const [countedOnes, setCountedOnes] = useState(0);
+  const runIdRef = useRef(0);
+  const completionReportedRef = useRef(false);
+  const tensPlaced = stage === "tensPlaced" || stage === "countingOnes" || stage === "complete";
+  const basketVisible = stage === "basket" || stage === "movingTens";
+  const firstTenVisible = stage === "ready" || stage === "countingTen" || stage === "groupingTen";
+
+  useEffect(() => () => {
+    runIdRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const countFirstTen = async () => {
+    if (stage !== "ready") return;
+    const runId = ++runIdRef.current;
+    setCountedToTen(0);
+    setStage("countingTen");
+    let progressed = false;
+    await speakCountingSequence(10, lang, COUNTING_STEP_MS, (value) => {
+      if (runIdRef.current !== runId) return;
+      progressed = true;
+      setCountedToTen(value);
+    });
+    if (runIdRef.current !== runId) return;
+    if (!progressed) setCountedToTen(10);
+    setStage("groupingTen");
+    await wait(prefersReducedMotion ? 100 : 900);
+    if (runIdRef.current !== runId) return;
+    setStage("basket");
+  };
+
+  const moveToTens = async () => {
+    if (stage !== "basket") return;
+    const runId = ++runIdRef.current;
+    setStage("movingTens");
+    await wait(prefersReducedMotion ? 100 : 800);
+    if (runIdRef.current !== runId) return;
+    setStage("tensPlaced");
+  };
+
+  const countRemaining = async () => {
+    if (stage !== "tensPlaced") return;
+    const runId = ++runIdRef.current;
+    setCountedOnes(0);
+    setStage("countingOnes");
+    let progressed = false;
+    await speakCountingSequence(7, lang, COUNTING_STEP_MS, (value) => {
+      if (runIdRef.current !== runId) return;
+      progressed = true;
+      setCountedOnes(value);
+    });
+    if (runIdRef.current !== runId) return;
+    if (!progressed) setCountedOnes(7);
+    setStage("complete");
+    if (!completionReportedRef.current) {
+      completionReportedRef.current = true;
+      onComplete();
+    }
+  };
+
+  const renderBanana = (label: number, counted: boolean, active: boolean, key: string) => (
+    <span key={key} className={`relative grid h-14 w-11 shrink-0 place-items-center rounded-xl border-2 transition-all duration-300 sm:h-16 sm:w-14 sm:rounded-2xl ${active ? "z-10 scale-110 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]" : counted ? "border-cyan-400 bg-cyan-950" : "border-cyan-900 bg-slate-900/90 opacity-35 grayscale"}`}>
+      <SpriteIcon value={BANANA} className="h-9 w-9 sm:h-11 sm:w-11" />
+      <span className={`absolute -top-3 left-1/2 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1 text-xs font-black shadow ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{label}</span>
+    </span>
+  );
+
+  return (
+    <section className="space-y-5 rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 shadow-[0_6px_0_#164e63] sm:p-6">
+      <div className="rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-4 text-center">
+        <h4 className="text-3xl font-black text-yellow-200">17 = 10 + 7</h4>
+        <p className="mt-2 text-lg font-black text-cyan-50">{lang === "en" ? "Make one group of 10. Then count the 7 bananas left." : "Buat satu kumpulan 10. Kemudian kira 7 pisang yang tinggal."}</p>
+      </div>
+
+      <div className="mx-auto grid max-w-xl grid-cols-2 gap-4 rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/90 p-4 text-center shadow-[0_5px_0_#164e63]">
+        <div><p className="rounded-full border border-cyan-400 bg-cyan-950 py-2 text-sm font-black uppercase tracking-wider text-cyan-200">{lang === "en" ? "Tens digit" : "Digit puluh"}</p><span className={`mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${tensPlaced ? "scale-100 border-cyan-300 bg-cyan-950 text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,.45)]" : "scale-90 border-cyan-900 bg-slate-900 text-slate-700"}`}>{tensPlaced ? "1" : "?"}</span>{tensPlaced && <p className="mt-3 font-black text-cyan-100">{lang === "en" ? "1 means 10" : "1 bermaksud 10"}</p>}</div>
+        <div><p className="rounded-full border border-yellow-400 bg-slate-950 py-2 text-sm font-black uppercase tracking-wider text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p><span className={`mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${stage === "complete" ? "scale-100 border-yellow-300 bg-slate-950 text-yellow-100 shadow-[0_0_24px_rgba(250,204,21,.45)]" : "scale-90 border-yellow-900 bg-slate-900 text-slate-700"}`}>{stage === "complete" ? "7" : "?"}</span>{stage === "complete" && <p className="mt-3 font-black text-yellow-100">{lang === "en" ? "7 single ones" : "7 sa"}</p>}</div>
+      </div>
+
+      <div className="overflow-hidden rounded-[2rem] border-2 border-cyan-400 bg-slate-950/85 p-4 sm:p-6">
+        <p className="mb-5 text-center text-xl font-black text-cyan-100">{firstTenVisible ? (lang === "en" ? "Count until you reach 10." : "Kira sehingga 10.") : basketVisible ? (lang === "en" ? "Ten bananas make one basket of 10." : "Sepuluh pisang membuat satu bakul 10.") : (lang === "en" ? "Now count the bananas left." : "Sekarang kira pisang yang tinggal.")}</p>
+
+        <div className="relative mx-auto min-h-40 max-w-xl">
+          {firstTenVisible && <div className={`mx-auto grid w-fit grid-cols-5 gap-2 transition-all ease-in-out sm:gap-3 ${stage === "groupingTen" ? "translate-y-8 scale-50 opacity-0 duration-[900ms]" : "translate-y-0 scale-100 opacity-100 duration-300"}`}>{Array.from({ length: 10 }, (_, index) => renderBanana(index + 1, index < countedToTen, stage === "countingTen" && index === countedToTen - 1, `ten-${index}`))}</div>}
+          {basketVisible && <div className={`mx-auto w-fit max-w-full transition-all ease-in-out ${stage === "movingTens" ? "-translate-y-60 scale-[.3] opacity-0 duration-[800ms]" : "translate-y-0 scale-100 opacity-100 duration-500"}`}><TenBananaBundle lang={lang} compact /></div>}
+          {tensPlaced && <p className="slide-in-up mx-auto grid min-h-28 max-w-xl place-items-center rounded-3xl border-2 border-cyan-400 bg-cyan-950/60 px-5 text-center text-xl font-black text-cyan-100">{lang === "en" ? "The basket changed into 1 in the tens digit." : "Bakul itu berubah menjadi 1 dalam digit puluh."}</p>}
+        </div>
+
+        {basketVisible && <p className="mx-auto mt-4 max-w-2xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/75 px-5 py-4 text-center text-xl font-black text-emerald-100">{lang === "en" ? "This basket has 10 bananas. It represents 1 in the tens digit column." : "Bakul ini ada 10 pisang. Ia mewakili 1 dalam lajur digit puluh."}</p>}
+
+        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:gap-3">
+          {Array.from({ length: 7 }, (_, index) => {
+            const relabelled = !firstTenVisible;
+            const counted = stage === "countingOnes" || stage === "complete" ? index < countedOnes : false;
+            const active = stage === "countingOnes" && index === countedOnes - 1;
+            return renderBanana(relabelled ? index + 1 : index + 11, counted, active, `one-${index}`);
+          })}
+        </div>
+        {!firstTenVisible && <p className="mt-4 text-center text-lg font-black text-yellow-100">{lang === "en" ? "7 bananas are left. These belong in the ones digit." : "7 pisang tinggal. Pisang ini berada dalam digit sa."}</p>}
+
+        <div className="mt-6 flex justify-center">
+          {stage === "ready" && <button type="button" onClick={() => void countFirstTen()} className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1">{lang === "en" ? "Start counting" : "Mula mengira"}</button>}
+          {stage === "countingTen" && <button type="button" disabled className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 opacity-70 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Counting to 10..." : "Mengira hingga 10..."}</button>}
+          {stage === "groupingTen" && <p className="rounded-2xl border-2 border-yellow-300 bg-yellow-300/10 px-6 py-3 text-center text-lg font-black text-yellow-100 animate-pulse">{lang === "en" ? "Putting 10 bananas into the basket..." : "Memasukkan 10 pisang ke dalam bakul..."}</p>}
+          {stage === "basket" && <button type="button" onClick={() => void moveToTens()} className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1">{lang === "en" ? "Move to tens digit" : "Pindah ke digit puluh"}</button>}
+          {stage === "movingTens" && <button type="button" disabled className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 opacity-70 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Moving to tens..." : "Bergerak ke puluh..."}</button>}
+          {stage === "tensPlaced" && <button type="button" onClick={() => void countRemaining()} className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1">{lang === "en" ? "Count the remaining bananas" : "Kira pisang yang tinggal"}</button>}
+          {stage === "countingOnes" && <button type="button" disabled className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 opacity-70 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Counting the 7 ones..." : "Mengira 7 sa..."}</button>}
+        </div>
+      </div>
+
+      {stage === "complete" && <div className="slide-in-up rounded-3xl border-2 border-emerald-300 bg-emerald-950/75 p-5 text-center shadow-[0_5px_0_#065f46]"><p className="text-4xl font-black text-yellow-100">17 = 10 + 7</p><p className="mt-2 text-xl font-black text-emerald-100">{lang === "en" ? "17 is 1 ten and 7 ones." : "17 ialah 1 puluh dan 7 sa."}</p></div>}
+    </section>
+  );
+}
+
 function CyberTeachingCard({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
   return (
     <div className="mb-5 grid items-center gap-4 rounded-3xl border-2 border-cyan-300 bg-gradient-to-r from-slate-950 to-cyan-950 p-4 shadow-[0_6px_0_#164e63] sm:grid-cols-[auto_1fr]">
@@ -2690,14 +2848,14 @@ function AdvancedLessonNavigation({ lang, t, phase, lastPhase, canNext = true, n
   );
 }
 
-function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA, largeObjects = false, rowPattern, visibleThrough = count, hiddenIndex = null }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string; largeObjects?: boolean; rowPattern?: number[]; visibleThrough?: number; hiddenIndex?: number | null }) {
+function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA, largeObjects = false, spacious = false, rowPattern, visibleThrough = count, hiddenIndex = null }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string; largeObjects?: boolean; spacious?: boolean; rowPattern?: number[]; visibleThrough?: number; hiddenIndex?: number | null }) {
   const isCookie = emoji === String.fromCodePoint(0x1f36a);
   const tileSizeClass = largeObjects ? "h-11 w-10 sm:h-16 sm:w-14 sm:rounded-2xl" : "h-10 w-9 sm:h-14 sm:w-12 sm:rounded-2xl";
   const objectSizeClass = isCookie
     ? largeObjects ? "h-10 w-10 sm:h-14 sm:w-14" : "h-9 w-9 sm:h-12 sm:w-12"
     : largeObjects ? "h-9 w-9 sm:h-12 sm:w-12" : "h-8 w-8 sm:h-11 sm:w-11";
   const renderBananas = (start: number, amount: number) => (
-    <div className="flex items-center justify-center gap-1 sm:gap-1.5">
+    <div className={`flex items-center justify-center ${spacious ? "gap-2.5 sm:gap-3" : "gap-1 sm:gap-1.5"}`}>
       {Array.from({ length: amount }, (_, offset) => {
         const index = start + offset;
         const visible = index < visibleThrough && index !== hiddenIndex;
@@ -2752,10 +2910,10 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
 
   return (
     <div className={compact ? "w-fit shrink-0" : "w-full"} aria-label={label}>
-      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > 8 ? "flex-col gap-2" : ""}`}>
+      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > 8 ? `flex-col ${spacious ? "gap-4" : "gap-2"}` : ""}`}>
         {customRows ?? (splitOnDesktop ? splitRows : desktopRows)}
       </div>
-      <div className="flex min-h-14 flex-col items-center justify-center gap-2 sm:hidden">
+      <div className={`flex min-h-14 flex-col items-center justify-center sm:hidden ${spacious ? "gap-4" : "gap-2"}`}>
         {customRows ?? (splitOnDesktop ? splitRows : mobileRows)}
       </div>
     </div>
@@ -3020,10 +3178,10 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
     }
     if (runRef.current !== runId) return;
     update(count);
+    setStage(nextStage);
     if (nextStage === "countSecond") await speakMathCue("plus", lang);
     if (nextStage === "readyJoin") await speakMathCue("equals", lang);
     if (runRef.current !== runId) return;
-    setStage(nextStage);
     setBusy(false);
   };
 
@@ -3081,7 +3239,7 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
     <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 sm:p-7">
       <style>{`@keyframes cookieGroupJoinLeft{0%{transform:translateX(-3rem);opacity:.55}100%{transform:translateX(0);opacity:1}}@keyframes cookieGroupJoinRight{0%{transform:translateX(3rem);opacity:.55}100%{transform:translateX(0);opacity:1}}.cookie-group-join-left{animation:cookieGroupJoinLeft 1300ms cubic-bezier(.22,.72,.24,1) both}.cookie-group-join-right{animation:cookieGroupJoinRight 1300ms cubic-bezier(.22,.72,.24,1) both}@media(prefers-reduced-motion:reduce){.cookie-group-join-left,.cookie-group-join-right{animation:none}}`}</style>
       <h4 className="text-center text-2xl font-black text-yellow-200">{lang === "en" ? "Now count the two parts" : "Sekarang kira dua bahagian"}</h4>
-      <div className="mx-auto mt-6 grid max-w-6xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      <div className="mx-auto mt-6 grid max-w-6xl items-center gap-4 md:grid-cols-[minmax(0,1.18fr)_auto_minmax(0,.82fr)]">
         <div className={`${trayClass} border-cyan-400`}>
           <p className="mb-5 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Alyse's tray at the beginning" : "Dulang Alyse pada awalnya"}</p>
           <AdvancedBananaRow count={8} countedThrough={firstCount} showCountLabels isCounting={stage === "countFirst" && busy} emoji={cookie} />
@@ -4632,6 +4790,25 @@ function AdvancedSequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIString
   );
 }
 
+type CookieFlightState = {
+  left: number;
+  top: number;
+  x: number;
+  y: number;
+  p30X: number;
+  p30Y: number;
+  p55X: number;
+  p55Y: number;
+  p75X: number;
+  p75Y: number;
+  p90X: number;
+  p90Y: number;
+  p97X: number;
+  p97Y: number;
+  size: number;
+  sourceIndex: number;
+};
+
 function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
   const cookie = String.fromCodePoint(0x1f36a);
   const [leftCount, setLeftCount] = useState(0);
@@ -4641,7 +4818,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
   const [transferred, setTransferred] = useState(0);
   const [transferring, setTransferring] = useState(false);
   const [transferComplete, setTransferComplete] = useState(false);
-  const [flyingCookie, setFlyingCookie] = useState<{ left: number; top: number; x: number; y: number; midX: number; midY: number; size: number; sourceIndex: number } | null>(null);
+  const [flyingCookie, setFlyingCookie] = useState<CookieFlightState | null>(null);
   const chrysTrayRef = useRef<HTMLDivElement>(null);
   const alyseTrayRef = useRef<HTMLDivElement>(null);
   const chrysCookieAreaRef = useRef<HTMLDivElement>(null);
@@ -4711,17 +4888,39 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
         const top = sourceBounds.top + (sourceBounds.height / 2) - (size / 2);
         const x = (destinationBounds.left + (destinationBounds.width / 2) - (size / 2)) - left;
         const y = (destinationBounds.top + (destinationBounds.height / 2) - (size / 2)) - top;
+        const controlX = x / 2;
+        const controlY = (y / 2) - 160;
+        const curvePoint = (progress: number) => {
+          const remaining = 1 - progress;
+          return {
+            x: (2 * remaining * progress * controlX) + (progress * progress * x),
+            y: (2 * remaining * progress * controlY) + (progress * progress * y),
+          };
+        };
+        const p30 = curvePoint(0.3);
+        const p55 = curvePoint(0.55);
+        const p75 = curvePoint(0.75);
+        const p90 = curvePoint(0.9);
+        const p97 = curvePoint(0.97);
         setFlyingCookie({
           left,
           top,
           x,
           y,
-          midX: x / 2,
-          midY: (y / 2) - 80,
+          p30X: p30.x,
+          p30Y: p30.y,
+          p55X: p55.x,
+          p55Y: p55.y,
+          p75X: p75.x,
+          p75Y: p75.y,
+          p90X: p90.x,
+          p90Y: p90.y,
+          p97X: p97.x,
+          p97Y: p97.y,
           size,
           sourceIndex: 5 - moved,
         });
-        await wait(1500);
+        await wait(1650);
       }
       if (runRef.current !== runId) return;
       setTransferred(moved);
@@ -4756,11 +4955,11 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
           <img src={character} alt="" className="h-14 w-14 object-contain" />
           <p className={`text-xl font-black ${textClass}`}>{name}</p>
         </div>
-        <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[25rem]" aria-label={lang === "en" ? `${displayCount} cookies in ${name}` : `${displayCount} biskut di ${name}`}>
+        <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[29rem]" aria-label={lang === "en" ? `${displayCount} cookies in ${name}` : `${displayCount} biskut di ${name}`}>
           <img src={trayImage} alt="" className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_10px_8px_rgba(0,0,0,.28)]" />
-          <div ref={objectAreaRef} className="absolute inset-x-[13%] inset-y-[16%] grid place-items-center">
+          <div ref={objectAreaRef} className="absolute inset-x-[9%] inset-y-[15%] grid place-items-center">
             {displayCount > 0
-              ? <AdvancedBananaRow count={slotCount} visibleThrough={displayCount} hiddenIndex={side === "left" ? flyingCookie?.sourceIndex : null} countedThrough={readyToTransfer ? displayCount : countedThrough} showCountLabels isCounting={countingTray === side || (transferring && side === "right" && !flyingCookie)} splitOnDesktop={!rowPattern} rowPattern={rowPattern} emoji={cookie} largeObjects />
+              ? <AdvancedBananaRow count={slotCount} visibleThrough={displayCount} hiddenIndex={side === "left" ? flyingCookie?.sourceIndex : null} countedThrough={readyToTransfer ? displayCount : countedThrough} showCountLabels isCounting={countingTray === side || (transferring && side === "right" && !flyingCookie)} splitOnDesktop={!rowPattern} rowPattern={rowPattern} emoji={cookie} largeObjects spacious />
               : <span className="text-5xl font-black text-slate-400">0</span>}
           </div>
         </div>
@@ -4768,7 +4967,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
           type="button"
           disabled={countingTray !== null || finished}
           onClick={() => void countTray(side, initialCount)}
-          className="relative mt-3 rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63] active:translate-y-1 disabled:opacity-60"
+          className="relative mt-3 rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63] active:translate-y-1 disabled:cursor-default disabled:text-white disabled:opacity-100"
         >
           {busy
             ? (lang === "en" ? "Counting..." : "Sedang mengira...")
@@ -4783,7 +4982,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
 
   return (
     <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 text-center">
-      <style>{`@keyframes cookieFlightCurve{0%{transform:translate(0,0) rotate(0deg) scale(1);opacity:1}50%{transform:translate(var(--cookie-mid-x),var(--cookie-mid-y)) rotate(-10deg) scale(1.08);opacity:1}100%{transform:translate(var(--cookie-x),var(--cookie-y)) rotate(0deg) scale(1);opacity:1}}@media(prefers-reduced-motion:reduce){.cookie-flight-curve{animation:none!important}}`}</style>
+      <style>{`@keyframes cookieFlightCurve{0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}27%{transform:translate3d(var(--cookie-p30-x),var(--cookie-p30-y),0) rotate(-6deg) scale(1.04)}50%{transform:translate3d(var(--cookie-p55-x),var(--cookie-p55-y),0) rotate(-9deg) scale(1.06)}68%{transform:translate3d(var(--cookie-p75-x),var(--cookie-p75-y),0) rotate(-7deg) scale(1.05)}82%{transform:translate3d(var(--cookie-p90-x),var(--cookie-p90-y),0) rotate(-4deg) scale(1.03)}92%{transform:translate3d(var(--cookie-p97-x),var(--cookie-p97-y),0) rotate(-2deg) scale(1.01)}100%{transform:translate3d(var(--cookie-x),var(--cookie-y),0) rotate(0deg) scale(1)}}.cookie-flight-curve{will-change:transform}@media(prefers-reduced-motion:reduce){.cookie-flight-curve{animation:none!important}}`}</style>
       {flyingCookie && (
         <span
           className="cookie-flight-curve pointer-events-none fixed z-[80] grid place-items-center drop-shadow-[0_8px_8px_rgba(0,0,0,.35)]"
@@ -4794,16 +4993,24 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
             height: flyingCookie.size,
             "--cookie-x": `${flyingCookie.x}px`,
             "--cookie-y": `${flyingCookie.y}px`,
-            "--cookie-mid-x": `${flyingCookie.midX}px`,
-            "--cookie-mid-y": `${flyingCookie.midY}px`,
-            animation: "cookieFlightCurve 1500ms cubic-bezier(.22,.72,.24,1) both",
+            "--cookie-p30-x": `${flyingCookie.p30X}px`,
+            "--cookie-p30-y": `${flyingCookie.p30Y}px`,
+            "--cookie-p55-x": `${flyingCookie.p55X}px`,
+            "--cookie-p55-y": `${flyingCookie.p55Y}px`,
+            "--cookie-p75-x": `${flyingCookie.p75X}px`,
+            "--cookie-p75-y": `${flyingCookie.p75Y}px`,
+            "--cookie-p90-x": `${flyingCookie.p90X}px`,
+            "--cookie-p90-y": `${flyingCookie.p90Y}px`,
+            "--cookie-p97-x": `${flyingCookie.p97X}px`,
+            "--cookie-p97-y": `${flyingCookie.p97Y}px`,
+            animation: "cookieFlightCurve 1650ms linear both",
           } as React.CSSProperties}
           aria-hidden="true"
         >
           <SpriteIcon value={cookie} className="h-full w-full" />
         </span>
       )}
-      <div className="mx-auto grid max-w-5xl items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-6xl items-center gap-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         {tray({ side: "left", initialCount: 5, displayCount: chrysCookieCount, countedThrough: leftCount, name: lang === "en" ? "Chrys's tray" : "Dulang Chrys", character: chrysThinking, borderClass: "border-cyan-400", textClass: "text-cyan-100", trayRef: chrysTrayRef, objectAreaRef: chrysCookieAreaRef, slotCount: 5 })}
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">{readyToTransfer ? "→" : "+"}</span>
         {tray({ side: "right", initialCount: 8, displayCount: alyseCookieCount, countedThrough: rightCount, name: lang === "en" ? "Alyse's tray" : "Dulang Alyse", character: alyseGuide, borderClass: "border-emerald-300", textClass: "text-emerald-100", trayRef: alyseTrayRef, objectAreaRef: alyseCookieAreaRef, rowPattern: alyseRowPattern, slotCount: 13 })}
@@ -5261,6 +5468,7 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   const [phase, setPhase] = useState(0);
   const [showPractice, setShowPractice] = useState(false);
   const [placeValueBeat, setPlaceValueBeat] = useState<0 | 1>(0);
+  const [placeValueDemoComplete, setPlaceValueDemoComplete] = useState(false);
   const [workedBeat, setWorkedBeat] = useState<AdvancedPart2BeatIndex>(0);
   const [walkthroughComplete, setWalkthroughComplete] = useState(false);
   if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 5: Carrying Practice" : "Misi Siber 5: Latihan Bawa Puluh"} questions={advancedAdditionPart2Questions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(2); setWorkedBeat(2); setWalkthroughComplete(false); }} onFinish={() => onDone()} />;
@@ -5269,12 +5477,15 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     { title: lang === "en" ? "Meet tens and ones" : "Kenal puluh dan sa", text: lang === "en" ? "A big number is made of tens and ones. The digit tells us how many of each." : "Nombor besar dibuat daripada puluh dan sa. Digit tunjuk berapa banyak setiap satu." },
     { title: lang === "en" ? "Vertical addition" : "Tambah menegak", text: lang === "en" ? "Count each group, combine them, then see how we write the same problem vertically." : "Kira setiap kumpulan, gabungkan, kemudian lihat cara kita tulis soalan yang sama secara menegak." },
   ];
-  const canNext = phase < 2 || walkthroughComplete;
+  const canNext = phase === 0 || (phase === 1 ? placeValueBeat === 0 || placeValueDemoComplete : walkthroughComplete);
 
   const previous = () => {
     stopNumberAudio();
     if (phase === 1) {
-      if (placeValueBeat === 1) setPlaceValueBeat(0);
+      if (placeValueBeat === 1) {
+        setPlaceValueBeat(0);
+        setPlaceValueDemoComplete(false);
+      }
       else setPhase(0);
       return;
     }
@@ -5284,6 +5495,7 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
       else {
         setPhase(1);
         setPlaceValueBeat(1);
+        setPlaceValueDemoComplete(false);
       }
     }
   };
@@ -5293,10 +5505,14 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     if (phase === 0) {
       setPhase(1);
       setPlaceValueBeat(0);
+      setPlaceValueDemoComplete(false);
       return;
     }
     if (phase === 1) {
-      if (placeValueBeat === 0) setPlaceValueBeat(1);
+      if (placeValueBeat === 0) {
+        setPlaceValueBeat(1);
+        setPlaceValueDemoComplete(false);
+      }
       else {
         setPhase(2);
         setWorkedBeat(0);
@@ -5314,9 +5530,9 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   return (
     <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart2} helper={lang === "en" ? "Cyber Mission 5 - Solve simple stories using vertical addition." : "Misi Siber 5 - Selesaikan cerita mudah menggunakan tambah menegak."} variant="cyber">
       <div className="mb-5 grid grid-cols-3 gap-2">{Array.from({ length: 3 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
-      <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 5" : "Misi Siber 5"} title={phaseCopy[phase].title} text={phaseCopy[phase].text} />
+      <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 5" : "Misi Siber 5"} title={phase === 1 && placeValueBeat === 1 ? (lang === "en" ? "17 equals 10 + 7" : "17 sama dengan 10 + 7") : phaseCopy[phase].title} text={phase === 1 && placeValueBeat === 1 ? (lang === "en" ? "Count 10 bananas into one basket. Then count the 7 bananas left." : "Kira 10 pisang ke dalam satu bakul. Kemudian kira 7 pisang yang tinggal.") : phaseCopy[phase].text} />
       {phase === 0 && <div className="grid min-h-72 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center"><div><div className="mx-auto grid w-64 grid-cols-2 gap-3 rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-5 text-xl font-black uppercase text-cyan-100"><span>{lang === "en" ? "Tens" : "Puluh"}</span><span>{lang === "en" ? "Ones" : "Sa"}</span></div><p className="mt-6 text-2xl font-black text-white">{lang === "en" ? "Vertical addition keeps each place-value column lined up." : "Tambah menegak memastikan setiap lajur nilai tempat tersusun."}</p></div></div>}
-      {phase === 1 && <div className="space-y-5">{placeValueBeat === 1 && <p className="rounded-2xl border-2 border-cyan-400 bg-cyan-950/70 px-5 py-3 text-center text-xl font-black text-cyan-50">{lang === "en" ? "One more: 17 is 1 ten and 7 ones." : "Satu lagi: 17 ialah 1 puluh dan 7 sa."}</p>}<TeenPlaceValueCard value={placeValueBeat === 0 ? 14 : 17} lang={lang} connectDigits /></div>}
+      {phase === 1 && (placeValueBeat === 0 ? <AdvancedPlaceValueMeaningCard lang={lang} /> : <AdvancedSeventeenPlaceValueDemo key={`seventeen-place-value-${lang}`} lang={lang} onComplete={() => setPlaceValueDemoComplete(true)} />)}
       {phase === 2 && <AdvancedPart2WorkedBeat key={`${workedBeat}-${lang}`} beat={workedBeat} lang={lang} onWalkthroughComplete={() => setWalkthroughComplete(true)} />}
       <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={2} canNext={canNext} nextLabel={phase === 2 && workedBeat < 2 ? t.next : undefined} onPrevious={previous} onNext={next} onPractice={() => setShowPractice(true)} />
     </LessonShell></div></main>
@@ -14687,16 +14903,19 @@ async function speakCountingSequence(
   const runId = audioRunId;
   activeCountingRunId = runId;
   const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
+  const finalValue = Math.min(count, 20);
   try {
-    for (let value = Math.max(1, startValue); value <= Math.min(count, 20); value += 1) {
+    for (let value = Math.max(1, startValue); value <= finalValue; value += 1) {
       if (runId !== audioRunId) return;
       onCount?.(value);
       const startedAt = performance.now();
       await playNumberFile(value, lang, runId);
       if (runId !== audioRunId) return;
       onCountComplete?.(value);
-      const elapsed = performance.now() - startedAt;
-      await wait(Math.max(180, stepMs - elapsed));
+      if (value < finalValue) {
+        const elapsed = performance.now() - startedAt;
+        await wait(Math.max(180, stepMs - elapsed));
+      }
     }
   } finally {
     if (activeCountingRunId === runId) {
@@ -14828,6 +15047,13 @@ function preloadNumberAudioFiles() {
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
     audio.preload = "auto";
     audio.load();
+  });
+  (Object.keys(MATH_CUE_AUDIO_FILES) as Lang[]).forEach((lang) => {
+    Object.values(MATH_CUE_AUDIO_FILES[lang] ?? {}).forEach((file) => {
+      const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
+      audio.preload = "auto";
+      audio.load();
+    });
   });
   (Object.keys(NUMBER_AUDIO_FILES) as Lang[]).forEach((lang) => {
     Object.keys(NUMBER_AUDIO_FILES[lang]).forEach((value) => {
