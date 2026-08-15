@@ -144,7 +144,6 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
   fontVariantNumeric: "tabular-nums",
 };
 const getNumberTextStyle = (_value: number | string): React.CSSProperties => NUMBER_TEXT_STYLE;
-const SPEECH_RATE = 0.68;
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
 const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
 const COUNTING_STEP_MS = 1400;
@@ -257,8 +256,8 @@ const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Record<number, string>> = {
 
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
   en: {
-    plus: "plus.wav",
-    equals: "equals-to.wav",
+    plus: "en-plus.mp3",
+    equals: "en-equals-to.mp3",
     minus: "minus.wav",
   },
   ms: {
@@ -273,11 +272,18 @@ const DIGIT_LABELS: Record<Lang, readonly [string, string, string]> = {
   ms: ["Digit pertama", "Digit kedua", "Digit ketiga"],
 };
 
-const MALAY_DIGIT_LABEL_AUDIO_FILES = [
-  "ms-digit-pertama.mp3",
-  "ms-digit-kedua.mp3",
-  "ms-digit-ketiga.mp3",
-] as const;
+const DIGIT_LABEL_AUDIO_FILES: Record<Lang, readonly [string, string, string]> = {
+  en: [
+    "en-first-digit.mp3",
+    "en-second-digit.mp3",
+    "en-third-digit.mp3",
+  ],
+  ms: [
+    "ms-digit-pertama.mp3",
+    "ms-digit-kedua.mp3",
+    "ms-digit-ketiga.mp3",
+  ],
+};
 
 const MALAY_COMPARISON_AUDIO_FILES = {
   greater: "ms-lebih-besar-daripada.mp3",
@@ -10818,14 +10824,14 @@ function AdditionBananaEquation({
     setIsCounting(false);
   };
 
-  const renderBanana = (groupIndex: number, countIndex: number, layoutCount: number, layoutIndex: number) => {
+  const renderBanana = (groupIndex: number, countIndex: number) => {
     const counted = countIndex < visibleCounts[groupIndex];
     const groupComplete = visibleCounts[groupIndex] >= groups[groupIndex];
     const currentBanana = activeBanana?.groupIndex === groupIndex && activeBanana.objectIndex === countIndex;
     return (
       <div
         key={`${groupIndex}-${countIndex}`}
-        className={`relative flex h-24 w-16 items-center justify-center rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 ${
+        className={`relative flex h-20 w-12 shrink-0 items-center justify-center rounded-2xl border-2 pt-3 shadow-inner transition-[background-color,border-color,filter,opacity,transform,box-shadow] duration-300 sm:h-24 sm:w-14 sm:pt-4 ${
           currentBanana
             ? cyber
               ? "scale-105 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]"
@@ -10841,15 +10847,31 @@ function AdditionBananaEquation({
               : cyber
                 ? "border-cyan-900 bg-slate-900 opacity-45 grayscale"
                 : "border-transparent bg-amber-50 opacity-55 grayscale"
-        } ${layoutCount % 2 === 1 && layoutIndex === layoutCount - 1 ? "col-span-2 justify-self-center" : ""}`}
+        }`}
       >
         <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1 text-xs font-black leading-none shadow-sm transition-opacity ${currentBanana ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"} ${counted ? "opacity-100" : "opacity-0"}`}>
           {countIndex + 1}
         </span>
-        <SpriteIcon value={emoji} className={`h-12 w-12 transition-[filter,transform] duration-300 ${currentBanana ? "scale-110 drop-shadow-lg" : ""}`} />
+        <SpriteIcon value={emoji} className={`h-10 w-10 transition-[filter,transform] duration-300 sm:h-12 sm:w-12 ${currentBanana ? "scale-110 drop-shadow-lg" : ""}`} />
       </div>
     );
   };
+
+  const renderBananaRows = (groupIndex: number, count: number, countOffset = 0) => (
+    <div className="flex w-full flex-col items-center justify-center gap-5 py-4 sm:gap-6">
+      {Array.from({ length: Math.ceil(count / 5) }, (_, rowIndex) => {
+        const rowStart = rowIndex * 5;
+        const rowCount = Math.min(5, count - rowStart);
+        return (
+          <div key={rowIndex} className="flex items-center justify-center gap-2 sm:gap-3">
+            {Array.from({ length: rowCount }, (_, rowObjectIndex) => (
+              renderBanana(groupIndex, countOffset + rowStart + rowObjectIndex)
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -10971,7 +10993,7 @@ function AdditionBananaEquation({
                             </div>
                           )}
                           <div
-                               className={`relative z-10 grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
+                               className={`relative z-10 grid w-full place-items-center rounded-2xl border-2 p-2 transition-[border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
                                resultMergeStage === "joined"
                                  ? "border-transparent bg-transparent shadow-none"
                                  : subgroupHighlighted
@@ -10993,16 +11015,9 @@ function AdditionBananaEquation({
                                 : ""
                             }`}
                           >
-                            {Array.from({ length: subgroupCount }, (_, subgroupObjectIndex) => (
-                              renderBanana(
-                                index,
-                                countOffset + subgroupObjectIndex,
-                                subgroupCount,
-                                subgroupObjectIndex,
-                              )
-                            ))}
+                            {renderBananaRows(index, subgroupCount, countOffset)}
                             {subgroupCount === 0 && (
-                              <span className="col-span-2 py-5 text-base font-black text-slate-500">
+                              <span className="py-5 text-base font-black text-slate-500">
                                 {lang === "en" ? "No objects" : "Tiada objek"}
                               </span>
                             )}
@@ -11012,11 +11027,7 @@ function AdditionBananaEquation({
                     })}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 place-items-center gap-3">
-                    {Array.from({ length: count }, (_, objectIndex) => (
-                      renderBanana(index, objectIndex, count, objectIndex)
-                    ))}
-                  </div>
+                  renderBananaRows(index, count)
                 )}
               </div>
               <div className={`mt-3 min-h-12 rounded-full border px-4 py-2 text-center text-base font-black transition-colors sm:text-xl ${
@@ -13062,7 +13073,6 @@ function LessonShell({ lang, title, helper, children, variant = "default" }: {
 
   const stopLessonNarration = useCallback(() => {
     narrationRunRef.current += 1;
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     clearLessonSpeechHighlight();
     setNarrating(false);
   }, []);
@@ -13073,46 +13083,11 @@ function LessonShell({ lang, title, helper, children, variant = "default" }: {
 
   useEffect(() => () => {
     narrationRunRef.current += 1;
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     clearLessonSpeechHighlight();
   }, []);
 
   const startLessonNarration = () => {
-    if (!soundEnabled || !contentRef.current || !("speechSynthesis" in window)) return;
-    const tokens = collectLessonNarrationTokens(contentRef.current, lang);
-    if (tokens.length === 0) return;
-
-    stopNumberAudio();
-    const runId = ++narrationRunRef.current;
-    const utterance = new SpeechSynthesisUtterance(tokens.map((token) => token.spoken).join(" "));
-    utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-    utterance.rate = SPEECH_RATE;
-    setNarrating(true);
-    showLessonSpeechHighlight(contentRef.current, lang, 0);
-
-    const finish = () => {
-      if (narrationRunRef.current !== runId) return;
-      clearLessonSpeechHighlight();
-      setNarrating(false);
-    };
-
-    utterance.onstart = () => {
-      if (narrationRunRef.current === runId && contentRef.current) {
-        showLessonSpeechHighlight(contentRef.current, lang, 0);
-      }
-    };
-    utterance.onboundary = (event) => {
-      if (narrationRunRef.current !== runId) return;
-      let tokenIndex = 0;
-      for (let index = 1; index < tokens.length; index += 1) {
-        if (tokens[index].spokenStart > event.charIndex) break;
-        tokenIndex = index;
-      }
-      if (contentRef.current) showLessonSpeechHighlight(contentRef.current, lang, tokenIndex);
-    };
-    utterance.onend = finish;
-    utterance.onerror = finish;
-    window.speechSynthesis.speak(utterance);
+    // Full lesson narration stays unavailable until matching recordings exist.
   };
 
   return (
@@ -15138,18 +15113,11 @@ async function speakNumber(value: number, lang: Lang, onStart?: (value: number) 
 }
 
 async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
-  const label = DIGIT_LABELS[lang][index];
-  if (!label) return false;
-  if (lang !== "ms") {
-    speakText(label, lang, { allowWhenWordAudioDisabled: true });
-    await wait(1100);
-    return true;
-  }
+  if (!DIGIT_LABELS[lang][index]) return false;
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
 
-  const file = MALAY_DIGIT_LABEL_AUDIO_FILES[index];
-  if (!file) return false;
-  return playRecordedVoiceFile(file);
+  const file = DIGIT_LABEL_AUDIO_FILES[lang][index];
+  return file ? playRecordedVoiceFile(file) : false;
 }
 
 async function playRecordedVoiceFile(file: string): Promise<boolean> {
@@ -15185,19 +15153,19 @@ async function speakComparisonSentence(
   lang: Lang,
 ): Promise<void> {
   if (left < 0 || left > 20 || right < 0 || right > 20) return;
-  if (lang !== "ms") {
-    const phrase = symbol === ">" ? "is greater than" : symbol === "<" ? "is less than" : "equals";
-    speakText(`${left} ${phrase} ${right}.`, lang, { allowWhenWordAudioDisabled: true });
-    return;
-  }
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+
+  const comparisonFile = lang === "ms" && symbol !== "="
+    ? MALAY_COMPARISON_AUDIO_FILES[symbol === ">" ? "greater" : "less"]
+    : null;
+  if (symbol !== "=" && !comparisonFile) return;
 
   await speakNumber(left, lang);
   await wait(220);
   if (symbol === "=") {
     await speakMathCue("equals", lang);
-  } else {
-    await playRecordedVoiceFile(MALAY_COMPARISON_AUDIO_FILES[symbol === ">" ? "greater" : "less"]);
+  } else if (comparisonFile) {
+    await playRecordedVoiceFile(comparisonFile);
   }
   await wait(220);
   await speakNumber(right, lang);
@@ -15312,7 +15280,6 @@ function stopNumberAudio() {
   queuedAudioAfterCounting = null;
   activeNumberAudio?.pause();
   activeNumberAudio = null;
-  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 
 function stopCelebrationAudio() {
@@ -15353,7 +15320,7 @@ function getSuccessFanfareAudio() {
 
 function playNumberFile(value: number, lang: Lang, runId: number) {
   const file = NUMBER_AUDIO_FILES[lang][value];
-  if (!file) return playNumberWithTts(value, lang, runId);
+  if (!file) return Promise.resolve(false);
   return new Promise<boolean>((resolve) => {
     activeNumberAudio?.pause();
     const audio = getNumberAudio(value, lang);
@@ -15385,27 +15352,6 @@ function playNumberFile(value: number, lang: Lang, runId: number) {
   });
 }
 
-function playNumberWithTts(value: number, lang: Lang, runId: number) {
-  if (!("speechSynthesis" in window) || runId !== audioRunId) return Promise.resolve(false);
-  return new Promise<boolean>((resolve) => {
-    const spokenNumber = TEEN_WORDS[lang][value] ?? WORDS[lang][value] ?? String(value);
-    const utterance = new SpeechSynthesisUtterance(spokenNumber);
-    let settled = false;
-    const finish = (played: boolean) => {
-      if (settled) return;
-      settled = true;
-      resolve(played);
-    };
-    utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-    utterance.rate = SPEECH_RATE;
-    utterance.onend = () => finish(true);
-    utterance.onerror = () => finish(false);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-    window.setTimeout(() => finish(false), 3200);
-  });
-}
-
 function getNumberAudio(value: number, lang: Lang) {
   const cacheKey = `${lang}-${value}`;
   const cached = numberAudioCache.get(cacheKey);
@@ -15420,7 +15366,8 @@ function getNumberAudio(value: number, lang: Lang) {
 function preloadNumberAudioFiles() {
   getSuccessFanfareAudio().load();
   [
-    ...MALAY_DIGIT_LABEL_AUDIO_FILES,
+    ...DIGIT_LABEL_AUDIO_FILES.en,
+    ...DIGIT_LABEL_AUDIO_FILES.ms,
     ...Object.values(MALAY_COMPARISON_AUDIO_FILES),
   ].forEach((file) => {
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
@@ -15448,81 +15395,32 @@ async function speakMathCue(cue: MathCue, lang: Lang) {
     return;
   }
   stopNumberAudio();
-  const cueText: Record<Lang, Record<MathCue, string>> = {
-    en: { plus: "plus", equals: "equals", minus: "minus" },
-    ms: { plus: "tambah", equals: "sama dengan", minus: "tolak" },
-  };
-
   const recordedFile = MATH_CUE_AUDIO_FILES[lang]?.[cue];
-  if (recordedFile) {
-    await new Promise<void>((resolve) => {
-      const audio = new Audio(`${import.meta.env.BASE_URL}audio/${recordedFile}`);
-      let settled = false;
-      let timeoutId: number | null = null;
-      const finish = () => {
-        if (settled) return;
-        settled = true;
-        if (timeoutId !== null) window.clearTimeout(timeoutId);
-        if (activeNumberAudio === audio) activeNumberAudio = null;
-        resolve();
-      };
-      timeoutId = window.setTimeout(finish, 5000);
-      activeNumberAudio = audio;
-      audio.preload = "auto";
-      audio.playbackRate = MATH_CUE_AUDIO_PLAYBACK_RATE;
-      audio.preservesPitch = true;
-      audio.onended = finish;
-      audio.onerror = finish;
-      void audio.play().catch(finish);
-    });
-    return;
-  }
-
-  if (!("speechSynthesis" in window)) return;
+  if (!recordedFile) return;
   await new Promise<void>((resolve) => {
-    const utterance = new SpeechSynthesisUtterance(cueText[lang][cue]);
+    const audio = new Audio(`${import.meta.env.BASE_URL}audio/${recordedFile}`);
     let settled = false;
     let timeoutId: number | null = null;
     const finish = () => {
       if (settled) return;
       settled = true;
       if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (activeNumberAudio === audio) activeNumberAudio = null;
       resolve();
     };
     timeoutId = window.setTimeout(finish, 5000);
-    utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-    utterance.rate = SPEECH_RATE;
-    utterance.onend = finish;
-    utterance.onerror = finish;
-    window.speechSynthesis.speak(utterance);
+    activeNumberAudio = audio;
+    audio.preload = "auto";
+    audio.playbackRate = MATH_CUE_AUDIO_PLAYBACK_RATE;
+    audio.preservesPitch = true;
+    audio.onended = finish;
+    audio.onerror = finish;
+    void audio.play().catch(finish);
   });
 }
 
-function speakText(text: string, lang: Lang, options: { requireInteraction?: boolean; allowWhenWordAudioDisabled?: boolean } = {}) {
-  if ((!WORD_AUDIO_ENABLED && !options.allowWhenWordAudioDisabled) || audioMuted) return;
-  if (options.requireInteraction && !audioUserInteracted) return;
-  if (!("speechSynthesis" in window)) return;
-  if (activeCountingRunId !== null) {
-    queuedAudioAfterCounting = () => speakText(text, lang, options);
-    return;
-  }
-  stopNumberAudio();
-  const mathWords = lang === "ms"
-    ? { minus: " tolak ", plus: " tambah ", equals: " sama dengan ", times: " darab " }
-    : { minus: " minus ", plus: " plus ", equals: " equals ", times: " times " };
-  const cleanText = text
-    .replace(/[−-]/g, mathWords.minus)
-    .replace(/\+/g, mathWords.plus)
-    .replace(/=/g, mathWords.equals)
-    .replace(/×/g, mathWords.times)
-    .replace(/\b([0-9])\b/g, (_, digit: string) => WORDS[lang][Number(digit)] ?? digit)
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!cleanText) return;
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.lang = lang === "ms" ? "ms-MY" : "en-US";
-  utterance.rate = SPEECH_RATE;
-  window.speechSynthesis.speak(utterance);
+function speakText(_text: string, _lang: Lang, _options: { requireInteraction?: boolean; allowWhenWordAudioDisabled?: boolean } = {}) {
+  // Recorded-audio-only policy: never fall back to browser-generated speech.
 }
 
 function wait(ms: number) {
