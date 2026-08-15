@@ -55,6 +55,8 @@ Every object-counting activity must include all of the following:
 
 ## Layout requirements
 
+- Keep safe inner padding around every object group, including before counting starts. No object may touch a tray, basket, box, or panel edge.
+- Reserve enough room for the active object's scale, yellow ring, glow, and number badge when deciding that padding.
 - Leave enough space between objects for the yellow ring and number badge.
 - The active highlight must not overlap neighbouring objects or cross the container boundary.
 - Increase the container size or split objects into centred rows when necessary.

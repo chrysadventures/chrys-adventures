@@ -3645,7 +3645,7 @@ function AdvancedComparePile({
   const objectTile = (index: number) => (
         <span
           key={index}
-          className={`relative grid h-20 w-20 shrink-0 place-items-center rounded-xl border-2 text-3xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] transition-colors sm:h-24 sm:w-24 sm:text-4xl ${
+          className={`relative grid h-16 w-16 shrink-0 place-items-center rounded-xl border-2 text-2xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] transition-colors sm:h-20 sm:w-20 sm:text-4xl ${
             index < visibleCount
               ? index === visibleCount - 1 && isCounting
               ? "z-10 scale-105 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]"
@@ -3669,12 +3669,12 @@ function AdvancedComparePile({
         </span>
   );
   const centeredRows = (perRow: number, className: string) => (
-    <div className={`${className} min-h-48 flex-col justify-center gap-2`}>
+    <div className={`${className} min-h-48 flex-col justify-center gap-3 sm:gap-4`}>
       {Array.from({ length: Math.ceil(count / perRow) }, (_, rowIndex) => {
         const rowStart = rowIndex * perRow;
         const rowCount = Math.min(perRow, count - rowStart);
         return (
-          <div key={rowIndex} className="flex justify-center gap-2">
+          <div key={rowIndex} className="flex justify-center gap-3 sm:gap-4">
             {Array.from({ length: rowCount }, (_, offset) => objectTile(rowStart + offset))}
           </div>
         );
@@ -3682,7 +3682,7 @@ function AdvancedComparePile({
     </div>
   );
   return (
-    <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-4">
+    <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-4 sm:p-7">
       {centeredRows(3, "flex sm:hidden")}
       {centeredRows(4, "hidden sm:flex")}
     </div>
@@ -3851,10 +3851,10 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     let cancelled = false;
     const revealComparison = async () => {
       setRevealStage(1);
-      await wait(prefersReducedMotion ? 0 : 450);
+      await wait(prefersReducedMotion ? 100 : 2000);
       if (cancelled) return;
       setRevealStage(2);
-      await wait(prefersReducedMotion ? 0 : 350);
+      await wait(prefersReducedMotion ? 100 : 1000);
       if (cancelled) return;
       setRevealStage(3);
       if (symbol) {
