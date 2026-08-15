@@ -16,6 +16,7 @@ Every object-counting activity must include all of the following:
 ## Count button behaviour
 
 - Before counting, use a clear label such as **Start counting** or **Count the objects**.
+- One button press must count the entire intended group from the first object to the last object. Do not require one press for each individual object.
 - While counting, disable the button and show **Counting...**.
 - After counting finishes, change the label to **Count again** when replay is appropriate.
 - Replaying must reset the visual count and audio to the first object.
@@ -73,4 +74,3 @@ Before completing any counting-related change, verify:
 - [ ] Highlight rings and labels do not overlap or leave their container.
 - [ ] Count replay resets both audio and visuals.
 - [ ] Navigating away stops the count.
-
