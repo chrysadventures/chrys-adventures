@@ -10418,9 +10418,11 @@ function AdditionBananaEquation({
   const [hasStarted, setHasStarted] = useState(false);
   const [isCounting, setIsCounting] = useState(false);
   const [resultMergeStage, setResultMergeStage] = useState<"split" | "cue" | "joining" | "joined">("split");
+  const countRunRef = useRef(0);
   const labels = groups.map((count) => `${count} ${objectName(emoji, count, lang)}`);
 
   useEffect(() => {
+    countRunRef.current += 1;
     stopNumberAudio();
     setVisibleCounts([0, 0, 0]);
     setCompletedGroups(0);
@@ -10431,11 +10433,16 @@ function AdditionBananaEquation({
     setResultMergeStage("split");
     setHasStarted(false);
     setIsCounting(false);
-    return () => stopNumberAudio();
+    return () => {
+      countRunRef.current += 1;
+      stopNumberAudio();
+    };
   }, [a, b, emoji, lang]);
 
   const startCounting = async () => {
     if (isCounting) return;
+    const runId = countRunRef.current + 1;
+    countRunRef.current = runId;
     setIsCounting(true);
     setHasStarted(true);
     stopNumberAudio();
@@ -10454,11 +10461,13 @@ function AdditionBananaEquation({
     if (groups[groupIndex] === 0) {
       setActiveGroup(groupIndex);
       await speakNumber(0, lang);
+      if (countRunRef.current !== runId) return;
       const nextCompletedGroups = groupIndex + 1;
       setCompletedGroups(nextCompletedGroups);
       if (groupIndex < groups.length - 1) {
         setActiveSign(groupIndex);
         await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+        if (countRunRef.current !== runId) return;
         setCompletedSigns(groupIndex + 1);
         setActiveSign(-1);
         setActiveGroup(groupIndex + 1);
@@ -10474,30 +10483,45 @@ function AdditionBananaEquation({
       return;
     }
 
-    const nextValue = currentCounts[groupIndex] + 1;
     setActiveGroup(groupIndex);
-    setActiveBanana({ groupIndex, objectIndex: nextValue - 1 });
-    if (!audioMuted) await speakNumber(nextValue, lang);
-    setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? nextValue : value));
+    setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? 0 : value));
+    const groupCount = groups[groupIndex];
+    const revealCount = (value: number) => {
+      if (countRunRef.current !== runId) return;
+      setActiveBanana({ groupIndex, objectIndex: value - 1 });
+      setVisibleCounts((current) => current.map((count, index) => index === groupIndex ? value : count));
+    };
+
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakCountingSequence(groupCount, lang, COUNTING_STEP_MS, revealCount);
+    } else {
+      for (let value = 1; value <= groupCount; value += 1) {
+        if (countRunRef.current !== runId) return;
+        revealCount(value);
+        await wait(prefersReducedMotion ? 80 : COUNTING_STEP_MS);
+      }
+    }
+    if (countRunRef.current !== runId) return;
     setActiveBanana(null);
 
-    if (nextValue >= groups[groupIndex]) {
-      const nextCompletedGroups = groupIndex + 1;
-      setCompletedGroups(nextCompletedGroups);
-      if (groupIndex < groups.length - 1) {
-        setActiveSign(groupIndex);
-        await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
-        setCompletedSigns(groupIndex + 1);
-        setActiveSign(-1);
-        setActiveGroup(groupIndex + 1);
-      } else {
-        setResultMergeStage("joining");
-        await wait(prefersReducedMotion ? 0 : 500);
-        setResultMergeStage("joined");
-        setActiveGroup(-1);
-        await speakMalayBananaTotal(a + b, lang, emoji);
-        if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
-      }
+    const nextCompletedGroups = groupIndex + 1;
+    setCompletedGroups(nextCompletedGroups);
+    if (groupIndex < groups.length - 1) {
+      setActiveSign(groupIndex);
+      await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
+      if (countRunRef.current !== runId) return;
+      setCompletedSigns(groupIndex + 1);
+      setActiveSign(-1);
+      setActiveGroup(groupIndex + 1);
+    } else {
+      setResultMergeStage("joining");
+      await wait(prefersReducedMotion ? 0 : 500);
+      if (countRunRef.current !== runId) return;
+      setResultMergeStage("joined");
+      setActiveGroup(-1);
+      await speakMalayBananaTotal(a + b, lang, emoji);
+      if (countRunRef.current !== runId) return;
+      if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
     }
     setIsCounting(false);
   };
@@ -10544,9 +10568,13 @@ function AdditionBananaEquation({
           disabled={isCounting}
           className={`relative rounded-2xl border-2 px-7 py-3 text-xl font-black text-white active:translate-y-1 disabled:cursor-wait disabled:opacity-70 ${cyber ? "border-cyan-300 bg-cyan-700 shadow-[0_6px_0_#164e63,0_0_18px_rgba(34,211,238,.20)]" : "border-blue-700 bg-blue-600 shadow-[0_6px_0_#1e3a8a]"}`}
         >
-          {completedGroups === groups.length
+          {isCounting
+            ? (lang === "en" ? "Counting..." : "Mengira...")
+            : completedGroups === groups.length
               ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
-              : (lang === "en" ? "Count one" : "Kira satu")}
+              : lang === "en"
+                ? `Count ${groups[completedGroups]} ${objectName(emoji, groups[completedGroups], lang)}`
+                : `Kira ${groups[completedGroups]} ${objectName(emoji, groups[completedGroups], lang)}`}
           {!isCounting && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
               <PointerIcon />
