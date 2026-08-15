@@ -1542,7 +1542,7 @@ function App() {
           <MenuScreen lang={lang} t={t} player={player} go={go} />
         )}
         {screen === "advancedMenu" && player && (
-          <AdvancedMenuScreen lang={lang} t={t} player={player} go={go} />
+          <AdvancedMenuScreen lang={lang} t={t} player={player} go={go} testingMode={accessPin === "000000"} />
         )}
         {completedLesson && (
           <LessonCompletionScreen
@@ -1579,7 +1579,7 @@ function App() {
             onDone={() => finishLesson("advancedAdditionPart1", "advancedAdditionPart1")}
           />
         )}
-        {!completedLesson && screen === "advancedAdditionPart2" && player?.progress.advancedAdditionPart1 && (
+        {!completedLesson && screen === "advancedAdditionPart2" && (accessPin === "000000" || player?.progress.advancedAdditionPart1) && (
           <AdvancedAdditionPart2Lesson
             lang={lang}
             t={t}
@@ -2540,7 +2540,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
   );
 }
 
-function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void; testingMode?: boolean }) {
   const teenComplete = Boolean(player.progress.advancedTeenNumbers);
   const compareComplete = Boolean(player.progress.advancedCompareBigger);
   const sequencingComplete = Boolean(player.progress.advancedSequencing);
@@ -2582,7 +2582,7 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
         <div className="flex items-center gap-2 sm:gap-4">
           {missionStates.map((complete, index) => (
             <React.Fragment key={index}>
-              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : index === 1 || (index === 4 && !part1Complete) ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
+              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : !testingMode && (index === 1 || (index === 4 && !part1Complete)) ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
                 {index + 1}
                 {complete && <Check className="absolute -right-2 -top-2 h-7 w-7 rounded-full border-2 border-white bg-emerald-500 p-1" strokeWidth={4} aria-hidden="true" />}
               </span>
@@ -2596,7 +2596,7 @@ function AdvancedMenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings;
       <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} icon="< >" complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
       <AdvancedMissionTile mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} icon="+1 −1" complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
       <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
-      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
+      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!testingMode && !part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
     </main>
   );
 }
