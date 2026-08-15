@@ -78,6 +78,17 @@ Without `src`, it renders the 🐒 emoji placeholder.
 - Malay: `client/public/audio/Tambah.mp3`, `Sama dengan.mp3`, and `tolak.mp3`.
 - Reuse these recordings through `MATH_CUE_AUDIO_FILES` and `speakMathCue`. Always inspect `client/public/audio/` before using text-to-speech or creating audio, because the required recording may already exist.
 
+### Child-friendly instructional copy
+- Keep directions short and use one idea per sentence.
+- Do not repeat instructions already shown in the lesson card, button labels, or animation.
+- Prefer direct wording such as “Count both groups” or “Add the ones.” Avoid long multi-clause directions unless every detail is needed to solve the task.
+- Keep English and Malay instructions equally concise without changing the mathematical meaning.
+
+### Object counting and transfer animation rules
+- In every mode and lesson, only the object currently being counted uses a yellow border, yellow ring, and yellow number badge. Previously counted objects stay blue/cyan and uncounted objects stay faded. Never use blue for the active counting highlight, and never highlight the entire tray, basket, box, or group.
+- When an object moves between containers, hide its source copy as the movement begins, animate it along a smooth curved path, and target the exact object slot where it will land. Do not fly objects to the centre of a tray, basket, or box.
+- Keep the flying copy visible over its destination until the landed object has rendered, then remove it so the handoff looks continuous. Object positions must not collide or overlap during the movement.
+
 ### Advanced Adventure visual rule
 - Advanced Adventure uses the dark cyber palette. Do not introduce `bg-white`, white image cards, or other white/light panel backgrounds in advanced menus, lessons, practice, feedback, or completion screens.
 - Chrys and Alyse assets ending in `_nobg` have transparent backgrounds. Keep them transparent and place them directly on dark slate/cyan/emerald cyber surfaces; never add a white plate behind them.
