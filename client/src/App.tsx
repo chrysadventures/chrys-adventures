@@ -2671,36 +2671,70 @@ function TeenPlaceValueCard({ value, lang, connectDigits = false }: { value: num
 
 function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
   const examples = [
-    { number: 12, tens: 1, tensValue: 10, ones: 2 },
-    { number: 27, tens: 2, tensValue: 20, ones: 7 },
+    {
+      display: "07",
+      tens: [0],
+      ones: [1, 1, 1, 1, 1, 1, 1],
+      tensLabel: lang === "en" ? "0 tens" : "0 puluh",
+      onesLabel: lang === "en" ? "7 ones" : "7 sa",
+      equation: "07 = 1 + 1 + 1 + 1 + 1 + 1 + 1 = 7",
+    },
+    {
+      display: "12",
+      tens: [10],
+      ones: [1, 1],
+      tensLabel: lang === "en" ? "1 ten" : "1 puluh",
+      onesLabel: lang === "en" ? "2 ones" : "2 sa",
+      equation: "12 = 10 + 1 + 1 = 12",
+    },
+    {
+      display: "20",
+      tens: [10, 10],
+      ones: [0],
+      tensLabel: lang === "en" ? "2 tens" : "2 puluh",
+      onesLabel: lang === "en" ? "0 ones" : "0 sa",
+      equation: "20 = 10 + 10 = 20",
+    },
   ];
+
+  const valueGroup = (values: number[], label: string, colour: "cyan" | "yellow") => (
+    <div className={`min-w-0 ${values.length > 3 ? "flex-[2]" : "flex-1"}`}>
+      <p className={`text-center text-base font-black ${colour === "cyan" ? "text-cyan-200" : "text-yellow-200"}`}>{label}</p>
+      <svg className="mx-auto h-9 w-full max-w-52 overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M8 6 H92 M8 6 V13 M92 6 V13 M50 6 V23" fill="none" stroke={colour === "cyan" ? "#67e8f9" : "#fde047"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M44 18 L50 25 L56 18" fill="none" stroke={colour === "cyan" ? "#67e8f9" : "#fde047"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <div className={`flex min-h-16 items-center justify-center gap-1 rounded-2xl border-2 px-2 py-3 ${colour === "cyan" ? "border-cyan-300 bg-cyan-950/80" : "border-yellow-300 bg-slate-950"}`}>
+        {values.map((value, index) => (
+          <React.Fragment key={`${value}-${index}`}>
+            {index > 0 && <span className="text-lg font-black text-white">+</span>}
+            <span className={`grid h-9 min-w-6 place-items-center rounded-lg border-2 px-0.5 text-lg font-black ${colour === "cyan" ? "border-cyan-300 text-cyan-100" : "border-yellow-300 text-yellow-100"}`}>{value}</span>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <section className="space-y-5 rounded-[2rem] border-2 border-cyan-300 bg-slate-950/85 p-4 shadow-[0_6px_0_#164e63] sm:p-6">
       <div className="rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-5 text-center">
         <h4 className="text-2xl font-black text-yellow-200">{lang === "en" ? "What do the digits mean?" : "Apakah maksud digit?"}</h4>
         <p className="mt-2 text-lg font-black text-cyan-50">{lang === "en" ? "The tens digit counts groups of 10. The ones digit counts single ones." : "Digit puluh mengira kumpulan 10. Digit sa mengira satu-satu."}</p>
       </div>
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-3">
         {examples.map((example) => (
-          <article key={example.number} className="rounded-[1.75rem] border-2 border-cyan-400 bg-gradient-to-br from-slate-950 to-cyan-950 p-5 shadow-[0_5px_0_#164e63]">
-            <p className="mb-4 text-center text-5xl font-black text-yellow-200" style={getNumberTextStyle(example.number)}>{example.number}</p>
-            <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 p-4">
-                <p className="text-sm font-black uppercase tracking-wider text-cyan-200">{lang === "en" ? "Tens digit" : "Digit puluh"}</p>
-                <span className="mx-auto my-3 grid h-20 w-16 place-items-center rounded-2xl border-4 border-cyan-300 bg-slate-950 text-5xl font-black text-cyan-100 shadow-[0_5px_0_#164e63]">{example.tens}</span>
-                <p className="font-black text-cyan-50">{lang === "en" ? `${example.tens} means ${example.tensValue}` : `${example.tens} bermaksud ${example.tensValue}`}</p>
-              </div>
-              <div className="rounded-2xl border-2 border-yellow-300 bg-slate-950 p-4">
-                <p className="text-sm font-black uppercase tracking-wider text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p>
-                <span className="mx-auto my-3 grid h-20 w-16 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-950 text-5xl font-black text-yellow-100 shadow-[0_5px_0_#a16207]">{example.ones}</span>
-                <p className="font-black text-yellow-50">{lang === "en" ? `${example.ones} means ${example.ones} single ones` : `${example.ones} bermaksud ${example.ones} sa`}</p>
-              </div>
+          <article key={example.display} className="rounded-[1.75rem] border-2 border-cyan-400 bg-gradient-to-br from-slate-950 to-cyan-950 p-4 shadow-[0_5px_0_#164e63]">
+            <p className="mb-4 text-center text-5xl font-black text-yellow-200">{example.display}</p>
+            <div className="flex items-end gap-2">
+              {valueGroup(example.tens, example.tensLabel, "cyan")}
+              <span className="mb-5 text-2xl font-black text-white">+</span>
+              {valueGroup(example.ones, example.onesLabel, "yellow")}
             </div>
-            <p className="mt-5 rounded-2xl border border-emerald-300 bg-emerald-950/70 px-4 py-3 text-center text-3xl font-black text-emerald-100" style={getNumberTextStyle(example.number)}>{example.number} = {example.tensValue} + {example.ones}</p>
+            <p className="mt-5 rounded-2xl border border-emerald-300 bg-emerald-950/70 px-3 py-3 text-center text-xl font-black leading-relaxed text-emerald-100">{example.equation}</p>
           </article>
         ))}
       </div>
-      <p className="rounded-2xl border-2 border-yellow-300/70 bg-yellow-300/10 px-5 py-4 text-center text-xl font-black text-yellow-100">{lang === "en" ? "1 in TENS means 10. 2 in TENS means 20. Each ONE is one banana." : "1 dalam PULUH bermaksud 10. 2 dalam PULUH bermaksud 20. Setiap SA ialah satu pisang."}</p>
+      <p className="rounded-2xl border-2 border-yellow-300/70 bg-yellow-300/10 px-5 py-4 text-center text-xl font-black text-yellow-100">{lang === "en" ? "The left digit tells the tens. The right digit tells the ones." : "Digit kiri menunjukkan puluh. Digit kanan menunjukkan sa."}</p>
     </section>
   );
 }
@@ -5531,7 +5565,25 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedAdditionPart2} helper={lang === "en" ? "Cyber Mission 5 - Solve simple stories using vertical addition." : "Misi Siber 5 - Selesaikan cerita mudah menggunakan tambah menegak."} variant="cyber">
       <div className="mb-5 grid grid-cols-3 gap-2">{Array.from({ length: 3 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
       <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 5" : "Misi Siber 5"} title={phase === 1 && placeValueBeat === 1 ? (lang === "en" ? "17 equals 10 + 7" : "17 sama dengan 10 + 7") : phaseCopy[phase].title} text={phase === 1 && placeValueBeat === 1 ? (lang === "en" ? "Count 10 bananas into one basket. Then count the 7 bananas left." : "Kira 10 pisang ke dalam satu bakul. Kemudian kira 7 pisang yang tinggal.") : phaseCopy[phase].text} />
-      {phase === 0 && <div className="grid min-h-72 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center"><div><div className="mx-auto grid w-64 grid-cols-2 gap-3 rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-5 text-xl font-black uppercase text-cyan-100"><span>{lang === "en" ? "Tens" : "Puluh"}</span><span>{lang === "en" ? "Ones" : "Sa"}</span></div><p className="mt-6 text-2xl font-black text-white">{lang === "en" ? "Vertical addition keeps each place-value column lined up." : "Tambah menegak memastikan setiap lajur nilai tempat tersusun."}</p></div></div>}
+      {phase === 0 && (
+        <div className="grid min-h-72 place-items-center rounded-[2rem] border-4 border-cyan-300 bg-slate-950/80 p-6 text-center">
+          <div className="w-full max-w-3xl">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-5">
+                <p className="text-xl font-black uppercase text-cyan-100">{lang === "en" ? "Tens digit" : "Digit puluh"}</p>
+                <span className="mx-auto my-3 grid h-20 w-16 place-items-center rounded-2xl border-4 border-cyan-300 bg-slate-950 text-5xl font-black text-cyan-100 shadow-[0_5px_0_#164e63]">1</span>
+                <p className="text-lg font-black text-white">{lang === "en" ? "It counts groups of 10. 1 means 10. 2 means 20." : "Ia mengira kumpulan 10. 1 bermaksud 10. 2 bermaksud 20."}</p>
+              </div>
+              <div className="rounded-3xl border-2 border-yellow-300 bg-slate-950 p-5">
+                <p className="text-xl font-black uppercase text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p>
+                <span className="mx-auto my-3 grid h-20 w-16 place-items-center rounded-2xl border-4 border-yellow-300 bg-slate-950 text-5xl font-black text-yellow-100 shadow-[0_5px_0_#a16207]">7</span>
+                <p className="text-lg font-black text-white">{lang === "en" ? "It counts single ones. 7 means 7 single ones." : "Ia mengira sa satu-satu. 7 bermaksud 7 sa."}</p>
+              </div>
+            </div>
+            <p className="mt-6 text-2xl font-black text-white">{lang === "en" ? "Keep tens under tens and ones under ones." : "Letakkan puluh di bawah puluh dan sa di bawah sa."}</p>
+          </div>
+        </div>
+      )}
       {phase === 1 && (placeValueBeat === 0 ? <AdvancedPlaceValueMeaningCard lang={lang} /> : <AdvancedSeventeenPlaceValueDemo key={`seventeen-place-value-${lang}`} lang={lang} onComplete={() => setPlaceValueDemoComplete(true)} />)}
       {phase === 2 && <AdvancedPart2WorkedBeat key={`${workedBeat}-${lang}`} beat={workedBeat} lang={lang} onWalkthroughComplete={() => setWalkthroughComplete(true)} />}
       <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={2} canNext={canNext} nextLabel={phase === 2 && workedBeat < 2 ? t.next : undefined} onPrevious={previous} onNext={next} onPractice={() => setShowPractice(true)} />
