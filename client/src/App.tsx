@@ -100,10 +100,10 @@ type Visual =
   | { kind: "symbol"; a: number; b: number; showObjects?: boolean }
   | { kind: "sequence"; nums: Array<number | "?"> }
   | { kind: "compare"; a: number; b: number }
-  | { kind: "add"; a: number; b: number; emoji?: string; container?: ContainerKind }
+  | { kind: "add"; a: number; b: number; emoji?: string; container?: ContainerKind; display?: "objects" | "none"; showLabels?: boolean }
   | { kind: "horizontalAdd"; a: number; b: number; display?: "equation" | "objects" | "none"; showLabels?: boolean }
   | { kind: "verticalAdd"; a: number; b: number }
-  | { kind: "subtract"; a: number; b: number; emoji?: string; container?: ContainerKind }
+  | { kind: "subtract"; a: number; b: number; emoji?: string; container?: ContainerKind; display?: "objects" | "none"; showLabels?: boolean }
   | { kind: "teenBundle"; tens: 1 | 2; ones: number };
 
 type Question = {
@@ -766,23 +766,33 @@ const operationQuestions: Question[] = [
 ];
 
 const additionPracticeQuestions: Question[] = [
-  q("l-add-build-2-3", "operations", { en: "Build the answer: 2 + 3.", ms: "Bina jawapan: 2 + 3." }, [], 5, { kind: "add", a: 2, b: 3, emoji: "🍌" }, "buildTotal"),
-  q("l-add-3-4", "operations", { en: "Chrys eats 3 bananas, then eats 4 more. How many bananas does he eat altogether?", ms: "Chrys makan 3 pisang dan 4 pisang lagi. Berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌" }),
-  q("l-add-2-4", "operations", { en: "Chrys has 2 bananas and gets 4 more. How many bananas does he have now?", ms: "Chrys ada 2 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [5, 6, 7, 8], 6, { kind: "add", a: 2, b: 4, emoji: "🍌" }),
-  q("l-add-4-5", "operations", { en: "Chrys has 4 bananas. He finds 5 more. How many bananas does he have now?", ms: "Chrys ada 4 pisang. Chrys jumpa 5 lagi. Berapa pisang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 4, b: 5, emoji: "🍌" }),
-  q("l-add-0-6", "operations", { en: "Chrys starts with 0 bananas and gets 6 bananas. How many bananas does he have now?", ms: "Chrys mula dengan 0 pisang dan dapat 6 pisang. Berapa pisang?" }, [0, 5, 6, 7], 6, { kind: "add", a: 0, b: 6, emoji: "🍌" }),
-  q("l-add-6-1", "operations", { en: "Chrys eats 6 bananas, then eats 1 more. How many bananas does he eat altogether?", ms: "Chrys makan 6 pisang dan 1 pisang lagi. Berapa pisang?" }, [6, 7, 8, 9], 7, { kind: "add", a: 6, b: 1, emoji: "🍌" }),
-  q("l-add-8-1", "operations", { en: "Chrys has 8 bananas and gets 1 more. How many bananas does he have now?", ms: "Chrys ada 8 pisang dan dapat 1 lagi. Berapa pisang sekarang?" }, [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🍌" }),
+  // Questions 1-3: objects with visible number labels.
+  q("l-add-labeled-1-2", "operations", { en: "Chrys has 1 banana and gets 2 more. How many bananas does he have now?", ms: "Chrys ada 1 pisang dan dapat 2 lagi. Berapa pisang sekarang?" }, [1, 2, 3, 4], 3, { kind: "add", a: 1, b: 2, emoji: "🍌", showLabels: true }),
+  q("l-add-labeled-2-4", "operations", { en: "Chrys has 2 bananas and gets 4 more. How many bananas does he have now?", ms: "Chrys ada 2 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [4, 5, 6, 7], 6, { kind: "add", a: 2, b: 4, emoji: "🍌", showLabels: true }),
+  q("l-add-labeled-3-4", "operations", { en: "Chrys eats 3 bananas, then eats 4 more. How many bananas does he eat altogether?", ms: "Chrys makan 3 pisang dan 4 pisang lagi. Berapa pisang semuanya?" }, [5, 6, 7, 8], 7, { kind: "add", a: 3, b: 4, emoji: "🍌", showLabels: true }),
+  // Questions 4-6: objects without number labels.
+  q("l-add-objects-1-5", "operations", { en: "Chrys has 1 banana and finds 5 more. How many bananas does he have now?", ms: "Chrys ada 1 pisang dan jumpa 5 lagi. Berapa pisang sekarang?" }, [4, 5, 6, 7], 6, { kind: "add", a: 1, b: 5, emoji: "🍌" }),
+  q("l-add-objects-4-4", "operations", { en: "Chrys has 4 bananas and gets 4 more. How many bananas does he have now?", ms: "Chrys ada 4 pisang dan dapat 4 lagi. Berapa pisang sekarang?" }, [6, 7, 8, 9], 8, { kind: "add", a: 4, b: 4, emoji: "🍌" }),
+  q("l-add-objects-5-4", "operations", { en: "Chrys eats 5 bananas, then eats 4 more. How many bananas does he eat altogether?", ms: "Chrys makan 5 pisang dan 4 pisang lagi. Berapa pisang semuanya?" }, [6, 7, 8, 9], 9, { kind: "add", a: 5, b: 4, emoji: "🍌" }),
+  // Questions 7-9: numbers only.
+  q("l-add-numbers-4-2", "operations", operationPrompt(4, "+", 2), [4, 5, 6, 7], 6, { kind: "add", a: 4, b: 2, emoji: "🍌", display: "none" }),
+  q("l-add-numbers-0-7", "operations", operationPrompt(0, "+", 7), [0, 6, 7, 8], 7, { kind: "add", a: 0, b: 7, emoji: "🍌", display: "none" }),
+  q("l-add-numbers-8-1", "operations", operationPrompt(8, "+", 1), [6, 7, 8, 9], 9, { kind: "add", a: 8, b: 1, emoji: "🍌", display: "none" }),
 ];
 
 const subtractionPracticeQuestions: Question[] = [
-  q("l-sub-takeaway-7-3", "operations", { en: "Show 7 - 3. Start with 7, take away 3.", ms: "Tunjuk 7 - 3. Mula dengan 7, ambil 3." }, [], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌" }, "takeAway"),
-  q("l-sub-8-5", "operations", { en: "Chrys has 8 bananas. He gives away 5 bananas. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia beri 5 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 8, b: 5, emoji: "🍌" }),
-  q("l-sub-6-2", "operations", { en: "Chrys has 6 bananas. He eats 2 bananas. How many bananas are left?", ms: "Chrys ada 6 pisang. Dia makan 2 pisang. Tinggal berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 6, b: 2, emoji: "🍌" }),
-  q("l-sub-9-6", "operations", { en: "There are 9 bananas. You take away 6 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 6 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 9, b: 6, emoji: "🍌" }),
-  q("l-sub-5-0", "operations", { en: "Chrys has 5 bananas. He gives away 0 bananas. How many bananas are left?", ms: "Chrys ada 5 pisang. Dia beri 0 pisang. Tinggal berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "subtract", a: 5, b: 0, emoji: "🍌" }),
-  q("l-sub-8-1", "operations", { en: "Chrys has 8 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "subtract", a: 8, b: 1, emoji: "🍌" }),
-  q("l-sub-4-4", "operations", { en: "Chrys has 4 bananas. He gives away all 4 bananas. How many bananas are left?", ms: "Chrys ada 4 pisang. Dia beri semua 4 pisang. Tinggal berapa pisang?" }, [0, 1, 3, 4], 0, { kind: "subtract", a: 4, b: 4, emoji: "🍌" }),
+  // Questions 1-3: objects with visible number labels.
+  q("l-sub-labeled-8-5", "operations", { en: "Chrys has 8 bananas. He gives away 5 bananas. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia beri 5 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 8, b: 5, emoji: "🍌", showLabels: true }),
+  q("l-sub-labeled-6-2", "operations", { en: "Chrys has 6 bananas. He eats 2 bananas. How many bananas are left?", ms: "Chrys ada 6 pisang. Dia makan 2 pisang. Tinggal berapa pisang?" }, [2, 3, 4, 5], 4, { kind: "subtract", a: 6, b: 2, emoji: "🍌", showLabels: true }),
+  q("l-sub-labeled-9-6", "operations", { en: "There are 9 bananas. You take away 6 bananas. How many bananas are left?", ms: "Ada 9 pisang. Kamu ambil 6 pisang. Tinggal berapa pisang?" }, [1, 2, 3, 4], 3, { kind: "subtract", a: 9, b: 6, emoji: "🍌", showLabels: true }),
+  // Questions 4-6: objects without number labels.
+  q("l-sub-objects-5-0", "operations", { en: "Chrys has 5 bananas. He gives away 0 bananas. How many bananas are left?", ms: "Chrys ada 5 pisang. Dia beri 0 pisang. Tinggal berapa pisang?" }, [0, 4, 5, 6], 5, { kind: "subtract", a: 5, b: 0, emoji: "🍌" }),
+  q("l-sub-objects-8-1", "operations", { en: "Chrys has 8 bananas. He eats 1 banana. How many bananas are left?", ms: "Chrys ada 8 pisang. Dia makan 1 pisang. Tinggal berapa pisang?" }, [5, 6, 7, 8], 7, { kind: "subtract", a: 8, b: 1, emoji: "🍌" }),
+  q("l-sub-objects-4-4", "operations", { en: "Chrys has 4 bananas. He gives away all 4 bananas. How many bananas are left?", ms: "Chrys ada 4 pisang. Dia beri semua 4 pisang. Tinggal berapa pisang?" }, [0, 1, 3, 4], 0, { kind: "subtract", a: 4, b: 4, emoji: "🍌" }),
+  // Questions 7-9: numbers only.
+  q("l-sub-numbers-7-3", "operations", operationPrompt(7, "-", 3), [2, 3, 4, 5], 4, { kind: "subtract", a: 7, b: 3, emoji: "🍌", display: "none" }),
+  q("l-sub-numbers-9-4", "operations", operationPrompt(9, "-", 4), [3, 4, 5, 6], 5, { kind: "subtract", a: 9, b: 4, emoji: "🍌", display: "none" }),
+  q("l-sub-numbers-6-5", "operations", operationPrompt(6, "-", 5), [0, 1, 2, 3], 1, { kind: "subtract", a: 6, b: 5, emoji: "🍌", display: "none" }),
 ];
 
 const realQuestions: Question[] = [
@@ -11993,16 +12003,14 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isTeenValueCountQuestion = qn.id.startsWith("adv-teen-value-count-");
   const showsTeenCountingSolution = isTeenValueCountQuestion && (isCorrect || showSolution);
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
-  const hidesQuestionVisual = qn.visual.kind === "horizontalAdd" && qn.visual.display === "none";
+  const hidesQuestionVisual =
+    (qn.visual.kind === "horizontalAdd" && qn.visual.display === "none") ||
+    ((qn.visual.kind === "add" || qn.visual.kind === "subtract") && qn.visual.display === "none");
   const isAnimatedCupQuestion = qn.id === "rt-sub-cups-5-5";
   const answersLockedForAnimation = isAnimatedCupQuestion && !cupAnimationComplete;
   const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen" || qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild";
-  const additionCountingQuestionIndex = additionPracticeQuestions
-    .filter((question) => question.inputMode !== "buildTotal")
-    .findIndex((question) => question.id === qn.id);
-  const showGuidedAdditionLabels = additionCountingQuestionIndex >= 0 && additionCountingQuestionIndex < 3;
-  const subtractionQuestionIndex = subtractionPracticeQuestions.findIndex((question) => question.id === qn.id);
-  const showGuidedSubtractionLabels = subtractionQuestionIndex >= 1 && subtractionQuestionIndex <= 3;
+  const showGuidedAdditionLabels = qn.visual.kind === "add" && qn.visual.showLabels === true;
+  const showGuidedSubtractionLabels = qn.visual.kind === "subtract" && qn.visual.showLabels === true;
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
   const answeredCount = Object.keys(answers).length;
   const cyber = variant === "cyber";
@@ -14832,9 +14840,9 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
     return (
       <div className="space-y-3">
         <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <ObjectGroup count={visual.a} emoji={emoji} numbered={revealNumbers} lang={lang} />
+          <ObjectGroup count={visual.a} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} />
           <span className="text-center text-4xl font-black text-blue-700">+</span>
-          <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} />
+          <ObjectGroup count={visual.b} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} />
         </div>
         <p className="text-center text-3xl font-black text-slate-400">= ?</p>
       </div>
@@ -14843,7 +14851,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   const emoji = visual.emoji ?? "🍌";
   return (
     <div className="space-y-3">
-      <ObjectGroup count={visual.a} emoji={emoji} crossed={visual.b} crossedLabels={revealCrossedLabels} lang={lang} />
+      <ObjectGroup count={visual.a} emoji={emoji} numbered={visual.showLabels === true || revealCrossedLabels} crossed={visual.b} crossedLabels={revealCrossedLabels} lang={lang} />
       {revealNumbers && <p className="text-center text-2xl font-black text-slate-500">{visual.a} - {visual.b} = ?</p>}
     </div>
   );
