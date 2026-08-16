@@ -174,6 +174,11 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
 const getNumberTextStyle = (_value: number | string): React.CSSProperties => NUMBER_TEXT_STYLE;
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
 const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
+// Give the browser/audio device a brief silent warm-up before every clip. Some
+// devices otherwise wake up on the first syllable and make the beginning sound
+// muffled or clipped. The clip is rewound before the audible playback starts.
+const AUDIO_CLEAR_START_PRIME_MS = 180;
+const AUDIO_CLEAR_START_SETTLE_MS = 45;
 const COUNTING_STEP_MS = 1400;
 const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
@@ -239,7 +244,9 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
     7: "seven.mp3",
     8: "eight.mp3",
     9: "nine.mp3",
-    10: "Ten.mp3",
+    // New recording uses a new URL so deployed browsers cannot reuse the old
+    // cached "ten" clip.
+    10: "en-number-10-new.mp3",
     11: "Eleven.mp3",
     12: "Twelve.mp3",
     13: "Thirteen.mp3",
@@ -317,6 +324,11 @@ const DIGIT_LABEL_AUDIO_FILES: Record<Lang, readonly [string, string, string]> =
 const MALAY_COMPARISON_AUDIO_FILES = {
   greater: "ms-lebih-besar-daripada.mp3",
   less: "ms-lebih-kecil-daripada.mp3",
+} as const;
+
+const MALAY_COMPARISON_PROMPT_AUDIO_FILES = {
+  compare: "ms-bandingkan.mp3",
+  and: "ms-dan.mp3",
 } as const;
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
@@ -15864,6 +15876,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
   const [stepIndex, setStepIndex] = useState(0);
   const announcedStaticTotalRef = useRef<string | null>(null);
   const announcedAdvancedSubtractionCueRef = useRef<string | null>(null);
+  const announcedComparisonStepRef = useRef<string | null>(null);
   const spokenSteps = q.method[lang].join(". ");
   const solutionVisual: Visual =
     q.inputMode === "tapObjects" && typeof q.answer === "number" && q.answer > 0
@@ -15872,6 +15885,9 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
   const lastStep = stepIndex >= q.method[lang].length - 1;
   const isAdvancedAdditionPart1 =
     q.id.startsWith("adv-add-1-") && solutionVisual.kind === "horizontalAdd";
+  const advancedComparisonPair = q.id.startsWith("adv-test-compare-") && solutionVisual.kind === "advancedCompareTest"
+    ? { left: solutionVisual.a, right: solutionVisual.b }
+    : null;
   const staticBananaCalculation =
     q.inputMode !== "carryBuild" &&
     q.inputMode !== "makeTenBuild" &&
@@ -15888,7 +15904,24 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     setStepIndex(0);
     announcedStaticTotalRef.current = null;
     announcedAdvancedSubtractionCueRef.current = null;
+    announcedComparisonStepRef.current = null;
   }, [q.id]);
+
+  useEffect(() => {
+    if (lang !== "ms" || !advancedComparisonPair || stepIndex > 1) return;
+    const { left, right } = advancedComparisonPair;
+    const announcementKey = `${q.id}:${lang}:${stepIndex}:${left}:${right}`;
+    if (announcedComparisonStepRef.current === announcementKey) return;
+    announcedComparisonStepRef.current = announcementKey;
+
+    if (stepIndex === 0) {
+      void speakComparisonPrompt(left, right, lang);
+      return;
+    }
+
+    const symbol = left > right ? ">" : left < right ? "<" : "=";
+    void speakComparisonSentence(left, right, symbol, lang);
+  }, [advancedComparisonPair, lang, q.id, stepIndex]);
 
   useEffect(() => {
     if (!(q.id.startsWith("adv-sub-") || q.id.startsWith("adv-test-sub-")) || (solutionVisual.kind !== "verticalSubtract" && solutionVisual.kind !== "horizontalSubtract" && solutionVisual.kind !== "subtract")) return;
@@ -16173,8 +16206,11 @@ async function playRecordedVoiceFile(file: string): Promise<boolean> {
     audio.preservesPitch = true;
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
-    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 5000);
-    void audio.play().catch(() => finish(false));
+    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 6500);
+    void playAudioFromClearStart(audio, () => activeNumberAudio === audio)
+      .then((started) => {
+        if (!started) finish(false);
+      });
   });
 }
 
@@ -16200,6 +16236,19 @@ async function speakComparisonSentence(
     await playRecordedVoiceFile(comparisonFile);
   }
   await wait(220);
+  await speakNumber(right, lang);
+}
+
+async function speakComparisonPrompt(left: number, right: number, lang: Lang): Promise<void> {
+  if (lang !== "ms" || left < 0 || left > 20 || right < 0 || right > 20) return;
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+
+  await playRecordedVoiceFile(MALAY_COMPARISON_PROMPT_AUDIO_FILES.compare);
+  await wait(180);
+  await speakNumber(left, lang);
+  await wait(180);
+  await playRecordedVoiceFile(MALAY_COMPARISON_PROMPT_AUDIO_FILES.and);
+  await wait(180);
   await speakNumber(right, lang);
 }
 
@@ -16236,8 +16285,11 @@ async function speakBananaTotal(value: number, lang: Lang) {
     audio.preservesPitch = true;
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
-    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 5000);
-    void audio.play().catch(() => finish(false));
+    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 6500);
+    void playAudioFromClearStart(audio, () => activeNumberAudio === audio)
+      .then((started) => {
+        if (!started) finish(false);
+      });
   });
 }
 
@@ -16323,6 +16375,62 @@ function stopCelebrationAudio() {
   activeCelebrationAudio = null;
 }
 
+function resetAudioToStart(audio: HTMLAudioElement) {
+  try {
+    audio.currentTime = 0;
+  } catch {
+    // Some browsers reject seeking until metadata is available. The readiness
+    // wait below will make the next reset succeed.
+  }
+}
+
+async function playAudioFromClearStart(
+  audio: HTMLAudioElement,
+  isCurrent: () => boolean,
+): Promise<boolean> {
+  if (!isCurrent()) return false;
+  audio.preload = "auto";
+  const audibleVolume = audio.volume;
+  audio.pause();
+  resetAudioToStart(audio);
+  audio.volume = 0;
+
+  try {
+    // Calling play immediately preserves the browser's user-gesture permission;
+    // its promise resolves only after enough of the clip has decoded to start.
+    await audio.play();
+  } catch {
+    audio.volume = audibleVolume;
+    return false;
+  }
+
+  if (!isCurrent()) {
+    audio.pause();
+    audio.volume = audibleVolume;
+    return false;
+  }
+
+  await wait(AUDIO_CLEAR_START_PRIME_MS);
+  if (!isCurrent()) {
+    audio.pause();
+    audio.volume = audibleVolume;
+    return false;
+  }
+
+  audio.pause();
+  resetAudioToStart(audio);
+  audio.volume = audibleVolume;
+  await wait(AUDIO_CLEAR_START_SETTLE_MS);
+  if (!isCurrent()) return false;
+
+  try {
+    await audio.play();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function playSuccessFanfare(onFinished?: () => void) {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
   stopNumberAudio();
@@ -16342,7 +16450,10 @@ function playSuccessFanfare(onFinished?: () => void) {
   };
   audio.onended = clear;
   audio.onerror = clear;
-  void audio.play().catch(clear);
+  void playAudioFromClearStart(audio, () => activeCelebrationAudio === audio)
+    .then((started) => {
+      if (!started) clear();
+    });
   return true;
 }
 
@@ -16378,8 +16489,13 @@ function playNumberFile(value: number, lang: Lang, runId: number) {
       numberAudioCache.delete(`${lang}-${value}`);
       finish(false);
     };
-    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 2600);
-    audio.play().catch(() => finish(false));
+    timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 4200);
+    void playAudioFromClearStart(
+      audio,
+      () => runId === audioRunId && activeNumberAudio === audio,
+    ).then((started) => {
+      if (!started) finish(false);
+    });
     if (runId !== audioRunId) {
       audio.pause();
       finish(false);
@@ -16404,6 +16520,7 @@ function preloadNumberAudioFiles() {
     ...DIGIT_LABEL_AUDIO_FILES.en,
     ...DIGIT_LABEL_AUDIO_FILES.ms,
     ...Object.values(MALAY_COMPARISON_AUDIO_FILES),
+    ...Object.values(MALAY_COMPARISON_PROMPT_AUDIO_FILES),
   ].forEach((file) => {
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
     audio.preload = "auto";
@@ -16443,14 +16560,17 @@ async function speakMathCue(cue: MathCue, lang: Lang) {
       if (activeNumberAudio === audio) activeNumberAudio = null;
       resolve();
     };
-    timeoutId = window.setTimeout(finish, 5000);
+    timeoutId = window.setTimeout(finish, 6500);
     activeNumberAudio = audio;
     audio.preload = "auto";
     audio.playbackRate = MATH_CUE_AUDIO_PLAYBACK_RATE;
     audio.preservesPitch = true;
     audio.onended = finish;
     audio.onerror = finish;
-    void audio.play().catch(finish);
+    void playAudioFromClearStart(audio, () => activeNumberAudio === audio)
+      .then((started) => {
+        if (!started) finish();
+      });
   });
 }
 
