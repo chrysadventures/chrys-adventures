@@ -29,6 +29,8 @@ Every object-counting activity must include all of the following:
 - Never run a separate visual timer that can drift away from the spoken count.
 - The spoken number and the yellow highlight must refer to the same object at the same time.
 - Preserve the synchronized visual sequence when audio is muted by using the established silent-count fallback.
+- After the final number audio and its yellow highlight finish, wait 500 milliseconds before revealing any total, result label, or completed-count state.
+- Never reveal a total on the same frame as the final counted object.
 
 ## Object states
 
@@ -70,6 +72,7 @@ Before completing any counting-related change, verify:
 - [ ] Counting begins only after a button press.
 - [ ] Every object has the correct number label.
 - [ ] Audio and visual counting advance together.
+- [ ] Every total appears 500 milliseconds after the final counted object and audio finish.
 - [ ] Exactly one object is yellow during the count.
 - [ ] Earlier objects have blue outlines and blue labels.
 - [ ] Future objects remain faded.

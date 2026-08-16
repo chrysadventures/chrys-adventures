@@ -147,6 +147,7 @@ const getNumberTextStyle = (_value: number | string): React.CSSProperties => NUM
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
 const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
 const COUNTING_STEP_MS = 1400;
+const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
 const ADDITION_BANANA_COUNT_PAUSE_MS = 1200;
@@ -349,6 +350,7 @@ let activeCelebrationAudio: HTMLAudioElement | null = null;
 let successFanfareAudio: HTMLAudioElement | null = null;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
+let lastCountingFinishedAt = 0;
 let queuedAudioAfterCounting: (() => void) | null = null;
 let audioMuted = !NUMBER_AUDIO_ENABLED;
 let audioUserInteracted = false;
@@ -1344,6 +1346,38 @@ function usePrefersReducedMotion() {
   }, []);
 
   return prefersReducedMotion;
+}
+
+function useDelayedTotalVisibility(shouldReveal: boolean, resetKey: string) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setVisible(false);
+    if (!shouldReveal) return;
+    let cancelled = false;
+    let timer = 0;
+    const waitForCountingToFinish = () => {
+      if (cancelled) return;
+      if (activeCountingRunId !== null) {
+        timer = window.setTimeout(waitForCountingToFinish, 50);
+        return;
+      }
+      const elapsedSinceCountFinished = lastCountingFinishedAt > 0 ? performance.now() - lastCountingFinishedAt : 0;
+      const remainingDelay = lastCountingFinishedAt > 0
+        ? Math.max(0, COUNT_TOTAL_REVEAL_DELAY_MS - elapsedSinceCountFinished)
+        : COUNT_TOTAL_REVEAL_DELAY_MS;
+      timer = window.setTimeout(() => {
+        if (!cancelled) setVisible(true);
+      }, remainingDelay);
+    };
+    waitForCountingToFinish();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [resetKey, shouldReveal]);
+
+  return visible;
 }
 
 function getReducedMotionPreference() {
@@ -3476,6 +3510,8 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
     }
     if (runRef.current !== runId) return;
     update(count);
+    await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+    if (runRef.current !== runId) return;
     setStage(nextStage);
     if (nextStage === "countSecond") await speakMathCue("plus", lang);
     if (nextStage === "readyJoin") await speakMathCue("equals", lang);
@@ -3507,6 +3543,8 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
     }
     if (runRef.current !== runId) return;
     setTotalCount(13);
+    await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+    if (runRef.current !== runId) return;
     setStage("done");
     setBusy(false);
     if (!completionReportedRef.current) {
@@ -3655,7 +3693,7 @@ function AdvancedComparePile({
   const objectTile = (index: number) => (
         <span
           key={index}
-          className={`relative grid h-16 w-16 shrink-0 place-items-center rounded-xl border-2 text-2xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] transition-colors sm:h-20 sm:w-20 sm:text-4xl ${
+          className={`relative grid h-16 w-16 shrink-0 place-items-center rounded-xl border-2 text-2xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] transition-colors sm:h-[4.5rem] sm:w-[4.5rem] sm:text-4xl ${
             index < visibleCount
               ? index === visibleCount - 1 && isCounting
               ? "z-10 scale-105 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]"
@@ -3679,12 +3717,12 @@ function AdvancedComparePile({
         </span>
   );
   const centeredRows = (perRow: number, className: string) => (
-    <div className={`${className} min-h-48 flex-col justify-center gap-3 sm:gap-4`}>
+    <div className={`${className} min-h-48 flex-col justify-center gap-4 sm:gap-5`}>
       {Array.from({ length: Math.ceil(count / perRow) }, (_, rowIndex) => {
         const rowStart = rowIndex * perRow;
         const rowCount = Math.min(perRow, count - rowStart);
         return (
-          <div key={rowIndex} className="flex justify-center gap-3 sm:gap-4">
+          <div key={rowIndex} className="flex justify-center gap-4 sm:gap-5">
             {Array.from({ length: rowCount }, (_, offset) => objectTile(rowStart + offset))}
           </div>
         );
@@ -3692,7 +3730,7 @@ function AdvancedComparePile({
     </div>
   );
   return (
-    <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-4 sm:p-7">
+    <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-5 sm:p-6">
       {centeredRows(3, "flex sm:hidden")}
       {centeredRows(4, "hidden sm:flex")}
     </div>
@@ -3827,18 +3865,20 @@ function GreaterThanSymbolTeaching({ lang }: { lang: Lang }) {
 function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = false }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang; symbol?: ">" | "<" | "="; stagedReveal?: boolean }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visibleCounts, setVisibleCounts] = useState({ left: 0, right: 0 });
+  const [completedSides, setCompletedSides] = useState({ left: false, right: false });
   const [countingSide, setCountingSide] = useState<"left" | "right" | null>(null);
   const [revealStage, setRevealStage] = useState<0 | 1 | 2 | 3>(stagedReveal ? 0 : 3);
   const [comparisonAudioPlaying, setComparisonAudioPlaying] = useState(false);
   const countingRunRef = useRef(0);
   const item = ADVANCED_COMPARE_OBJECTS[object];
-  const bothPilesCounted = visibleCounts.left === a && visibleCounts.right === b;
+  const bothPilesCounted = completedSides.left && completedSides.right;
   const leftObjectName = lang === "en" ? (a === 1 ? item.en[0] : item.en[1]) : item.ms;
   const rightObjectName = lang === "en" ? (b === 1 ? item.en[0] : item.en[1]) : item.ms;
 
   useEffect(() => {
     countingRunRef.current += 1;
     setVisibleCounts({ left: 0, right: 0 });
+    setCompletedSides({ left: false, right: false });
     setCountingSide(null);
     setRevealStage(stagedReveal ? 0 : 2);
     setComparisonAudioPlaying(false);
@@ -3893,6 +3933,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     countingRunRef.current = runId;
     setCountingSide(side);
     setVisibleCounts((current) => ({ ...current, [side]: 0 }));
+    setCompletedSides((current) => ({ ...current, [side]: false }));
     const reveal = (value: number) => {
       if (countingRunRef.current === runId) {
         setVisibleCounts((current) => ({ ...current, [side]: value }));
@@ -3905,17 +3946,20 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       for (let value = 1; value <= count; value += 1) {
         if (countingRunRef.current !== runId) return;
         reveal(value);
-        await wait(COUNTING_STEP_MS);
+        await wait(value === count ? COUNT_TOTAL_REVEAL_DELAY_MS : COUNTING_STEP_MS);
       }
     }
     if (countingRunRef.current !== runId) return;
     setVisibleCounts((current) => ({ ...current, [side]: count }));
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+    if (countingRunRef.current !== runId) return;
+    setCompletedSides((current) => ({ ...current, [side]: true }));
     setCountingSide(null);
   };
 
   const pileSection = (side: "left" | "right", count: number) => {
     const isCounting = countingSide === side;
-    const isComplete = visibleCounts[side] === count;
+    const isComplete = completedSides[side];
     const sideLabel = lang === "en"
       ? `Pile ${side === "left" ? "A" : "B"}`
       : `Kumpulan ${side === "left" ? "A" : "B"}`;
@@ -3947,7 +3991,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
 
   return (
     <div>
-      <div className={`grid gap-4 ${symbol ? "sm:grid-cols-[minmax(0,1fr)_5rem_minmax(0,1fr)] sm:items-center" : "sm:grid-cols-2"}`}>
+      <div className={`grid gap-3 ${symbol ? "sm:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] sm:items-center" : "sm:grid-cols-2"}`}>
         {pileSection("left", a)}
         {symbol && (
           <div className="grid min-h-20 place-items-center self-center justify-self-center" aria-live="polite">
@@ -4426,7 +4470,7 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   if (showPractice) return <AdvancedComparePractice lang={lang} t={t} onBack={() => { setShowPractice(false); setPhase(slides.length - 1); }} onDone={onDone} />;
 
   return (
-    <main className="mx-auto w-full max-w-6xl pb-8">
+    <main className="mx-auto w-full max-w-[90rem] pb-8">
       <div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3">
         <LessonShell lang={lang} title={t.advancedCompareBigger} helper={lang === "en" ? "Compare groups and numbers from 0 to 20." : "Banding kumpulan dan nombor dari 0 hingga 20."} variant="cyber">
           <div className="mb-5 grid grid-cols-3 gap-2 md:grid-cols-7 xl:grid-cols-[repeat(14,minmax(0,1fr))]">{slides.map((_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
@@ -5162,6 +5206,8 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
     }
     if (runRef.current !== runId) return;
     update(count);
+    await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+    if (runRef.current !== runId) return;
     setCountingTray(null);
     const bothCounted = side === "left" ? rightCount === 8 : leftCount === 5;
     if (bothCounted) {
@@ -7205,6 +7251,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             const nextValue = singleCountComplete ? 1 : singleCountValue + 1;
             await speakNumber(nextValue, lang);
             setSingleCountValue(nextValue);
+            if (nextValue >= n) await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
             setSingleCountComplete(nextValue >= n);
             setCounting(false);
           }}
@@ -7346,6 +7393,10 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
   largeTiles?: boolean;
   lang: Lang;
 }) {
+  const isTotalLabel = label.startsWith("Total:") || label.startsWith("Jumlah:");
+  const delayedTotalLabelVisible = useDelayedTotalVisibility(showLabel && isTotalLabel, label);
+  const labelVisible = showLabel && (!isTotalLabel || delayedTotalLabelVisible);
+
   return (
     <div className={`rounded-3xl border-4 p-4 text-center transition-[border-color,background-color,box-shadow] duration-300 ${
       active
@@ -7373,10 +7424,10 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
         />
       ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
       <p
-        className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black transition-opacity ease-out ${slowLabelReveal ? "duration-700" : "duration-200"} ${showLabel ? (cyber ? "bg-cyan-950 text-cyan-50 opacity-100" : "bg-white text-emerald-950 opacity-100") : "opacity-0"}`}
+        className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black transition-opacity ease-out ${slowLabelReveal ? "duration-700" : "duration-200"} ${labelVisible ? (cyber ? "bg-cyan-950 text-cyan-50 opacity-100" : "bg-white text-emerald-950 opacity-100") : "opacity-0"}`}
         aria-live="polite"
       >
-        {showLabel ? label : "\u00a0"}
+        {labelVisible ? label : "\u00a0"}
       </p>
     </div>
   );
@@ -7888,12 +7939,15 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
 
 function CountTotalBadge({ count, lang, unit }: { count: number; lang: Lang; unit?: string }) {
   const totalLabel = `${lang === "en" ? "Total" : "Jumlah"}: ${count}${unit ? ` ${unit}` : ""}`;
+  const visible = useDelayedTotalVisibility(true, totalLabel);
+
   return (
     <div
-      className="mx-auto mt-3 inline-flex items-center justify-center rounded-full border-2 border-emerald-200 bg-emerald-100 px-5 py-3 text-center text-xl font-black text-emerald-950 shadow-[0_4px_0_rgba(5,150,105,.16)]"
+      className={`mx-auto mt-3 inline-flex min-h-14 items-center justify-center rounded-full border-2 px-5 py-3 text-center text-xl font-black transition-opacity duration-200 ${visible ? "border-emerald-200 bg-emerald-100 text-emerald-950 opacity-100 shadow-[0_4px_0_rgba(5,150,105,.16)]" : "border-transparent opacity-0"}`}
       aria-label={totalLabel}
+      aria-hidden={!visible}
     >
-      {totalLabel}
+      {visible ? totalLabel : "\u00a0"}
     </div>
   );
 }
@@ -11695,29 +11749,42 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
             }
           },
         ).then(() => {
-          if (!cancelled) {
+          if (cancelled) return;
+          const completionTimer = window.setTimeout(() => {
+            if (cancelled) return;
             setCountingInProgress(false);
             onCountComplete?.();
-          }
+          }, COUNT_TOTAL_REVEAL_DELAY_MS);
+          timers.push(completionTimer);
         });
       };
+      const timers: number[] = [];
       const speechTimer = countDelay > 0
         ? window.setTimeout(startAudioCount, countDelay)
         : null;
+      if (speechTimer) timers.push(speechTimer);
       if (!speechTimer) startAudioCount();
       return () => {
         cancelled = true;
-        if (speechTimer) window.clearTimeout(speechTimer);
+        timers.forEach(window.clearTimeout);
         stopNumberAudio();
       };
     }
 
     if (prefersReducedMotion) {
       setVisible(max);
-      setCountingInProgress(false);
       onCountProgress?.(max);
-      onCountComplete?.();
-      return;
+      lastCountingFinishedAt = performance.now();
+      setCountingInProgress(true);
+      const completionTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        setCountingInProgress(false);
+        onCountComplete?.();
+      }, COUNT_TOTAL_REVEAL_DELAY_MS);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(completionTimer);
+      };
     }
 
     setCountingInProgress(true);
@@ -11726,8 +11793,13 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       setVisible(i + 1);
       onCountProgress?.(i + 1);
       if (i + 1 === max) {
-        setCountingInProgress(false);
-        onCountComplete?.();
+        lastCountingFinishedAt = performance.now();
+        const completionTimer = window.setTimeout(() => {
+          if (cancelled) return;
+          setCountingInProgress(false);
+          onCountComplete?.();
+        }, COUNT_TOTAL_REVEAL_DELAY_MS);
+        timers.push(completionTimer);
       }
     }, countDelay + (stepIntervalMs * (i + 1))));
     return () => {
@@ -13365,8 +13437,10 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
       for (let value = 1; value <= count; value += 1) {
         if (countRunRef.current !== runId) return;
         reveal(value);
-        await wait(prefersReducedMotion ? 80 : COUNTING_STEP_MS);
+        if (value < count) await wait(prefersReducedMotion ? 80 : COUNTING_STEP_MS);
       }
+      lastCountingFinishedAt = performance.now();
+      await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
     }
     if (countRunRef.current !== runId) return;
     setVisibleCount(count);
@@ -15259,6 +15333,7 @@ async function speakCountingSequence(
   activeCountingRunId = runId;
   const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
   const finalValue = Math.min(count, 20);
+  let completed = false;
   try {
     for (let value = Math.max(1, startValue); value <= finalValue; value += 1) {
       if (runId !== audioRunId) return;
@@ -15272,7 +15347,9 @@ async function speakCountingSequence(
         await wait(Math.max(180, stepMs - elapsed));
       }
     }
+    completed = true;
   } finally {
+    if (completed && runId === audioRunId) lastCountingFinishedAt = performance.now();
     if (activeCountingRunId === runId) {
       activeCountingRunId = null;
       const queuedAudio = queuedAudioAfterCounting;
