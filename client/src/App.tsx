@@ -39,6 +39,7 @@ import {
   loadGameSave,
   saveGameProgress,
 } from "./lib/gameSaves";
+import { advancedSubtractionQuestionData } from "./questions/advancedSubtractionQuestions";
 
 type Lang = "en" | "ms";
 type MathCue = "plus" | "equals" | "minus";
@@ -53,6 +54,7 @@ type Screen =
   | "advancedSequencing"
   | "advancedAdditionPart1"
   | "advancedAdditionPart2"
+  | "advancedSubtraction"
   | "learnRecognize"
   | "learnValues"
   | "learnSequencing"
@@ -79,7 +81,8 @@ type LearningSectionKey =
   | "advancedCompareBigger"
   | "advancedSequencing"
   | "advancedAdditionPart1"
-  | "advancedAdditionPart2";
+  | "advancedAdditionPart2"
+  | "advancedSubtraction";
 
 type Visual =
   | { kind: "count"; emoji: string; count: number; container?: ContainerKind }
@@ -103,6 +106,7 @@ type Visual =
   | { kind: "add"; a: number; b: number; emoji?: string; container?: ContainerKind; display?: "objects" | "none"; showLabels?: boolean }
   | { kind: "horizontalAdd"; a: number; b: number; display?: "equation" | "objects" | "none"; showLabels?: boolean }
   | { kind: "verticalAdd"; a: number; b: number }
+  | { kind: "verticalSubtract"; a: number; b: number; borrowing?: boolean }
   | { kind: "subtract"; a: number; b: number; emoji?: string; container?: ContainerKind; display?: "objects" | "none"; showLabels?: boolean }
   | { kind: "teenBundle"; tens: 1 | 2; ones: number };
 
@@ -114,7 +118,7 @@ type Question = {
   answer: number | string;
   visual: Visual;
   method: Record<Lang, string[]>;
-  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects" | "takeAway" | "buildTeen" | "makeTenBuild" | "carryBuild";
+  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects" | "takeAway" | "buildTeen" | "makeTenBuild" | "carryBuild" | "borrowSubtract";
 };
 
 const DONT_KNOW_ANSWER = "__dont_know__";
@@ -410,6 +414,7 @@ const UI = {
     advancedSequencingShort: "Build sequences with +1 and −1",
     advancedAdditionPart1: "Add Bigger Numbers",
     advancedAdditionPart2: "Write it Down",
+    advancedSubtraction: "Subtract Bigger Numbers",
     recognizeNumbers: "Recognize and Identify Numbers",
     numberValues: "Number Values",
     sequencing: "Number Order",
@@ -471,6 +476,7 @@ const UI = {
     advancedSequencingShort: "Bina urutan dengan +1 dan −1",
     advancedAdditionPart1: "Tambah Nombor Besar",
     advancedAdditionPart2: "Tulis Tambah",
+    advancedSubtraction: "Tolak Nombor Besar",
     recognizeNumbers: "Kenal Nombor",
     numberValues: "Nilai Nombor",
     sequencing: "Susunan Nombor",
@@ -892,6 +898,13 @@ function q(
 }
 
 function buildMethod(visual: Visual, answer: number | string): Record<Lang, string[]> {
+  if (visual.kind === "verticalSubtract") {
+    const result = visual.a - visual.b;
+    return {
+      en: [`Subtract the ones, borrowing a ten when needed.`, `Then subtract the tens.`, `Answer: ${result}.`],
+      ms: [`Tolak sa dan pinjam satu puluh jika perlu.`, `Kemudian tolak puluh.`, `Jawapan: ${result}.`],
+    };
+  }
   if (visual.kind === "horizontalAdd" || visual.kind === "verticalAdd") {
     const total = visual.a + visual.b;
     const ones = total % 10;
@@ -1318,6 +1331,17 @@ const advancedAdditionPart2Questions: Question[] = [
   q("adv-add-2-choice-9-6", "advanced", { en: "Add in vertical form.", ms: "Tambah dalam bentuk menegak." }, [13, 14, 15, 16], 15, { kind: "verticalAdd", a: 9, b: 6 }),
 ];
 
+const advancedSubtractionQuestions: Question[] = advancedSubtractionQuestionData.map((question): Question => ({
+  id: question.id,
+  area: "advanced",
+  text: question.text,
+  options: question.options,
+  answer: question.answer,
+  visual: { kind: "verticalSubtract", a: question.a, b: question.b, borrowing: question.borrowing },
+  inputMode: question.production ? "borrowSubtract" : "choice",
+  method: question.method,
+}));
+
 function shuffled<T>(items: T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -1554,7 +1578,7 @@ function App() {
           onToggleSound={() => setSoundEnabled((current) => !current)}
           onOpenGlossary={() => setGlossaryOpen(true)}
           onBack={screen === "home" ? undefined : screen === "modeSelect" ? leaveCurrentGame : () => go(
-            screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedSequencing" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2"
+            screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedSequencing" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2" || screen === "advancedSubtraction"
               ? "advancedMenu"
               : screen === "advancedMenu"
                 ? "modeSelect"
@@ -1628,6 +1652,13 @@ function App() {
             lang={lang}
             t={t}
             onDone={() => finishLesson("advancedAdditionPart2", "advancedAdditionPart2")}
+          />
+        )}
+        {!completedLesson && screen === "advancedSubtraction" && (accessPin === "000000" || player?.progress.advancedAdditionPart2) && (
+          <AdvancedSubtractionLesson
+            lang={lang}
+            t={t}
+            onDone={() => finishLesson("advancedSubtraction", "advancedSubtraction")}
           />
         )}
         {!completedLesson && screen === "learnRecognize" && (
@@ -2590,7 +2621,8 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
   const sequencingComplete = Boolean(player.progress.advancedSequencing);
   const part1Complete = Boolean(player.progress.advancedAdditionPart1);
   const part2Complete = Boolean(player.progress.advancedAdditionPart2);
-  const missionStates = [teenComplete, compareComplete, sequencingComplete, part1Complete, part2Complete];
+  const subtractionComplete = Boolean(player.progress.advancedSubtraction);
+  const missionStates = [teenComplete, compareComplete, sequencingComplete, part1Complete, part2Complete, subtractionComplete];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
@@ -2613,7 +2645,7 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
           </div>
           <div className="flex gap-3 sm:flex-col">
             <span className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-4 py-3 text-center font-black text-slate-950 shadow-[0_5px_0_#a16207]">
-              {lang === "en" ? "5 missions" : "5 misi"}
+              {lang === "en" ? "6 missions" : "6 misi"}
             </span>
             <span className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 px-4 py-3 text-center font-black text-cyan-50 shadow-[0_5px_0_#155e75]">
               {lang === "en" ? "Numbers 10-20" : "Nombor 10-20"}
@@ -2626,7 +2658,7 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
         <div className="flex items-center gap-2 sm:gap-4">
           {missionStates.map((complete, index) => (
             <React.Fragment key={index}>
-              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : !testingMode && (index === 1 || (index === 4 && !part1Complete)) ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
+              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : !testingMode && index > 0 && !missionStates[index - 1] ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
                 {index + 1}
                 {complete && <Check className="absolute -right-2 -top-2 h-7 w-7 rounded-full border-2 border-white bg-emerald-500 p-1" strokeWidth={4} aria-hidden="true" />}
               </span>
@@ -2641,6 +2673,7 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
       <AdvancedMissionTile mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} icon="+1 −1" complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
       <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
       <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!testingMode && !part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
+      <AdvancedMissionTile mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} icon="10−" complete={subtractionComplete} locked={!testingMode && !part2Complete} onClick={() => go("advancedSubtraction")} lang={lang} />
     </main>
   );
 }
@@ -2675,7 +2708,7 @@ function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false,
           <span>
             <span className={`block text-3xl font-black leading-tight ${locked ? "text-slate-300" : "text-yellow-200"}`}>{title}</span>
             <span className={`mt-2 block text-lg font-bold ${locked ? "text-slate-400" : "text-cyan-100"}`}>{subtitle}</span>
-            {(locked || complete) && <span className={`mt-4 inline-flex rounded-full border px-4 py-2 text-sm font-black ${complete ? "border-emerald-300 bg-emerald-950 text-emerald-200" : "border-slate-500 bg-slate-950 text-slate-300"}`}>{complete ? (lang === "en" ? "Mission complete" : "Misi selesai") : comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? "Complete Mission 3 to unlock" : "Selesaikan Misi 3 untuk buka")}</span>}
+            {(locked || complete) && <span className={`mt-4 inline-flex rounded-full border px-4 py-2 text-sm font-black ${complete ? "border-emerald-300 bg-emerald-950 text-emerald-200" : "border-slate-500 bg-slate-950 text-slate-300"}`}>{complete ? (lang === "en" ? "Mission complete" : "Misi selesai") : comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? `Complete Mission ${mission - 1} to unlock` : `Selesaikan Misi ${mission - 1} untuk buka`)}</span>}
           </span>
           {locked ? <span className="text-4xl" aria-hidden="true">🔒</span> : <ArrowRight className="hidden h-12 w-12 text-yellow-300 transition group-hover:translate-x-1 sm:block" strokeWidth={3} />}
         </span>
@@ -5896,6 +5929,549 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
       )}
       {phase === 1 && (placeValueBeat === 0 ? <AdvancedPlaceValueMeaningCard lang={lang} /> : <AdvancedSeventeenPlaceValueDemo key={`seventeen-place-value-${lang}`} lang={lang} onComplete={() => setPlaceValueDemoComplete(true)} />)}
       {phase === 2 && <AdvancedPart2WorkedBeat key={`${workedBeat}-${lang}`} beat={workedBeat} lang={lang} onWalkthroughComplete={() => setWalkthroughComplete(true)} />}
+      <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={2} canNext={canNext} nextLabel={phase === 2 && workedBeat < 2 ? t.next : undefined} onPrevious={previous} onNext={next} onPractice={() => setShowPractice(true)} />
+    </LessonShell></div></main>
+  );
+}
+
+type AdvancedSubtractionBeatIndex = 0 | 1 | 2;
+
+function getAdvancedSubtractionBeat(beat: AdvancedSubtractionBeatIndex) {
+  return [
+    { a: 14, b: 5, answer: 9, borrowing: true },
+    { a: 19, b: 15, answer: 4, borrowing: false },
+    { a: 20, b: 10, answer: 10, borrowing: false },
+  ][beat];
+}
+
+function AdvancedSubtractionLooseBananas({ count, countedThrough = 0, counting = false, startLabel = 1, removedThrough = 0, dashed = false, shaking = false, compact = false }: {
+  count: number;
+  countedThrough?: number;
+  counting?: boolean;
+  startLabel?: number;
+  removedThrough?: number;
+  dashed?: boolean;
+  shaking?: boolean;
+  compact?: boolean;
+}) {
+  const rows: number[] = [];
+  let left = count;
+  while (left > 0) {
+    const row = Math.min(5, left);
+    rows.push(row);
+    left -= row;
+  }
+  let runningIndex = 0;
+  return (
+    <div className={`grid justify-items-center gap-4 ${shaking ? "motion-safe:animate-bounce" : ""}`}>
+      {rows.map((rowCount, rowIndex) => {
+        const rowStart = runningIndex;
+        runningIndex += rowCount;
+        return (
+          <div key={rowIndex} className="flex items-center justify-center gap-2 min-[380px]:gap-3">
+            {Array.from({ length: rowCount }, (_, offset) => {
+              const index = rowStart + offset;
+              const removed = index < removedThrough;
+              const counted = index < countedThrough;
+              const active = counting && counted && index === countedThrough - 1;
+              return (
+                <span key={index} className={`relative grid shrink-0 place-items-center rounded-2xl border-2 transition-all ${compact ? "h-14 w-11 min-[380px]:w-12" : "h-16 w-12 min-[380px]:h-20 min-[380px]:w-16"} ${removed ? "pointer-events-none -translate-y-10 translate-x-12 rotate-12 scale-75 opacity-0 duration-700 motion-reduce:duration-75" : "translate-x-0 translate-y-0 opacity-100 duration-300"} ${active ? "z-10 scale-110 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]" : counted ? "border-cyan-300 bg-cyan-950" : dashed ? "border-dashed border-cyan-400 bg-slate-950/70" : "border-cyan-900 bg-slate-900/90 opacity-45 grayscale"}`}>
+                  <SpriteIcon value={BANANA} className={compact ? "h-9 w-9" : "h-11 w-11 min-[380px]:h-12 min-[380px]:w-12"} />
+                  <span className={`absolute -top-3 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black shadow-md ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : dashed ? "border border-cyan-300 bg-slate-950 text-cyan-100" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
+                </span>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AdvancedSubtractionCountableTen({ lang, countedThrough = 0, counting = false, startLabel = 1, dashed = false, removing = false }: {
+  lang: Lang;
+  countedThrough?: number;
+  counting?: boolean;
+  startLabel?: number;
+  dashed?: boolean;
+  removing?: boolean;
+}) {
+  return (
+    <div className={`relative mx-auto w-fit max-w-full transition-all ${removing ? "-translate-y-16 scale-75 opacity-0 duration-700 motion-reduce:duration-75" : "translate-y-0 opacity-100 duration-300"} ${dashed ? "rounded-[2rem] border-2 border-dashed border-cyan-300 p-1" : ""}`}>
+      <AdvancedPart2CountableTen lang={lang} countedThrough={countedThrough} counting={counting} startLabel={startLabel} />
+    </div>
+  );
+}
+
+function AdvancedSubtractionOperandGroup({ value, countedThrough, counting, lang, dashed = false, opened = false, removedLoose = 0, removedTens = 0, shaking = false }: {
+  value: number;
+  countedThrough: number;
+  counting: boolean;
+  lang: Lang;
+  dashed?: boolean;
+  opened?: boolean;
+  removedLoose?: number;
+  removedTens?: number;
+  shaking?: boolean;
+}) {
+  if (opened) return <AdvancedSubtractionLooseBananas count={value} countedThrough={countedThrough} counting={counting} removedThrough={removedLoose} dashed={dashed} shaking={shaking} compact={value > 10} />;
+  const tens = Math.floor(value / 10);
+  const ones = value % 10;
+  return (
+    <div className="flex min-h-44 flex-col items-center justify-center gap-4">
+      {Array.from({ length: tens }, (_, index) => (
+        <AdvancedSubtractionCountableTen key={index} lang={lang} countedThrough={Math.max(0, Math.min(10, countedThrough - (index * 10)))} counting={counting && countedThrough > index * 10 && countedThrough <= (index + 1) * 10} startLabel={(index * 10) + 1} dashed={dashed} removing={index < removedTens} />
+      ))}
+      {ones > 0 && <AdvancedSubtractionLooseBananas count={ones} countedThrough={Math.max(0, countedThrough - (tens * 10))} counting={counting && countedThrough > tens * 10} startLabel={(tens * 10) + 1} removedThrough={removedLoose} dashed={dashed} shaking={shaking} compact={tens > 0} />}
+    </div>
+  );
+}
+
+function AdvancedSubtractionCompactTen({ lang, count = 1 }: { lang: Lang; count?: 1 | 2 }) {
+  return <AdvancedPart2CompactTen lang={lang} count={count} />;
+}
+
+function AdvancedSubtractionWholeTens({ count, countedThrough, counting, lang, dashed = false }: { count: 1 | 2; countedThrough: number; counting: boolean; lang: Lang; dashed?: boolean }) {
+  return (
+    <div className="flex min-h-44 flex-wrap items-center justify-center gap-3">
+      {Array.from({ length: count }, (_, index) => {
+        const counted = index < countedThrough;
+        const active = counting && counted && index === countedThrough - 1;
+        return <div key={index} className={`relative rounded-[2rem] border-2 p-1 transition-all ${active ? "z-10 scale-105 border-yellow-200 ring-4 ring-yellow-300/80 shadow-[0_0_22px_rgba(250,204,21,.6)]" : counted ? "border-cyan-300" : dashed ? "border-dashed border-cyan-400 opacity-55" : "border-cyan-900 opacity-45 grayscale"}`}><AdvancedSubtractionCompactTen lang={lang} /><span className={`absolute -top-3 left-1/2 grid h-8 min-w-8 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{index + 1}</span></div>;
+      })}
+    </div>
+  );
+}
+
+function AdvancedSubtractionPanelAForm({ beat, complete, lang }: { beat: AdvancedSubtractionBeatIndex; complete: boolean; lang: Lang }) {
+  const problem = getAdvancedSubtractionBeat(beat);
+  const aDigits = String(problem.a).padStart(2, "0").split("");
+  const bDigits = String(problem.b).padStart(2, "0").split("");
+  const answerDigits = String(problem.answer).padStart(2, "0").split("");
+  return (
+    <section className="mx-auto w-full max-w-sm rounded-[2rem] border-4 border-cyan-300 bg-slate-950/90 p-4 shadow-[0_7px_0_#164e63] min-[380px]:p-5">
+      <div className="mb-3 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-200 min-[380px]:text-sm">
+        <span className="rounded-full border border-cyan-400 bg-cyan-950 px-2 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
+        <span className="rounded-full border border-cyan-400 bg-cyan-950 px-2 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
+      </div>
+      <div className="relative grid grid-cols-2 text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(problem.answer)}>
+        <span>{aDigits[0]}</span><span>{aDigits[1]}</span>
+        <span className="relative"><span className="absolute -left-1 top-1/2 -translate-x-full -translate-y-1/2 text-cyan-300">−</span>{bDigits[0]}</span><span>{bDigits[1]}</span>
+        <span className="col-span-2 my-3 border-t-4 border-cyan-300" />
+        <span className={`transition-all ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{answerDigits[0]}</span>
+        <span className={`transition-all ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{answerDigits[1]}</span>
+      </div>
+    </section>
+  );
+}
+
+function VerticalSubtractionCard({ a, b, answer, borrowing = false, showBorrow = false, lang }: { a: number; b: number; answer?: number; borrowing?: boolean; showBorrow?: boolean; lang: Lang }) {
+  const aDigits = String(a).padStart(2, "0").split("");
+  const bDigits = String(b).padStart(2, "0").split("");
+  const answerDigits = answer == null ? ["?", "?"] : String(answer).padStart(2, "0").split("");
+  return (
+    <div className="mx-auto w-full max-w-sm rounded-[2rem] border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63] min-[380px]:p-6">
+      <div className="mb-3 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase text-cyan-100 min-[380px]:text-sm"><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span></div>
+      <div className="grid grid-cols-2 gap-3 text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(a)}>
+        <span className="relative rounded-xl border border-cyan-900 py-2">{aDigits[0]}{borrowing && showBorrow && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -rotate-[32deg] bg-red-400" /><span className="absolute -right-1 -top-4 text-xl text-yellow-300">0</span></>}</span>
+        <span className="relative rounded-xl border border-cyan-900 py-2">{borrowing && showBorrow && <span className="absolute -left-1 -top-4 text-xl text-yellow-300">1</span>}{aDigits[1]}</span>
+        <span className="relative rounded-xl border border-cyan-900 py-2"><span className="absolute left-2 text-cyan-300">−</span>{bDigits[0]}</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[1]}</span>
+        <span className="col-span-2 border-t-4 border-cyan-300" />
+        <span>{answerDigits[0]}</span><span>{answerDigits[1]}</span>
+      </div>
+    </div>
+  );
+}
+
+function advancedSubtractionWalkthroughLines(beat: AdvancedSubtractionBeatIndex, lang: Lang) {
+  const lines = beat === 0 ? [
+    ["Let's subtract 5 from 14 the vertical way.", "Jom tolak 5 daripada 14 secara menegak."],
+    ["Look at the ones column. 4 minus 5. We don't have enough!", "Lihat lajur sa. 4 tolak 5. Tak cukup!"],
+    ["We borrow 1 ten. Cross out the 1, write 0. The ones become 14.", "Kita pinjam 1 puluh. Coret 1, tulis 0. Sa jadi 14."],
+    ["Now subtract: 14 minus 5 equals 9.", "Sekarang tolak: 14 tolak 5 sama dengan 9."],
+    ["Write 9 in the ones column.", "Tulis 9 dalam lajur sa."],
+    ["Now the tens column. 0 minus 0.", "Sekarang lajur puluh. 0 tolak 0."],
+    ["That's 0. So the answer is 9.", "Itu 0. Jadi jawapannya 9."],
+    ["14 minus 5 equals 9.", "14 tolak 5 sama dengan 9."],
+  ] : beat === 1 ? [
+    ["Let's subtract 15 from 19 the vertical way.", "Jom tolak 15 daripada 19 secara menegak."],
+    ["Ones column: 9 minus 5.", "Lajur sa: 9 tolak 5."],
+    ["9 minus 5 equals 4. No borrowing needed.", "9 tolak 5 sama dengan 4. Tak perlu pinjam."],
+    ["Tens column: 1 minus 1.", "Lajur puluh: 1 tolak 1."],
+    ["That's 0. So the answer is 4.", "Itu 0. Jadi jawapannya 4."],
+    ["19 minus 15 equals 4.", "19 tolak 15 sama dengan 4."],
+  ] : [
+    ["Let's subtract 10 from 20 the vertical way.", "Jom tolak 10 daripada 20 secara menegak."],
+    ["Ones column: 0 minus 0.", "Lajur sa: 0 tolak 0."],
+    ["That's 0.", "Itu 0."],
+    ["Tens column: 2 minus 1.", "Lajur puluh: 2 tolak 1."],
+    ["That's 1 ten. So the answer is 10.", "Itu 1 puluh. Jadi jawapannya 10."],
+    ["20 minus 10 equals 10.", "20 tolak 10 sama dengan 10."],
+  ];
+  return lines.map((line) => line[lang === "en" ? 0 : 1]);
+}
+
+function AdvancedSubtractionVerticalCard({ beat, step, lang }: { beat: AdvancedSubtractionBeatIndex; step: number; lang: Lang }) {
+  const problem = getAdvancedSubtractionBeat(beat);
+  const aDigits = String(problem.a).padStart(2, "0").split("");
+  const bDigits = String(problem.b).padStart(2, "0").split("");
+  const answerDigits = String(problem.answer).padStart(2, "0").split("");
+  const finalStep = advancedSubtractionWalkthroughLines(beat, lang).length - 1;
+  const onesActive = beat === 0 ? step === 1 || step === 3 || step === 4 : step === 1 || step === 2;
+  const tensActive = beat === 0 ? step === 5 || step === 6 : step === 3 || step === 4;
+  const onesVisible = beat === 0 ? step >= 4 : step >= 2;
+  const tensVisible = beat === 0 ? step >= 6 : step >= 4;
+  const borrowed = beat === 0 && step >= 2;
+  const finalGlow = step === finalStep;
+  const digitClass = (active: boolean) => `relative grid h-16 min-w-0 place-items-center rounded-2xl border-2 text-4xl font-black transition-all duration-500 min-[380px]:h-20 min-[380px]:text-5xl ${active || finalGlow ? "scale-105 border-yellow-200 bg-yellow-300/15 text-yellow-100 ring-2 ring-yellow-300/80 shadow-[0_0_22px_rgba(250,204,21,.55)]" : "border-cyan-800 bg-cyan-950/60 text-yellow-200"}`;
+  return (
+    <div className="relative mx-auto w-full max-w-lg rounded-[2rem] border-4 border-cyan-300 bg-slate-950/95 p-4 shadow-[0_8px_0_#164e63] min-[380px]:p-6 sm:p-8">
+      <div className="mb-4 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-100 min-[380px]:text-sm">
+        <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
+        <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 text-center" style={getNumberTextStyle(problem.answer)}>
+        <span className={digitClass(borrowed || tensActive)}>
+          {aDigits[0]}
+          {borrowed && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -translate-y-1/2 -rotate-[32deg] rounded bg-red-400" aria-hidden="true" /><span className="absolute -right-1 -top-4 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 text-lg text-slate-950">0</span></>}
+        </span>
+        <span className={digitClass(onesActive || borrowed)}>{borrowed && <span className="absolute -left-1 -top-4 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 text-lg text-slate-950">1</span>}{aDigits[1]}</span>
+        <span className={digitClass(tensActive)}><span className="absolute left-2 text-cyan-300 min-[380px]:left-4">−</span>{bDigits[0]}</span>
+        <span className={digitClass(onesActive)}>{bDigits[1]}</span>
+        <span className="col-span-2 my-2 border-t-4 border-cyan-300" />
+        <span className={`${digitClass(tensVisible)} ${tensVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
+        <span className={`${digitClass(onesVisible)} ${onesVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[1]}</span>
+      </div>
+    </div>
+  );
+}
+
+function AdvancedSubtractionMethodPanel({ beat, lang, onComplete }: { beat: AdvancedSubtractionBeatIndex; lang: Lang; onComplete: () => void }) {
+  const lines = useMemo(() => advancedSubtractionWalkthroughLines(beat, lang), [beat, lang]);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [step, setStep] = useState(0);
+  const [showNextStep, setShowNextStep] = useState(false);
+  const completedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  const finalStep = lines.length - 1;
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => {
+    setShowNextStep(false);
+    speakText(lines[step], lang, { allowWhenWordAudioDisabled: true });
+    const revealTimer = step < finalStep ? window.setTimeout(() => setShowNextStep(true), prefersReducedMotion ? 250 : 1500) : null;
+    const dwell = prefersReducedMotion ? 450 : beat === 0 && step === 2 ? 3000 : step === 0 ? 1500 : step === finalStep ? 1000 : 2500;
+    const advanceTimer = window.setTimeout(() => {
+      if (step < finalStep) setStep((value) => value + 1);
+      else if (!completedRef.current) { completedRef.current = true; onCompleteRef.current(); }
+    }, dwell);
+    return () => { if (revealTimer) window.clearTimeout(revealTimer); window.clearTimeout(advanceTimer); };
+  }, [beat, finalStep, lang, lines, prefersReducedMotion, step]);
+  return (
+    <section className="slide-in-up rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-cyan-950 p-4 shadow-[0_6px_0_#164e63] sm:p-6">
+      <p className="mb-5 text-center text-sm font-black uppercase tracking-[.2em] text-cyan-300">{lang === "en" ? "Vertical subtraction method" : "Kaedah tolak menegak"}</p>
+      <AdvancedSubtractionVerticalCard beat={beat} step={step} lang={lang} />
+      <p className={`mx-auto mt-5 min-h-20 max-w-3xl rounded-2xl border-2 px-4 py-4 text-center text-lg font-black transition-all min-[380px]:text-xl ${step === finalStep ? "border-yellow-300 bg-yellow-300/15 text-yellow-100 shadow-[0_0_24px_rgba(250,204,21,.35)]" : "border-cyan-700 bg-slate-950/70 text-cyan-50"}`} aria-live="polite">{lines[step]}</p>
+      {showNextStep && step < finalStep && <button type="button" onClick={() => setStep((value) => Math.min(finalStep, value + 1))} className="mx-auto mt-4 flex rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-6 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] active:translate-y-1">{lang === "en" ? "Next step" : "Langkah seterusnya"}</button>}
+    </section>
+  );
+}
+
+function advancedSubtractionSummary(beat: AdvancedSubtractionBeatIndex, lang: Lang) {
+  if (beat === 0) return lang === "en" ? "14 take away 5 equals 9." : "14 tolak 5 sama dengan 9.";
+  if (beat === 1) return lang === "en" ? "19 take away 15 equals 4. No borrowing needed." : "19 tolak 15 sama dengan 4. Tak perlu buka bakul.";
+  return lang === "en" ? "2 tens take away 1 ten equals 1 ten. That's 10." : "2 puluh tolak 1 puluh sama dengan 1 puluh. Itu 10.";
+}
+
+function AdvancedSubtractionWorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: AdvancedSubtractionBeatIndex; lang: Lang; onWalkthroughComplete: () => void }) {
+  const problem = getAdvancedSubtractionBeat(beat);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [panel, setPanel] = useState<"A" | "B">("A");
+  const [panelLeaving, setPanelLeaving] = useState(false);
+  const [topCounted, setTopCounted] = useState(0);
+  const [bottomCounted, setBottomCounted] = useState(0);
+  const [countingGroup, setCountingGroup] = useState<"top" | "bottom" | "remove" | "remaining" | null>(null);
+  const [insufficient, setInsufficient] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const [removedLoose, setRemovedLoose] = useState(0);
+  const [removedTens, setRemovedTens] = useState(0);
+  const [removalDone, setRemovalDone] = useState(false);
+  const [remainingCounted, setRemainingCounted] = useState(0);
+  const [showUnderstand, setShowUnderstand] = useState(false);
+  const [panelAComplete, setPanelAComplete] = useState(false);
+  const busy = countingGroup !== null || opening;
+
+  useEffect(() => () => stopNumberAudio(), []);
+
+  const countSequence = async (count: number, update: (value: number) => void, group: "top" | "bottom" | "remove" | "remaining") => {
+    if (busy) return;
+    setCountingGroup(group);
+    update(0);
+    let progressed = false;
+    await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => { progressed = true; update(value); });
+    if (!progressed) update(count);
+    setCountingGroup(null);
+  };
+
+  const countOperand = async (side: "top" | "bottom") => {
+    const value = side === "top" ? problem.a : problem.b;
+    const update = side === "top" ? setTopCounted : setBottomCounted;
+    if (beat === 2) {
+      if (busy) return;
+      setCountingGroup(side);
+      let progressed = false;
+      await speakCountingSequence(value / 10, lang, COUNTING_STEP_MS, (tens) => { progressed = true; update(tens * 10); });
+      if (!progressed) update(value);
+      setCountingGroup(null);
+      await speakNumber(value, lang);
+      return;
+    }
+    await countSequence(value, update, side);
+  };
+
+  const tryTakeAway = async () => {
+    if (busy || topCounted !== problem.a || bottomCounted !== problem.b) return;
+    if (beat === 0 && !opened) { setInsufficient(true); return; }
+    setInsufficient(false);
+    setCountingGroup("remove");
+    if (beat > 0) {
+      setRemovedTens(1);
+      await wait(prefersReducedMotion ? 80 : 700);
+    }
+    const looseToRemove = beat === 0 ? 5 : beat === 1 ? 5 : 0;
+    if (looseToRemove > 0) {
+      let progressed = false;
+      await speakCountingSequence(looseToRemove, lang, COUNTING_STEP_MS, (value) => { progressed = true; setRemovedLoose(value); });
+      if (!progressed) setRemovedLoose(looseToRemove);
+    }
+    setCountingGroup(null);
+    setRemovalDone(true);
+  };
+
+  const openTen = async () => {
+    if (busy || opened) return;
+    setOpening(true);
+    await wait(prefersReducedMotion ? 100 : 900);
+    setOpened(true);
+    setOpening(false);
+    setInsufficient(false);
+  };
+
+  const countRemaining = async () => {
+    if (beat === 2) {
+      if (busy) return;
+      setCountingGroup("remaining");
+      let progressed = false;
+      await speakCountingSequence(1, lang, COUNTING_STEP_MS, () => { progressed = true; setRemainingCounted(10); });
+      if (!progressed) setRemainingCounted(10);
+      setCountingGroup(null);
+      await speakNumber(10, lang);
+      setPanelAComplete(true);
+      return;
+    }
+    await countSequence(problem.answer, setRemainingCounted, "remaining");
+    setShowUnderstand(true);
+  };
+
+  const resetPanelA = () => {
+    stopNumberAudio();
+    setTopCounted(0); setBottomCounted(0); setCountingGroup(null); setInsufficient(false);
+    setOpening(false); setOpened(false); setRemovedLoose(0); setRemovedTens(0); setRemovalDone(false);
+    setRemainingCounted(0); setShowUnderstand(false); setPanelAComplete(false);
+  };
+
+  const openMethod = async () => {
+    if (panelLeaving) return;
+    setPanelLeaving(true);
+    await wait(prefersReducedMotion ? 40 : 300);
+    setPanel("B");
+  };
+
+  if (panel === "B") return <AdvancedSubtractionMethodPanel beat={beat} lang={lang} onComplete={onWalkthroughComplete} />;
+
+  const readyToRemove = topCounted === problem.a && bottomCounted === problem.b;
+  const remainingVisual = beat === 2
+    ? <AdvancedSubtractionWholeTens count={1} countedThrough={remainingCounted === 10 ? 1 : 0} counting={countingGroup === "remaining"} lang={lang} />
+    : <AdvancedSubtractionLooseBananas count={problem.answer} countedThrough={remainingCounted} counting={countingGroup === "remaining"} />;
+
+  return (
+    <section className={`space-y-6 rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 shadow-[inset_0_0_32px_rgba(34,211,238,.10)] transition-all duration-300 sm:p-6 ${panelLeaving ? "scale-[.99] opacity-0" : "scale-100 opacity-100"}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="rounded-full border border-cyan-400 bg-cyan-950 px-4 py-2 text-sm font-black uppercase tracking-wider text-cyan-100">{lang === "en" ? `Example ${beat + 1} of 3` : `Contoh ${beat + 1} daripada 3`}</p>
+        <p className="text-3xl font-black text-yellow-200" style={getNumberTextStyle(problem.answer)}>{problem.a} − {problem.b}</p>
+      </div>
+
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(15rem,.72fr)_minmax(0,1.28fr)]">
+        <AdvancedSubtractionPanelAForm beat={beat} complete={panelAComplete} lang={lang} />
+        {!removalDone ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(["top", "bottom"] as const).map((side) => {
+              const value = side === "top" ? problem.a : problem.b;
+              const counted = side === "top" ? topCounted : bottomCounted;
+              const done = counted === value;
+              return (
+                <div key={side} className={`rounded-[1.75rem] border-2 p-3 shadow-[0_5px_0_#164e63] sm:p-4 ${side === "bottom" ? "border-dashed border-cyan-300 bg-cyan-950/35" : "border-cyan-400 bg-slate-950/85"}`}>
+                  <p className="mb-3 text-center text-lg font-black text-cyan-100">{side === "top" ? (lang === "en" ? `Start with ${value}` : `Mula dengan ${value}`) : (lang === "en" ? `Take away ${value}` : `Buang ${value}`)}</p>
+                  {beat === 2 ? <AdvancedSubtractionWholeTens count={(value / 10) as 1 | 2} countedThrough={counted / 10} counting={countingGroup === side} lang={lang} dashed={side === "bottom"} /> : <AdvancedSubtractionOperandGroup value={value} countedThrough={counted} counting={countingGroup === side} lang={lang} dashed={side === "bottom"} opened={side === "top" && beat === 0 && opened} removedLoose={side === "top" ? removedLoose : 0} removedTens={side === "top" ? removedTens : 0} shaking={side === "top" && insufficient} />}
+                  <button type="button" disabled={busy || done} onClick={() => void countOperand(side)} className={`mx-auto mt-4 flex min-h-12 items-center rounded-2xl border-2 px-5 py-2 font-black shadow-[0_4px_0_#164e63] active:translate-y-1 disabled:opacity-70 ${done ? "border-emerald-300 bg-emerald-900 text-emerald-100" : "border-cyan-300 bg-cyan-950 text-cyan-100"}`}>{done ? (lang === "en" ? "Counted ✓" : "Sudah dikira ✓") : countingGroup === side ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count" : "Kira")}</button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-[2rem] border-2 border-emerald-300 bg-slate-950/85 p-5 text-center shadow-[0_5px_0_#065f46]">
+            <p className="mb-5 text-xl font-black text-emerald-100">{lang === "en" ? `${problem.answer} remain` : `Tinggal ${problem.answer}`}</p>
+            {remainingVisual}
+            {remainingCounted !== problem.answer && <button type="button" disabled={busy} onClick={() => void countRemaining()} className="mx-auto mt-5 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] active:translate-y-1 disabled:opacity-60">{countingGroup === "remaining" ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count what is left" : "Kira yang tinggal")}</button>}
+          </div>
+        )}
+      </div>
+
+      {!removalDone && !insufficient && !(beat === 0 && opened) && <button type="button" disabled={busy || !readyToRemove} onClick={() => void tryTakeAway()} className="mx-auto flex min-h-14 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-3 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-35">{countingGroup === "remove" ? (lang === "en" ? "Taking away..." : "Sedang membuang...") : (lang === "en" ? "Take away" : "Buang")}</button>}
+
+      {insufficient && !opened && <div className="rounded-3xl border-2 border-yellow-300 bg-amber-950/70 p-5 text-center"><p className="text-xl font-black text-yellow-100">{lang === "en" ? "We only have 4 ones. We need 1 more to take away 5. Not enough!" : "Kita cuma ada 4 sa. Kita perlukan 1 lagi untuk tolak 5. Tak cukup!"}</p><button type="button" disabled={opening} onClick={() => void openTen()} className="mx-auto mt-4 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] active:translate-y-1 disabled:opacity-60">{opening ? (lang === "en" ? "Opening..." : "Membuka...") : (lang === "en" ? "Open the ten-basket" : "Buka bakul puluh")}</button></div>}
+      {beat === 0 && opened && !removalDone && <div className="rounded-3xl border-2 border-emerald-300 bg-emerald-950/70 p-4 text-center"><p className="text-xl font-black text-emerald-100">{lang === "en" ? "Now we have 14 ones. Let's take away 5." : "Sekarang kita ada 14 sa. Jom tolak 5."}</p><button type="button" disabled={busy} onClick={() => void tryTakeAway()} className="mx-auto mt-4 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] active:translate-y-1 disabled:opacity-60">{lang === "en" ? "Take away" : "Buang"}</button></div>}
+
+      {showUnderstand && !panelAComplete && <div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => { setShowUnderstand(false); setPanelAComplete(true); }} className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-6 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] active:translate-y-1">{lang === "en" ? "I understand" : "Saya faham"}</button><button type="button" onClick={resetPanelA} className="rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-6 py-3 font-black text-cyan-100 shadow-[0_5px_0_#164e63] active:translate-y-1">{lang === "en" ? "Please repeat" : "Ulang semula"}</button></div>}
+
+      {panelAComplete && <div className="slide-in-up rounded-3xl border-2 border-emerald-300 bg-emerald-950/75 p-5 text-center shadow-[0_5px_0_#065f46]"><p className="text-2xl font-black text-emerald-100">{advancedSubtractionSummary(beat, lang)}</p><button type="button" disabled={panelLeaving} onClick={() => void openMethod()} className="mx-auto mt-5 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-60">{lang === "en" ? "See the vertical subtraction method" : "Lihat kaedah tolak menegak"}</button></div>}
+    </section>
+  );
+}
+
+function AdvancedSubtractionConcreteAnchor({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [removed, setRemoved] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const finished = removed === 3;
+  useEffect(() => () => stopNumberAudio(), []);
+  const removeOne = async () => {
+    if (busy || finished) return;
+    setBusy(true);
+    const next = removed + 1;
+    let progressed = false;
+    await speakCountingSequence(next, lang, COUNTING_STEP_MS, (value) => { progressed = true; setRemoved(value); }, undefined, next);
+    if (!progressed) setRemoved(next);
+    await wait(prefersReducedMotion ? 60 : 600);
+    setBusy(false);
+    if (next === 3) onComplete();
+  };
+  return (
+    <section className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 text-center shadow-[inset_0_0_28px_rgba(34,211,238,.12)] sm:p-6">
+      <p className="text-xl font-black text-cyan-50">{lang === "en" ? "Chrys has 15 bananas. Chrys gives 3 away." : "Chrys ada 15 pisang. Chrys beri 3."}</p>
+      <div className="mx-auto mt-6 max-w-4xl rounded-[2rem] border-2 border-cyan-400 bg-slate-950/80 px-3 py-8 sm:px-6">
+        <AdvancedSubtractionLooseBananas count={15} countedThrough={15} removedThrough={removed} compact />
+      </div>
+      <div className="mx-auto mt-5 grid max-w-xl gap-3 min-[380px]:grid-cols-2">
+        <div className="rounded-2xl border-2 border-red-300 bg-red-950/70 px-4 py-3"><p className="text-sm font-black uppercase text-red-200">{lang === "en" ? "Removed" : "Dibuang"}</p><p className="text-4xl font-black text-white">{removed} / 3</p></div>
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-950/70 px-4 py-3"><p className="text-sm font-black uppercase text-emerald-200">{lang === "en" ? "Bananas remaining" : "Pisang tinggal"}</p><p className="text-4xl font-black text-white">{15 - removed}</p></div>
+      </div>
+      {!finished ? <button type="button" disabled={busy} onClick={() => void removeOne()} className="relative mx-auto mt-5 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1 disabled:opacity-60">{busy ? (lang === "en" ? "Taking away..." : "Sedang membuang...") : (lang === "en" ? "Take away a banana" : "Buang satu pisang")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button> : <div className="slide-in-up mt-6 rounded-3xl border-2 border-emerald-300 bg-emerald-950/75 p-5"><p className="text-4xl font-black text-yellow-200">15 − 3 = 12</p><p className="mt-2 text-xl font-black text-emerald-100">{lang === "en" ? "15 take away 3 equals 12." : "15 tolak 3 sama dengan 12."}</p></div>}
+    </section>
+  );
+}
+
+function AdvancedSubtractionBorrowingIntro({ lang }: { lang: Lang }) {
+  return (
+    <section className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 shadow-[inset_0_0_28px_rgba(34,211,238,.12)] sm:p-7">
+      <div className="mx-auto grid max-w-4xl items-center gap-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,.8fr)]">
+        <div className="relative mx-auto"><TenBananaBundle lang={lang} compact /></div>
+        <span className="text-center text-5xl font-black text-cyan-300">+</span>
+        <div className="relative rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-5"><AdvancedSubtractionLooseBananas count={4} countedThrough={4} /><span className="absolute -right-3 -top-4 grid h-12 w-12 place-items-center rounded-full border-4 border-yellow-200 bg-yellow-400 text-3xl font-black text-slate-950 shadow-[0_0_20px_rgba(250,204,21,.55)]">?</span></div>
+      </div>
+      <p className="mx-auto mt-6 max-w-3xl rounded-2xl border border-cyan-500 bg-cyan-950/60 px-5 py-4 text-center text-xl font-black text-cyan-50">{lang === "en" ? "If the ones are not enough, this ten-basket can open into 10 ones." : "Jika sa tidak cukup, bakul puluh ini boleh dibuka menjadi 10 sa."}</p>
+    </section>
+  );
+}
+
+function AdvancedSubtractionProductionPractice({ a, b, lang, onSolved }: { a: number; b: number; lang: Lang; onSolved: () => void }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const answer = a - b;
+  const [topCounted, setTopCounted] = useState(0);
+  const [bottomCounted, setBottomCounted] = useState(0);
+  const [counting, setCounting] = useState<"top" | "bottom" | "remove" | "remaining" | null>(null);
+  const [opened, setOpened] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [removed, setRemoved] = useState(0);
+  const [remainingCounted, setRemainingCounted] = useState(0);
+  const removalDone = removed === b;
+  useEffect(() => () => stopNumberAudio(), []);
+  const countGroup = async (side: "top" | "bottom") => {
+    if (counting || opening) return;
+    const count = side === "top" ? a : b;
+    const update = side === "top" ? setTopCounted : setBottomCounted;
+    setCounting(side); update(0); let progressed = false;
+    await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => { progressed = true; update(value); });
+    if (!progressed) update(count);
+    setCounting(null);
+  };
+  const openBasket = async () => {
+    if (opening || counting) return;
+    setOpening(true); await wait(prefersReducedMotion ? 100 : 900); setOpened(true); setOpening(false);
+  };
+  const remove = async () => {
+    if (counting || !opened) return;
+    setCounting("remove"); let progressed = false;
+    await speakCountingSequence(b, lang, COUNTING_STEP_MS, (value) => { progressed = true; setRemoved(value); });
+    if (!progressed) setRemoved(b);
+    setCounting(null);
+  };
+  const countRemaining = async () => {
+    if (counting || !removalDone) return;
+    setCounting("remaining"); setRemainingCounted(0); let progressed = false;
+    await speakCountingSequence(answer, lang, COUNTING_STEP_MS, (value) => { progressed = true; setRemainingCounted(value); });
+    if (!progressed) setRemainingCounted(answer);
+    setCounting(null); onSolved();
+  };
+  const ready = topCounted === a && bottomCounted === b;
+  return (
+    <section className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 text-center sm:p-5">
+      <VerticalSubtractionCard a={a} b={b} borrowing lang={lang} />
+      {!removalDone ? <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        {(["top", "bottom"] as const).map((side) => { const value = side === "top" ? a : b; const counted = side === "top" ? topCounted : bottomCounted; return <div key={side} className={`rounded-3xl border-2 p-4 ${side === "bottom" ? "border-dashed border-cyan-300 bg-cyan-950/40" : "border-cyan-400 bg-slate-950/80"}`}><AdvancedSubtractionOperandGroup value={value} countedThrough={counted} counting={counting === side} lang={lang} dashed={side === "bottom"} opened={side === "top" && opened} removedLoose={side === "top" ? removed : 0} /><button type="button" disabled={Boolean(counting) || opening || counted === value} onClick={() => void countGroup(side)} className="mx-auto mt-4 rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-5 py-2 font-black text-cyan-100 shadow-[0_4px_0_#164e63] disabled:opacity-55">{counted === value ? (lang === "en" ? "Counted ✓" : "Sudah dikira ✓") : counting === side ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count" : "Kira")}</button></div>; })}
+      </div> : <div className="mx-auto mt-5 max-w-2xl rounded-3xl border-2 border-emerald-300 bg-slate-950/80 p-5"><AdvancedSubtractionLooseBananas count={answer} countedThrough={remainingCounted} counting={counting === "remaining"} /><button type="button" disabled={Boolean(counting)} onClick={() => void countRemaining()} className="mx-auto mt-5 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-6 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-55">{counting === "remaining" ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count what is left" : "Kira yang tinggal")}</button></div>}
+      {ready && !opened && <button type="button" disabled={opening} onClick={() => void openBasket()} className="mx-auto mt-5 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-55">{opening ? (lang === "en" ? "Opening..." : "Membuka...") : (lang === "en" ? "Open the ten-basket" : "Buka bakul puluh")}</button>}
+      {ready && opened && !removalDone && <button type="button" disabled={Boolean(counting)} onClick={() => void remove()} className="mx-auto mt-5 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] disabled:opacity-55">{counting === "remove" ? (lang === "en" ? "Taking away..." : "Sedang membuang...") : (lang === "en" ? "Take away" : "Buang")}</button>}
+    </section>
+  );
+}
+
+function AdvancedSubtractionLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
+  const [phase, setPhase] = useState(0);
+  const [showPractice, setShowPractice] = useState(false);
+  const [anchorComplete, setAnchorComplete] = useState(false);
+  const [workedBeat, setWorkedBeat] = useState<AdvancedSubtractionBeatIndex>(0);
+  const [walkthroughComplete, setWalkthroughComplete] = useState(false);
+  if (showPractice) return <Quiz lang={lang} t={t} title={lang === "en" ? "Cyber Mission 6: Subtraction Practice" : "Misi Siber 6: Latihan Tolak"} questions={advancedSubtractionQuestions} randomize={false} variant="cyber" onBackToLearning={() => { setShowPractice(false); setPhase(2); setWorkedBeat(2); setWalkthroughComplete(false); }} onFinish={() => onDone()} />;
+  const phaseCopy = [
+    { title: lang === "en" ? "Take away bigger numbers" : "Tolak nombor lebih besar", text: lang === "en" ? "It works just like before — just with more bananas." : "Caranya sama macam dulu — cuma pisang lebih banyak." },
+    { title: lang === "en" ? "Meet borrowing" : "Kenal pinjam", text: lang === "en" ? "Sometimes the ones don't have enough to take away. We can open a ten-basket to get more ones." : "Kadang-kadang sa tak cukup untuk ditolak. Kita boleh buka bakul puluh untuk dapat lebih sa." },
+    { title: lang === "en" ? "Vertical subtraction" : "Tolak menegak", text: lang === "en" ? "Count each group, take away, then see how we write it vertically." : "Kira setiap kumpulan, tolak, kemudian lihat cara kita tulis secara menegak." },
+  ];
+  const canNext = phase === 0 ? anchorComplete : phase === 1 || walkthroughComplete;
+  const previous = () => {
+    stopNumberAudio();
+    if (phase === 0) return;
+    if (phase === 1) { setAnchorComplete(false); setPhase(0); return; }
+    setWalkthroughComplete(false);
+    if (workedBeat > 0) setWorkedBeat((workedBeat - 1) as AdvancedSubtractionBeatIndex);
+    else setPhase(1);
+  };
+  const next = () => {
+    stopNumberAudio();
+    if (phase === 0 && anchorComplete) { setPhase(1); return; }
+    if (phase === 1) { setPhase(2); setWorkedBeat(0); setWalkthroughComplete(false); return; }
+    if (!walkthroughComplete) return;
+    if (workedBeat < 2) { setWorkedBeat((workedBeat + 1) as AdvancedSubtractionBeatIndex); setWalkthroughComplete(false); }
+    else setShowPractice(true);
+  };
+  return (
+    <main className="mx-auto w-full max-w-6xl pb-8"><div className="rounded-[2.25rem] border-4 border-cyan-300 bg-slate-950 p-2 shadow-[0_10px_0_#083344] sm:p-3"><LessonShell lang={lang} title={t.advancedSubtraction} helper={lang === "en" ? "Cyber Mission 6 - Take away tens and ones up to 20." : "Misi Siber 6 - Tolak puluh dan sa hingga 20."} variant="cyber">
+      <div className="mb-5 grid grid-cols-3 gap-2">{Array.from({ length: 3 }, (_, index) => <span key={index} className={`h-3 rounded-full border ${index <= phase ? "border-yellow-200 bg-yellow-400" : "border-slate-600 bg-slate-700"}`} />)}</div>
+      <CyberTeachingCard eyebrow={lang === "en" ? "Cyber Mission 6" : "Misi Siber 6"} title={phaseCopy[phase].title} text={phaseCopy[phase].text} />
+      {phase === 0 && <AdvancedSubtractionConcreteAnchor key={`sub-anchor-${lang}`} lang={lang} onComplete={() => setAnchorComplete(true)} />}
+      {phase === 1 && <AdvancedSubtractionBorrowingIntro lang={lang} />}
+      {phase === 2 && <AdvancedSubtractionWorkedBeat key={`${workedBeat}-${lang}`} beat={workedBeat} lang={lang} onWalkthroughComplete={() => setWalkthroughComplete(true)} />}
       <AdvancedLessonNavigation lang={lang} t={t} phase={phase} lastPhase={2} canNext={canNext} nextLabel={phase === 2 && workedBeat < 2 ? t.next : undefined} onPrevious={previous} onNext={next} onPractice={() => setShowPractice(true)} />
     </LessonShell></div></main>
   );
@@ -12080,7 +12656,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
     ((qn.visual.kind === "add" || qn.visual.kind === "subtract") && qn.visual.display === "none");
   const isAnimatedCupQuestion = qn.id === "rt-sub-cups-5-5";
   const answersLockedForAnimation = isAnimatedCupQuestion && !cupAnimationComplete;
-  const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen" || qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild";
+  const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen" || qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild" || qn.inputMode === "borrowSubtract";
   const showGuidedAdditionLabels = qn.visual.kind === "add" && qn.visual.showLabels === true;
   const showGuidedSubtractionLabels = qn.visual.kind === "subtract" && qn.visual.showLabels === true;
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
@@ -12245,7 +12821,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
             />
           ) : qn.inputMode && qn.inputMode !== "choice" ? (
             <ActiveAnswerPanel
-              key={`${qn.id}-${qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild" ? "production" : answered ? "answered" : "open"}`}
+              key={`${qn.id}-${qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild" || qn.inputMode === "borrowSubtract" ? "production" : answered ? "answered" : "open"}`}
               question={qn}
               lang={lang}
               answered={answered}
@@ -12506,6 +13082,14 @@ function ActiveAnswerPanel({
     return (
       <div className={cyber ? "rounded-[2rem] border-2 border-cyan-400 bg-slate-950/70 p-2" : ""}>
         <CarryInteraction a={question.visual.a} b={question.visual.b} lang={lang} onSolved={() => onAnswer(answer)} />
+      </div>
+    );
+  }
+
+  if (question.inputMode === "borrowSubtract" && question.visual.kind === "verticalSubtract") {
+    return (
+      <div className={cyber ? "rounded-[2rem] border-2 border-cyan-400 bg-slate-950/70 p-2" : ""}>
+        <AdvancedSubtractionProductionPractice a={question.visual.a} b={question.visual.b} lang={lang} onSolved={() => onAnswer(answer)} />
       </div>
     );
   }
@@ -14736,6 +15320,9 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   if (visual.kind === "verticalAdd") {
     return <VerticalAdditionCard a={visual.a} b={visual.b} lang={lang} />;
   }
+  if (visual.kind === "verticalSubtract") {
+    return <VerticalSubtractionCard a={visual.a} b={visual.b} borrowing={visual.borrowing} lang={lang} />;
+  }
   if (visual.kind === "teenBundle") {
     return (
       <div className="space-y-4">
@@ -14953,6 +15540,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     !isAdvancedAdditionPart1 &&
     (
       solutionVisual.kind === "verticalAdd" ||
+      solutionVisual.kind === "verticalSubtract" ||
       solutionVisual.kind === "horizontalAdd" ||
       (solutionVisual.kind === "count" && solutionVisual.count === 0 && (solutionVisual.emoji ?? BANANA) === BANANA)
     );
@@ -15111,6 +15699,9 @@ function SequentialCountResult({ count, emoji, lang, cyber = false }: { count: n
 }
 
 function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang: Lang; cyber?: boolean }) {
+  if (visual.kind === "verticalSubtract") {
+    return <VerticalSubtractionCard a={visual.a} b={visual.b} answer={visual.a - visual.b} borrowing={visual.borrowing} showBorrow={visual.borrowing} lang={lang} />;
+  }
   if (visual.kind === "teenBundle") {
     return <VisualDisplay visual={visual} lang={lang} revealNumbers cyber={cyber} />;
   }
