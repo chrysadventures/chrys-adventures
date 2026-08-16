@@ -3475,12 +3475,13 @@ function balancedIndexRows(count: number, maxPerRow: number) {
 
 function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA, largeObjects = false, spacious = false, rowPattern, visibleThrough = count, hiddenIndex = null }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string; largeObjects?: boolean; spacious?: boolean; rowPattern?: number[]; visibleThrough?: number; hiddenIndex?: number | null }) {
   const isCookie = emoji === String.fromCodePoint(0x1f36a);
+  const useSafeObjectSpacing = spacious || isCookie;
   const tileSizeClass = largeObjects ? "h-11 w-10 sm:h-16 sm:w-14 sm:rounded-2xl" : "h-10 w-9 sm:h-14 sm:w-12 sm:rounded-2xl";
   const objectSizeClass = isCookie
     ? largeObjects ? "h-10 w-10 sm:h-14 sm:w-14" : "h-9 w-9 sm:h-12 sm:w-12"
     : largeObjects ? "h-9 w-9 sm:h-12 sm:w-12" : "h-8 w-8 sm:h-11 sm:w-11";
   const renderBananas = (start: number, amount: number) => (
-    <div className={`flex items-center justify-center ${spacious ? "gap-2.5 sm:gap-3" : "gap-1 sm:gap-1.5"}`}>
+    <div className={`flex items-center justify-center ${useSafeObjectSpacing ? "gap-2.5 sm:gap-3" : "gap-1 sm:gap-1.5"}`}>
       {Array.from({ length: amount }, (_, offset) => {
         const index = start + offset;
         const visible = index < visibleThrough && index !== hiddenIndex;
@@ -3528,11 +3529,11 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
   }, { rows: [], start: 0 }).rows;
 
   return (
-    <div className={compact ? "w-fit max-w-full shrink-0 px-2" : "w-full min-w-0 px-2 sm:px-3"} aria-label={label}>
-      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > maxObjectsPerRow ? `flex-col ${spacious ? "gap-4" : "gap-2"}` : ""}`}>
+    <div className={`${compact ? "w-fit max-w-full shrink-0" : "w-full min-w-0"} px-2 py-2 sm:px-3 sm:py-3`} aria-label={label}>
+      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > maxObjectsPerRow ? `flex-col ${useSafeObjectSpacing ? "gap-4" : "gap-2"}` : ""}`}>
         {customRows ?? (splitOnDesktop ? splitRows : desktopRows)}
       </div>
-      <div className={`flex min-h-14 flex-col items-center justify-center sm:hidden ${spacious ? "gap-4" : "gap-2"}`}>
+      <div className={`flex min-h-14 flex-col items-center justify-center sm:hidden ${useSafeObjectSpacing ? "gap-4" : "gap-2"}`}>
         {customRows ?? (splitOnDesktop ? splitRows : mobileRows)}
       </div>
     </div>
@@ -3856,7 +3857,7 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
   const secondVisible = stage !== "countFirst";
   const secondFinished = !["countFirst", "countSecond"].includes(stage);
   const showJoinArea = ["readyJoin", "joining", "countTotal", "done"].includes(stage);
-  const joined = stage === "countTotal" || stage === "done";
+  const showingCombinedBox = ["joining", "countTotal", "done"].includes(stage);
 
   return (
     <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 sm:p-7">
@@ -3880,10 +3881,17 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
       {showJoinArea && (
         <div className="mt-7 border-t-2 border-cyan-700 pt-6">
           <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
-          {!joined && (
-            stage === "joining" ? (
-              <div className="comparison-result-reveal mx-auto max-w-5xl rounded-[1.75rem] border-2 border-yellow-300 bg-slate-950/90 p-6 shadow-[0_0_28px_rgba(250,204,21,.16)]">
-                <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
+          {stage === "readyJoin" && (
+            <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
+              <div className={`${trayClass} border-cyan-400`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} /></div>
+              <div className={`${trayClass} border-emerald-300`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} /></div>
+            </div>
+          )}
+          {stage === "readyJoin" && <button type="button" onClick={() => void joinTrays()} className="relative mx-auto mt-5 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Join the two trays" : "Gabungkan dua dulang"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
+          {showingCombinedBox && (
+            <div ref={combinedRef} className="comparison-result-reveal mx-auto max-w-5xl rounded-[1.75rem] border-2 border-yellow-300 bg-slate-950/90 p-6 shadow-[0_0_28px_rgba(250,204,21,.16)]">
+              <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
+              {stage === "joining" ? (
                 <div className="mx-auto flex max-w-4xl items-stretch justify-center overflow-hidden px-2">
                   <div className="cookie-group-join-left flex min-w-0 flex-1 items-center rounded-l-[1.5rem] border-2 border-r-0 border-cyan-400 bg-cyan-950/65 p-4">
                     <AdvancedBananaRow count={8} countedThrough={8} showCountLabels splitOnDesktop emoji={cookie} />
@@ -3892,21 +3900,12 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
                     <AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} />
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
-                <div className={`${trayClass} border-cyan-400`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} /></div>
-                <div className={`${trayClass} border-emerald-300`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} /></div>
-              </div>
-            )
-          )}
-          {stage === "readyJoin" && <button type="button" onClick={() => void joinTrays()} className="relative mx-auto mt-5 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Join the two trays" : "Gabungkan dua dulang"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
-          {stage === "joining" && <p className="mt-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Joining the trays smoothly..." : "Menggabungkan dulang dengan lancar..."}</p>}
-          {joined && (
-            <div ref={combinedRef} className="comparison-result-reveal mx-auto max-w-5xl rounded-[1.75rem] border-2 border-yellow-300 bg-slate-950/90 p-6 shadow-[0_0_28px_rgba(250,204,21,.16)]">
-              <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
-              <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels isCounting={stage === "countTotal"} rowPattern={[5, 5, 3]} emoji={cookie} largeObjects />
-              <p className="mt-5 text-center text-2xl font-black text-cyan-100">{stage === "done" ? (lang === "en" ? "Total: 13 cookies" : "Jumlah: 13 biskut") : (lang === "en" ? `Counting: ${totalCount}` : `Mengira: ${totalCount}`)}</p>
+              ) : (
+                <>
+                  <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels isCounting={stage === "countTotal"} rowPattern={[5, 5, 3]} emoji={cookie} largeObjects />
+                  <p className="mt-5 text-center text-2xl font-black text-cyan-100">{stage === "done" ? (lang === "en" ? "Total: 13 cookies" : "Jumlah: 13 biskut") : (lang === "en" ? `Counting: ${totalCount}` : `Mengira: ${totalCount}`)}</p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -4017,7 +4016,7 @@ function AdvancedComparePile({
     </div>
   );
   return (
-    <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-5 sm:p-6">
+    <div role="img" aria-label={lang === "en" ? `${count} ${word} in the ${side} pile` : `${count} ${word} di kumpulan ${side === "left" ? "kiri" : "kanan"}`} className="rounded-3xl border-2 border-cyan-700 bg-slate-950/80 p-6 sm:p-8">
       {centeredRows(3, "flex sm:hidden")}
       {centeredRows(4, "hidden sm:flex")}
     </div>
@@ -5586,9 +5585,9 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
           <img src={character} alt="" className="h-14 w-14 object-contain" />
           <p className={`text-xl font-black ${textClass}`}>{name}</p>
         </div>
-        <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[29rem]" aria-label={lang === "en" ? `${displayCount} cookies in ${name}` : `${displayCount} biskut di ${name}`}>
+        <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[32rem]" aria-label={lang === "en" ? `${displayCount} cookies in ${name}` : `${displayCount} biskut di ${name}`}>
           <img src={trayImage} alt="" className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_10px_8px_rgba(0,0,0,.28)]" />
-          <div ref={objectAreaRef} className="absolute inset-x-[9%] inset-y-[15%] grid place-items-center">
+          <div ref={objectAreaRef} className="absolute inset-x-[10%] inset-y-[18%] grid place-items-center">
             {displayCount > 0
               ? <AdvancedBananaRow count={slotCount} visibleThrough={displayCount} hiddenIndex={side === "left" ? flyingCookie?.sourceIndex : null} countedThrough={readyToTransfer ? displayCount : countedThrough} showCountLabels isCounting={countingTray === side || (transferring && side === "right" && !flyingCookie)} splitOnDesktop={!rowPattern} rowPattern={rowPattern} emoji={cookie} largeObjects spacious />
               : <span className="text-5xl font-black text-slate-400">0</span>}
@@ -5641,7 +5640,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
           <SpriteIcon value={cookie} className="h-full w-full" />
         </span>
       )}
-      <div className="mx-auto grid max-w-6xl items-center gap-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-[78rem] items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         {tray({ side: "left", initialCount: 5, displayCount: chrysCookieCount, countedThrough: leftCount, name: lang === "en" ? "Chrys's tray" : "Dulang Chrys", character: chrysThinking, borderClass: "border-cyan-400", textClass: "text-cyan-100", trayRef: chrysTrayRef, objectAreaRef: chrysCookieAreaRef, slotCount: 5 })}
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">{readyToTransfer ? "→" : "+"}</span>
         {tray({ side: "right", initialCount: 8, displayCount: alyseCookieCount, countedThrough: rightCount, name: lang === "en" ? "Alyse's tray" : "Dulang Alyse", character: alyseGuide, borderClass: "border-emerald-300", textClass: "text-emerald-100", trayRef: alyseTrayRef, objectAreaRef: alyseCookieAreaRef, rowPattern: alyseRowPattern, slotCount: 13 })}
@@ -11559,10 +11558,10 @@ function BasketBananaScene({ count, counted, isCounting, label }: {
 }) {
   const banana = String.fromCodePoint(0x1f34c);
   const positions = [
-    ["left-[34%]", "top-[34%]", "-rotate-12"],
-    ["left-[66%]", "top-[34%]", "rotate-12"],
-    ["left-[34%]", "top-[66%]", "rotate-6"],
-    ["left-[66%]", "top-[66%]", "-rotate-6"],
+    ["left-[37%]", "top-[36%]", "-rotate-12"],
+    ["left-[63%]", "top-[36%]", "rotate-12"],
+    ["left-[37%]", "top-[64%]", "rotate-6"],
+    ["left-[63%]", "top-[64%]", "-rotate-6"],
   ];
 
   return (
@@ -12675,12 +12674,12 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
     ? { flex: `0 0 calc((100% - ${(teenColumnCount - 1) * 0.5}rem) / ${teenColumnCount})` }
     : undefined;
   const spacingClass = balancedTeenGrid
-    ? "gap-2 px-3 pb-4 pt-7"
+    ? "gap-3 px-5 pb-5 pt-8"
     : largeTiles
-    ? "gap-x-3 gap-y-7 px-4 pb-4 pt-7"
+    ? "gap-x-4 gap-y-8 px-6 pb-5 pt-8"
     : compact
-      ? "gap-x-2 gap-y-6 px-3 pb-3 pt-6"
-      : "gap-x-3 gap-y-7 px-4 pb-4 pt-7";
+      ? "gap-x-3 gap-y-7 px-5 pb-4 pt-7"
+      : "gap-x-4 gap-y-8 px-6 pb-5 pt-8";
   const tileSizeClass = balancedTeenGrid
     ? "h-20 min-w-0 text-3xl"
     : largeTiles ? "h-24 w-14 text-4xl" : compact ? "h-20 w-12 text-3xl" : "h-24 w-16 text-4xl";
@@ -14351,17 +14350,17 @@ function ContainerScene({
     <div className="mobile-container-scene mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 z-0 h-full w-full object-contain" />
-        <div className={`absolute z-10 grid content-center justify-items-center overflow-hidden px-3 py-4 ${container === "basket" ? "inset-[15%] gap-y-2" : "inset-[12%] gap-y-5"}`}>
+        <div className={`absolute z-10 grid content-center justify-items-center overflow-hidden px-3 py-4 ${container === "basket" ? "inset-[18%] gap-y-3" : "inset-x-[16%] inset-y-[18%] gap-y-5"}`}>
           {balancedIndexRows(count, container === "basket" ? 4 : 5).map((row, rowIndex) => (
-            <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-2">
+            <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-3">
               {row.map((i) => (
                 <div
                   key={i}
-                  className={`relative grid shrink-0 place-items-center rounded-2xl border-2 pt-3 shadow-md ${container === "basket" ? "h-9 w-9 sm:h-11 sm:w-11" : "h-14 w-14"} ${
+                  className={`relative grid shrink-0 place-items-center rounded-2xl border-2 pt-3 shadow-md ${container === "basket" ? "h-10 w-10 sm:h-12 sm:w-12" : "h-14 w-14"} ${
                     numbered ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100" : "border-white/70 bg-white/90"
                   }`}
                 >
-                  <SpriteIcon value={emoji} className={container === "basket" ? "h-7 w-7 sm:h-8 sm:w-8" : "h-11 w-11"} />
+                  <SpriteIcon value={emoji} className={container === "basket" ? "h-8 w-8 sm:h-10 sm:w-10" : "h-11 w-11"} />
                   {numbered && <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1.5 text-xs font-black leading-none text-white shadow-sm">{i + 1}</span>}
                 </div>
               ))}
@@ -14609,7 +14608,7 @@ function LayoutGroup({ count, emoji, layout, label }: { count: number; emoji: st
     : [];
   return (
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center shadow-inner">
-      <div className={`mx-auto flex min-h-36 max-w-44 flex-wrap justify-center gap-2 rounded-3xl bg-blue-50 p-3 ${layout === "row" ? "items-center" : "items-start"}`}>
+      <div className={`mx-auto flex min-h-36 max-w-48 flex-wrap justify-center gap-3 rounded-3xl bg-blue-50 p-5 ${layout === "row" ? "items-center" : "items-start"}`}>
         {Array.from({ length: count }, (_, i) => (
           <span
             key={i}
