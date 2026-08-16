@@ -263,12 +263,12 @@ const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>
   en: {
     plus: "en-plus.mp3",
     equals: "en-equals-to.mp3",
-    minus: "minus.wav",
+    minus: "en-minus.mp3",
   },
   ms: {
     plus: "Tambah.mp3",
     equals: "Sama dengan.mp3",
-    minus: "tolak.mp3",
+    minus: "ms-minus.mp3",
   },
 };
 
@@ -2843,15 +2843,16 @@ function VerticalAdditionCard({ a, b, answer, carried, lang }: { a: number; b: n
       ? ["", String(answer)]
       : String(answer).padStart(2, "0").split("");
   return (
-    <div className="mx-auto w-56 rounded-3xl border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63]">
-      <div className="mb-2 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-300">
+    <div className="mx-auto w-64 rounded-3xl border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63]">
+      <div className="mb-2 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-300">
+        <span aria-hidden="true" />
         <span>{lang === "en" ? "Tens" : "Puluh"}</span><span>{lang === "en" ? "Ones" : "Sa"}</span>
       </div>
-      <div className="grid grid-cols-[1fr_1fr] text-center text-4xl font-black text-yellow-200" style={getNumberTextStyle(a)}>
-        <span className="relative">{carried && <small className="absolute -top-5 left-1/2 -translate-x-1/2 text-lg text-emerald-300">1</small>}</span><span>{a}</span>
-        <span className="text-cyan-300">+</span><span>{b}</span>
-        <span className="col-span-2 my-2 border-t-4 border-cyan-300" />
-        {answerDigits.map((digit, index) => <span key={index}>{digit}</span>)}
+      <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] text-center text-4xl font-black text-yellow-200" style={getNumberTextStyle(a)}>
+        <span aria-hidden="true" /><span className="relative">{carried && <small className="absolute -top-5 left-1/2 -translate-x-1/2 text-lg text-emerald-300">1</small>}</span><span>{a}</span>
+        <span className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span /><span>{b}</span>
+        <span className="col-span-3 my-2 border-t-4 border-cyan-300" />
+        <span aria-hidden="true" />{answerDigits.map((digit, index) => <span key={index}>{digit}</span>)}
       </div>
     </div>
   );
@@ -3213,6 +3214,18 @@ function AdvancedLessonNavigation({ lang, t, phase, lastPhase, canNext = true, n
   );
 }
 
+function balancedIndexRows(count: number, maxPerRow: number) {
+  if (count <= 0) return [] as number[][];
+  const rowCount = Math.max(1, Math.ceil(count / maxPerRow));
+  const smallestRow = Math.floor(count / rowCount);
+  const largerRows = count % rowCount;
+  let index = 0;
+  return Array.from({ length: rowCount }, (_, rowIndex) => {
+    const amount = smallestRow + (rowIndex < largerRows ? 1 : 0);
+    return Array.from({ length: amount }, () => index++);
+  });
+}
+
 function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA, largeObjects = false, spacious = false, rowPattern, visibleThrough = count, hiddenIndex = null }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string; largeObjects?: boolean; spacious?: boolean; rowPattern?: number[]; visibleThrough?: number; hiddenIndex?: number | null }) {
   const isCookie = emoji === String.fromCodePoint(0x1f36a);
   const tileSizeClass = largeObjects ? "h-11 w-10 sm:h-16 sm:w-14 sm:rounded-2xl" : "h-10 w-9 sm:h-14 sm:w-12 sm:rounded-2xl";
@@ -3251,19 +3264,9 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
       })}
     </div>
   );
-  const balancedRows = (maxPerRow: number) => {
-    const rowCount = Math.max(1, Math.ceil(count / maxPerRow));
-    const smallestRow = Math.floor(count / rowCount);
-    const largerRows = count % rowCount;
-    let start = 0;
-
-    return Array.from({ length: rowCount }, (_, rowIndex) => {
-      const amount = smallestRow + (rowIndex < largerRows ? 1 : 0);
-      const row = renderBananas(start, amount);
-      start += amount;
-      return <React.Fragment key={rowIndex}>{row}</React.Fragment>;
-    });
-  };
+  const balancedRows = (maxPerRow: number) => balancedIndexRows(count, maxPerRow).map((row, rowIndex) => (
+    <React.Fragment key={rowIndex}>{renderBananas(row[0], row.length)}</React.Fragment>
+  ));
   const mobileRows = count > 7 ? balancedRows(7) : [renderBananas(0, count)];
   const desktopRows = count > 8 ? balancedRows(8) : [renderBananas(0, count)];
   const splitRows = balancedRows(5);
@@ -3274,7 +3277,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
   }, { rows: [], start: 0 }).rows;
 
   return (
-    <div className={compact ? "w-fit shrink-0" : "w-full"} aria-label={label}>
+    <div className={compact ? "w-fit max-w-full shrink-0 px-2" : "w-full min-w-0 px-2 sm:px-3"} aria-label={label}>
       <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > 8 ? `flex-col ${spacious ? "gap-4" : "gap-2"}` : ""}`}>
         {customRows ?? (splitOnDesktop ? splitRows : desktopRows)}
       </div>
@@ -3441,7 +3444,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
             {source === "branch" ? (
               <div className="relative mx-auto aspect-square w-full max-w-[22rem]">
                 <img src={BASKET_SPRITE} alt={lang === "en" ? "Chrys's basket" : "Bakul Chrys"} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_12px_12px_rgba(0,0,0,.38)]" />
-                <div className="absolute inset-x-[18%] inset-y-[20%] grid -translate-x-[4%] place-items-center">
+                <div className="absolute inset-x-[10%] inset-y-[18%] grid place-items-center overflow-hidden py-3">
                   <AdvancedBananaRow count={total} visibleThrough={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas in Chrys's basket` : `${currentTotal} pisang di dalam bakul Chrys`} />
                 </div>
               </div>
@@ -5526,7 +5529,7 @@ function AdvancedPart2CountableTen({ lang, countedThrough = 0, counting = false,
           const active = counting && counted && index === countedThrough - 1;
           return (
             <span key={index} className={`relative h-10 w-10 rounded-xl border-2 transition-all duration-300 ${active ? "z-10 scale-110 border-yellow-200 ring-4 ring-yellow-300/90 shadow-[0_0_18px_rgba(250,204,21,.72)]" : counted ? "border-cyan-300" : "border-slate-700 bg-slate-950/55 grayscale"}`}>
-              <span className={`absolute -right-2 -top-3 grid h-6 min-w-6 place-items-center rounded-full px-1 text-xs font-black shadow ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
+              <span className={`absolute -top-3 left-1/2 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1 text-xs font-black shadow ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
             </span>
           );
         })}
@@ -5560,17 +5563,18 @@ function AdvancedPart2PanelAForm({ beat, complete, combined, tenInColumn, remain
   const answerDigits = String(problem.total).padStart(2, "0").split("");
   return (
     <section className="mx-auto max-w-xl rounded-[2rem] border-4 border-cyan-300 bg-slate-950/90 p-5 shadow-[0_7px_0_#164e63]">
-      <div className="mb-3 grid grid-cols-2 gap-3 text-center text-sm font-black uppercase tracking-wider text-cyan-200">
+      <div className="mb-3 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-3 text-center text-sm font-black uppercase tracking-wider text-cyan-200">
+        <span aria-hidden="true" />
         <span className="rounded-full border border-cyan-400 bg-cyan-950 px-3 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
         <span className="rounded-full border border-cyan-400 bg-cyan-950 px-3 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
       </div>
       {tenInColumn && beat === 0 && <div className="mb-3 grid grid-cols-2 items-center"><div className="relative h-28"><div className="absolute left-1/2 top-1/2 w-[15rem] -translate-x-1/2 -translate-y-1/2 scale-[.45]"><AdvancedPart2CompactTen lang={lang} /><span className="absolute -right-12 top-1/2 text-6xl font-black text-yellow-200">1</span></div></div><span /></div>}
       {beat === 2 && combined && <div className="slide-in-up mb-4 grid grid-cols-2 gap-3"><div className="overflow-hidden rounded-2xl border-2 border-cyan-400 bg-cyan-950/60 p-2"><p className="mb-1 text-center text-xs font-black uppercase text-cyan-200">{lang === "en" ? "Tens column" : "Lajur puluh"}</p><div className="relative h-28"><div className="absolute left-1/2 top-1/2 flex w-[31rem] -translate-x-1/2 -translate-y-1/2 scale-[.30] items-center justify-center gap-4 sm:scale-[.38]">{([0, 1] as const).map((index) => <div key={index} className={`rounded-[1.75rem] transition-all ${tensCounting && tensCounted === index + 1 ? "scale-110 ring-8 ring-yellow-300 shadow-[0_0_30px_rgba(250,204,21,.7)]" : ""}`}><TenBananaBundle lang={lang} compact /></div>)}</div></div></div><div className="grid place-items-center rounded-2xl border-2 border-cyan-900 bg-slate-900/60 text-4xl font-black text-cyan-800">0</div></div>}
-      <div className="relative grid grid-cols-2 text-center text-5xl font-black text-yellow-200" style={getNumberTextStyle(problem.total)}>
-        <span>{aDigits[0]}</span><span>{aDigits[1]}</span>
-        <span className="relative"><span className="absolute -left-1 top-1/2 -translate-x-full -translate-y-1/2 text-cyan-300">+</span>{bDigits[0]}</span><span>{bDigits[1]}</span>
-        <span className="col-span-2 my-3 border-t-4 border-cyan-300" />
-        <span className={`transition-all duration-500 ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{complete ? answerDigits[0] : "0"}</span>
+      <div className="relative grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] text-center text-5xl font-black text-yellow-200" style={getNumberTextStyle(problem.total)}>
+        <span aria-hidden="true" /><span>{aDigits[0]}</span><span>{aDigits[1]}</span>
+        <span className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span>{bDigits[0]}</span><span>{bDigits[1]}</span>
+        <span className="col-span-3 my-3 border-t-4 border-cyan-300" />
+        <span aria-hidden="true" /><span className={`transition-all duration-500 ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{complete ? answerDigits[0] : "0"}</span>
         <span className={`transition-all duration-500 ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{complete ? answerDigits[1] : beat === 0 && remainderCounted === 3 ? "3" : beat === 2 && tensCounted === 2 ? "0" : "0"}</span>
       </div>
     </section>
@@ -5659,17 +5663,18 @@ function AdvancedPart2MethodPanel({ beat, lang, onComplete }: { beat: AdvancedPa
     <section className="slide-in-up rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-cyan-950 p-5 shadow-[0_6px_0_#164e63] sm:p-6">
       <p className="mb-5 text-center text-sm font-black uppercase tracking-[.2em] text-cyan-300">{lang === "en" ? "Vertical method" : "Kaedah menegak"}</p>
       <div className="relative mx-auto w-full max-w-lg rounded-[2rem] border-4 border-cyan-300 bg-slate-950/95 p-6 shadow-[0_8px_0_#164e63] sm:p-8">
-        <div className="mb-4 grid grid-cols-2 gap-3 text-center text-sm font-black uppercase tracking-wider text-cyan-100">
+        <div className="mb-4 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-3 text-center text-sm font-black uppercase tracking-wider text-cyan-100">
+          <span aria-hidden="true" />
           <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
           <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
         </div>
         {beat === 0 && step >= 3 && <span className={`absolute left-[18%] top-[5.9rem] z-20 grid h-9 w-8 place-items-center rounded-xl border-2 border-yellow-200 bg-yellow-400 text-xl font-black text-slate-950 shadow-[0_0_16px_rgba(250,204,21,.7)] ${step === 3 || step === 5 ? "animate-pulse" : ""}`}>1</span>}
         {beat === 0 && step === 2 && <span className="absolute -right-2 top-1/2 rounded-xl border border-cyan-400 bg-cyan-950 px-2 py-1 text-lg font-black text-cyan-200 opacity-80">13</span>}
-        <div className="grid grid-cols-2 gap-4 text-center" style={getNumberTextStyle(problem.total)}>
-          <span className={digitClass(tensOperandsActive)}>{aDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{aDigits[1]}</span>
-          <span className={`relative ${digitClass(tensOperandsActive)}`}><span className="absolute left-3 text-cyan-300 sm:left-5">+</span>{bDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{bDigits[1]}</span>
-          <span className="col-span-2 my-2 border-t-4 border-cyan-300" />
-          <span className={`${digitClass(tensResultVisible && (beat === 0 ? step === 6 || finalGlow : step === 4 || finalGlow))} ${tensResultVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
+        <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-4 text-center" style={getNumberTextStyle(problem.total)}>
+          <span aria-hidden="true" /><span className={digitClass(tensOperandsActive)}>{aDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{aDigits[1]}</span>
+          <span className="grid place-items-center text-4xl font-black text-cyan-300" aria-hidden="true">+</span><span className={digitClass(tensOperandsActive)}>{bDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{bDigits[1]}</span>
+          <span className="col-span-3 my-2 border-t-4 border-cyan-300" />
+          <span aria-hidden="true" /><span className={`${digitClass(tensResultVisible && (beat === 0 ? step === 6 || finalGlow : step === 4 || finalGlow))} ${tensResultVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
           <span className={`${digitClass(onesResultVisible && (beat === 0 ? step === 4 || finalGlow : step === 2 || finalGlow))} ${onesResultVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[1]}</span>
         </div>
       </div>
@@ -5954,29 +5959,19 @@ function AdvancedSubtractionLooseBananas({ count, countedThrough = 0, counting =
   shaking?: boolean;
   compact?: boolean;
 }) {
-  const rows: number[] = [];
-  let left = count;
-  while (left > 0) {
-    const row = Math.min(5, left);
-    rows.push(row);
-    left -= row;
-  }
-  let runningIndex = 0;
+  const rows = balancedIndexRows(count, compact ? 5 : 4);
   return (
-    <div className={`grid justify-items-center gap-4 ${shaking ? "motion-safe:animate-bounce" : ""}`}>
-      {rows.map((rowCount, rowIndex) => {
-        const rowStart = runningIndex;
-        runningIndex += rowCount;
+    <div className={`grid w-full min-w-0 justify-items-center gap-4 overflow-hidden px-3 py-3 ${shaking ? "motion-safe:animate-bounce" : ""}`}>
+      {rows.map((row, rowIndex) => {
         return (
-          <div key={rowIndex} className="flex items-center justify-center gap-2 min-[380px]:gap-3">
-            {Array.from({ length: rowCount }, (_, offset) => {
-              const index = rowStart + offset;
+          <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-2 min-[380px]:gap-3">
+            {row.map((index) => {
               const removed = index < removedThrough;
               const counted = index < countedThrough;
               const active = counting && counted && index === countedThrough - 1;
               return (
-                <span key={index} className={`relative grid shrink-0 place-items-center rounded-2xl border-2 transition-all ${compact ? "h-14 w-11 min-[380px]:w-12" : "h-16 w-12 min-[380px]:h-20 min-[380px]:w-16"} ${removed ? "pointer-events-none -translate-y-10 translate-x-12 rotate-12 scale-75 opacity-0 duration-700 motion-reduce:duration-75" : "translate-x-0 translate-y-0 opacity-100 duration-300"} ${active ? "z-10 scale-110 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]" : counted ? "border-cyan-300 bg-cyan-950" : dashed ? "border-dashed border-cyan-400 bg-slate-950/70" : "border-cyan-900 bg-slate-900/90 opacity-45 grayscale"}`}>
-                  <SpriteIcon value={BANANA} className={compact ? "h-9 w-9" : "h-11 w-11 min-[380px]:h-12 min-[380px]:w-12"} />
+                <span key={index} className={`relative grid h-12 w-9 shrink-0 place-items-center rounded-xl border-2 transition-all min-[380px]:h-16 min-[380px]:w-12 min-[380px]:rounded-2xl ${removed ? "pointer-events-none -translate-y-10 translate-x-12 rotate-12 scale-75 opacity-0 duration-700 motion-reduce:duration-75" : "translate-x-0 translate-y-0 opacity-100 duration-300"} ${active ? "z-10 scale-110 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]" : counted ? "border-cyan-300 bg-cyan-950" : dashed ? "border-dashed border-cyan-400 bg-slate-950/70" : "border-cyan-900 bg-slate-900/90 opacity-45 grayscale"}`}>
+                  <SpriteIcon value={BANANA} className="h-7 w-7 min-[380px]:h-10 min-[380px]:w-10" />
                   <span className={`absolute -top-3 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black shadow-md ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : dashed ? "border border-cyan-300 bg-slate-950 text-cyan-100" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
                 </span>
               );
@@ -6018,7 +6013,7 @@ function AdvancedSubtractionOperandGroup({ value, countedThrough, counting, lang
   const tens = Math.floor(value / 10);
   const ones = value % 10;
   return (
-    <div className="flex min-h-44 flex-col items-center justify-center gap-4">
+    <div className="flex min-h-44 w-full min-w-0 flex-col items-center justify-center gap-4 overflow-hidden px-2 py-3">
       {Array.from({ length: tens }, (_, index) => (
         <AdvancedSubtractionCountableTen key={index} lang={lang} countedThrough={Math.max(0, Math.min(10, countedThrough - (index * 10)))} counting={counting && countedThrough > index * 10 && countedThrough <= (index + 1) * 10} startLabel={(index * 10) + 1} dashed={dashed} removing={index < removedTens} />
       ))}
@@ -6050,15 +6045,16 @@ function AdvancedSubtractionPanelAForm({ beat, complete, lang }: { beat: Advance
   const answerDigits = String(problem.answer).padStart(2, "0").split("");
   return (
     <section className="mx-auto w-full max-w-sm rounded-[2rem] border-4 border-cyan-300 bg-slate-950/90 p-4 shadow-[0_7px_0_#164e63] min-[380px]:p-5">
-      <div className="mb-3 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-200 min-[380px]:text-sm">
+      <div className="mb-3 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-200 min-[380px]:text-sm">
+        <span aria-hidden="true" />
         <span className="rounded-full border border-cyan-400 bg-cyan-950 px-2 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
         <span className="rounded-full border border-cyan-400 bg-cyan-950 px-2 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
       </div>
-      <div className="relative grid grid-cols-2 text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(problem.answer)}>
-        <span>{aDigits[0]}</span><span>{aDigits[1]}</span>
-        <span className="relative"><span className="absolute -left-1 top-1/2 -translate-x-full -translate-y-1/2 text-cyan-300">−</span>{bDigits[0]}</span><span>{bDigits[1]}</span>
-        <span className="col-span-2 my-3 border-t-4 border-cyan-300" />
-        <span className={`transition-all ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{answerDigits[0]}</span>
+      <div className="relative grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(problem.answer)}>
+        <span aria-hidden="true" /><span>{aDigits[0]}</span><span>{aDigits[1]}</span>
+        <span className="grid place-items-center text-cyan-300" aria-hidden="true">−</span><span>{bDigits[0]}</span><span>{bDigits[1]}</span>
+        <span className="col-span-3 my-3 border-t-4 border-cyan-300" />
+        <span aria-hidden="true" /><span className={`transition-all ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{answerDigits[0]}</span>
         <span className={`transition-all ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{answerDigits[1]}</span>
       </div>
     </section>
@@ -6071,13 +6067,13 @@ function VerticalSubtractionCard({ a, b, answer, borrowing = false, showBorrow =
   const answerDigits = answer == null ? ["?", "?"] : String(answer).padStart(2, "0").split("");
   return (
     <div className="mx-auto w-full max-w-sm rounded-[2rem] border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63] min-[380px]:p-6">
-      <div className="mb-3 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase text-cyan-100 min-[380px]:text-sm"><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span></div>
-      <div className="grid grid-cols-2 gap-3 text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(a)}>
-        <span className="relative rounded-xl border border-cyan-900 py-2">{aDigits[0]}{borrowing && showBorrow && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -rotate-[32deg] bg-red-400" /><span className="absolute -right-1 -top-4 text-xl text-yellow-300">0</span></>}</span>
+      <div className="mb-3 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-center text-xs font-black uppercase text-cyan-100 min-[380px]:text-sm"><span aria-hidden="true" /><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span></div>
+      <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-3 text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(a)}>
+        <span aria-hidden="true" /><span className="relative rounded-xl border border-cyan-900 py-2">{aDigits[0]}{borrowing && showBorrow && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -rotate-[32deg] bg-red-400" /><span className="absolute -right-1 -top-4 text-xl text-yellow-300">0</span></>}</span>
         <span className="relative rounded-xl border border-cyan-900 py-2">{borrowing && showBorrow && <span className="absolute -left-1 -top-4 text-xl text-yellow-300">1</span>}{aDigits[1]}</span>
-        <span className="relative rounded-xl border border-cyan-900 py-2"><span className="absolute left-2 text-cyan-300">−</span>{bDigits[0]}</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[1]}</span>
-        <span className="col-span-2 border-t-4 border-cyan-300" />
-        <span>{answerDigits[0]}</span><span>{answerDigits[1]}</span>
+        <span className="grid place-items-center text-cyan-300" aria-hidden="true">−</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[0]}</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[1]}</span>
+        <span className="col-span-3 border-t-4 border-cyan-300" />
+        <span aria-hidden="true" /><span>{answerDigits[0]}</span><span>{answerDigits[1]}</span>
       </div>
     </div>
   );
@@ -6126,20 +6122,21 @@ function AdvancedSubtractionVerticalCard({ beat, step, lang }: { beat: AdvancedS
   const digitClass = (active: boolean) => `relative grid h-16 min-w-0 place-items-center rounded-2xl border-2 text-4xl font-black transition-all duration-500 min-[380px]:h-20 min-[380px]:text-5xl ${active || finalGlow ? "scale-105 border-yellow-200 bg-yellow-300/15 text-yellow-100 ring-2 ring-yellow-300/80 shadow-[0_0_22px_rgba(250,204,21,.55)]" : "border-cyan-800 bg-cyan-950/60 text-yellow-200"}`;
   return (
     <div className="relative mx-auto w-full max-w-lg rounded-[2rem] border-4 border-cyan-300 bg-slate-950/95 p-4 shadow-[0_8px_0_#164e63] min-[380px]:p-6 sm:p-8">
-      <div className="mb-4 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-100 min-[380px]:text-sm">
+      <div className="mb-4 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-100 min-[380px]:text-sm">
+        <span aria-hidden="true" />
         <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
         <span className="rounded-full border border-cyan-400 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
       </div>
-      <div className="grid grid-cols-2 gap-3 text-center" style={getNumberTextStyle(problem.answer)}>
-        <span className={digitClass(borrowed || tensActive)}>
+      <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-3 text-center" style={getNumberTextStyle(problem.answer)}>
+        <span aria-hidden="true" /><span className={digitClass(borrowed || tensActive)}>
           {aDigits[0]}
           {borrowed && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -translate-y-1/2 -rotate-[32deg] rounded bg-red-400" aria-hidden="true" /><span className="absolute -right-1 -top-4 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 text-lg text-slate-950">0</span></>}
         </span>
         <span className={digitClass(onesActive || borrowed)}>{borrowed && <span className="absolute -left-1 -top-4 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 text-lg text-slate-950">1</span>}{aDigits[1]}</span>
-        <span className={digitClass(tensActive)}><span className="absolute left-2 text-cyan-300 min-[380px]:left-4">−</span>{bDigits[0]}</span>
+        <span className="grid place-items-center text-4xl font-black text-cyan-300" aria-hidden="true">−</span><span className={digitClass(tensActive)}>{bDigits[0]}</span>
         <span className={digitClass(onesActive)}>{bDigits[1]}</span>
-        <span className="col-span-2 my-2 border-t-4 border-cyan-300" />
-        <span className={`${digitClass(tensVisible)} ${tensVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
+        <span className="col-span-3 my-2 border-t-4 border-cyan-300" />
+        <span aria-hidden="true" /><span className={`${digitClass(tensVisible)} ${tensVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
         <span className={`${digitClass(onesVisible)} ${onesVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[1]}</span>
       </div>
     </div>
@@ -6157,7 +6154,12 @@ function AdvancedSubtractionMethodPanel({ beat, lang, onComplete }: { beat: Adva
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
   useEffect(() => {
     setShowNextStep(false);
-    speakText(lines[step], lang, { allowWhenWordAudioDisabled: true });
+    const narration = lines[step];
+    const usesSubtractionCue = lang === "en" ? /\b(minus|subtract)\b/i.test(narration) : /\btolak\b/i.test(narration);
+    void (async () => {
+      if (usesSubtractionCue) await speakMathCue("minus", lang);
+      speakText(narration, lang, { allowWhenWordAudioDisabled: true });
+    })();
     const revealTimer = step < finalStep ? window.setTimeout(() => setShowNextStep(true), prefersReducedMotion ? 250 : 1500) : null;
     const dwell = prefersReducedMotion ? 450 : beat === 0 && step === 2 ? 3000 : step === 0 ? 1500 : step === finalStep ? 1000 : 2500;
     const advanceTimer = window.setTimeout(() => {
@@ -6234,6 +6236,7 @@ function AdvancedSubtractionWorkedBeat({ beat, lang, onWalkthroughComplete }: { 
     if (beat === 0 && !opened) { setInsufficient(true); return; }
     setInsufficient(false);
     setCountingGroup("remove");
+    await speakMathCue("minus", lang);
     if (beat > 0) {
       setRemovedTens(1);
       await wait(prefersReducedMotion ? 80 : 700);
@@ -6348,6 +6351,7 @@ function AdvancedSubtractionConcreteAnchor({ lang, onComplete }: { lang: Lang; o
   const removeOne = async () => {
     if (busy || finished) return;
     setBusy(true);
+    if (removed === 0) await speakMathCue("minus", lang);
     const next = removed + 1;
     let progressed = false;
     await speakCountingSequence(next, lang, COUNTING_STEP_MS, (value) => { progressed = true; setRemoved(value); }, undefined, next);
@@ -6479,12 +6483,12 @@ function AdvancedSubtractionLesson({ lang, t, onDone }: { lang: Lang; t: UIStrin
 
 function TenBananaBundle({ lang, active = false, compact = false }: { lang: Lang; active?: boolean; compact?: boolean }) {
   return (
-    <div className={`relative rounded-[1.75rem] border-4 p-3 transition ${
+    <div className={`relative max-w-full overflow-hidden rounded-[1.75rem] border-4 p-3 transition ${
       active
         ? "border-yellow-300 bg-amber-950/80 shadow-[0_0_0_6px_rgba(250,204,21,.24)]"
         : "border-emerald-400 bg-emerald-950/75"
     }`}>
-      <div className="grid grid-cols-5 gap-1.5 rounded-2xl border-2 border-emerald-400/80 bg-slate-950/85 p-2">
+      <div className="grid grid-cols-5 place-items-center gap-1.5 overflow-hidden rounded-2xl border-2 border-emerald-400/80 bg-slate-950/85 p-2">
         {Array.from({ length: 10 }, (_, index) => (
           <span
             key={index}
@@ -8879,7 +8883,7 @@ function MiniAppleBasket({ count }: { count: number }) {
   return (
     <div className="relative mx-auto h-40 max-w-64">
       <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain" />
-      <div className="absolute inset-0 -translate-x-[4%]">
+      <div className="absolute inset-0">
         {Array.from({ length: count }, (_, index) => (
           <span key={index} className={`absolute ${positions[index]}`}>
             <SceneCountObject number={index + 1} compact>
@@ -9748,7 +9752,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, objectKind
                 <p className="mb-3 text-sm font-black uppercase text-amber-800">{butterflies ? (lang === "en" ? "Butterflies near Chrys" : "Rama-rama dekat Chrys") : (lang === "en" ? "Chrys's basket" : "Bakul Chrys")}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
                   {!butterflies && <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />}
-                  <div className={`relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 px-7 pb-10 pt-12 sm:gap-x-2 sm:px-9 ${butterflies ? "" : "-translate-x-[4%]"}`}>
+                  <div className="relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 overflow-hidden px-9 pb-10 pt-12 sm:gap-x-2 sm:px-11">
                     {Array.from({ length: start }, (_, index) => {
                       const inBasket = index < left;
                       const isFlying = flight?.some((item) => item.sourceIndex === index);
@@ -9796,7 +9800,7 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, objectKind
                 <p className="mb-4 text-base font-black text-emerald-900">{butterflies ? (lang === "en" ? `${takeAway} butterflies fly away.` : `${takeAway} rama-rama terbang pergi.`) : (lang === "en" ? `Alyse gets ${takeAway} bananas.` : `Alyse dapat ${takeAway} pisang.`)}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-emerald-100 bg-white">
                   {!butterflies && <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />}
-                  <div className={`relative z-10 grid min-h-[21rem] grid-cols-3 place-content-center gap-4 px-8 py-12 ${butterflies ? "" : "-translate-x-[4%]"}`}>
+                  <div className="relative z-10 grid min-h-[21rem] grid-cols-3 place-content-center gap-4 overflow-hidden px-10 py-12">
                     {Array.from({ length: takeAway }, (_, index) => (
                       <div
                         key={index}
@@ -10373,7 +10377,7 @@ function MangoTraySubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
             </h4>
             <div className="relative mx-auto min-h-[18rem] max-w-sm overflow-hidden rounded-[2rem] bg-amber-50/60 p-5">
               <img src={BASKET_SPRITE} alt={lang === "en" ? "Basket" : "Bakul"} className="absolute inset-0 h-full w-full object-contain" />
-              <div className="relative z-10 mx-auto mt-12 grid max-w-[15rem] -translate-x-[4%] grid-cols-3 justify-items-center gap-3">
+              <div className="relative z-10 mx-auto mt-12 grid max-w-[15rem] grid-cols-3 justify-items-center gap-3 overflow-hidden px-2 py-3">
                 {Array.from({ length: 6 }, (_, index) => {
                   const packed = index < packedCount;
                   const current = index + 1 === packedCount && phase === "packing";
@@ -11298,7 +11302,7 @@ function BasketBananaScene({ count, counted, isCounting, label }: {
     <div className="mx-auto max-w-xl rounded-3xl border-4 border-amber-200 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={BASKET_SPRITE} alt="basket" className="absolute inset-0 h-full w-full object-contain" />
-        <div className="absolute inset-0 -translate-x-[4%]">
+        <div className="absolute inset-0">
           {Array.from({ length: count }, (_, index) => {
             const [x, y, rotation] = positions[index];
             const isCounted = index < counted;
@@ -13892,11 +13896,13 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
     return <div className={`mx-auto rounded-3xl border-4 border-dashed p-8 text-center text-2xl font-black ${cyber ? "border-cyan-700 bg-slate-950/80 text-cyan-300" : "border-slate-200 bg-white text-slate-400"}`}>{numbered ? "0" : lang === "en" ? "empty" : "kosong"}</div>;
   }
   return (
-    <div className={`flex flex-wrap justify-center gap-x-3 gap-y-6 rounded-3xl border-2 px-4 pb-4 pt-7 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"}`}>
-      {Array.from({ length: count }, (_, i) => {
+    <div className={`grid w-full min-w-0 justify-items-center gap-y-6 overflow-hidden rounded-3xl border-2 px-5 pb-5 pt-8 sm:px-7 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"}`}>
+      {balancedIndexRows(count, 4).map((row, rowIndex) => (
+        <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-3">
+          {row.map((i) => {
         const gone = i < crossed;
         return (
-          <div className={`relative grid h-16 w-16 place-items-center rounded-2xl border-2 pt-3 text-4xl shadow-inner ${
+          <div className={`relative grid h-12 w-12 place-items-center rounded-xl border-2 pt-3 text-3xl shadow-inner sm:h-16 sm:w-16 sm:rounded-2xl sm:text-4xl ${
             gone
               ? cyber ? "border-red-700 bg-slate-900" : "border-red-200 bg-amber-50"
               : numbered
@@ -13904,7 +13910,7 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
                 : cyber ? "border-cyan-900 bg-slate-900" : "border-amber-100 bg-amber-50"
           }`} key={i}>
             <span className="opacity-100 saturate-100 grayscale-0">
-              <SpriteIcon value={emoji} className="h-12 w-12" />
+              <SpriteIcon value={emoji} className="h-9 w-9 sm:h-12 sm:w-12" />
             </span>
             {(numbered || (crossedLabels && gone)) && (
               <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1.5 text-xs font-black leading-none text-white shadow-sm ${gone ? "bg-red-600" : "bg-blue-600"}`}>
@@ -13919,7 +13925,9 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
             )}
           </div>
         );
-      })}
+          })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -13948,16 +13956,20 @@ function ContainerScene({
     <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 z-0 h-full w-full object-contain" />
-        <div className={`absolute z-10 flex flex-wrap content-center items-center justify-center ${container === "basket" ? "inset-x-[19%] inset-y-[20%] -translate-x-[4%] gap-x-2 gap-y-3" : "inset-[12%] gap-x-2 gap-y-5"}`}>
-          {Array.from({ length: count }, (_, i) => (
-            <div
-              key={i}
-              className={`relative grid shrink-0 place-items-center rounded-2xl border-2 pt-3 shadow-md ${container === "basket" ? "h-12 w-12 sm:h-14 sm:w-14" : "h-14 w-14"} ${
-                numbered ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100" : "border-white/70 bg-white/90"
-              }`}
-            >
-              <SpriteIcon value={emoji} className={container === "basket" ? "h-9 w-9 sm:h-11 sm:w-11" : "h-11 w-11"} />
-              {numbered && <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1.5 text-xs font-black leading-none text-white shadow-sm">{i + 1}</span>}
+        <div className={`absolute z-10 grid content-center justify-items-center overflow-hidden px-3 py-4 ${container === "basket" ? "inset-[15%] gap-y-2" : "inset-[12%] gap-y-5"}`}>
+          {balancedIndexRows(count, container === "basket" ? 4 : 5).map((row, rowIndex) => (
+            <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-2">
+              {row.map((i) => (
+                <div
+                  key={i}
+                  className={`relative grid shrink-0 place-items-center rounded-2xl border-2 pt-3 shadow-md ${container === "basket" ? "h-9 w-9 sm:h-11 sm:w-11" : "h-14 w-14"} ${
+                    numbered ? "border-blue-400 bg-blue-50 ring-2 ring-blue-100" : "border-white/70 bg-white/90"
+                  }`}
+                >
+                  <SpriteIcon value={emoji} className={container === "basket" ? "h-7 w-7 sm:h-8 sm:w-8" : "h-11 w-11"} />
+                  {numbered && <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1.5 text-xs font-black leading-none text-white shadow-sm">{i + 1}</span>}
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -15526,6 +15538,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
 }) {
   const [stepIndex, setStepIndex] = useState(0);
   const announcedStaticTotalRef = useRef<string | null>(null);
+  const announcedAdvancedSubtractionCueRef = useRef<string | null>(null);
   const spokenSteps = q.method[lang].join(". ");
   const solutionVisual: Visual =
     q.inputMode === "tapObjects" && typeof q.answer === "number" && q.answer > 0
@@ -15548,7 +15561,16 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
   useEffect(() => {
     setStepIndex(0);
     announcedStaticTotalRef.current = null;
+    announcedAdvancedSubtractionCueRef.current = null;
   }, [q.id]);
+
+  useEffect(() => {
+    if (!q.id.startsWith("adv-sub-") || solutionVisual.kind !== "verticalSubtract") return;
+    const cueKey = `${q.id}:${lang}`;
+    if (announcedAdvancedSubtractionCueRef.current === cueKey) return;
+    announcedAdvancedSubtractionCueRef.current = cueKey;
+    void speakMathCue("minus", lang);
+  }, [lang, q.id, solutionVisual.kind]);
 
   useEffect(() => {
     const answer = typeof q.answer === "number" ? q.answer : Number(q.answer);
