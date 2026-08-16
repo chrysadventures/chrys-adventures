@@ -40,6 +40,14 @@ import {
   saveGameProgress,
 } from "./lib/gameSaves";
 import { advancedSubtractionQuestionData } from "./questions/advancedSubtractionQuestions";
+import {
+  advancedTestAdditionData,
+  advancedTestCompareBiggerData,
+  advancedTestSequencingData,
+  advancedTestSubtractionData,
+  advancedTestTeenNumberData,
+  type AdvancedTestQuestionData,
+} from "./questions/advancedTestQuestions";
 
 type Lang = "en" | "ms";
 type MathCue = "plus" | "equals" | "minus";
@@ -55,6 +63,12 @@ type Screen =
   | "advancedAdditionPart1"
   | "advancedAdditionPart2"
   | "advancedSubtraction"
+  | "advancedTestMenu"
+  | "advancedTestTeenNumbers"
+  | "advancedTestCompareBigger"
+  | "advancedTestSequencing"
+  | "advancedTestAddition"
+  | "advancedTestSubtraction"
   | "learnRecognize"
   | "learnValues"
   | "learnSequencing"
@@ -68,6 +82,13 @@ type Screen =
   | "testNumbers"
   | "testOperations"
   | "testReal";
+
+type AdvancedTestId = "teenNumbers" | "compareBigger" | "sequencing" | "addition" | "subtraction";
+type AdvancedTestScore = { testId: AdvancedTestId; correct: number; total: number; mastered: boolean };
+
+function advancedTestProgressKey(testId: AdvancedTestId, field: "score" | "total" | "mastered") {
+  return `advancedTest:${testId}:${field}`;
+}
 
 type LearningSectionKey =
   | "recognizeNumbers"
@@ -107,8 +128,11 @@ type Visual =
   | { kind: "horizontalAdd"; a: number; b: number; display?: "equation" | "objects" | "none"; showLabels?: boolean }
   | { kind: "verticalAdd"; a: number; b: number }
   | { kind: "verticalSubtract"; a: number; b: number; borrowing?: boolean }
+  | { kind: "horizontalSubtract"; a: number; b: number }
   | { kind: "subtract"; a: number; b: number; emoji?: string; container?: ContainerKind; display?: "objects" | "none"; showLabels?: boolean }
-  | { kind: "teenBundle"; tens: 1 | 2; ones: number };
+  | { kind: "teenBundle"; tens: 1 | 2; ones: number }
+  | { kind: "teenQuantityArrangement"; count: number; emoji: string; rowPattern: number[] }
+  | { kind: "advancedCompareTest"; a: number; b: number; emoji: string; representation: "labeled" | "objects" | "numbers" };
 
 type Question = {
   id: string;
@@ -415,6 +439,8 @@ const UI = {
     advancedAdditionPart1: "Add Bigger Numbers",
     advancedAdditionPart2: "Write it Down",
     advancedSubtraction: "Subtract Bigger Numbers",
+    advancedTestMode: "Advanced Test Mode",
+    advancedTestHelp: "Check each Cyber Mission skill in its own test.",
     recognizeNumbers: "Recognize and Identify Numbers",
     numberValues: "Number Values",
     sequencing: "Number Order",
@@ -477,6 +503,8 @@ const UI = {
     advancedAdditionPart1: "Tambah Nombor Besar",
     advancedAdditionPart2: "Tulis Tambah",
     advancedSubtraction: "Tolak Nombor Besar",
+    advancedTestMode: "Mod Ujian Lanjutan",
+    advancedTestHelp: "Uji setiap kemahiran Misi Siber dalam ujian berasingan.",
     recognizeNumbers: "Kenal Nombor",
     numberValues: "Nilai Nombor",
     sequencing: "Susunan Nombor",
@@ -1129,6 +1157,24 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   if (visual.kind === "teenBundle") {
     return teenNumberMethod((visual.tens * 10) + visual.ones);
   }
+  if (visual.kind === "teenQuantityArrangement") {
+    return {
+      en: [`The arrangement changed, but the group still has ${visual.count}.`, `Answer: ${answer}.`],
+      ms: [`Susunan berubah, tetapi kumpulan masih ada ${visual.count}.`, `Jawapan: ${answer}.`],
+    };
+  }
+  if (visual.kind === "advancedCompareTest") {
+    return {
+      en: [`Compare ${visual.a} and ${visual.b}.`, `Answer: ${answer}.`],
+      ms: [`Bandingkan ${visual.a} dan ${visual.b}.`, `Jawapan: ${answer}.`],
+    };
+  }
+  if (visual.kind === "horizontalSubtract") {
+    return {
+      en: [`Take ${visual.b} away from ${visual.a}.`, `${visual.a} minus ${visual.b} equals ${answer}.`, `Answer: ${answer}.`],
+      ms: [`Tolak ${visual.b} daripada ${visual.a}.`, `${visual.a} tolak ${visual.b} sama dengan ${answer}.`, `Jawapan: ${answer}.`],
+    };
+  }
   return {
     en: ["Press the button to count the whole group.", `The last number you say is ${visual.count}.`, `Answer: ${answer}.`],
     ms: ["Tekan butang untuk mengira seluruh kumpulan.", `Nombor terakhir yang disebut ialah ${visual.count}.`, `Jawapan: ${answer}.`],
@@ -1342,6 +1388,21 @@ const advancedSubtractionQuestions: Question[] = advancedSubtractionQuestionData
   method: question.method,
 }));
 
+function advancedTestQuestions(data: AdvancedTestQuestionData[]): Question[] {
+  return data.map((question): Question => ({
+    ...question,
+    area: "advanced",
+    visual: question.visual as Visual,
+    inputMode: "choice",
+  }));
+}
+
+const advancedTestTeenNumberQuestions = advancedTestQuestions(advancedTestTeenNumberData);
+const advancedTestCompareBiggerQuestions = advancedTestQuestions(advancedTestCompareBiggerData);
+const advancedTestSequencingQuestions = advancedTestQuestions(advancedTestSequencingData);
+const advancedTestAdditionQuestions = advancedTestQuestions(advancedTestAdditionData);
+const advancedTestSubtractionQuestions = advancedTestQuestions(advancedTestSubtractionData);
+
 function shuffled<T>(items: T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -1438,6 +1499,7 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(NUMBER_AUDIO_ENABLED && initial.soundEnabled);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
+  const [lastAdvancedTestScore, setLastAdvancedTestScore] = useState<AdvancedTestScore | null>(null);
   const [completedLesson, setCompletedLesson] = useState<LearningSectionKey | null>(null);
 
   useEffect(() => saveState(lang, soundEnabled), [lang, soundEnabled]);
@@ -1509,6 +1571,7 @@ function App() {
   const backgroundStyle = isCyberBackground ? CYBER_BACKGROUND_STYLE : DEFAULT_BACKGROUND_STYLE;
   const go = (next: Screen) => {
     setLastScore(null);
+    setLastAdvancedTestScore(null);
     setCompletedLesson(null);
     setScreen(next);
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
@@ -1519,6 +1582,29 @@ function App() {
     setLastScore({ correct, total, mastered });
     awardStar(key, mastered ? 1 : 0);
     setScreen("testMenu");
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+  };
+
+  const finishAdvancedTest = (testId: AdvancedTestId, correct: number, total: number) => {
+    const mastered = correct >= Math.ceil(total * 0.7);
+    setLastAdvancedTestScore({ testId, correct, total, mastered });
+    setPlayer((current) => {
+      if (!current) return current;
+      const masteryKey = advancedTestProgressKey(testId, "mastered");
+      const alreadyMastered = (current.progress[masteryKey] ?? 0) >= 1;
+      const earnedMastery = mastered || alreadyMastered;
+      return {
+        ...current,
+        stars: current.stars + (mastered && !alreadyMastered ? 1 : 0),
+        progress: {
+          ...current.progress,
+          [advancedTestProgressKey(testId, "score")]: correct,
+          [advancedTestProgressKey(testId, "total")]: total,
+          [masteryKey]: earnedMastery ? 1 : 0,
+        },
+      };
+    });
+    setScreen("advancedTestMenu");
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
@@ -1552,6 +1638,7 @@ function App() {
         .catch(() => undefined);
     }
     setLastScore(null);
+    setLastAdvancedTestScore(null);
     setCompletedLesson(null);
     setActiveSaveId(null);
     setPlayer(null);
@@ -1578,7 +1665,11 @@ function App() {
           onToggleSound={() => setSoundEnabled((current) => !current)}
           onOpenGlossary={() => setGlossaryOpen(true)}
           onBack={screen === "home" ? undefined : screen === "modeSelect" ? leaveCurrentGame : () => go(
-            screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedSequencing" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2" || screen === "advancedSubtraction"
+            screen === "advancedTestMenu"
+              ? "advancedMenu"
+              : screen.startsWith("advancedTest")
+                ? "advancedTestMenu"
+                : screen === "advancedTeenNumbers" || screen === "advancedCompareBigger" || screen === "advancedSequencing" || screen === "advancedAdditionPart1" || screen === "advancedAdditionPart2" || screen === "advancedSubtraction"
               ? "advancedMenu"
               : screen === "advancedMenu"
                 ? "modeSelect"
@@ -1660,6 +1751,30 @@ function App() {
             t={t}
             onDone={() => finishLesson("advancedSubtraction", "advancedSubtraction")}
           />
+        )}
+        {screen === "advancedTestMenu" && player && (
+          <AdvancedTestMenu
+            lang={lang}
+            t={t}
+            player={player}
+            go={go}
+            lastScore={lastAdvancedTestScore}
+          />
+        )}
+        {screen === "advancedTestTeenNumbers" && (
+          <Quiz lang={lang} t={t} title={lang === "en" ? "Advanced Test: Teen Numbers" : "Ujian Lanjutan: Nombor Belasan"} questions={advancedTestTeenNumberQuestions} chunkSize={5} variant="cyber" onFinish={(correct, total) => finishAdvancedTest("teenNumbers", correct, total)} />
+        )}
+        {screen === "advancedTestCompareBigger" && (
+          <Quiz lang={lang} t={t} title={lang === "en" ? "Advanced Test: Compare Bigger" : "Ujian Lanjutan: Banding Nombor"} questions={advancedTestCompareBiggerQuestions} chunkSize={4} variant="cyber" onFinish={(correct, total) => finishAdvancedTest("compareBigger", correct, total)} />
+        )}
+        {screen === "advancedTestSequencing" && (
+          <Quiz lang={lang} t={t} title={lang === "en" ? "Advanced Test: Sequencing" : "Ujian Lanjutan: Urutan"} questions={advancedTestSequencingQuestions} chunkSize={5} variant="cyber" onFinish={(correct, total) => finishAdvancedTest("sequencing", correct, total)} />
+        )}
+        {screen === "advancedTestAddition" && (
+          <Quiz lang={lang} t={t} title={lang === "en" ? "Advanced Test: Addition" : "Ujian Lanjutan: Tambah"} questions={advancedTestAdditionQuestions} chunkSize={4} variant="cyber" onFinish={(correct, total) => finishAdvancedTest("addition", correct, total)} />
+        )}
+        {screen === "advancedTestSubtraction" && (
+          <Quiz lang={lang} t={t} title={lang === "en" ? "Advanced Test: Subtraction" : "Ujian Lanjutan: Tolak"} questions={advancedTestSubtractionQuestions} chunkSize={4} variant="cyber" onFinish={(correct, total) => finishAdvancedTest("subtraction", correct, total)} />
         )}
         {!completedLesson && screen === "learnRecognize" && (
           <RecognizeNumbersLesson lang={lang} t={t} onDone={() => finishLesson("learnRecognize", "recognizeNumbers")} />
@@ -2674,6 +2789,23 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
       <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
       <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!testingMode && !part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
       <AdvancedMissionTile mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} icon="10−" complete={subtractionComplete} locked={!testingMode && !part2Complete} onClick={() => go("advancedSubtraction")} lang={lang} />
+      <button
+        type="button"
+        onClick={() => go("advancedTestMenu")}
+        className="group relative overflow-hidden rounded-[2rem] border-4 border-yellow-300 bg-gradient-to-r from-slate-950 via-cyan-950 to-emerald-950 p-5 text-left shadow-[0_9px_0_#a16207] transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 active:translate-y-1 sm:p-6"
+      >
+        <span className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(34,211,238,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.2)_1px,transparent_1px)] [background-size:24px_24px]" aria-hidden="true" />
+        <span className="relative flex items-center gap-4">
+          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 text-slate-950 shadow-[0_5px_0_#a16207]">
+            <Flag className="h-8 w-8" strokeWidth={3} aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-2xl font-black text-yellow-200 sm:text-3xl">{t.advancedTestMode}</span>
+            <span className="mt-1 block font-bold text-cyan-50">{t.advancedTestHelp}</span>
+          </span>
+          <ArrowRight className="ml-auto hidden h-9 w-9 text-yellow-200 transition-transform group-hover:translate-x-1 sm:block" strokeWidth={3} aria-hidden="true" />
+        </span>
+      </button>
     </main>
   );
 }
@@ -5521,18 +5653,22 @@ function AdvancedPart2LooseBananas({ count, countedThrough = 0, counting = false
 
 function AdvancedPart2CountableTen({ lang, countedThrough = 0, counting = false, startLabel = 1 }: { lang: Lang; countedThrough?: number; counting?: boolean; startLabel?: number }) {
   return (
-    <div className="relative mx-auto w-fit max-w-full">
-      <TenBananaBundle lang={lang} compact />
-      <div className="pointer-events-none absolute left-[1.625rem] top-[1.625rem] grid grid-cols-5 gap-1.5">
+    <div className="relative mx-auto w-fit max-w-full overflow-hidden rounded-[1.5rem] border-4 border-emerald-400 bg-emerald-950/75 p-2.5">
+      <div className="grid grid-cols-5 place-items-center gap-x-2 gap-y-3 overflow-hidden rounded-xl border-2 border-emerald-400/80 bg-slate-950/85 px-3 pb-2.5 pt-4">
         {Array.from({ length: 10 }, (_, index) => {
           const counted = index < countedThrough;
           const active = counting && counted && index === countedThrough - 1;
           return (
-            <span key={index} className={`relative h-10 w-10 rounded-xl border-2 transition-all duration-300 ${active ? "z-10 scale-110 border-yellow-200 ring-4 ring-yellow-300/90 shadow-[0_0_18px_rgba(250,204,21,.72)]" : counted ? "border-cyan-300" : "border-slate-700 bg-slate-950/55 grayscale"}`}>
-              <span className={`absolute -top-3 left-1/2 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1 text-xs font-black shadow ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
+            <span key={index} className={`relative grid h-9 w-9 place-items-center rounded-lg border transition-all duration-300 ${active ? "z-10 scale-105 border-yellow-200 ring-2 ring-yellow-300/90 shadow-[0_0_14px_rgba(250,204,21,.68)]" : counted ? "border-cyan-300 bg-cyan-950" : "border-slate-700 bg-slate-950/55 opacity-55 grayscale"}`}>
+              <SpriteIcon value={BANANA} className="h-7 w-7" />
+              <span className={`absolute -top-2.5 left-1/2 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black leading-none shadow ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
             </span>
           );
         })}
+      </div>
+      <div className="mx-auto mt-2 flex w-fit items-center gap-2 rounded-full bg-emerald-800 px-3 py-1.5 text-white">
+        <span className="text-xl font-black" style={getNumberTextStyle(10)}>10</span>
+        <span className="text-xs font-black">{lang === "en" ? "one ten" : "satu sepuluh"}</span>
       </div>
     </div>
   );
@@ -12589,6 +12725,129 @@ function AnimatedCupSubtractionVisual({ lang, onComplete }: { lang: Lang; onComp
   );
 }
 
+function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
+  lang: Lang;
+  t: UIStrings;
+  player: Player;
+  go: (screen: Screen) => void;
+  lastScore: AdvancedTestScore | null;
+}) {
+  const tests: Array<{
+    id: AdvancedTestId;
+    screen: Screen;
+    title: string;
+    subtitle: string;
+    unlocked: boolean;
+    icon: string;
+  }> = [
+    {
+      id: "teenNumbers",
+      screen: "advancedTestTeenNumbers",
+      title: lang === "en" ? "Teen Numbers" : "Nombor Belasan",
+      subtitle: lang === "en" ? "10 questions · Numbers 10-20" : "10 soalan · Nombor 10-20",
+      unlocked: Boolean(player.progress.advancedTeenNumbers),
+      icon: "10-20",
+    },
+    {
+      id: "compareBigger",
+      screen: "advancedTestCompareBigger",
+      title: lang === "en" ? "Compare Bigger" : "Banding Nombor",
+      subtitle: lang === "en" ? "12 questions · Greater than, less than, or equal" : "12 soalan · Lebih besar, lebih kecil, atau sama",
+      unlocked: Boolean(player.progress.advancedCompareBigger),
+      icon: "< > =",
+    },
+    {
+      id: "sequencing",
+      screen: "advancedTestSequencing",
+      title: lang === "en" ? "Sequencing" : "Urutan",
+      subtitle: lang === "en" ? "10 questions · What comes next" : "10 soalan · Nombor seterusnya",
+      unlocked: Boolean(player.progress.advancedSequencing),
+      icon: "+1",
+    },
+    {
+      id: "addition",
+      screen: "advancedTestAddition",
+      title: lang === "en" ? "Addition" : "Tambah",
+      subtitle: lang === "en" ? "16 questions · Adding up to 20" : "16 soalan · Tambah sehingga 20",
+      unlocked: Boolean(player.progress.advancedAdditionPart1) && Boolean(player.progress.advancedAdditionPart2),
+      icon: "10+",
+    },
+    {
+      id: "subtraction",
+      screen: "advancedTestSubtraction",
+      title: lang === "en" ? "Subtraction" : "Tolak",
+      subtitle: lang === "en" ? "16 questions · Subtracting up to 20" : "16 soalan · Tolak sehingga 20",
+      unlocked: Boolean(player.progress.advancedSubtraction),
+      icon: "10−",
+    },
+  ];
+
+  return (
+    <main className="mx-auto w-full max-w-5xl pb-8">
+      <section className="relative mb-5 overflow-hidden rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-6 text-center shadow-[0_9px_0_#083344]">
+        <span className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(34,211,238,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.2)_1px,transparent_1px)] [background-size:26px_26px]" aria-hidden="true" />
+        <div className="relative">
+          <span className="mx-auto grid h-24 w-24 place-items-center rounded-[1.75rem] border-2 border-yellow-200 bg-yellow-400 text-slate-950 shadow-[0_6px_0_#a16207]">
+            <Flag className="h-12 w-12" strokeWidth={3} aria-hidden="true" />
+          </span>
+          <h2 className="mt-4 text-4xl font-black text-yellow-200">{t.advancedTestMode}</h2>
+          <p className="mx-auto mt-2 max-w-xl text-lg font-bold text-cyan-50">{t.advancedTestHelp}</p>
+          <p className="mt-2 text-sm font-black text-cyan-200">{lang === "en" ? "Earn mastery with 70% or more." : "Capai penguasaan dengan 70% atau lebih."}</p>
+        </div>
+      </section>
+
+      {lastScore && (
+        <section className={`mb-5 rounded-[1.75rem] border-2 p-5 text-center shadow-[0_6px_0_#083344] ${lastScore.mastered ? "border-emerald-300 bg-emerald-950/90" : "border-orange-300 bg-orange-950/90"}`} aria-live="polite">
+          <p className={`text-2xl font-black ${lastScore.mastered ? "text-emerald-200" : "text-orange-200"}`}>
+            {lastScore.mastered
+              ? (lang === "en" ? "Mastery achieved! You earned a star." : "Penguasaan dicapai! Kamu mendapat bintang.")
+              : (lang === "en" ? "Test complete. Keep practicing with Chrys." : "Ujian selesai. Terus berlatih bersama Chrys.")}
+          </p>
+          <p className="mt-1 text-xl font-black text-cyan-50">{t.score}: {lastScore.correct}/{lastScore.total}</p>
+        </section>
+      )}
+
+      <div className="grid gap-4">
+        {tests.map((test) => {
+          const score = player.progress[advancedTestProgressKey(test.id, "score")];
+          const total = player.progress[advancedTestProgressKey(test.id, "total")];
+          const mastered = Boolean(player.progress[advancedTestProgressKey(test.id, "mastered")]);
+          const hasScore = Number.isFinite(score) && Number.isFinite(total) && total > 0;
+          return (
+            <button
+              key={test.id}
+              type="button"
+              disabled={!test.unlocked}
+              onClick={() => go(test.screen)}
+              className={`group rounded-[1.75rem] border-2 p-5 text-left shadow-[0_7px_0_#083344] transition sm:p-6 ${test.unlocked ? "border-cyan-300 bg-slate-950/95 hover:-translate-y-1 hover:border-yellow-300" : "cursor-not-allowed border-slate-600 bg-slate-950/80 opacity-65"}`}
+            >
+              <span className="flex items-center gap-4">
+                <span className={`grid h-16 min-w-16 shrink-0 place-items-center rounded-2xl border-2 px-2 text-lg font-black shadow-[0_4px_0_#164e63] ${test.unlocked ? "border-cyan-200 bg-cyan-950 text-yellow-200" : "border-slate-600 bg-slate-900 text-slate-500"}`} style={NUMBER_TEXT_STYLE}>
+                  {test.unlocked ? test.icon : <KeyRound className="h-8 w-8" strokeWidth={3} aria-hidden="true" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-2xl font-black ${test.unlocked ? "text-yellow-200" : "text-slate-400"}`}>{test.title}</span>
+                  <span className={`mt-1 block font-bold ${test.unlocked ? "text-cyan-100" : "text-slate-500"}`}>{test.subtitle}</span>
+                  {!test.unlocked && <span className="mt-2 block text-sm font-black text-orange-300">{lang === "en" ? "Complete the matching mission to unlock." : "Selesaikan misi yang sepadan untuk membuka."}</span>}
+                </span>
+                <span className="shrink-0 text-right">
+                  {mastered ? (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-900 px-3 py-2 text-sm font-black text-emerald-100"><Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />{lang === "en" ? "Mastered" : "Dikuasai"}</span>
+                  ) : hasScore ? (
+                    <span className="inline-block rounded-full border border-cyan-500 bg-cyan-950 px-3 py-2 text-sm font-black text-cyan-100">{t.score}: {score}/{total}</span>
+                  ) : test.unlocked ? (
+                    <ArrowRight className="h-8 w-8 text-cyan-200 transition-transform group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+                  ) : null}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </main>
+  );
+}
+
 function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Screen) => void }) {
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
@@ -12822,6 +13081,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               revealCorrect={isCorrect || showSolution}
               answer={Number(qn.answer)}
               onAnswer={answerQuestion}
+              cyber={cyber}
             />
           ) : qn.inputMode && qn.inputMode !== "choice" ? (
             <ActiveAnswerPanel
@@ -12987,6 +13247,7 @@ function GroupChoiceAnswerPanel({
   revealCorrect,
   answer,
   onAnswer,
+  cyber = false,
 }: {
   visual: Extract<Visual, { kind: "groupChoices" }>;
   lang: Lang;
@@ -12995,6 +13256,7 @@ function GroupChoiceAnswerPanel({
   revealCorrect: boolean;
   answer: number;
   onAnswer: (answer: number) => void;
+  cyber?: boolean;
 }) {
   return (
     <div className="my-4 space-y-4">
@@ -13009,12 +13271,12 @@ function GroupChoiceAnswerPanel({
         const picked = selected === count;
         const right = count === answer;
         const stateClass = !answered
-          ? "border-blue-100 bg-white hover:border-blue-300"
+          ? cyber ? "border-cyan-400 bg-slate-950 hover:border-yellow-300" : "border-blue-100 bg-white hover:border-blue-300"
           : right && revealCorrect
-            ? "border-emerald-600 bg-emerald-50"
+            ? cyber ? "border-emerald-300 bg-emerald-950" : "border-emerald-600 bg-emerald-50"
             : picked
-              ? "border-orange-500 bg-orange-50"
-              : "border-slate-100 bg-slate-50 opacity-70";
+              ? cyber ? "border-orange-300 bg-orange-950" : "border-orange-500 bg-orange-50"
+              : cyber ? "border-slate-700 bg-slate-950 opacity-70" : "border-slate-100 bg-slate-50 opacity-70";
         const status = !answered
           ? ""
           : right && revealCorrect
@@ -13030,7 +13292,7 @@ function GroupChoiceAnswerPanel({
             aria-label={`${lang === "en" ? "Group answer with" : "Jawapan kumpulan dengan"} ${count}${status}`}
             className={`rounded-3xl border-4 p-3 text-center shadow-[0_6px_0_rgba(0,0,0,.12)] transition active:translate-y-1 ${stateClass}`}
           >
-            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealCorrect} lang={lang} />
+            <ObjectGroup count={count} emoji={visual.emoji} numbered={revealCorrect} cyber={cyber} lang={lang} />
             {answered && (picked || (right && revealCorrect)) && (
               <span className={`mt-3 inline-grid h-10 w-10 place-items-center rounded-full border-2 bg-white text-2xl font-black ${right ? "border-emerald-700 text-emerald-700" : picked ? "border-orange-700 text-orange-700" : "border-slate-200 text-slate-300"}`} aria-hidden="true">
                 {right ? "✓" : picked ? "×" : ""}
@@ -15303,7 +15565,52 @@ function DrawQuantity({ count, lang }: { count: number; lang: Lang }) {
   );
 }
 
+function TeenQuantityArrangementVisual({ count, emoji, rowPattern, lang }: { count: number; emoji: string; rowPattern: number[]; lang: Lang }) {
+  return (
+    <div className="mx-auto max-w-2xl rounded-[2rem] border-2 border-cyan-300 bg-slate-950/80 p-5 shadow-[inset_0_0_24px_rgba(34,211,238,.12)]">
+      <p className="mb-4 text-center text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? "Same group, new arrangement" : "Kumpulan sama, susunan baharu"}</p>
+      <AdvancedBananaRow count={count} emoji={emoji} rowPattern={rowPattern} spacious largeObjects />
+    </div>
+  );
+}
+
+function AdvancedCompareTestVisual({ a, b, emoji, representation, lang }: Extract<Visual, { kind: "advancedCompareTest" }> & { lang: Lang }) {
+  const group = (value: number, side: "A" | "B") => (
+    <div className="relative flex min-h-44 min-w-0 flex-col items-center justify-center overflow-hidden rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/80 px-3 pb-4 pt-5">
+      <span className="mb-3 text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Group ${side}` : `Kumpulan ${side}`}</span>
+      {representation === "labeled" && (
+        <span className="absolute right-3 top-3 grid h-11 min-w-11 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 px-2 text-2xl font-black text-slate-950 shadow-[0_4px_0_#a16207]" style={getNumberTextStyle(value)}>{value}</span>
+      )}
+      <AdvancedBananaRow count={value} emoji={emoji} compact={value >= 10} />
+    </div>
+  );
+
+  if (representation === "numbers") {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-5 rounded-[2rem] border-2 border-cyan-400 bg-slate-950/80 p-6">
+        <span className="grid h-28 min-w-28 place-items-center rounded-3xl border-4 border-cyan-300 bg-cyan-950 px-4 text-6xl font-black text-yellow-200 shadow-[0_6px_0_#164e63]" style={getNumberTextStyle(a)}>{a}</span>
+        <span className="text-5xl font-black text-cyan-300" aria-hidden="true">?</span>
+        <span className="grid h-28 min-w-28 place-items-center rounded-3xl border-4 border-cyan-300 bg-cyan-950 px-4 text-6xl font-black text-yellow-200 shadow-[0_6px_0_#164e63]" style={getNumberTextStyle(b)}>{b}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+      {group(a, "A")}
+      <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">?</span>
+      {group(b, "B")}
+    </div>
+  );
+}
+
 function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrossedLabels = false, cyber = false }: { visual: Visual; lang?: Lang; revealNumbers?: boolean; revealCrossedLabels?: boolean; cyber?: boolean }) {
+  if (visual.kind === "teenQuantityArrangement") {
+    return <TeenQuantityArrangementVisual count={visual.count} emoji={visual.emoji} rowPattern={visual.rowPattern} lang={lang} />;
+  }
+  if (visual.kind === "advancedCompareTest") {
+    return <AdvancedCompareTestVisual {...visual} lang={lang} />;
+  }
   if (visual.kind === "horizontalAdd") {
     if (visual.display === "none") return null;
 
@@ -15311,11 +15618,11 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
       return (
         <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
           <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
-            {cyber ? <AdvancedBananaRow count={visual.a} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
+            {cyber ? <AdvancedBananaRow count={visual.a} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.a : 0} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
           </div>
           <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
           <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
-            {cyber ? <AdvancedBananaRow count={visual.b} /> : <ObjectGroup count={visual.b} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
+            {cyber ? <AdvancedBananaRow count={visual.b} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.b : 0} /> : <ObjectGroup count={visual.b} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
           </div>
         </div>
       );
@@ -15334,6 +15641,15 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   }
   if (visual.kind === "verticalSubtract") {
     return <VerticalSubtractionCard a={visual.a} b={visual.b} borrowing={visual.borrowing} lang={lang} />;
+  }
+  if (visual.kind === "horizontalSubtract") {
+    return (
+      <div className={`mx-auto max-w-xl rounded-[2rem] border-4 p-6 text-center ${cyber ? "border-cyan-300 bg-slate-950 shadow-[0_7px_0_#164e63]" : "border-yellow-300 bg-yellow-50"}`}>
+        <p className={`text-5xl font-black sm:text-6xl ${cyber ? "text-yellow-200" : "text-blue-950"}`} style={getNumberTextStyle(visual.a)}>
+          {visual.a} <span className={cyber ? "text-cyan-300" : "text-blue-600"}>−</span> {visual.b} <span className={cyber ? "text-cyan-300" : "text-blue-600"}>=</span> ?
+        </p>
+      </div>
+    );
   }
   if (visual.kind === "teenBundle") {
     return (
@@ -15524,8 +15840,8 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   const emoji = visual.emoji ?? "🍌";
   return (
     <div className="space-y-3">
-      <ObjectGroup count={visual.a} emoji={emoji} numbered={visual.showLabels === true || revealCrossedLabels} crossed={visual.b} crossedLabels={revealCrossedLabels} lang={lang} />
-      {revealNumbers && <p className="text-center text-2xl font-black text-slate-500">{visual.a} - {visual.b} = ?</p>}
+      <ObjectGroup count={visual.a} emoji={emoji} numbered={visual.showLabels === true || revealCrossedLabels} crossed={visual.b} crossedLabels={revealCrossedLabels} cyber={cyber} lang={lang} />
+      {revealNumbers && <p className={`text-center text-2xl font-black ${cyber ? "text-cyan-200" : "text-slate-500"}`}>{visual.a} - {visual.b} = ?</p>}
     </div>
   );
 }
@@ -15554,6 +15870,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     (
       solutionVisual.kind === "verticalAdd" ||
       solutionVisual.kind === "verticalSubtract" ||
+      solutionVisual.kind === "horizontalSubtract" ||
       solutionVisual.kind === "horizontalAdd" ||
       (solutionVisual.kind === "count" && solutionVisual.count === 0 && (solutionVisual.emoji ?? BANANA) === BANANA)
     );
@@ -15565,7 +15882,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
   }, [q.id]);
 
   useEffect(() => {
-    if (!q.id.startsWith("adv-sub-") || solutionVisual.kind !== "verticalSubtract") return;
+    if (!(q.id.startsWith("adv-sub-") || q.id.startsWith("adv-test-sub-")) || (solutionVisual.kind !== "verticalSubtract" && solutionVisual.kind !== "horizontalSubtract" && solutionVisual.kind !== "subtract")) return;
     const cueKey = `${q.id}:${lang}`;
     if (announcedAdvancedSubtractionCueRef.current === cueKey) return;
     announcedAdvancedSubtractionCueRef.current = cueKey;
@@ -15721,8 +16038,19 @@ function SequentialCountResult({ count, emoji, lang, cyber = false }: { count: n
 }
 
 function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang: Lang; cyber?: boolean }) {
+  if (visual.kind === "verticalAdd") {
+    return <VerticalAdditionCard a={visual.a} b={visual.b} answer={visual.a + visual.b} lang={lang} />;
+  }
   if (visual.kind === "verticalSubtract") {
     return <VerticalSubtractionCard a={visual.a} b={visual.b} answer={visual.a - visual.b} borrowing={visual.borrowing} showBorrow={visual.borrowing} lang={lang} />;
+  }
+  if (visual.kind === "horizontalSubtract") {
+    const answer = visual.a - visual.b;
+    return (
+      <div className={`mx-auto rounded-3xl border-2 p-5 text-center text-4xl font-black ${cyber ? "border-cyan-300 bg-slate-950 text-yellow-200" : "border-emerald-200 bg-white text-emerald-900"}`} style={getNumberTextStyle(answer)}>
+        {visual.a} − {visual.b} = {answer}
+      </div>
+    );
   }
   if (visual.kind === "teenBundle") {
     return <VisualDisplay visual={visual} lang={lang} revealNumbers cyber={cyber} />;
