@@ -3399,8 +3399,12 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
   const balancedRows = (maxPerRow: number) => balancedIndexRows(count, maxPerRow).map((row, rowIndex) => (
     <React.Fragment key={rowIndex}>{renderBananas(row[0], row.length)}</React.Fragment>
   ));
-  const mobileRows = count > 7 ? balancedRows(7) : [renderBananas(0, count)];
-  const desktopRows = count > 8 ? balancedRows(8) : [renderBananas(0, count)];
+  // Five is the safe maximum for every card width used by lessons, questions,
+  // tests, and worked solutions. Larger sets become balanced centred rows
+  // instead of shrinking, clipping, or touching the card border.
+  const maxObjectsPerRow = 5;
+  const mobileRows = count > maxObjectsPerRow ? balancedRows(maxObjectsPerRow) : [renderBananas(0, count)];
+  const desktopRows = count > maxObjectsPerRow ? balancedRows(maxObjectsPerRow) : [renderBananas(0, count)];
   const splitRows = balancedRows(5);
   const customRows = rowPattern?.reduce<{ rows: React.ReactNode[]; start: number }>((result, amount, rowIndex) => {
     result.rows.push(<React.Fragment key={rowIndex}>{renderBananas(result.start, amount)}</React.Fragment>);
@@ -3410,7 +3414,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
 
   return (
     <div className={compact ? "w-fit max-w-full shrink-0 px-2" : "w-full min-w-0 px-2 sm:px-3"} aria-label={label}>
-      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > 8 ? `flex-col ${spacious ? "gap-4" : "gap-2"}` : ""}`}>
+      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > maxObjectsPerRow ? `flex-col ${spacious ? "gap-4" : "gap-2"}` : ""}`}>
         {customRows ?? (splitOnDesktop ? splitRows : desktopRows)}
       </div>
       <div className={`flex min-h-14 flex-col items-center justify-center sm:hidden ${spacious ? "gap-4" : "gap-2"}`}>
@@ -6748,8 +6752,9 @@ function TeenValueObjects({
     ? `Total: ${value} ${secondObjectName}`
     : `Jumlah: ${value} ${secondObjectName}`;
   const activelyCounting = counting && resultStage === 0;
-  // Keep teen quantities in two near-equal rows: 14 is 7 + 7, 15 is 8 + 7.
-  const balancedColumns = Math.ceil(value / 2);
+  // Keep every teen object large enough to identify. A maximum of five per
+  // row avoids the former 7-10-column squeeze inside side-by-side panels.
+  const balancedColumns = Math.min(5, Math.ceil(value / 2));
 
   return (
     <div className={`rounded-[2rem] border-4 p-4 transition sm:p-5 ${
@@ -9888,29 +9893,33 @@ function ChrysSubtractionStory({ lang, t, start, takeAway, situation, objectKind
                 <p className="mb-3 text-sm font-black uppercase text-amber-800">{butterflies ? (lang === "en" ? "Butterflies near Chrys" : "Rama-rama dekat Chrys") : (lang === "en" ? "Chrys's basket" : "Bakul Chrys")}</p>
                 <div className="relative mx-auto min-h-[21rem] w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-amber-100 bg-white">
                   {!butterflies && <img src={BASKET_SPRITE} alt="" aria-hidden="true" className="absolute inset-1 h-[calc(100%-0.5rem)] w-[calc(100%-0.5rem)] object-contain opacity-95" />}
-                  <div className="relative z-10 grid min-h-[21rem] grid-cols-8 place-content-center gap-x-1 gap-y-5 overflow-hidden px-9 pb-10 pt-12 sm:gap-x-2 sm:px-11">
-                    {Array.from({ length: start }, (_, index) => {
-                      const inBasket = index < left;
-                      const isFlying = flight?.some((item) => item.sourceIndex === index);
-                      return (
-                        <div
-                          key={index}
-                          ref={(node) => { chrysBananaRefs.current[index] = node; }}
-                          className={`relative col-span-2 flex h-16 w-16 items-center justify-center justify-self-center overflow-visible rounded-full border-[3px] shadow-[0_3px_0_#93c5fd] transition-opacity duration-150 ${
-                            inBasket
-                              ? "border-blue-400 bg-blue-50/95"
-                              : "pointer-events-none border-transparent bg-transparent opacity-0"
-                          } ${isFlying ? "opacity-0" : ""}`}
-                        >
-                          {inBasket && <>
-                            <span className="absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
-                              {index + 1}
-                            </span>
-                            <SpriteIcon value={objectEmoji} className="h-12 w-12" />
-                          </>}
-                        </div>
-                      );
-                    })}
+                  <div className="relative z-10 flex min-h-[21rem] flex-col items-center justify-center gap-5 overflow-hidden px-8 pb-10 pt-12 sm:px-10">
+                    {balancedIndexRows(start, 4).map((row, rowIndex) => (
+                      <div key={rowIndex} className="flex w-full items-center justify-center gap-3 sm:gap-4">
+                        {row.map((index) => {
+                          const inBasket = index < left;
+                          const isFlying = flight?.some((item) => item.sourceIndex === index);
+                          return (
+                            <div
+                              key={index}
+                              ref={(node) => { chrysBananaRefs.current[index] = node; }}
+                              className={`relative flex h-16 w-16 shrink-0 items-center justify-center overflow-visible rounded-full border-[3px] shadow-[0_3px_0_#93c5fd] transition-opacity duration-150 ${
+                                inBasket
+                                  ? "border-blue-400 bg-blue-50/95"
+                                  : "pointer-events-none border-transparent bg-transparent opacity-0"
+                              } ${isFlying ? "opacity-0" : ""}`}
+                            >
+                              {inBasket && <>
+                                <span className="absolute -right-1 -top-2 z-20 grid h-6 min-w-6 place-items-center rounded-full bg-blue-600 px-1 text-xs font-black leading-none text-white shadow-sm">
+                                  {index + 1}
+                                </span>
+                                <SpriteIcon value={objectEmoji} className="h-12 w-12" />
+                              </>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-lg font-black">
@@ -12559,7 +12568,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   let leftIndex = 0;
   return (
     <div
-      className={`${layoutClass} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
+      className={`${layoutClass} mx-auto w-full ${fixedColumns ? "max-w-full" : "max-w-[28rem]"} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
     >
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
@@ -15576,8 +15585,8 @@ function TeenQuantityArrangementVisual({ count, emoji, rowPattern, lang }: { cou
 
 function AdvancedCompareTestVisual({ a, b, emoji, representation, lang }: Extract<Visual, { kind: "advancedCompareTest" }> & { lang: Lang }) {
   const group = (value: number, side: "A" | "B") => (
-    <div className="relative flex min-h-44 min-w-0 flex-col items-center justify-center overflow-hidden rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/80 px-3 pb-4 pt-5">
-      <span className="mb-3 text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Group ${side}` : `Kumpulan ${side}`}</span>
+    <div className="relative flex min-h-60 min-w-0 flex-col items-center justify-center overflow-hidden rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/80 px-5 pb-6 pt-7">
+      <span className="mb-5 text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Group ${side}` : `Kumpulan ${side}`}</span>
       {representation === "labeled" && (
         <span className="absolute right-3 top-3 grid h-11 min-w-11 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 px-2 text-2xl font-black text-slate-950 shadow-[0_4px_0_#a16207]" style={getNumberTextStyle(value)}>{value}</span>
       )}
@@ -15596,7 +15605,7 @@ function AdvancedCompareTestVisual({ a, b, emoji, representation, lang }: Extrac
   }
 
   return (
-    <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+    <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
       {group(a, "A")}
       <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">?</span>
       {group(b, "B")}
@@ -15616,7 +15625,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
 
     if (visual.display === "objects") {
       return (
-        <div className="grid items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div className="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
           <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
             {cyber ? <AdvancedBananaRow count={visual.a} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.a : 0} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
           </div>
@@ -15694,7 +15703,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   }
   if (visual.kind === "groupChoices") {
     return (
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         {visual.groups.map((count) => (
           <div key={count} className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center">
             <ObjectGroup count={count} emoji={visual.emoji} numbered={revealNumbers} lang={lang} />
