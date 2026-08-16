@@ -388,6 +388,7 @@ const OBJECT_SPRITES: Record<string, string> = {
 let activeNumberAudio: HTMLAudioElement | null = null;
 let activeCelebrationAudio: HTMLAudioElement | null = null;
 let successFanfareAudio: HTMLAudioElement | null = null;
+let successFanfarePrimeRunId = 0;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
 let lastCountingFinishedAt = 0;
@@ -399,6 +400,7 @@ const AudioEnabledContext = React.createContext(NUMBER_AUDIO_ENABLED);
 
 function markAudioInteraction() {
   audioUserInteracted = true;
+  primeSuccessFanfareOutput();
 }
 
 function setGlobalAudioMuted(muted: boolean) {
@@ -16370,9 +16372,34 @@ function stopNumberAudio() {
 }
 
 function stopCelebrationAudio() {
-  activeCelebrationAudio?.pause();
-  if (activeCelebrationAudio) activeCelebrationAudio.currentTime = 0;
+  successFanfarePrimeRunId += 1;
+  const audio = activeCelebrationAudio ?? successFanfareAudio;
+  audio?.pause();
+  if (audio) resetAudioToStart(audio);
   activeCelebrationAudio = null;
+}
+
+function primeSuccessFanfareOutput() {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted || activeCelebrationAudio) return;
+  const audio = getSuccessFanfareAudio();
+  const runId = ++successFanfarePrimeRunId;
+  const restoreVolume = audio.volume;
+  audio.pause();
+  resetAudioToStart(audio);
+  audio.preload = "auto";
+  audio.volume = 0;
+
+  void audio.play()
+    .then(async () => {
+      await wait(AUDIO_CLEAR_START_PRIME_MS);
+      if (runId !== successFanfarePrimeRunId || activeCelebrationAudio === audio) return;
+      audio.pause();
+      resetAudioToStart(audio);
+      audio.volume = restoreVolume;
+    })
+    .catch(() => {
+      if (runId === successFanfarePrimeRunId) audio.volume = restoreVolume;
+    });
 }
 
 function resetAudioToStart(audio: HTMLAudioElement) {
@@ -16451,10 +16478,10 @@ function playSuccessFanfare(onFinished?: () => void) {
   };
   audio.onended = clear;
   audio.onerror = clear;
-  void playAudioFromClearStart(audio, () => activeCelebrationAudio === audio)
-    .then((started) => {
-      if (!started) clear();
-    });
+  // The pointer/key interaction has already warmed the output. Start the
+  // fanfare audibly in one direct request so effect-triggered playback is not
+  // mistaken for muted autoplay by the browser.
+  void audio.play().catch(clear);
   return true;
 }
 
