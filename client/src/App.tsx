@@ -16379,8 +16379,8 @@ function resetAudioToStart(audio: HTMLAudioElement) {
   try {
     audio.currentTime = 0;
   } catch {
-    // Some browsers reject seeking until metadata is available. The readiness
-    // wait below will make the next reset succeed.
+    // Some browsers reject seeking until metadata is available. Playback will
+    // decode the clip before the next reset attempt.
   }
 }
 
@@ -16417,18 +16417,19 @@ async function playAudioFromClearStart(
     return false;
   }
 
-  audio.pause();
+  // Keep this as one continuous play request. Pausing and calling play again
+  // after the warm-up can be treated as autoplay and blocked by the browser.
   resetAudioToStart(audio);
-  audio.volume = audibleVolume;
   await wait(AUDIO_CLEAR_START_SETTLE_MS);
-  if (!isCurrent()) return false;
-
-  try {
-    await audio.play();
-    return true;
-  } catch {
+  if (!isCurrent()) {
+    audio.pause();
+    audio.volume = audibleVolume;
     return false;
   }
+
+  resetAudioToStart(audio);
+  audio.volume = audibleVolume;
+  return true;
 }
 
 function playSuccessFanfare(onFinished?: () => void) {
