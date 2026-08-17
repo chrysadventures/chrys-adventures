@@ -642,6 +642,291 @@
   animation: correctBurstPulse 1.25s ease-out forwards;
 }
 
+/* Responsive app shell ----------------------------------------------------
+   The game contains many visual counting panels. These rules keep their
+   objects at a readable size, add device-safe padding, and stack complex
+   desktop grids before an iPad or iPhone is forced to squeeze them. */
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+.app-responsive-frame,
+.app-responsive-frame main,
+.app-responsive-frame section,
+.app-responsive-frame article,
+.app-responsive-frame header,
+.mobile-lesson-panel,
+.mobile-quiz-card,
+.mobile-visual-card,
+.mobile-feedback-card,
+.mobile-grouping-tray,
+.mobile-container-scene,
+.mobile-wide-grid,
+.mobile-wide-grid > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-responsive-frame button,
+.app-responsive-frame h1,
+.app-responsive-frame h2,
+.app-responsive-frame h3,
+.app-responsive-frame p {
+  overflow-wrap: anywhere;
+}
+
+/* Tailwind's desktop grids begin at 768px/1024px. Those widths are still
+   tablets, so dense lesson panels remain stacked until there is real room. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .app-responsive-frame [class*="md:grid-cols"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .app-responsive-frame [class*="md:items-center"] {
+    align-items: stretch !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .app-responsive-frame [class*="lg:grid-cols"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-responsive-frame {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+  }
+
+  .app-header {
+    margin-bottom: 0.6rem;
+    border-radius: 1.1rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .app-header button,
+  .app-header a {
+    min-height: 2.75rem;
+  }
+
+  .mobile-lesson-panel,
+  .mobile-quiz-card {
+    border-width: 2px;
+    border-radius: 1.25rem;
+    padding: 0.75rem;
+  }
+
+  .mobile-lesson-panel > div:first-child {
+    margin-bottom: 0.85rem;
+  }
+
+  .mobile-lesson-panel h2,
+  .mobile-quiz-card > h2 {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+    line-height: 1.12;
+  }
+
+  .mobile-teaching-card {
+    gap: 0.65rem;
+    border-radius: 1.1rem;
+    padding: 0.75rem;
+    text-align: center;
+  }
+
+  .mobile-teaching-card > span {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .mobile-teaching-card img {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .mobile-teaching-card h3 {
+    font-size: 1.3rem;
+    line-height: 1.15;
+  }
+
+  .mobile-teaching-card p {
+    font-size: 0.95rem;
+  }
+
+  .mobile-visual-card,
+  .mobile-feedback-card,
+  .mobile-grouping-tray,
+  .mobile-container-scene {
+    border-radius: 1.1rem;
+    padding: 0.6rem;
+  }
+
+  .mobile-object-group {
+    gap: 1rem;
+    border-radius: 1rem;
+    padding: 1.6rem 0.55rem 0.7rem;
+  }
+
+  .mobile-object-group > div {
+    gap: 0.45rem;
+  }
+
+  [data-advanced-object-index] {
+    width: 2.25rem !important;
+    height: 3rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  [data-advanced-object-index] > svg,
+  [data-advanced-object-index] > img {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .mobile-subtraction-bananas {
+    gap: 0.75rem;
+    padding-inline: 0.25rem;
+  }
+
+  .mobile-subtraction-bananas > div {
+    gap: 0.45rem;
+  }
+
+  .mobile-subtraction-bananas > div > span {
+    width: 2.25rem !important;
+    height: 3rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .mobile-subtraction-bananas > div > span > img {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .mobile-part2-bananas > div {
+    gap: 0.45rem;
+  }
+
+  .mobile-part2-bananas > div > span {
+    width: 2.5rem !important;
+    height: 3.5rem !important;
+    border-radius: 0.8rem !important;
+  }
+
+  .mobile-part2-bananas > div > span > img {
+    width: 2.15rem !important;
+    height: 2.15rem !important;
+  }
+
+  .mobile-ten-bundle {
+    border-width: 2px;
+    border-radius: 1.1rem;
+    padding: 0.45rem;
+  }
+
+  .mobile-ten-bundle > div:first-child {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.25rem;
+    padding: 0.35rem;
+  }
+
+  .mobile-ten-bundle > div:first-child > span {
+    width: min(2.35rem, 100%) !important;
+    height: 2.35rem !important;
+  }
+
+  .mobile-ten-bundle > div:first-child > span > * {
+    width: 1.9rem !important;
+    height: 1.9rem !important;
+  }
+
+  .mobile-vertical-card {
+    border-width: 2px;
+    border-radius: 1.15rem;
+    padding: 0.75rem;
+  }
+
+  .mobile-answer-grid {
+    gap: 0.6rem;
+  }
+
+  .mobile-answer-grid button {
+    min-height: 4rem;
+    border-radius: 1rem;
+    font-size: clamp(1.35rem, 7vw, 2rem);
+  }
+
+  .mobile-feedback-card > div:first-of-type {
+    align-items: flex-start;
+  }
+
+  .mobile-feedback-card img {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .mobile-lesson-navigation,
+  .mobile-lesson-navigation > div {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mobile-lesson-navigation button {
+    width: 100%;
+    min-height: 3rem;
+    white-space: normal;
+  }
+
+  .mobile-wide-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .app-responsive-frame button {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 370px) {
+  .app-responsive-frame {
+    padding-right: max(0.35rem, env(safe-area-inset-right));
+    padding-left: max(0.35rem, env(safe-area-inset-left));
+  }
+
+  .mobile-lesson-panel,
+  .mobile-quiz-card {
+    padding: 0.55rem;
+  }
+
+  .mobile-object-group > div > div {
+    width: 2.55rem;
+    height: 2.55rem;
+  }
+
+  .mobile-object-group > div > div > span:first-child > * {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

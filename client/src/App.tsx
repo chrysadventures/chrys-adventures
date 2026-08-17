@@ -1667,7 +1667,7 @@ function App() {
         onKeyDownCapture={markAudioInteraction}
       >
       <Decor />
-      <div className="jungle-leaves relative z-10 min-h-[100dvh] mx-auto flex w-full max-w-6xl flex-col px-4 py-4 md:px-8">
+      <div className="app-responsive-frame jungle-leaves relative z-10 min-h-[100dvh] mx-auto flex w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <Header
           lang={lang}
           onToggleLang={() => setLang((current) => (current === "en" ? "ms" : "en"))}
@@ -1896,7 +1896,7 @@ function PinGate({ lang, onToggleLang, onGranted }: {
 
   return (
     <div className="page-bg min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
-      <div className="jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
+      <div className="app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <header className="flex justify-end">
           <button
             type="button"
@@ -2090,7 +2090,7 @@ function GameFileScreen({
 
   return (
     <div className="page-bg min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
-      <div className="jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
+      <div className="app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <header className="flex items-center justify-between gap-3">
           <button type="button" onClick={onChangePin} className="rounded-2xl border-2 border-white/90 bg-white/90 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(0,0,0,.15)]">
             <ArrowLeft className="mr-1 inline h-4 w-4" aria-hidden="true" /> {copy.changePin}
@@ -2179,7 +2179,7 @@ function Header({ lang, onToggleLang, title, stars, cyber = false, t, soundEnabl
   onBack?: () => void;
 }) {
   return (
-    <header className={`${cyber ? "border-2 border-cyan-300/80 bg-[#041c2d]/95 shadow-[0_6px_0_#07546e]" : "soft-panel"} mb-4 flex items-center justify-between gap-2 rounded-[1.75rem] px-3 py-2 sm:gap-3`}>
+    <header className={`${cyber ? "border-2 border-cyan-300/80 bg-[#041c2d]/95 shadow-[0_6px_0_#07546e]" : "soft-panel"} app-header mb-4 flex items-center justify-between gap-2 rounded-[1.75rem] px-3 py-2 sm:gap-3`}>
       <div className="flex min-w-0 items-center gap-2">
         {onBack && (
           <button onClick={onBack} aria-label={t.back} className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 transition hover:-translate-y-0.5 active:translate-y-1 ${cyber ? "border-cyan-300/70 bg-slate-950 text-cyan-100 shadow-[0_5px_0_#164e63] hover:bg-cyan-950" : "border-sky-100 bg-white text-blue-800 shadow-[0_5px_0_rgba(14,116,144,.18)] hover:border-sky-200 hover:bg-sky-50"}`}>
@@ -2989,7 +2989,7 @@ function VerticalAdditionCard({ a, b, answer, carried, lang }: { a: number; b: n
       ? ["", String(answer)]
       : String(answer).padStart(2, "0").split("");
   return (
-    <div className="mx-auto w-64 rounded-3xl border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63]">
+    <div className="mobile-vertical-card mx-auto w-full max-w-64 rounded-3xl border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63]">
       <div className="mb-2 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-center text-xs font-black uppercase tracking-wider text-cyan-300">
         <span aria-hidden="true" />
         <span>{lang === "en" ? "Tens" : "Puluh"}</span><span>{lang === "en" ? "Ones" : "Sa"}</span>
@@ -3341,7 +3341,7 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
 
 function CyberTeachingCard({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
   return (
-    <div className="mb-5 grid items-center gap-4 rounded-3xl border-2 border-cyan-300 bg-gradient-to-r from-slate-950 to-cyan-950 p-4 shadow-[0_6px_0_#164e63] sm:grid-cols-[auto_1fr]">
+    <div className="mobile-teaching-card mb-5 grid items-center gap-4 rounded-3xl border-2 border-cyan-300 bg-gradient-to-r from-slate-950 to-cyan-950 p-4 shadow-[0_6px_0_#164e63] sm:grid-cols-[auto_1fr]">
       <span className="mx-auto grid h-24 w-24 place-items-center rounded-2xl border-2 border-cyan-300 bg-slate-950/70 shadow-[0_5px_0_#0891b2,0_0_18px_rgba(34,211,238,.16)]"><img src={chrysThinking} alt="Chrys teaching" className="h-20 w-20 object-contain drop-shadow-lg" /></span>
       <div><p className="text-sm font-black uppercase tracking-wide text-cyan-300">{eyebrow}</p><h3 className="text-2xl font-black text-yellow-200">{title}</h3><p className="mt-1 text-lg font-black text-cyan-50">{text}</p></div>
     </div>
@@ -3350,7 +3350,7 @@ function CyberTeachingCard({ eyebrow, title, text }: { eyebrow: string; title: s
 
 function AdvancedLessonNavigation({ lang, t, phase, lastPhase, canNext = true, nextLabel, onPrevious, onNext, onPractice }: { lang: Lang; t: UIStrings; phase: number; lastPhase: number; canNext?: boolean; nextLabel?: string; onPrevious: () => void; onNext: () => void; onPractice: () => void }) {
   return (
-    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-cyan-400/40 pt-5">
+    <div className="mobile-lesson-navigation mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-cyan-400/40 pt-5">
       <button type="button" disabled={phase === 0} onClick={onPrevious} className="rounded-2xl border-2 border-cyan-400 bg-slate-950 px-6 py-3 font-black text-cyan-100 shadow-[0_4px_0_#164e63] disabled:border-slate-700 disabled:text-slate-500 disabled:shadow-none">{t.previous}</button>
       <div className="flex flex-1 flex-wrap justify-end gap-3">
         <button type="button" onClick={onPractice} className="rounded-xl border-2 border-emerald-300 bg-emerald-900 px-4 py-2 text-sm font-black text-emerald-100 shadow-[0_4px_0_#064e3b]">{skipPracticeLabel(lang)}</button>
@@ -5645,7 +5645,7 @@ function AdvancedPart2LooseBananas({ count, countedThrough = 0, counting = false
   const rows = count <= 5 ? [count] : [topCount, count - topCount];
   let runningIndex = 0;
   return (
-    <div className="grid justify-items-center gap-3">
+    <div className="mobile-part2-bananas grid justify-items-center gap-3">
       {rows.map((rowCount, rowIndex) => {
         const start = runningIndex;
         runningIndex += rowCount;
@@ -6115,7 +6115,7 @@ function AdvancedSubtractionLooseBananas({ count, countedThrough = 0, counting =
 }) {
   const rows = balancedIndexRows(count, compact ? 5 : 4);
   return (
-    <div className={`grid w-full min-w-0 justify-items-center gap-4 overflow-hidden px-3 py-3 ${shaking ? "motion-safe:animate-bounce" : ""}`}>
+    <div className={`mobile-subtraction-bananas grid w-full min-w-0 justify-items-center gap-4 overflow-hidden px-3 py-3 ${shaking ? "motion-safe:animate-bounce" : ""}`}>
       {rows.map((row, rowIndex) => {
         return (
           <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-2 min-[380px]:gap-3">
@@ -6220,7 +6220,7 @@ function VerticalSubtractionCard({ a, b, answer, borrowing = false, showBorrow =
   const bDigits = String(b).padStart(2, "0").split("");
   const answerDigits = answer == null ? ["?", "?"] : String(answer).padStart(2, "0").split("");
   return (
-    <div className="mx-auto w-full max-w-sm rounded-[2rem] border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63] min-[380px]:p-6">
+    <div className="mobile-vertical-card mx-auto w-full max-w-sm rounded-[2rem] border-4 border-cyan-300 bg-slate-950 p-4 shadow-[0_7px_0_#164e63] min-[380px]:p-6">
       <div className="mb-3 grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-2 text-center text-xs font-black uppercase text-cyan-100 min-[380px]:text-sm"><span aria-hidden="true" /><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Tens" : "Puluh"}</span><span className="rounded-full border border-cyan-500 bg-cyan-950 py-2">{lang === "en" ? "Ones" : "Sa"}</span></div>
       <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-3 text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(a)}>
         <span aria-hidden="true" /><span className="relative rounded-xl border border-cyan-900 py-2">{aDigits[0]}{borrowing && showBorrow && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -rotate-[32deg] bg-red-400" /><span className="absolute -right-1 -top-4 text-xl text-yellow-300">0</span></>}</span>
@@ -6637,7 +6637,7 @@ function AdvancedSubtractionLesson({ lang, t, onDone }: { lang: Lang; t: UIStrin
 
 function TenBananaBundle({ lang, active = false, compact = false }: { lang: Lang; active?: boolean; compact?: boolean }) {
   return (
-    <div className={`relative max-w-full overflow-hidden rounded-[1.75rem] border-4 p-3 transition ${
+    <div className={`mobile-ten-bundle relative max-w-full overflow-hidden rounded-[1.75rem] border-4 p-3 transition ${
       active
         ? "border-yellow-300 bg-amber-950/80 shadow-[0_0_0_6px_rgba(250,204,21,.24)]"
         : "border-emerald-400 bg-emerald-950/75"
@@ -8646,7 +8646,7 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
   }, [count, counted, emoji, lang]);
 
   return (
-    <div className={`rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
+    <div className={`mobile-grouping-tray rounded-[2rem] border-4 p-4 text-center transition-all ${active ? "border-yellow-400 bg-yellow-50 shadow-[0_7px_0_rgba(180,83,9,.22)]" : "border-emerald-200 bg-white"}`}>
       {label && <h3 className="mb-3 text-2xl font-black text-blue-950">{label}</h3>}
       {counted ? (
         <CountedObjectRow
@@ -13045,7 +13045,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   return (
     <main className={`mx-auto w-full pb-8 ${cyber ? "max-w-5xl" : "max-w-3xl"}`}>
       <LessonShell lang={lang} title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length} - ${index + 1}/${randomizedQuestions.length}`} variant={variant}>
-        <div className={`rounded-[2rem] border-4 p-4 ${cyber ? "border-cyan-400 bg-slate-950/90 shadow-[0_8px_0_#164e63]" : "border-white bg-white shadow-[0_8px_0_rgba(0,0,0,.16)]"}`}>
+        <div className={`mobile-quiz-card rounded-[2rem] border-4 p-4 ${cyber ? "border-cyan-400 bg-slate-950/90 shadow-[0_8px_0_#164e63]" : "border-white bg-white shadow-[0_8px_0_rgba(0,0,0,.16)]"}`}>
           <div className={`mb-3 h-3 overflow-hidden rounded-full ${cyber ? "border border-cyan-700 bg-slate-800" : "bg-slate-100"}`}>
             <div className={`h-full rounded-full ${cyber ? "bg-gradient-to-r from-cyan-400 to-yellow-300 shadow-[0_0_12px_rgba(34,211,238,.45)]" : "bg-blue-500"}`} style={{ width: `${(answeredCount / randomizedQuestions.length) * 100}%` }} />
           </div>
@@ -13078,7 +13078,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
           )}
           <h2 data-narration-read="true" className={`whitespace-pre-line text-center text-2xl font-black leading-snug ${cyber ? "text-yellow-200" : "text-slate-900"}`}>{qn.text[lang]}</h2>
           {!groupChoiceVisual && !activePanelOwnsVisual && !hidesQuestionVisual && (
-            <div className={`my-4 rounded-3xl border-2 p-3 ${cyber ? "border-cyan-500 bg-gradient-to-br from-slate-950 to-cyan-950/80 shadow-[inset_0_0_28px_rgba(34,211,238,.10)]" : "border-sky-100 bg-sky-50"}`}>
+            <div className={`mobile-visual-card my-4 rounded-3xl border-2 p-3 ${cyber ? "border-cyan-500 bg-gradient-to-br from-slate-950 to-cyan-950/80 shadow-[inset_0_0_28px_rgba(34,211,238,.10)]" : "border-sky-100 bg-sky-50"}`}>
               {isAnimatedCupQuestion ? (
                 <AnimatedCupSubtractionVisual
                   lang={lang}
@@ -13118,7 +13118,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
             />
           ) : (
             <div
-              className={`grid gap-3 ${
+              className={`mobile-answer-grid grid gap-3 ${
                 qn.visual.kind === "audioNumber" &&
                 qn.options.length === NUMBERS.length &&
                 qn.options.every((option) => typeof option === "number")
@@ -13195,7 +13195,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
             </div>
           )}
           {answered && (
-            <div className={`relative mt-5 overflow-hidden rounded-3xl border-2 p-4 ${cyber ? "border-cyan-400 bg-gradient-to-br from-slate-900 to-cyan-950 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-yellow-200 bg-yellow-50"}`}>
+            <div className={`mobile-feedback-card relative mt-5 overflow-hidden rounded-3xl border-2 p-4 ${cyber ? "border-cyan-400 bg-gradient-to-br from-slate-900 to-cyan-950 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-yellow-200 bg-yellow-50"}`}>
               {isCorrect && <CorrectCelebration />}
               <div className="mb-3 flex items-center gap-3">
                 <img
@@ -14046,7 +14046,7 @@ function LessonShell({ lang, title, helper, children, variant = "default" }: {
   return (
     <section
       ref={contentRef}
-      className={cyber ? "cyber-lesson-panel rounded-[2rem] p-4 text-white md:p-6" : "lesson-panel rounded-[2rem] p-4 md:p-6"}
+      className={cyber ? "mobile-lesson-panel cyber-lesson-panel rounded-[2rem] p-4 text-white md:p-6" : "mobile-lesson-panel lesson-panel rounded-[2rem] p-4 md:p-6"}
       onClickCapture={(event) => {
         const target = event.target as Element;
         if (narrating && target.closest("button") && !target.closest("[data-lesson-narration-control='true']")) {
@@ -14181,7 +14181,7 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
     return <div className={`mx-auto rounded-3xl border-4 border-dashed p-8 text-center text-2xl font-black ${cyber ? "border-cyan-700 bg-slate-950/80 text-cyan-300" : "border-slate-200 bg-white text-slate-400"}`}>{numbered ? "0" : lang === "en" ? "empty" : "kosong"}</div>;
   }
   return (
-    <div className={`grid w-full min-w-0 justify-items-center gap-y-6 overflow-hidden rounded-3xl border-2 px-5 pb-5 pt-8 sm:px-7 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"}`}>
+    <div className={`mobile-object-group grid w-full min-w-0 justify-items-center gap-y-6 overflow-hidden rounded-3xl border-2 px-5 pb-5 pt-8 sm:px-7 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"}`}>
       {balancedIndexRows(count, 4).map((row, rowIndex) => (
         <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-3">
           {row.map((i) => {
@@ -14238,7 +14238,7 @@ function ContainerScene({
   const alt = container === "basket" ? "basket" : "tray";
 
   return (
-    <div className="mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
+    <div className="mobile-container-scene mx-auto max-w-xl rounded-3xl border-2 border-amber-100 bg-white p-4">
       <div className="relative mx-auto aspect-[4/3] max-h-80 overflow-hidden rounded-3xl bg-amber-50">
         <img src={image} alt={alt} className="absolute inset-0 z-0 h-full w-full object-contain" />
         <div className={`absolute z-10 grid content-center justify-items-center overflow-hidden px-3 py-4 ${container === "basket" ? "inset-[15%] gap-y-2" : "inset-[12%] gap-y-5"}`}>
@@ -15619,7 +15619,7 @@ function AdvancedCompareTestVisual({ a, b, emoji, representation, lang }: Extrac
   }
 
   return (
-    <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+    <div className="mobile-wide-grid grid items-center gap-5 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
       {group(a, "A")}
       <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">?</span>
       {group(b, "B")}
@@ -15639,7 +15639,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
 
     if (visual.display === "objects") {
       return (
-        <div className="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div className="mobile-wide-grid grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
           <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
             {cyber ? <AdvancedBananaRow count={visual.a} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.a : 0} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
           </div>
@@ -15717,7 +15717,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   }
   if (visual.kind === "groupChoices") {
     return (
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="mobile-wide-grid grid gap-4 xl:grid-cols-3">
         {visual.groups.map((count) => (
           <div key={count} className="rounded-3xl border-2 border-blue-100 bg-white p-3 text-center">
             <ObjectGroup count={count} emoji={visual.emoji} numbered={revealNumbers} lang={lang} />
