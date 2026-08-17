@@ -283,18 +283,39 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
   },
 };
 
-const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Record<number, string>> = {
-  // These two batches were exported with their numeric filenames in reverse order.
-  // Map the displayed value to the recording whose spoken content matches it.
-  en: Object.fromEntries(NUMBERS.map((value) => [value, `total ${9 - value} banana.mp3`])) as Record<number, string>,
+const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Partial<Record<number, string>>> = {
+  // The 2026-08-17 English batch has no complete "Total 10 bananas" or
+  // "Total 12 bananas" clip. Its t12 clip says 13, while t13 and t14 are
+  // duplicate recordings of 14, so the verified content is mapped below.
+  en: {
+    0: "total 9 banana.mp3",
+    1: "en-total-1-bananas.mp3",
+    2: "en-total-2-bananas.mp3",
+    3: "en-total-3-bananas.mp3",
+    4: "en-total-4-bananas.mp3",
+    5: "en-total-5-bananas.mp3",
+    6: "en-total-6-bananas.mp3",
+    7: "en-total-7-bananas.mp3",
+    8: "en-total-8-bananas.mp3",
+    9: "en-total-9-bananas.mp3",
+    11: "en-total-11-bananas.mp3",
+    13: "en-total-13-bananas.mp3",
+    14: "en-total-14-bananas.mp3",
+    15: "en-total-15-bananas.mp3",
+    16: "en-total-16-bananas.mp3",
+    17: "en-total-17-bananas.mp3",
+    18: "en-total-18-bananas.mp3",
+    19: "en-total-19-bananas.mp3",
+    20: "en-total-20-bananas.mp3",
+  },
   ms: Object.fromEntries(Array.from({ length: 21 }, (_, value) => [value, `ms-total-${value}-bananas.mp3`])) as Record<number, string>,
 };
 
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
   en: {
-    plus: "en-plus.mp3",
-    equals: "en-equals-to.mp3",
-    minus: "en-minus.mp3",
+    plus: "en-plus-clear.mp3",
+    equals: "en-equals-to-clear.mp3",
+    minus: "en-minus-clear.mp3",
   },
   ms: {
     plus: "Tambah.mp3",
@@ -321,10 +342,16 @@ const DIGIT_LABEL_AUDIO_FILES: Record<Lang, readonly [string, string, string]> =
   ],
 };
 
-const MALAY_COMPARISON_AUDIO_FILES = {
-  greater: "ms-lebih-besar-daripada.mp3",
-  less: "ms-lebih-kecil-daripada.mp3",
-} as const;
+const COMPARISON_AUDIO_FILES: Record<Lang, { greater: string; less: string }> = {
+  en: {
+    greater: "en-greater-than.mp3",
+    less: "en-less-than.mp3",
+  },
+  ms: {
+    greater: "ms-lebih-besar-daripada.mp3",
+    less: "ms-lebih-kecil-daripada.mp3",
+  },
+};
 
 const MALAY_COMPARISON_PROMPT_AUDIO_FILES = {
   compare: "ms-bandingkan.mp3",
@@ -1632,7 +1659,19 @@ function App() {
   };
 
   const finishLesson = (progressKey: string, sectionKey: LearningSectionKey) => {
-    awardStar(progressKey);
+    setPlayer((current) => {
+      if (!current) return current;
+      const alreadyCompleted = (current.progress[progressKey] ?? 0) >= 1 || (current.progress[sectionKey] ?? 0) >= 1;
+      return {
+        ...current,
+        stars: current.stars + (alreadyCompleted ? 0 : 1),
+        progress: {
+          ...current.progress,
+          [progressKey]: 1,
+          [sectionKey]: 1,
+        },
+      };
+    });
     setCompletedLesson(sectionKey);
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
@@ -1721,6 +1760,7 @@ function App() {
           <LessonCompletionScreen
             lang={lang}
             sectionName={t[completedLesson]}
+            cyber={completedLesson.startsWith("advanced")}
             onContinue={() => go(completedLesson.startsWith("advanced") ? "advancedMenu" : "menu")}
           />
         )}
@@ -1812,7 +1852,7 @@ function App() {
           <RealWorldLesson lang={lang} t={t} onDone={() => finishLesson("learnReal", "learnReal")} />
         )}
         {screen === "testMenu" && (
-          <TestMenu lang={lang} t={t} go={go} />
+          <TestMenu lang={lang} t={t} player={player} go={go} />
         )}
         {screen === "testNumbers" && (
           <Quiz lang={lang} t={t} title={t.learnNumbers} questions={numberQuestions} chunkSize={6} onFinish={(correct, total) => finishTest("testNumbers", correct, total)} />
@@ -1825,8 +1865,10 @@ function App() {
         )}
 
         {lastScore && screen === "testMenu" && (
-          <div className="mx-auto mt-4 w-full max-w-xl rounded-3xl border-2 border-white/80 bg-white/90 p-4 text-center shadow-[0_6px_0_rgba(0,0,0,.14)]">
-            <p className="text-xl font-black text-emerald-800">{lang === "en" ? "You finished the test. Nice work!" : "Kamu sudah habis ujian. Bagus!"}</p>
+          <div className="relative mx-auto mt-4 w-full max-w-xl overflow-hidden rounded-[2rem] border-4 border-yellow-300 bg-gradient-to-br from-yellow-50 via-white to-emerald-50 p-5 text-center shadow-[0_8px_0_#ca8a04,0_0_28px_rgba(250,204,21,.3)]">
+            {lastScore.mastered && <CorrectCelebration />}
+            <span className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full border-4 border-yellow-200 bg-yellow-400 text-emerald-950 shadow-[0_5px_0_#a16207]"><Check className="h-9 w-9" strokeWidth={5} aria-hidden="true" /></span>
+            <p className="text-2xl font-black text-emerald-800">{lang === "en" ? "Test complete — amazing work!" : "Ujian selesai — hebat sekali!"}</p>
             <p className="mt-1 text-lg font-black text-blue-900">{t.score}: {lastScore.correct}/{lastScore.total}</p>
             <p className="text-sm font-bold text-slate-500">
               {lastScore.mastered
@@ -1958,28 +2000,47 @@ function PinGate({ lang, onToggleLang, onGranted }: {
   );
 }
 
-function LessonCompletionScreen({ lang, sectionName, onContinue }: {
+function LessonCompletionScreen({ lang, sectionName, onContinue, cyber = false }: {
   lang: Lang;
   sectionName: string;
   onContinue: () => void;
+  cyber?: boolean;
 }) {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center pb-8" aria-live="polite">
-      <section className="relative w-full overflow-hidden rounded-[2rem] border-4 border-yellow-300 bg-white p-6 text-center shadow-[0_10px_0_rgba(161,98,7,.22)] sm:p-10">
+      <section className={`relative w-full overflow-hidden rounded-[2.5rem] border-4 p-6 text-center sm:p-10 ${cyber ? "border-yellow-300 bg-gradient-to-br from-slate-950 via-emerald-950 to-cyan-950 shadow-[0_12px_0_#083344,0_0_42px_rgba(250,204,21,.28)]" : "border-yellow-300 bg-gradient-to-br from-yellow-50 via-white to-emerald-50 shadow-[0_12px_0_rgba(161,98,7,.25),0_0_40px_rgba(250,204,21,.3)]"}`}>
         <CorrectCelebration />
-        <img src={chrysExcited} alt="Chrys celebrating" className="mx-auto h-40 w-40 object-contain" />
-        <h2 className="mt-2 text-4xl font-black text-emerald-700 sm:text-5xl">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(250,204,21,.3),transparent_38%)]" aria-hidden="true" />
+        <div className="relative">
+          <span className={`mx-auto inline-flex items-center gap-2 rounded-full border-2 px-5 py-2 text-sm font-black uppercase tracking-widest ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950" : "border-emerald-600 bg-emerald-600 text-white"}`}>
+            <Sparkles className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
+            {lang === "en" ? "Level complete" : "Tahap selesai"}
+            <Sparkles className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
+          </span>
+          <div className="mx-auto mt-6 grid w-fit grid-cols-[auto_auto] items-center justify-center gap-1">
+            <span className={`relative z-10 grid h-28 w-28 place-items-center rounded-full border-8 shadow-[0_8px_0_#a16207,0_0_38px_rgba(250,204,21,.72)] ${cyber ? "border-yellow-200 bg-yellow-400 text-slate-950" : "border-yellow-200 bg-yellow-400 text-emerald-950"}`}>
+              <Check className="h-16 w-16" strokeWidth={5} aria-hidden="true" />
+              <Star className="absolute -right-5 -top-4 h-12 w-12 rotate-12 fill-orange-400 text-orange-600 drop-shadow-md" strokeWidth={2.5} aria-hidden="true" />
+            </span>
+            <img src={chrysExcited} alt="Chrys celebrating" className="-ml-3 h-40 w-40 object-contain drop-shadow-2xl" />
+          </div>
+        </div>
+        <h2 className={`relative mt-2 text-4xl font-black sm:text-6xl ${cyber ? "text-yellow-200" : "text-emerald-700"}`}>
           {lang === "en" ? "Congratulations!" : "Tahniah!"}
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-2xl font-black text-blue-950 sm:text-3xl">
+        <p className={`relative mx-auto mt-4 max-w-xl text-2xl font-black sm:text-3xl ${cyber ? "text-cyan-50" : "text-blue-950"}`}>
           {lang === "en"
             ? `You completed the ${sectionName} section!`
             : `Kamu sudah tamat bahagian ${sectionName}!`}
         </p>
+        <div className={`relative mx-auto mt-6 flex w-fit items-center gap-3 rounded-2xl border-2 px-5 py-3 font-black shadow-[0_5px_0_rgba(5,150,105,.45)] ${cyber ? "border-emerald-300 bg-emerald-950 text-emerald-100" : "border-emerald-300 bg-emerald-50 text-emerald-800"}`}>
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-6 w-6" strokeWidth={4} aria-hidden="true" /></span>
+          {lang === "en" ? "Completion saved — replay it anytime!" : "Kemajuan disimpan — main semula bila-bila masa!"}
+        </div>
         <button
           type="button"
           onClick={onContinue}
-          className="mt-7 rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-8 py-4 text-xl font-black text-white shadow-[0_6px_0_#047857] active:translate-y-1"
+          className={`relative mt-8 rounded-2xl border-2 px-9 py-4 text-xl font-black shadow-[0_7px_0_#047857] transition hover:-translate-y-1 active:translate-y-1 active:shadow-none ${cyber ? "border-emerald-200 bg-emerald-500 text-slate-950" : "border-emerald-700 bg-emerald-500 text-white"}`}
         >
           {lang === "en" ? "Back to learning menu" : "Kembali ke menu belajar"}
         </button>
@@ -2419,6 +2480,18 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
 }
 
 function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  const learningCompleted = [
+    (player.progress.recognizeNumbers ?? 0) > 0 || (player.progress.learnRecognize ?? 0) > 0,
+    (player.progress.numberValues ?? 0) > 0 || (player.progress.learnValues ?? 0) > 0,
+    (player.progress.sequencing ?? 0) > 0 || (player.progress.learnSequencing ?? 0) > 0,
+    (player.progress.groupingMode ?? 0) > 0,
+    (player.progress.addition ?? 0) > 0 || (player.progress.learnAddition ?? 0) > 0,
+    (player.progress.subtraction ?? 0) > 0 || (player.progress.learnSubtraction ?? 0) > 0,
+    (player.progress.learnReal ?? 0) > 0,
+    ["testNumbers", "testOperations", "testReal"].every((key) => Object.prototype.hasOwnProperty.call(player.progress, key)),
+  ].filter(Boolean).length;
+  const advancedCompleted = ["advancedTeenNumbers", "advancedCompareBigger", "advancedSequencing", "advancedAdditionPart1", "advancedAdditionPart2", "advancedSubtraction"]
+    .filter((key) => (player.progress[key] ?? 0) > 0).length;
   const learningTopics = lang === "en"
     ? ["Recognize numbers", "Number values", "Number order", "Grouping", "Addition", "Subtraction", "Real-world maths", "Practice tests"]
     : ["Kenal nombor", "Nilai nombor", "Susunan nombor", "Kumpulan nombor", "Tambah", "Tolak", "Aplikasi konsep", "Soalan latihan"];
@@ -2453,6 +2526,10 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
             <span className="mt-2 block text-lg font-bold text-slate-600">
               {lang === "en" ? "Learn numbers 0-9 with Chrys" : "Belajar nombor 0-9 bersama Chrys"}
             </span>
+            <span className="mt-4 inline-flex items-center gap-2 rounded-full border-2 border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-800 shadow-sm">
+              {learningCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
+              {lang === "en" ? `${learningCompleted} of 8 adventures complete` : `${learningCompleted} daripada 8 pengembaraan selesai`}
+            </span>
             <span className="mt-5 flex items-center gap-2 text-sm font-black uppercase text-blue-800">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
               {lang === "en" ? "Topics you will explore" : "Topik yang akan diteroka"}
@@ -2484,6 +2561,10 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
             </span>
             <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
             <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedAdventureShort}</span>
+            <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-900/90 px-4 py-2 text-sm font-black text-emerald-100 shadow-sm">
+              {advancedCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
+              {lang === "en" ? `${advancedCompleted} of 6 missions complete` : `${advancedCompleted} daripada 6 misi selesai`}
+            </span>
             <span className="mt-5 flex items-center gap-2 text-sm font-black uppercase text-yellow-200">
               <BookOpen className="h-5 w-5" aria-hidden="true" />
               {lang === "en" ? "Topics you will explore" : "Topik yang akan diteroka"}
@@ -2520,6 +2601,18 @@ const LEARNING_SECTION_MARKERS: Record<LearningSectionColor, string> = {
 };
 
 function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  const completed = {
+    recognize: (player.progress.recognizeNumbers ?? 0) > 0 || (player.progress.learnRecognize ?? 0) > 0,
+    values: (player.progress.numberValues ?? 0) > 0 || (player.progress.learnValues ?? 0) > 0,
+    sequencing: (player.progress.sequencing ?? 0) > 0 || (player.progress.learnSequencing ?? 0) > 0,
+    grouping: (player.progress.groupingMode ?? 0) > 0,
+    addition: (player.progress.addition ?? 0) > 0 || (player.progress.learnAddition ?? 0) > 0,
+    subtraction: (player.progress.subtraction ?? 0) > 0 || (player.progress.learnSubtraction ?? 0) > 0,
+    realWorld: (player.progress.learnReal ?? 0) > 0,
+  };
+  const testModeComplete = ["testNumbers", "testOperations", "testReal"].every((key) =>
+    Object.prototype.hasOwnProperty.call(player.progress, key),
+  );
   const stages = [
     {
       number: 1,
@@ -2532,6 +2625,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: lang === "en" ? "See, spell, trace, and write" : "Lihat, eja, ikut garisan, dan tulis",
           icon: <Hash className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
           color: "sky" as const,
+          complete: completed.recognize,
           onClick: () => go("learnRecognize"),
         },
         {
@@ -2539,6 +2633,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: lang === "en" ? "Find how many objects there are" : "Cari berapa banyak objek",
           icon: <SpriteIcon value={BANANA} className="h-12 w-12" />,
           color: "emerald" as const,
+          complete: completed.values,
           onClick: () => go("learnValues"),
         },
         {
@@ -2546,6 +2641,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: lang === "en" ? "Put numbers in the right order" : "Susun nombor dengan betul",
           icon: <ListOrdered className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
           color: "violet" as const,
+          complete: completed.sequencing,
           onClick: () => go("learnSequencing"),
         },
       ],
@@ -2561,6 +2657,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: t.groupingModeShort,
           icon: <Boxes className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
           color: "amber" as const,
+          complete: completed.grouping,
           onClick: () => go("groupingMode"),
         },
         {
@@ -2568,6 +2665,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: lang === "en" ? "Put groups together" : "Gabungkan kumpulan",
           icon: <Plus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
           color: "teal" as const,
+          complete: completed.addition,
           onClick: () => go("learnAddition"),
         },
         {
@@ -2575,6 +2673,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: lang === "en" ? "Take bananas away" : "Ambil pisang",
           icon: <Minus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
           color: "rose" as const,
+          complete: completed.subtraction,
           onClick: () => go("learnSubtraction"),
         },
       ],
@@ -2590,6 +2689,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: lang === "en" ? "Solve simple everyday stories" : "Selesaikan cerita harian mudah",
           icon: <MapIcon className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
           color: "orange" as const,
+          complete: completed.realWorld,
           onClick: () => go("learnReal"),
         },
         {
@@ -2597,49 +2697,47 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
           subtitle: t.testHelp,
           icon: <Star className="h-11 w-11" fill="currentColor" strokeWidth={2.5} aria-hidden="true" />,
           color: "navy" as const,
+          complete: testModeComplete,
           onClick: () => go("testMenu"),
         },
       ],
     },
   ];
 
-  const testModeComplete = ["testNumbers", "testOperations", "testReal"].every((key) =>
-    Object.prototype.hasOwnProperty.call(player.progress, key),
-  );
   const trailDestinations = [
     {
       label: lang === "en" ? "Recognize" : "Kenal",
-      complete: (player.progress.recognizeNumbers ?? 0) > 0,
+      complete: completed.recognize,
       markerClass: LEARNING_SECTION_MARKERS.sky,
     },
     {
       label: lang === "en" ? "Values" : "Nilai",
-      complete: (player.progress.numberValues ?? 0) > 0,
+      complete: completed.values,
       markerClass: LEARNING_SECTION_MARKERS.emerald,
     },
     {
       label: lang === "en" ? "Order" : "Susunan",
-      complete: (player.progress.sequencing ?? 0) > 0,
+      complete: completed.sequencing,
       markerClass: LEARNING_SECTION_MARKERS.violet,
     },
     {
       label: lang === "en" ? "Groups" : "Kumpulan",
-      complete: (player.progress.groupingMode ?? 0) > 0,
+      complete: completed.grouping,
       markerClass: LEARNING_SECTION_MARKERS.amber,
     },
     {
       label: lang === "en" ? "Addition" : "Tambah",
-      complete: (player.progress.addition ?? 0) > 0,
+      complete: completed.addition,
       markerClass: LEARNING_SECTION_MARKERS.teal,
     },
     {
       label: lang === "en" ? "Subtraction" : "Tolak",
-      complete: (player.progress.subtraction ?? 0) > 0,
+      complete: completed.subtraction,
       markerClass: LEARNING_SECTION_MARKERS.rose,
     },
     {
       label: lang === "en" ? "Real world" : "Aplikasi",
-      complete: (player.progress.learnReal ?? 0) > 0,
+      complete: completed.realWorld,
       markerClass: LEARNING_SECTION_MARKERS.orange,
     },
     {
@@ -2732,6 +2830,8 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
                   icon={section.icon}
                   color={section.color}
                   step={destinationNumber}
+                  complete={section.complete}
+                  lang={lang}
                   actionLabel={lang === "en" ? "Start" : "Mula"}
                   onClick={section.onClick}
                 />
@@ -2836,11 +2936,12 @@ function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false,
   lang: Lang;
 }) {
   return (
-    <section className={`rounded-[2rem] border-2 p-5 shadow-[0_8px_0_#083344] sm:p-7 ${locked ? "border-slate-600 bg-slate-950/90" : "border-cyan-200 bg-gradient-to-br from-slate-950/95 to-emerald-950/95"}`}>
+    <section className={`relative overflow-hidden rounded-[2rem] border-2 p-5 sm:p-7 ${locked ? "border-slate-600 bg-slate-950/90 shadow-[0_8px_0_#083344]" : complete ? "border-emerald-300 bg-gradient-to-br from-emerald-950 to-cyan-950 shadow-[0_8px_0_#047857,0_0_32px_rgba(16,185,129,.28)]" : "border-cyan-200 bg-gradient-to-br from-slate-950/95 to-emerald-950/95 shadow-[0_8px_0_#083344]"}`}>
+      {complete && <span className="pointer-events-none absolute -right-12 top-8 rotate-45 border-y border-emerald-200 bg-emerald-500 px-14 py-2 text-xs font-black uppercase tracking-wider text-slate-950" aria-hidden="true">{lang === "en" ? "Complete" : "Selesai"}</span>}
       <div className="mb-5 flex items-start gap-4">
-        <span className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 text-2xl font-black shadow-[0_5px_0_#0f172a] ${locked ? "border-slate-500 bg-slate-800 text-slate-400" : "border-yellow-300 bg-yellow-300 text-slate-950"}`}>
-          {mission}
-          {complete && <Check className="absolute -right-2 -top-2 h-7 w-7 rounded-full border-2 border-white bg-emerald-500 p-1 text-white" strokeWidth={4} />}
+        <span className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 text-2xl font-black shadow-[0_5px_0_#0f172a] ${locked ? "border-slate-500 bg-slate-800 text-slate-400" : complete ? "border-emerald-200 bg-emerald-500 text-slate-950 ring-4 ring-emerald-300/30" : "border-yellow-300 bg-yellow-300 text-slate-950"}`}>
+          {complete ? <Check className="h-8 w-8" strokeWidth={5} aria-hidden="true" /> : mission}
+          {complete && <span className="absolute -bottom-2 -left-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-slate-950 text-[.65rem] text-white">{mission}</span>}
         </span>
         <div>
           <p className={`text-sm font-black uppercase ${locked ? "text-slate-400" : "text-cyan-300"}`}>{lang === "en" ? `Cyber mission ${mission}` : `Misi siber ${mission}`}</p>
@@ -2848,7 +2949,7 @@ function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false,
           <p className={`mt-1 font-bold ${locked ? "text-slate-400" : "text-cyan-100"}`}>{subtitle}</p>
         </div>
       </div>
-      <button type="button" disabled={locked} onClick={onClick} className={`group w-full rounded-[2rem] border-4 p-5 text-left shadow-[0_8px_0_#064e3b] transition focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-cyan-300 sm:p-7 ${locked ? "cursor-not-allowed border-slate-600 bg-slate-900 text-slate-500" : "border-yellow-300 bg-gradient-to-r from-emerald-900 to-cyan-950 text-white hover:-translate-y-1 active:translate-y-1"}`}>
+      <button type="button" disabled={locked} onClick={onClick} className={`group w-full rounded-[2rem] border-4 p-5 text-left shadow-[0_8px_0_#064e3b] transition focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-cyan-300 sm:p-7 ${locked ? "cursor-not-allowed border-slate-600 bg-slate-900 text-slate-500" : complete ? "border-emerald-300 bg-gradient-to-r from-emerald-900 to-cyan-950 text-white hover:-translate-y-1 active:translate-y-1" : "border-yellow-300 bg-gradient-to-r from-emerald-900 to-cyan-950 text-white hover:-translate-y-1 active:translate-y-1"}`}>
         <span className="grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
           <span className={`grid h-24 w-24 place-items-center rounded-[1.6rem] border-4 bg-slate-950 text-3xl font-black shadow-[inset_0_0_18px_rgba(34,211,238,.35)] ${locked ? "border-slate-600 text-slate-500" : "border-yellow-300 text-yellow-200"}`} style={getNumberTextStyle(icon)}>{icon}</span>
           <span>
@@ -7383,6 +7484,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                 t={t}
                 lang={lang}
                 onComplete={goNext}
+                cyber
               />
             </div>
           )}
@@ -7455,6 +7557,8 @@ function MenuCard({
   icon,
   color,
   step,
+  complete = false,
+  lang,
   actionLabel,
   onClick,
 }: {
@@ -7463,6 +7567,8 @@ function MenuCard({
   icon: string | React.ReactNode;
   color: LearningSectionColor;
   step?: number;
+  complete?: boolean;
+  lang: Lang;
   actionLabel?: string;
   onClick: () => void;
 }) {
@@ -7521,26 +7627,28 @@ function MenuCard({
     <button
       type="button"
       onClick={onClick}
-      aria-label={`${title}. ${subtitle}`}
-      className={`menu-card group relative min-h-48 overflow-hidden rounded-[2rem] border-4 p-5 text-left transition active:translate-y-1 md:p-6 ${theme.border} ${step ? "learning-menu-card" : ""}`}
+      aria-label={`${title}. ${subtitle}. ${complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}
+      className={`menu-card group relative min-h-48 overflow-hidden rounded-[2rem] border-4 p-5 text-left transition active:translate-y-1 md:p-6 ${complete ? "border-emerald-500 ring-4 ring-emerald-200 shadow-[0_9px_0_#047857,0_0_28px_rgba(16,185,129,.35)]" : theme.border} ${step ? "learning-menu-card" : ""}`}
     >
-      <span className={`absolute inset-x-0 top-0 h-3 ${theme.accent}`} aria-hidden="true" />
+      <span className={`absolute inset-x-0 top-0 h-3 ${complete ? "bg-emerald-500" : theme.accent}`} aria-hidden="true" />
+      {complete && <span className="pointer-events-none absolute -right-10 top-7 rotate-45 bg-emerald-600 px-12 py-2 text-xs font-black uppercase tracking-wider text-white shadow-md" aria-hidden="true">{lang === "en" ? "Completed" : "Selesai"}</span>}
       <span className="relative z-10 flex items-start justify-between gap-3 pt-2">
-        <span className={`grid h-20 w-20 shrink-0 place-items-center rounded-[1.4rem] border-2 shadow-inner ${theme.badge}`}>
+        <span className={`grid h-20 w-20 shrink-0 place-items-center rounded-[1.4rem] border-2 shadow-inner ${complete ? "border-emerald-300 bg-emerald-50 text-emerald-700" : theme.badge}`}>
           {typeof icon === "string" ? <SpriteIcon value={icon} className="h-14 w-14" /> : icon}
         </span>
         {step !== undefined && (
-          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border-4 border-white text-lg font-black text-white shadow-md ${theme.step}`}>
-            {step}
+          <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 border-white text-lg font-black text-white shadow-md ${complete ? "bg-emerald-600 ring-4 ring-emerald-200" : theme.step}`}>
+            {complete ? <Check className="h-7 w-7" strokeWidth={5} aria-hidden="true" /> : step}
+            {complete && <span className="absolute -bottom-2 -left-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-blue-950 text-[.65rem] text-white">{step}</span>}
           </span>
         )}
       </span>
       <h3 className="relative z-10 mt-5 text-2xl font-black leading-tight text-blue-950 md:text-[1.7rem]">{title}</h3>
       <p className="relative z-10 mt-2 max-w-[28rem] text-base font-black leading-snug text-slate-600">{subtitle}</p>
       {step !== undefined && (
-        <span className="relative z-10 mt-5 flex items-center justify-end gap-2 font-black text-blue-700">
-          {actionLabel}
-          <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+        <span className={`relative z-10 mt-5 flex items-center justify-end gap-2 font-black ${complete ? "text-emerald-700" : "text-blue-700"}`}>
+          {complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : actionLabel}
+          {complete ? <Check className="h-6 w-6" strokeWidth={4} aria-hidden="true" /> : <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />}
         </span>
       )}
     </button>
@@ -10134,7 +10242,7 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
         if (answer === 0) {
           await speakNumber(0, lang);
           setPhase("done");
-          await speakMalayBananaTotal(0, lang, objectEmoji);
+          await speakRecordedBananaTotal(0, lang, objectEmoji);
         } else {
           setPhase("counting");
         }
@@ -10148,7 +10256,7 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
       setRemainingCount(nextValue);
       if (nextValue >= answer) {
         setPhase("done");
-        await speakMalayBananaTotal(answer, lang, objectEmoji);
+        await speakRecordedBananaTotal(answer, lang, objectEmoji);
       }
     }
     setBusy(false);
@@ -11577,7 +11685,7 @@ function AdditionBananaEquation({
         await wait(prefersReducedMotion ? 0 : 500);
         setResultMergeStage("joined");
         setActiveGroup(-1);
-        await speakMalayBananaTotal(a + b, lang, emoji);
+        await speakRecordedBananaTotal(a + b, lang, emoji);
         if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
       }
       setIsCounting(false);
@@ -11620,7 +11728,7 @@ function AdditionBananaEquation({
       if (countRunRef.current !== runId) return;
       setResultMergeStage("joined");
       setActiveGroup(-1);
-      await speakMalayBananaTotal(a + b, lang, emoji);
+      await speakRecordedBananaTotal(a + b, lang, emoji);
       if (countRunRef.current !== runId) return;
       if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
     }
@@ -12290,7 +12398,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
       await speakNumber(0, lang);
       if (countRunRef.current !== runId) return;
       setPhase("done");
-      await speakMalayBananaTotal(0, lang, emoji);
+      await speakRecordedBananaTotal(0, lang, emoji);
       if (countRunRef.current !== runId) return;
       setCuePlaying(false);
       onComplete?.();
@@ -12316,7 +12424,7 @@ function InteractiveSubtractionFlow({ start, takeAway, emoji, lang, onComplete }
     setRemainingCountValue(left);
     setPhase("done");
     setCuePlaying(false);
-    await speakMalayBananaTotal(left, lang, emoji);
+    await speakRecordedBananaTotal(left, lang, emoji);
     if (countRunRef.current !== runId) return;
     onComplete?.();
   };
@@ -12689,7 +12797,6 @@ function AnimatedCupSubtractionVisual({ lang, onComplete }: { lang: Lang; onComp
         lang === "en" ? "Five minus five equals zero." : "Lima tolak lima sama dengan sifar.",
         lang,
       );
-      await speakMalayBananaTotal(0, lang);
     };
 
     void runAnimation();
@@ -12820,7 +12927,9 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
       </section>
 
       {lastScore && (
-        <section className={`mb-5 rounded-[1.75rem] border-2 p-5 text-center shadow-[0_6px_0_#083344] ${lastScore.mastered ? "border-emerald-300 bg-emerald-950/90" : "border-orange-300 bg-orange-950/90"}`} aria-live="polite">
+        <section className={`relative mb-5 overflow-hidden rounded-[1.75rem] border-4 p-5 text-center ${lastScore.mastered ? "border-yellow-300 bg-gradient-to-br from-emerald-950 to-cyan-950 shadow-[0_8px_0_#047857,0_0_30px_rgba(250,204,21,.3)]" : "border-orange-300 bg-orange-950/90 shadow-[0_6px_0_#083344]"}`} aria-live="polite">
+          {lastScore.mastered && <CorrectCelebration />}
+          <span className={`mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full border-4 shadow-[0_5px_0_#0f172a] ${lastScore.mastered ? "border-yellow-200 bg-yellow-400 text-slate-950" : "border-orange-200 bg-orange-500 text-slate-950"}`}><Check className="h-9 w-9" strokeWidth={5} aria-hidden="true" /></span>
           <p className={`text-2xl font-black ${lastScore.mastered ? "text-emerald-200" : "text-orange-200"}`}>
             {lastScore.mastered
               ? (lang === "en" ? "Mastery achieved! You earned a star." : "Penguasaan dicapai! Kamu mendapat bintang.")
@@ -12857,7 +12966,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
                   {mastered ? (
                     <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-900 px-3 py-2 text-sm font-black text-emerald-100"><Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />{lang === "en" ? "Mastered" : "Dikuasai"}</span>
                   ) : hasScore ? (
-                    <span className="inline-block rounded-full border border-cyan-500 bg-cyan-950 px-3 py-2 text-sm font-black text-cyan-100">{t.score}: {score}/{total}</span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400 bg-cyan-950 px-3 py-2 text-sm font-black text-cyan-100"><Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />{lang === "en" ? "Completed" : "Selesai"} · {t.score}: {score}/{total}</span>
                   ) : test.unlocked ? (
                     <ArrowRight className="h-8 w-8 text-cyan-200 transition-transform group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
                   ) : null}
@@ -12871,7 +12980,8 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
   );
 }
 
-function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Screen) => void }) {
+function TestMenu({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
+  const completed = (key: string) => Object.prototype.hasOwnProperty.call(player.progress, key);
   return (
     <main className="mx-auto w-full max-w-3xl pb-8">
       <section className="mb-4 rounded-[2rem] border-4 border-white/80 bg-white/90 p-5 text-center shadow-[0_8px_0_rgba(0,0,0,.16)]">
@@ -12880,9 +12990,9 @@ function TestMenu({ lang, t, go }: { lang: Lang; t: UIStrings; go: (screen: Scre
         <p className="mt-2 font-bold text-slate-500">{t.testHelp}</p>
       </section>
       <div className="grid gap-4">
-        <MenuCard title={t.learnNumbers} subtitle={lang === "en" ? "25 questions, all 0-9" : "25 soalan, semua nombor 0-9"} icon="🔢" color="sky" onClick={() => go("testNumbers")} />
-        <MenuCard title={t.learnOperations} subtitle={lang === "en" ? "Solve number sentences using + and −" : "Jawab ayat nombor dengan + dan −"} icon="➕" color="emerald" onClick={() => go("testOperations")} />
-        <MenuCard title={t.learnReal} subtitle={lang === "en" ? "Solve everyday stories using visible objects" : "Jawab cerita harian dengan objek yang boleh dilihat"} icon="🍎" color="orange" onClick={() => go("testReal")} />
+        <MenuCard lang={lang} title={t.learnNumbers} subtitle={lang === "en" ? "25 questions, all 0-9" : "25 soalan, semua nombor 0-9"} icon="🔢" color="sky" complete={completed("testNumbers")} onClick={() => go("testNumbers")} />
+        <MenuCard lang={lang} title={t.learnOperations} subtitle={lang === "en" ? "Solve number sentences using + and −" : "Jawab ayat nombor dengan + dan −"} icon="➕" color="emerald" complete={completed("testOperations")} onClick={() => go("testOperations")} />
+        <MenuCard lang={lang} title={t.learnReal} subtitle={lang === "en" ? "Solve everyday stories using visible objects" : "Jawab cerita harian dengan objek yang boleh dilihat"} icon="🍎" color="orange" complete={completed("testReal")} onClick={() => go("testReal")} />
       </div>
     </main>
   );
@@ -14327,7 +14437,7 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
     setVisibleCount(count);
     onProgress?.(count);
     setBusy(false);
-    if (announceTotal) await speakMalayBananaTotal(count, lang, emoji);
+    if (announceTotal) await speakRecordedBananaTotal(count, lang, emoji);
     if (countRunRef.current === runId) onComplete?.();
   };
 
@@ -15181,17 +15291,18 @@ const DRAWING_COLORS = [
   { value: "#7c3aed", en: "Purple", ms: "Ungu" },
 ] as const;
 
-function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange, cyber = false }: {
+function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange, cyber = false, sidePanel = false }: {
   lang: Lang;
   color: string;
   tool: DrawingTool;
   onColorChange: (color: string) => void;
   onToolChange: (tool: DrawingTool) => void;
   cyber?: boolean;
+  sidePanel?: boolean;
 }) {
   return (
-    <div className={`flex flex-wrap items-center justify-center gap-3 rounded-2xl border-2 p-3 ${cyber ? "border-cyan-400/70 bg-slate-950/75 lg:flex-col lg:items-stretch lg:p-4" : "mt-3 border-slate-200 bg-slate-50"}`}>
-      <span className={`font-black ${cyber ? "text-center text-cyan-100 lg:text-left" : "text-slate-700"}`}>{lang === "en" ? "Pen colour" : "Warna pen"}</span>
+    <div className={`flex flex-wrap items-center justify-center gap-3 rounded-2xl border-2 p-3 ${sidePanel ? "flex-col items-stretch p-4" : ""} ${cyber ? "border-cyan-400/70 bg-slate-950/75" : `${sidePanel ? "" : "mt-3"} border-slate-200 bg-slate-50`}`}>
+      <span className={`font-black ${cyber ? `text-cyan-100 ${sidePanel ? "text-left" : "text-center"}` : "text-slate-700"}`}>{lang === "en" ? "Pen colour" : "Warna pen"}</span>
       <div className="flex flex-wrap justify-center gap-2">
         {DRAWING_COLORS.map((option) => {
           const selected = tool === "pen" && color === option.value;
@@ -15237,7 +15348,7 @@ function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange, cybe
   );
 }
 
-function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings; lang: Lang; onComplete: () => void }) {
+function TracePad({ value, t, lang, onComplete, cyber = false }: { value: number; t: UIStrings; lang: Lang; onComplete: () => void; cyber?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -15298,22 +15409,22 @@ function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings;
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-5 shadow-[inset_0_0_32px_rgba(34,211,238,.16)] sm:p-6">
-      <h3 className="mb-2 text-center text-3xl font-black text-yellow-200">{lang === "en" ? `Trace ${value}` : `Ikut garisan ${value}`}</h3>
-      <p className="mb-5 text-center text-base font-bold text-cyan-100">
+    <div className={`mx-auto w-full max-w-5xl rounded-[2rem] p-4 sm:p-6 ${cyber ? "border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 shadow-[inset_0_0_32px_rgba(34,211,238,.16)]" : "border-2 border-amber-100 bg-white shadow-[0_7px_0_rgba(30,64,175,.10)]"}`}>
+      <h3 className={`mb-2 text-center text-3xl font-black ${cyber ? "text-yellow-200" : "text-blue-950"}`}>{lang === "en" ? `Trace ${value}` : `Ikut garisan ${value}`}</h3>
+      <p className={`mb-5 text-center text-base font-bold ${cyber ? "text-cyan-100" : "text-slate-500"}`}>
         {lang === "en" ? "Follow the big number guide on the screen." : "Ikut panduan nombor besar pada skrin."}
       </p>
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-stretch">
-        <div className="relative h-80 overflow-hidden rounded-3xl border-3 border-cyan-400 bg-slate-950/80 shadow-[inset_0_0_28px_rgba(34,211,238,.15)] sm:h-[26rem]">
+      <div className="trace-pad-layout grid gap-5 md:grid-cols-[minmax(0,1fr)_16rem] md:items-stretch xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className={`relative h-72 overflow-hidden rounded-3xl sm:h-[26rem] ${cyber ? "border-3 border-cyan-400 bg-slate-950/80 shadow-[inset_0_0_28px_rgba(34,211,238,.15)]" : "border-4 border-amber-300 bg-amber-50 shadow-[inset_0_0_0_3px_rgba(255,255,255,.7),0_5px_0_rgba(180,83,9,.16)]"}`}>
           <div
-            className="pointer-events-none absolute inset-0 grid place-items-center text-[12rem] font-black leading-none text-cyan-200/25 sm:text-[16rem]"
+            className={`pointer-events-none absolute inset-0 grid place-items-center text-[12rem] font-black leading-none sm:text-[16rem] ${cyber ? "text-cyan-200/25" : "text-blue-950/20"}`}
             style={getNumberTextStyle(value)}
           >
             {value}
           </div>
           {confirmed && (
             <div
-              className="trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none text-yellow-200 sm:text-[16rem]"
+              className={`trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none sm:text-[16rem] ${cyber ? "text-yellow-200" : "text-amber-500"}`}
               aria-hidden="true"
               style={getNumberTextStyle(value)}
             >
@@ -15329,9 +15440,9 @@ function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings;
             className="relative h-full w-full touch-none rounded-3xl"
           />
         </div>
-        <aside className="flex flex-col gap-4 rounded-3xl border-2 border-cyan-400/70 bg-cyan-950/65 p-4 shadow-[0_5px_0_#164e63]">
+        <aside className={`flex flex-col gap-4 rounded-3xl border-2 p-4 ${cyber ? "border-cyan-400/70 bg-cyan-950/65 shadow-[0_5px_0_#164e63]" : "border-slate-200 bg-slate-50 shadow-[0_5px_0_rgba(15,23,42,.10)]"}`}>
           {confirmed && (
-            <p className="rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-3 py-3 text-center text-sm font-black text-emerald-100">
+            <p className={`rounded-2xl border-2 px-3 py-3 text-center text-sm font-black ${cyber ? "border-emerald-300 bg-emerald-950 text-emerald-100" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
               {lang === "en" ? "Watch the correct number shape slowly." : "Lihat bentuk nombor yang betul perlahan."}
             </p>
           )}
@@ -15339,7 +15450,8 @@ function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings;
             lang={lang}
             color={penColor}
             tool={tool}
-            cyber
+            cyber={cyber}
+            sidePanel
             onColorChange={(color) => {
               setPenColor(color);
               setTool("pen");
@@ -15347,7 +15459,7 @@ function TracePad({ value, t, lang, onComplete }: { value: number; t: UIStrings;
             onToolChange={setTool}
           />
           <div className="mt-auto grid gap-3">
-            <button onClick={clear} className="rounded-2xl border-2 border-cyan-300 bg-slate-900 px-4 py-3 font-black text-cyan-50 shadow-[0_4px_0_#164e63] active:translate-y-1 active:shadow-none">
+            <button onClick={clear} className={`rounded-2xl border-2 px-4 py-3 font-black active:translate-y-1 active:shadow-none ${cyber ? "border-cyan-300 bg-slate-900 text-cyan-50 shadow-[0_4px_0_#164e63]" : "border-slate-200 bg-white text-slate-600 shadow-[0_4px_0_rgba(15,23,42,.10)]"}`}>
               {lang === "en" ? "Clear all" : "Padamkan semua"}
             </button>
             <button
@@ -15484,18 +15596,18 @@ function WriteNumberPad({
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl border-2 border-amber-100 bg-white p-4">
+    <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border-2 border-amber-100 bg-white p-4 sm:p-6">
       {matched && <CorrectCelebration />}
       <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Write ${value} yourself` : `Tulis ${value} sendiri`}</h3>
       <p className="mb-3 text-center text-sm font-bold text-slate-500">
         {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan garisan."}
       </p>
-      <div className={showModel ? "grid gap-4 md:grid-cols-[minmax(0,25rem)_14rem] md:justify-center" : "flex justify-center"}>
-        <div className="w-full max-w-[25rem] min-w-0">
+      <div className={`grid gap-5 ${showModel ? "md:grid-cols-[minmax(0,1fr)_14rem]" : "md:grid-cols-[minmax(0,1fr)_16rem] xl:grid-cols-[minmax(0,1fr)_18rem]"}`}>
+        <div className="w-full min-w-0">
           <p className="mb-3 text-center text-lg font-black text-amber-900">
             {lang === "en" ? `Drawing of number ${WORDS.en[value]}` : `Lukisan nombor ${WORDS.ms[value]}`}
           </p>
-          <div className="relative h-80 rounded-3xl border-4 border-amber-300 bg-amber-50 shadow-[inset_0_0_0_3px_rgba(255,255,255,.7),0_5px_0_rgba(180,83,9,.16)]">
+          <div className="relative h-72 rounded-3xl border-4 border-amber-300 bg-amber-50 shadow-[inset_0_0_0_3px_rgba(255,255,255,.7),0_5px_0_rgba(180,83,9,.16)] sm:h-[26rem]">
             <canvas
               ref={canvasRef}
               onPointerDown={start}
@@ -15506,7 +15618,7 @@ function WriteNumberPad({
             />
           </div>
         </div>
-        {showModel && (
+        {showModel ? (
           <div className="w-full rounded-3xl border-4 border-blue-100 bg-blue-50 p-4 text-center md:w-56">
             <p className="mb-2 text-sm font-black text-blue-900">{lang === "en" ? "Look at this model" : "Lihat contoh ini"}</p>
             <div className="mx-auto grid h-40 w-40 place-items-center rounded-[2rem] border-4 border-blue-200 bg-white text-8xl font-black leading-none text-blue-950 shadow-inner" style={getNumberTextStyle(value)}>
@@ -15516,34 +15628,32 @@ function WriteNumberPad({
               {lang === "en" ? `This is ${value}. Does yours look like this?` : `Ini ${value}. Sama tak dengan awak?`}
             </p>
           </div>
-        )}
-      </div>
-      {!showModel && (
-        <DrawingToolPanel
-          lang={lang}
-          color={penColor}
-          tool={tool}
-          onColorChange={(color) => {
-            setPenColor(color);
-            setTool("pen");
-          }}
-          onToolChange={setTool}
-        />
-      )}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {!showModel && (
-          <>
-            <button onClick={clear} className="flex-1 rounded-2xl border-2 border-slate-200 bg-white py-2 font-black text-slate-500">
-              {lang === "en" ? "Clear all" : "Padamkan semua"}
-            </button>
-            <button
-              onClick={checkAnswer}
-              disabled={!hasDrawn}
-              className="flex-[1.4] rounded-2xl border-2 border-blue-700 bg-blue-600 px-4 py-2 font-black text-white shadow-[0_4px_0_#1e3a8a] active:translate-y-1 disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
-            >
-              {lang === "en" ? "Check my answer" : "Semak jawapan saya"}
-            </button>
-          </>
+        ) : (
+          <aside className="flex flex-col gap-4 rounded-3xl border-2 border-slate-200 bg-slate-50 p-4 shadow-[0_5px_0_rgba(15,23,42,.10)]">
+            <DrawingToolPanel
+              lang={lang}
+              color={penColor}
+              tool={tool}
+              sidePanel
+              onColorChange={(color) => {
+                setPenColor(color);
+                setTool("pen");
+              }}
+              onToolChange={setTool}
+            />
+            <div className="mt-auto grid gap-3">
+              <button onClick={clear} className="rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 font-black text-slate-600 shadow-[0_4px_0_rgba(15,23,42,.10)] active:translate-y-1 active:shadow-none">
+                {lang === "en" ? "Clear all" : "Padamkan semua"}
+              </button>
+              <button
+                onClick={checkAnswer}
+                disabled={!hasDrawn}
+                className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-4 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 active:shadow-none disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+              >
+                {lang === "en" ? "Check my answer" : "Semak jawapan saya"}
+              </button>
+            </div>
+          </aside>
         )}
       </div>
       {showModel && (
@@ -15937,7 +16047,6 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     const answer = typeof q.answer === "number" ? q.answer : Number(q.answer);
     const announcementKey = `${q.id}:${lang}:${answer}`;
     if (
-      lang !== "ms" ||
       !staticBananaCalculation ||
       !lastStep ||
       !Number.isInteger(answer) ||
@@ -15947,7 +16056,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     ) return;
 
     announcedStaticTotalRef.current = announcementKey;
-    void speakMalayBananaTotal(answer, lang);
+    void speakRecordedBananaTotal(answer, lang);
   }, [lang, lastStep, q.answer, q.id, staticBananaCalculation]);
 
   if (isAdvancedAdditionPart1) {
@@ -16225,8 +16334,8 @@ async function speakComparisonSentence(
   if (left < 0 || left > 20 || right < 0 || right > 20) return;
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
 
-  const comparisonFile = lang === "ms" && symbol !== "="
-    ? MALAY_COMPARISON_AUDIO_FILES[symbol === ">" ? "greater" : "less"]
+  const comparisonFile = symbol !== "="
+    ? COMPARISON_AUDIO_FILES[lang][symbol === ">" ? "greater" : "less"]
     : null;
   if (symbol !== "=" && !comparisonFile) return;
 
@@ -16254,8 +16363,8 @@ async function speakComparisonPrompt(left: number, right: number, lang: Lang): P
   await speakNumber(right, lang);
 }
 
-async function speakMalayBananaTotal(value: number, lang: Lang, emoji: string = BANANA) {
-  if (lang !== "ms" || emoji !== BANANA || value < 0 || value > 20) return false;
+async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA) {
+  if (emoji !== BANANA || value < 0 || value > 20) return false;
   return speakBananaTotal(value, lang);
 }
 
@@ -16547,7 +16656,8 @@ function preloadNumberAudioFiles() {
   [
     ...DIGIT_LABEL_AUDIO_FILES.en,
     ...DIGIT_LABEL_AUDIO_FILES.ms,
-    ...Object.values(MALAY_COMPARISON_AUDIO_FILES),
+    ...Object.values(COMPARISON_AUDIO_FILES.en),
+    ...Object.values(COMPARISON_AUDIO_FILES.ms),
     ...Object.values(MALAY_COMPARISON_PROMPT_AUDIO_FILES),
   ].forEach((file) => {
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
@@ -16556,6 +16666,13 @@ function preloadNumberAudioFiles() {
   });
   (Object.keys(MATH_CUE_AUDIO_FILES) as Lang[]).forEach((lang) => {
     Object.values(MATH_CUE_AUDIO_FILES[lang] ?? {}).forEach((file) => {
+      const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
+      audio.preload = "auto";
+      audio.load();
+    });
+  });
+  (Object.keys(BANANA_TOTAL_AUDIO_FILES) as Lang[]).forEach((lang) => {
+    Object.values(BANANA_TOTAL_AUDIO_FILES[lang]).forEach((file) => {
       const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
       audio.preload = "auto";
       audio.load();

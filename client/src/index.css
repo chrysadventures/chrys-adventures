@@ -680,6 +680,16 @@ video {
 .mobile-wide-grid,
 .mobile-wide-grid > * {
   min-width: 0;
+}
+
+.mobile-lesson-panel,
+.mobile-quiz-card,
+.mobile-visual-card,
+.mobile-feedback-card,
+.mobile-grouping-tray,
+.mobile-container-scene,
+.mobile-wide-grid,
+.mobile-wide-grid > * {
   max-width: 100%;
 }
 
@@ -691,21 +701,32 @@ video {
   overflow-wrap: anywhere;
 }
 
-/* Tailwind's desktop grids begin at 768px/1024px. Those widths are still
-   tablets, so dense lesson panels remain stacked until there is real room. */
-@media (min-width: 768px) and (max-width: 1100px) {
-  .app-responsive-frame [class*="md:grid-cols"] {
+/* Wide comparison panels still stack on tablets, while ordinary lesson
+   grids retain their carefully designed tablet layouts. */
+@media (max-width: 1199px) {
+  .mobile-wide-grid {
     grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .app-responsive-frame [class*="md:items-center"] {
-    align-items: stretch !important;
   }
 }
 
-@media (min-width: 1024px) and (max-width: 1199px) {
-  .app-responsive-frame [class*="lg:grid-cols"] {
-    grid-template-columns: minmax(0, 1fr) !important;
+/* A landscape phone gets a compact two-column drawing layout instead of a
+   squeezed portrait layout. The desktop max-width remains controlled by the
+   existing max-w-6xl utility so the jungle background stays visible. */
+@media (max-width: 900px) and (orientation: landscape) {
+  .app-responsive-frame {
+    padding-top: max(0.4rem, env(safe-area-inset-top));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .trace-pad-layout {
+    grid-template-columns: minmax(0, 1fr) 15rem !important;
+  }
+
+  .trace-pad-layout > div:first-child {
+    height: min(20rem, calc(100dvh - 8rem));
+    min-height: 15rem;
   }
 }
 
