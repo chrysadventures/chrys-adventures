@@ -174,13 +174,11 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
 const getNumberTextStyle = (_value: number | string): React.CSSProperties => NUMBER_TEXT_STYLE;
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
 const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
-// Give the browser/audio device a quiet real-signal warm-up before every clip.
-// A fully muted pre-roll does not wake the speaker on some phones, so the first
-// syllable can still sound clipped. The clip loops quietly, rewinds, and then
-// restarts almost immediately at its normal volume.
-const AUDIO_CLEAR_START_PRIME_MS = 520;
+// Decode each clip silently before its audible start. A separate, inaudible Web
+// Audio channel keeps mobile audio output awake without replaying part of the
+// requested clip or leaking the celebration fanfare into ordinary button taps.
+const AUDIO_CLEAR_START_PRIME_MS = 320;
 const AUDIO_CLEAR_START_SETTLE_MS = 12;
-const AUDIO_CLEAR_START_PRIME_VOLUME = 0.035;
 const COUNTING_STEP_MS = 1400;
 const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
@@ -432,7 +430,9 @@ const OBJECT_SPRITES: Record<string, string> = {
 let activeNumberAudio: HTMLAudioElement | null = null;
 let activeCelebrationAudio: HTMLAudioElement | null = null;
 let successFanfareAudio: HTMLAudioElement | null = null;
-let successFanfarePrimeRunId = 0;
+let audioOutputContext: AudioContext | null = null;
+let audioOutputKeepAlive: OscillatorNode | null = null;
+let audioOutputKeepAliveGain: GainNode | null = null;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
 let lastCountingFinishedAt = 0;
@@ -444,7 +444,7 @@ const AudioEnabledContext = React.createContext(NUMBER_AUDIO_ENABLED);
 
 function markAudioInteraction() {
   audioUserInteracted = true;
-  primeSuccessFanfareOutput();
+  keepAudioOutputAwake();
 }
 
 function setGlobalAudioMuted(muted: boolean) {
@@ -452,6 +452,32 @@ function setGlobalAudioMuted(muted: boolean) {
   if (muted) {
     stopNumberAudio();
     stopCelebrationAudio();
+    if (audioOutputContext?.state === "running") void audioOutputContext.suspend();
+  } else {
+    keepAudioOutputAwake();
+  }
+}
+
+function keepAudioOutputAwake() {
+  if (typeof window === "undefined" || audioMuted) return;
+  const AudioContextClass = window.AudioContext
+    ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    if (!audioOutputContext) {
+      audioOutputContext = new AudioContextClass();
+      audioOutputKeepAlive = audioOutputContext.createOscillator();
+      audioOutputKeepAliveGain = audioOutputContext.createGain();
+      audioOutputKeepAliveGain.gain.value = 0;
+      audioOutputKeepAlive.frequency.value = 20;
+      audioOutputKeepAlive.connect(audioOutputKeepAliveGain);
+      audioOutputKeepAliveGain.connect(audioOutputContext.destination);
+      audioOutputKeepAlive.start();
+    }
+    if (audioOutputContext.state === "suspended") void audioOutputContext.resume();
+  } catch {
+    // Audio still works through HTMLAudioElement when Web Audio is unavailable.
   }
 }
 
@@ -16616,7 +16642,6 @@ function stopNumberAudio() {
 }
 
 function stopCelebrationAudio() {
-  successFanfarePrimeRunId += 1;
   const audio = activeCelebrationAudio ?? successFanfareAudio;
   audio?.pause();
   if (audio) {
@@ -16624,36 +16649,6 @@ function stopCelebrationAudio() {
     resetAudioToStart(audio);
   }
   activeCelebrationAudio = null;
-}
-
-function primeSuccessFanfareOutput() {
-  if (!NUMBER_AUDIO_ENABLED || audioMuted || activeCelebrationAudio) return;
-  const audio = getSuccessFanfareAudio();
-  const runId = ++successFanfarePrimeRunId;
-  const restoreVolume = audio.volume;
-  audio.pause();
-  resetAudioToStart(audio);
-  audio.preload = "auto";
-  audio.volume = Math.min(restoreVolume, AUDIO_CLEAR_START_PRIME_VOLUME);
-  audio.loop = true;
-
-  void audio.play()
-    .then(async () => {
-      await wait(AUDIO_CLEAR_START_PRIME_MS);
-      if (runId !== successFanfarePrimeRunId || activeCelebrationAudio === audio) return;
-      audio.pause();
-      audio.loop = false;
-      await seekAudioToStart(audio);
-      await wait(AUDIO_CLEAR_START_SETTLE_MS);
-      if (runId !== successFanfarePrimeRunId || activeCelebrationAudio === audio) return;
-      audio.volume = restoreVolume;
-    })
-    .catch(() => {
-      if (runId === successFanfarePrimeRunId) {
-        audio.loop = false;
-        audio.volume = restoreVolume;
-      }
-    });
 }
 
 function resetAudioToStart(audio: HTMLAudioElement) {
@@ -16718,7 +16713,7 @@ async function playAudioFromClearStart(
   if (!await waitForAudioReady(audio) || !isCurrent()) return false;
   await seekAudioToStart(audio);
   if (!isCurrent()) return false;
-  audio.volume = Math.min(audibleVolume, AUDIO_CLEAR_START_PRIME_VOLUME);
+  audio.volume = 0;
   audio.loop = true;
 
   try {
@@ -16746,8 +16741,8 @@ async function playAudioFromClearStart(
     return false;
   }
 
-  // Stop the quiet warm-up, restore normal looping, and rewind. The very short
-  // settle keeps the speaker awake while avoiding a decoder/seek race.
+  // Stop the silent decode pass, restore normal looping, and rewind. The short
+  // settle avoids a decoder/seek race without producing a quiet duplicate.
   audio.pause();
   audio.loop = wasLooping;
   await seekAudioToStart(audio);
