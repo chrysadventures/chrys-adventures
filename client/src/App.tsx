@@ -174,11 +174,13 @@ const NUMBER_TEXT_STYLE: React.CSSProperties = {
 const getNumberTextStyle = (_value: number | string): React.CSSProperties => NUMBER_TEXT_STYLE;
 const NUMBER_AUDIO_PLAYBACK_RATE = 0.85;
 const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
-// Give the browser/audio device a brief silent warm-up before every clip. Some
-// devices otherwise wake up on the first syllable and make the beginning sound
-// muffled or clipped. The clip is rewound before the audible playback starts.
-const AUDIO_CLEAR_START_PRIME_MS = 260;
-const AUDIO_CLEAR_START_SETTLE_MS = 80;
+// Give the browser/audio device a quiet real-signal warm-up before every clip.
+// A fully muted pre-roll does not wake the speaker on some phones, so the first
+// syllable can still sound clipped. The clip loops quietly, rewinds, and then
+// restarts almost immediately at its normal volume.
+const AUDIO_CLEAR_START_PRIME_MS = 520;
+const AUDIO_CLEAR_START_SETTLE_MS = 12;
+const AUDIO_CLEAR_START_PRIME_VOLUME = 0.035;
 const COUNTING_STEP_MS = 1400;
 const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
@@ -16581,7 +16583,10 @@ function stopCelebrationAudio() {
   successFanfarePrimeRunId += 1;
   const audio = activeCelebrationAudio ?? successFanfareAudio;
   audio?.pause();
-  if (audio) resetAudioToStart(audio);
+  if (audio) {
+    audio.loop = false;
+    resetAudioToStart(audio);
+  }
   activeCelebrationAudio = null;
 }
 
@@ -16593,20 +16598,25 @@ function primeSuccessFanfareOutput() {
   audio.pause();
   resetAudioToStart(audio);
   audio.preload = "auto";
-  audio.volume = 0;
+  audio.volume = Math.min(restoreVolume, AUDIO_CLEAR_START_PRIME_VOLUME);
+  audio.loop = true;
 
   void audio.play()
     .then(async () => {
       await wait(AUDIO_CLEAR_START_PRIME_MS);
       if (runId !== successFanfarePrimeRunId || activeCelebrationAudio === audio) return;
       audio.pause();
+      audio.loop = false;
       await seekAudioToStart(audio);
       await wait(AUDIO_CLEAR_START_SETTLE_MS);
       if (runId !== successFanfarePrimeRunId || activeCelebrationAudio === audio) return;
       audio.volume = restoreVolume;
     })
     .catch(() => {
-      if (runId === successFanfarePrimeRunId) audio.volume = restoreVolume;
+      if (runId === successFanfarePrimeRunId) {
+        audio.loop = false;
+        audio.volume = restoreVolume;
+      }
     });
 }
 
@@ -16667,23 +16677,27 @@ async function playAudioFromClearStart(
   if (!isCurrent()) return false;
   audio.preload = "auto";
   const audibleVolume = audio.volume;
+  const wasLooping = audio.loop;
   audio.pause();
   if (!await waitForAudioReady(audio) || !isCurrent()) return false;
   await seekAudioToStart(audio);
   if (!isCurrent()) return false;
-  audio.volume = 0;
+  audio.volume = Math.min(audibleVolume, AUDIO_CLEAR_START_PRIME_VOLUME);
+  audio.loop = true;
 
   try {
     // Calling play immediately preserves the browser's user-gesture permission;
     // its promise resolves only after enough of the clip has decoded to start.
     await audio.play();
   } catch {
+    audio.loop = wasLooping;
     audio.volume = audibleVolume;
     return false;
   }
 
   if (!isCurrent()) {
     audio.pause();
+    audio.loop = wasLooping;
     audio.volume = audibleVolume;
     return false;
   }
@@ -16691,14 +16705,15 @@ async function playAudioFromClearStart(
   await wait(AUDIO_CLEAR_START_PRIME_MS);
   if (!isCurrent()) {
     audio.pause();
+    audio.loop = wasLooping;
     audio.volume = audibleVolume;
     return false;
   }
 
-  // Stop the silent warm-up completely, then wait for the seek back to zero to
-  // finish. Resetting currentTime while playback continues can race the media
-  // decoder and lose the first consonant on mobile devices.
+  // Stop the quiet warm-up, restore normal looping, and rewind. The very short
+  // settle keeps the speaker awake while avoiding a decoder/seek race.
   audio.pause();
+  audio.loop = wasLooping;
   await seekAudioToStart(audio);
   await wait(AUDIO_CLEAR_START_SETTLE_MS);
   if (!isCurrent()) {
