@@ -184,6 +184,8 @@ const AUDIO_SEQUENCE_JOIN_WINDOW_MS = 700;
 const AUDIO_NUMBER_OBJECT_JOIN_GAP_MS = 8;
 const AUDIO_NUMBER_OBJECT_TAIL_TRIM_MS = 160;
 const COUNTING_STEP_MS = 1400;
+const COUNTING_INTER_NUMBER_GAP_MS = 360;
+const COUNTING_NUMBER_TAIL_TRIM_MS = 120;
 const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
 const ADDITION_BANANA_TRAVEL_MS = 1200;
@@ -4322,6 +4324,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
   const [completedSides, setCompletedSides] = useState({ left: false, right: false });
   const [countingSide, setCountingSide] = useState<"left" | "right" | null>(null);
   const [revealStage, setRevealStage] = useState<0 | 1 | 2 | 3>(stagedReveal ? 0 : 3);
+  const [comparisonAudioPlaying, setComparisonAudioPlaying] = useState(false);
   const countingRunRef = useRef(0);
   const item = ADVANCED_COMPARE_OBJECTS[object];
   const bothPilesCounted = completedSides.left && completedSides.right;
@@ -4334,6 +4337,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     setCompletedSides({ left: false, right: false });
     setCountingSide(null);
     setRevealStage(stagedReveal ? 0 : 2);
+    setComparisonAudioPlaying(false);
 
     return () => {
       countingRunRef.current += 1;
@@ -4356,10 +4360,14 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       await wait(prefersReducedMotion ? 100 : 2000);
       if (cancelled) return;
       setRevealStage(2);
-      if (symbol) await speakComparisonSymbol(symbol, lang);
       await wait(prefersReducedMotion ? 100 : 1000);
       if (cancelled) return;
       setRevealStage(3);
+      if (symbol) {
+        setComparisonAudioPlaying(true);
+        await speakComparisonResultSentence(a, b, symbol, lang);
+        if (!cancelled) setComparisonAudioPlaying(false);
+      }
     };
     void revealComparison();
     return () => {
@@ -4367,6 +4375,13 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       stopNumberAudio();
     };
   }, [a, b, bothPilesCounted, lang, prefersReducedMotion, stagedReveal, symbol]);
+
+  const replayComparison = async () => {
+    if (!symbol || comparisonAudioPlaying) return;
+    setComparisonAudioPlaying(true);
+    await speakComparisonResultSentence(a, b, symbol, lang);
+    setComparisonAudioPlaying(false);
+  };
 
   const countPile = async (side: "left" | "right", count: number) => {
     if (countingSide !== null) return;
@@ -4466,22 +4481,21 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         </p>
       )}
       {stagedReveal && revealStage >= 3 && (
-        <div className="comparison-explanation-bar-reveal mx-auto mt-3 max-w-3xl rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:px-5">
+        <div className="comparison-explanation-bar-reveal mx-auto mt-3 grid max-w-3xl items-center gap-3 rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5">
           <p className="text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
-            {lang === "en" ? symbol === "<" ? (
-              <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">less than</span> {b}.</>
-            ) : symbol === "=" ? (
-              <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">equal to</span> {b}.</>
-            ) : (
-              <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">greater than</span> {b}.</>
-            ) : symbol === "<" ? (
-              <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">lebih kecil daripada</span> {b}.</>
-            ) : symbol === "=" ? (
-              <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">sama dengan</span> {b}.</>
-            ) : (
-              <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">lebih besar daripada</span> {b}.</>
-            )}
+            {a} <span className="inline-grid min-w-14 place-items-center rounded-xl bg-yellow-300 px-3 py-1 text-3xl text-slate-950 shadow-[0_3px_0_#a16207]">{symbol}</span> {b}
           </p>
+          <button
+            type="button"
+            onClick={() => void replayComparison()}
+            disabled={comparisonAudioPlaying}
+            className="mx-auto inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-4 font-black text-slate-950 shadow-[0_5px_0_#0e7490] transition hover:bg-cyan-400 active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
+          >
+            <SpeakerIcon />
+            {comparisonAudioPlaying
+              ? (lang === "en" ? "Playing..." : "Sedang dimainkan...")
+              : (lang === "en" ? "Hear again" : "Dengar sekali lagi")}
+          </button>
         </div>
       )}
     </div>
@@ -8494,9 +8508,14 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
       visual: <MissingNumberTeaching lang={lang} nums={[0, 1, 2, "?", 4, 5, 6, 7, 8, 9]} answer={3} />,
     },
     {
-      title: lang === "en" ? "Place the missing number" : "Letak nombor hilang",
-      text: lang === "en" ? "Choose a tile for the empty space." : "Pilih jubin untuk ruang kosong.",
-      visual: <MissingNumberPlacementActivity lang={lang} />,
+      title: lang === "en" ? "Missing number: count down" : "Nombor hilang: kira turun",
+      text: lang === "en" ? "Which number is missing?" : "Nombor apa yang hilang?",
+      visual: <MissingNumberPlacementActivity key="missing-down" lang={lang} sequence={[9, 8, "?", 6]} answer={7} choices={[5, 7, 8]} direction="descending" />,
+    },
+    {
+      title: lang === "en" ? "Missing number: count up" : "Nombor hilang: kira naik",
+      text: lang === "en" ? "Which number is missing?" : "Nombor apa yang hilang?",
+      visual: <MissingNumberPlacementActivity key="missing-up" lang={lang} sequence={[5, 6, "?", 8]} answer={7} choices={[4, 7, 9]} direction="ascending" />,
     },
   ];
   const current = slides[step];
@@ -13235,6 +13254,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
   const isTeenValueCountQuestion = qn.id.startsWith("adv-teen-value-count-");
+  const usesWideSequenceQuestion = qn.visual.kind === "sequence" && qn.visual.nums.length > 5;
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
   const hidesQuestionVisual =
     (qn.visual.kind === "horizontalAdd" && qn.visual.display === "none") ||
@@ -13342,7 +13362,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   }
 
   return (
-    <main className={`mx-auto w-full pb-8 ${cyber ? "max-w-5xl" : "max-w-3xl"}`}>
+    <main className={`mx-auto w-full pb-8 ${cyber ? "max-w-5xl" : usesWideSequenceQuestion ? "max-w-7xl" : "max-w-3xl"}`}>
       <LessonShell lang={lang} title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length} - ${index + 1}/${randomizedQuestions.length}`} variant={variant}>
         <div className={`mobile-quiz-card rounded-[2rem] border-4 p-4 ${cyber ? "border-cyan-400 bg-slate-950/90 shadow-[0_8px_0_#164e63]" : "border-white bg-white shadow-[0_8px_0_rgba(0,0,0,.16)]"}`}>
           <div className={`mb-3 h-3 overflow-hidden rounded-full ${cyber ? "border border-cyan-700 bg-slate-800" : "bg-slate-100"}`}>
@@ -14737,11 +14757,14 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
 function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<number | "?">; marked: number | number[]; arrow?: "left" | "right" }) {
   const compact = nums.length <= 5;
   const markedNumbers = Array.isArray(marked) ? marked : [marked];
+  const numberSize = compact
+    ? "h-7 w-7 text-xs sm:h-10 sm:w-10 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl"
+    : "h-8 w-8 text-sm sm:h-11 sm:w-11 sm:text-lg md:h-14 md:w-14 md:text-xl lg:h-16 lg:w-16 lg:text-2xl";
 
   return (
-    <div className="overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-4 sm:pb-3">
+    <div className="w-full overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-5 sm:pb-4">
       <div
-        className={`relative mx-auto grid min-w-0 gap-1 px-0 pb-3 sm:gap-3 sm:px-1 md:gap-7 lg:gap-8 ${compact ? "max-w-3xl" : "max-w-6xl"}`}
+        className={`relative mx-auto grid w-full min-w-0 gap-1 px-0 pb-3 sm:gap-3 sm:px-1 md:gap-7 lg:gap-8 xl:gap-10 ${compact ? "max-w-3xl" : "max-w-7xl"}`}
         style={{ gridTemplateColumns: `repeat(${nums.length}, minmax(0, 1fr))` }}
       >
         <div className="absolute bottom-3 left-3 right-3 h-2 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-400 shadow-[0_3px_0_rgba(14,116,144,.18)] sm:bottom-4 sm:left-6 sm:right-6 sm:h-3" aria-hidden="true" />
@@ -14755,7 +14778,7 @@ function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<num
             ) : (
               <ArrowLeft className="absolute -right-2 top-2 z-20 h-3 w-3 text-emerald-700 sm:-right-3 sm:top-3 sm:h-4 sm:w-4 md:-right-6 md:h-6 md:w-6 lg:top-4" strokeWidth={3} aria-hidden="true" />
             ))}
-            <div className={`mb-2 grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:h-10 sm:w-10 sm:border-4 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl ${missing ? "border-amber-500 bg-yellow-50 text-yellow-900" : selected ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
+            <div className={`mb-2 grid place-items-center rounded-full border-2 font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:border-4 ${numberSize} ${missing ? "border-amber-500 bg-yellow-50 text-yellow-900" : selected ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
             <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${missing || selected ? "bg-amber-500" : "bg-sky-500"}`} />
           </div>
           );
@@ -15160,13 +15183,17 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
           );
         })}
       </div>
-      {done && mode === "up" ? (
+      {done ? (
         <div className="mx-auto w-full max-w-3xl space-y-3">
-          <NumberLineSequence nums={[1, 2, 3, 4]} marked={-1} arrow="right" />
+          <NumberLineSequence nums={mode === "up" ? [1, 2, 3, 4] : [4, 3, 2, 1]} marked={-1} arrow="right" />
           <p className="text-center text-lg font-black text-emerald-900 sm:text-xl">
-            {lang === "en"
-              ? "Numbers increase in an ascending order."
-              : "Nombor meningkat dalam susunan menaik."}
+            {mode === "up"
+              ? (lang === "en"
+                  ? "Numbers increase in an ascending order."
+                  : "Nombor meningkat dalam susunan menaik.")
+              : (lang === "en"
+                  ? "Numbers decrease in a descending order."
+                  : "Nombor menurun dalam susunan menurun.")}
           </p>
         </div>
       ) : (
@@ -15272,6 +15299,52 @@ function TapRevealSequence({ lang }: { lang: Lang }) {
   );
 }
 
+function NumberOrderRelationship({ before, answer, after, lang }: { before: number; answer: number; after: number; lang: Lang }) {
+  const numberNode = (value: number, active = false) => (
+    <div className="text-center">
+      <span
+        className={`mx-auto grid h-16 w-16 place-items-center rounded-full border-4 text-3xl font-black shadow-[0_5px_0_rgba(0,0,0,.12)] sm:h-20 sm:w-20 sm:text-4xl ${active ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}
+        style={getNumberTextStyle(value)}
+      >
+        {value}
+      </span>
+      <span className={`mt-2 block text-sm font-black uppercase ${active ? "text-amber-800" : "text-sky-800"}`}>
+        {active
+          ? (lang === "en" ? "This number" : "Nombor ini")
+          : value === before
+            ? (lang === "en" ? "Previous" : "Sebelum")
+            : (lang === "en" ? "Next" : "Selepas")}
+      </span>
+    </div>
+  );
+
+  const relationshipArrow = (label: string) => (
+    <div className="min-w-0 text-center">
+      <span className="mb-2 block text-xs font-black uppercase tracking-wide text-emerald-800 sm:text-sm">{label}</span>
+      <div className="flex items-center" aria-hidden="true">
+        <span className="h-1 flex-1 rounded-full bg-emerald-400" />
+        <ArrowRight className="-ml-1 h-7 w-7 shrink-0 text-emerald-600" strokeWidth={3.5} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="mt-3 rounded-3xl border-2 border-emerald-200 bg-white px-3 py-4 sm:px-6" aria-live="polite" aria-label={`${answer} ${lang === "en" ? "comes after" : "selepas"} ${before}. ${answer} ${lang === "en" ? "comes before" : "sebelum"} ${after}.`}>
+      <div className="grid grid-cols-[auto_minmax(4rem,1fr)_auto_minmax(4rem,1fr)_auto] items-center gap-2 sm:gap-4">
+        {numberNode(before)}
+        {relationshipArrow(lang === "en" ? `AFTER ${before}` : `SELEPAS ${before}`)}
+        {numberNode(answer, true)}
+        {relationshipArrow(lang === "en" ? `BEFORE ${after}` : `SEBELUM ${after}`)}
+        {numberNode(after)}
+      </div>
+      <div className="mt-4 flex flex-wrap justify-center gap-2 text-base font-black text-emerald-950 sm:text-lg">
+        <span className="rounded-full bg-emerald-100 px-4 py-2">{lang === "en" ? `${answer} comes after ${before}` : `${answer} selepas ${before}`}</span>
+        <span className="rounded-full bg-sky-100 px-4 py-2">{lang === "en" ? `${answer} comes before ${after}` : `${answer} sebelum ${after}`}</span>
+      </div>
+    </div>
+  );
+}
+
 function MissingNumberTeaching({ nums, answer, lang }: { nums: Array<number | "?">; answer: number; lang: Lang }) {
   const [running, setRunning] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -15368,20 +15441,28 @@ function MissingNumberTeaching({ nums, answer, lang }: { nums: Array<number | "?
           <p className="mt-3 text-xl font-black text-yellow-950" aria-live="polite">{resultText}</p>
         )}
         {finished && orderText && (
-          <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-lg font-black text-emerald-900" aria-live="polite">{orderText}</p>
+          typeof before === "number" && typeof after === "number"
+            ? <NumberOrderRelationship before={before} answer={answer} after={after} lang={lang} />
+            : <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-lg font-black text-emerald-900" aria-live="polite">{orderText}</p>
         )}
       </div>
     </div>
   );
 }
 
-function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
-  const answer = 3;
-  const choices = [2, 3, 5];
+function MissingNumberPlacementActivity({ lang, sequence, answer, choices, direction }: {
+  lang: Lang;
+  sequence: Array<number | "?">;
+  answer: number;
+  choices: number[];
+  direction: "ascending" | "descending";
+}) {
   const [selected, setSelected] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const correct = checked && selected === answer;
+  const displayedSequence: Array<number | "?"> = sequence.map((value) => value === "?" ? (checked ? answer : selected ?? "?") : value);
+  const resolvedSequenceText = sequence.map((value) => value === "?" ? answer : value).join(", ");
 
   const choose = (value: number) => {
     setSelected(value);
@@ -15396,23 +15477,13 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
   return (
     <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
       {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} />}
-      <NumberLineSequence nums={NUMBERS} marked={selected ?? -1} arrow="right" />
-      <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-white bg-white p-3">
-        {[0, 1, 2, "?", 4, 5].map((item, index) => (
-          <React.Fragment key={`${item}-${index}`}>
-            {index > 0 && <span className="text-2xl font-black text-blue-300">{"\u2192"}</span>}
-            <span
-              className={`grid h-14 min-w-14 place-items-center rounded-2xl border-2 px-4 text-2xl font-black ${
-                item === "?"
-                  ? "border-dashed border-yellow-400 bg-yellow-50 text-yellow-900"
-                  : "border-blue-100 bg-blue-50 text-blue-950"
-              }`}
-              style={typeof item === "number" ? getNumberTextStyle(item) : undefined}
-            >
-              {item === "?" ? (selected ?? "?") : item}
-            </span>
-          </React.Fragment>
-        ))}
+      <div className="rounded-3xl border-2 border-white bg-white p-3 sm:p-5">
+        <NumberLineSequence nums={displayedSequence} marked={checked ? answer : selected ?? -1} arrow="right" />
+        <p className="mt-3 text-center text-lg font-black text-blue-950">
+          {direction === "ascending"
+            ? (lang === "en" ? "Count up by 1." : "Kira naik satu demi satu.")
+            : (lang === "en" ? "Count down by 1." : "Kira turun satu demi satu.")}
+        </p>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
         {choices.map((choice) => (
@@ -15454,14 +15525,14 @@ function MissingNumberPlacementActivity({ lang }: { lang: Lang }) {
         <div className={`rounded-3xl border-2 p-4 text-center ${correct ? "border-emerald-200 bg-emerald-50" : "border-yellow-200 bg-yellow-50"}`}>
           <p className={`text-xl font-black ${correct ? "text-emerald-800" : "text-orange-700"}`}>
             {correct
-              ? (lang === "en" ? "Great job. 3 is missing." : "Bagus. 3 yang hilang.")
+              ? (lang === "en" ? `Great job. ${answer} is missing.` : `Bagus. ${answer} yang hilang.`)
               : (lang === "en" ? "Good try. Let's look again." : "Cubaan baik. Mari lihat lagi.")}
           </p>
-          <div className="mt-3 grid gap-2 text-base font-black text-slate-700">
-            <p>{lang === "en" ? "3 comes after 2." : "3 selepas 2."}</p>
-            <p>{lang === "en" ? "3 comes before 4." : "3 sebelum 4."}</p>
-            <p>{lang === "en" ? "So, ? is 3." : "Jadi, ? ialah 3."}</p>
-          </div>
+          <p className="mt-3 text-lg font-black text-slate-700">
+            {direction === "ascending"
+              ? (lang === "en" ? `Count up: ${resolvedSequenceText}.` : `Kira naik: ${resolvedSequenceText}.`)
+              : (lang === "en" ? `Count down: ${resolvedSequenceText}.` : `Kira turun: ${resolvedSequenceText}.`)}
+          </p>
         </div>
       )}
     </div>
@@ -16650,30 +16721,31 @@ async function playRecordedVoiceFile(
 }
 
 async function speakComparisonResultSentence(
-  _left: number,
-  _right: number,
+  left: number,
+  right: number,
   symbol: ">" | "<" | "=",
   lang: Lang,
 ): Promise<void> {
-  await speakComparisonSymbol(symbol, lang);
-}
-
-async function speakComparisonSymbol(symbol: ">" | "<" | "=", lang: Lang): Promise<void> {
+  if (left < 0 || left > 20 || right < 0 || right > 20) return;
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+  await speakNumber(left, lang);
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
   if (symbol === "=") {
-    await speakMathCue("equals", lang);
-    return;
+    await speakMathCue("equals", lang, "joined");
+  } else {
+    await playRecordedVoiceFile(COMPARISON_AUDIO_FILES[lang][symbol === ">" ? "greater" : "less"], undefined, "joined");
   }
-  await playRecordedVoiceFile(COMPARISON_AUDIO_FILES[lang][symbol === ">" ? "greater" : "less"]);
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  await speakNumber(right, lang, undefined, undefined, "joined");
 }
 
 async function speakComparisonSentence(
-  _left: number,
-  _right: number,
+  left: number,
+  right: number,
   symbol: ">" | "<" | "=",
   lang: Lang,
 ): Promise<void> {
-  await speakComparisonSymbol(symbol, lang);
+  await speakComparisonResultSentence(left, right, symbol, lang);
 }
 
 async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA, onAudibleStart?: () => void) {
@@ -16763,16 +16835,22 @@ async function speakNumberValuesSequence(
   stopNumberAudio();
   const runId = audioRunId;
   activeCountingRunId = runId;
-  const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
+  const gapMs = Math.max(180, COUNTING_INTER_NUMBER_GAP_MS + intervalMs - COUNTING_STEP_MS);
   try {
-    for (const value of values) {
+    for (let index = 0; index < values.length; index += 1) {
+      const value = values[index];
       if (runId !== audioRunId) return;
       onCount?.(value);
-      const startedAt = performance.now();
-      await playNumberFile(value, lang, runId);
+      await playNumberFile(
+        value,
+        lang,
+        runId,
+        undefined,
+        index === 0 ? "clear" : "joined",
+        COUNTING_NUMBER_TAIL_TRIM_MS,
+      );
       if (runId !== audioRunId) return;
-      const elapsed = performance.now() - startedAt;
-      await wait(Math.max(180, stepMs - elapsed));
+      if (index < values.length - 1) await wait(gapMs);
     }
   } finally {
     if (activeCountingRunId === runId) activeCountingRunId = null;
@@ -16793,21 +16871,25 @@ async function speakCountingSequence(
   stopNumberAudio();
   const runId = audioRunId;
   activeCountingRunId = runId;
-  const stepMs = Math.max(intervalMs, COUNTING_STEP_MS);
+  const gapMs = Math.max(180, COUNTING_INTER_NUMBER_GAP_MS + intervalMs - COUNTING_STEP_MS);
   const finalValue = Math.min(count, 20);
+  const firstValue = Math.max(1, startValue);
   let completed = false;
   try {
-    for (let value = Math.max(1, startValue); value <= finalValue; value += 1) {
+    for (let value = firstValue; value <= finalValue; value += 1) {
       if (runId !== audioRunId) return;
       onCount?.(value);
-      const startedAt = performance.now();
-      await playNumberFile(value, lang, runId);
+      await playNumberFile(
+        value,
+        lang,
+        runId,
+        undefined,
+        value === firstValue ? "clear" : "joined",
+        COUNTING_NUMBER_TAIL_TRIM_MS,
+      );
       if (runId !== audioRunId) return;
       onCountComplete?.(value);
-      if (value < finalValue) {
-        const elapsed = performance.now() - startedAt;
-        await wait(Math.max(180, stepMs - elapsed));
-      }
+      if (value < finalValue) await wait(gapMs);
     }
     completed = true;
   } finally {
