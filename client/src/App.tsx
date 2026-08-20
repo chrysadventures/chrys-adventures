@@ -288,11 +288,10 @@ const NUMBER_AUDIO_FILES: Record<Lang, Record<number, string>> = {
 };
 
 const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Partial<Record<number, string>>> = {
-  // The 2026-08-17 English batch has no complete "Total 10 bananas" or
-  // "Total 12 bananas" clip. Its t12 clip says 13, while t13 and t14 are
-  // duplicate recordings of 14, so the verified content is mapped below.
+  // The verified English total recordings are mapped explicitly because the
+  // uploaded batches use a few different filename patterns.
   en: {
-    0: "total 9 banana.mp3",
+    0: "total 0 banana.mp3",
     1: "en-total-1-bananas.mp3",
     2: "en-total-2-bananas.mp3",
     3: "en-total-3-bananas.mp3",
@@ -302,7 +301,9 @@ const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Partial<Record<number, string>>> = 
     7: "en-total-7-bananas.mp3",
     8: "en-total-8-bananas.mp3",
     9: "en-total-9-bananas.mp3",
+    10: "t10bananas.mp3",
     11: "en-total-11-bananas.mp3",
+    12: "t12 bananas.mp3",
     13: "en-total-13-bananas.mp3",
     14: "en-total-14-bananas.mp3",
     15: "en-total-15-bananas.mp3",
@@ -414,10 +415,16 @@ const COMPARISON_AUDIO_FILES: Record<Lang, { greater: string; less: string }> = 
   },
 };
 
-const MALAY_COMPARISON_PROMPT_AUDIO_FILES = {
-  compare: "ms-bandingkan.mp3",
-  and: "ms-dan.mp3",
-} as const;
+const COMPARISON_PROMPT_AUDIO_FILES: Record<Lang, { compare: string; and: string }> = {
+  en: {
+    compare: "compare.mp3",
+    and: "and.mp3",
+  },
+  ms: {
+    compare: "ms-bandingkan.mp3",
+    and: "ms-dan.mp3",
+  },
+};
 
 const BM_RECORDED_AUDIO_FILES = new Set<string>([
   ...Object.values(NUMBER_AUDIO_FILES.ms),
@@ -425,7 +432,7 @@ const BM_RECORDED_AUDIO_FILES = new Set<string>([
   ...Object.values(MATH_CUE_AUDIO_FILES.ms ?? {}),
   ...DIGIT_LABEL_AUDIO_FILES.ms,
   ...Object.values(COMPARISON_AUDIO_FILES.ms),
-  ...Object.values(MALAY_COMPARISON_PROMPT_AUDIO_FILES),
+  ...Object.values(COMPARISON_PROMPT_AUDIO_FILES.ms),
   ...Object.values(MS_OBJECT_TOTAL_AUDIO_FILES).flatMap((files) => Object.values(files)),
   COUNT_PROMPT_AUDIO_FILES.ms,
 ].filter((file): file is string => Boolean(file)));
@@ -16221,7 +16228,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
   }, [q.id]);
 
   useEffect(() => {
-    if (lang !== "ms" || !advancedComparisonPair || stepIndex > 1) return;
+    if (!advancedComparisonPair || stepIndex > 1) return;
     const { left, right } = advancedComparisonPair;
     const announcementKey = `${q.id}:${lang}:${stepIndex}:${left}:${right}`;
     if (announcedComparisonStepRef.current === announcementKey) return;
@@ -16233,7 +16240,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     }
 
     const symbol = left > right ? ">" : left < right ? "<" : "=";
-    void speakComparisonSentence(left, right, symbol, lang);
+    void speakComparisonResultSentence(left, right, symbol, lang);
   }, [advancedComparisonPair, lang, q.id, stepIndex]);
 
   useEffect(() => {
@@ -16551,7 +16558,7 @@ async function playRecordedVoiceFile(
   });
 }
 
-async function speakComparisonSentence(
+async function speakComparisonResultSentence(
   left: number,
   right: number,
   symbol: ">" | "<" | "=",
@@ -16577,16 +16584,29 @@ async function speakComparisonSentence(
 }
 
 async function speakComparisonPrompt(left: number, right: number, lang: Lang): Promise<void> {
-  if (lang !== "ms" || left < 0 || left > 20 || right < 0 || right > 20) return;
+  if (left < 0 || left > 20 || right < 0 || right > 20) return;
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
 
-  await playRecordedVoiceFile(MALAY_COMPARISON_PROMPT_AUDIO_FILES.compare);
+  const promptFiles = COMPARISON_PROMPT_AUDIO_FILES[lang];
+  await playRecordedVoiceFile(promptFiles.compare);
   await wait(AUDIO_PHRASE_JOIN_GAP_MS);
   await speakNumber(left, lang, undefined, undefined, "joined");
   await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  await playRecordedVoiceFile(MALAY_COMPARISON_PROMPT_AUDIO_FILES.and, undefined, "joined");
+  await playRecordedVoiceFile(promptFiles.and, undefined, "joined");
   await wait(AUDIO_PHRASE_JOIN_GAP_MS);
   await speakNumber(right, lang, undefined, undefined, "joined");
+}
+
+async function speakComparisonSentence(
+  left: number,
+  right: number,
+  symbol: ">" | "<" | "=",
+  lang: Lang,
+): Promise<void> {
+  await speakComparisonPrompt(left, right, lang);
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  await speakComparisonResultSentence(left, right, symbol, lang);
 }
 
 async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA, onAudibleStart?: () => void) {
@@ -17007,7 +17027,8 @@ function preloadNumberAudioFiles() {
     ...DIGIT_LABEL_AUDIO_FILES.ms,
     ...Object.values(COMPARISON_AUDIO_FILES.en),
     ...Object.values(COMPARISON_AUDIO_FILES.ms),
-    ...Object.values(MALAY_COMPARISON_PROMPT_AUDIO_FILES),
+    ...Object.values(COMPARISON_PROMPT_AUDIO_FILES.en),
+    ...Object.values(COMPARISON_PROMPT_AUDIO_FILES.ms),
     EN_OBJECT_TOTAL_AUDIO_FILES.total,
     ...Object.values(COUNT_PROMPT_AUDIO_FILES),
     ...Object.values(EN_OBJECT_TOTAL_AUDIO_FILES.objects).flatMap(({ singular, plural }) => singular ? [singular, plural] : [plural]),
