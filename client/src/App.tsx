@@ -2606,8 +2606,8 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
     ? ["Recognize numbers", "Number values", "Number order", "Grouping", "Addition", "Subtraction", "Real-world maths", "Practice tests"]
     : ["Kenal nombor", "Nilai nombor", "Susunan nombor", "Kumpulan nombor", "Tambah", "Tolak", "Aplikasi konsep", "Soalan latihan"];
   const advancedTopics = lang === "en"
-    ? ["Recognizing", "Addition", "Subtraction", "Greater than (>) and less than (<)", "Multiplication", "Division", "Real-world maths", "Test mode"]
-    : ["Kenal nombor", "Tambah", "Tolak", "Lebih besar (>) dan lebih kecil (<)", "Darab", "Bahagi", "Matematik dunia sebenar", "Mod ujian"];
+    ? ["Recognizing and identifying numbers", "Greater than (>) and less than (<)", "Number sequence", "Addition", "Subtraction", "Test mode"]
+    : ["Mengenal dan mengenal pasti nombor", "Lebih besar (>) dan lebih kecil (<)", "Urutan nombor", "Tambah", "Tolak", "Mod ujian"];
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-6">
@@ -8423,11 +8423,6 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
   const [practice, setPractice] = useState(false);
   const slides = [
     {
-      title: lang === "en" ? "Number values" : "Nilai nombor",
-      text: lang === "en" ? "Numbers show amounts." : "Nombor menunjukkan jumlah.",
-      visual: <NumberValueCompare a={2} b={5} lang={lang} />,
-    },
-    {
       title: lang === "en" ? "Full number line" : "Garis nombor penuh",
       text: lang === "en" ? "Numbers go from 0 to 9." : "Nombor dari 0 hingga 9.",
       visual: <NumberLineSequence nums={NUMBERS} marked={-1} arrow="right" />,
@@ -8435,7 +8430,7 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
     {
       title: lang === "en" ? "Ascending: Going Up" : "Menaik: Nombor Naik",
       text: lang === "en" ? "Ascending means numbers go up." : "Menaik maksudnya nombor naik.",
-      visual: <SequencingExample nums={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} arrow="right" />,
+      visual: <SequencingExample lang={lang} />,
     },
     {
       title: lang === "en" ? "Numbers get bigger" : "Nombor makin besar",
@@ -14751,24 +14746,6 @@ function SequenceReferenceSolution({ nums, lang }: { nums: Array<number | "?">; 
   );
 }
 
-function NumberValueCompare({ a, b, lang }: { a: number; b: number; lang: Lang }) {
-  const banana = "🍌";
-  const bigger = Math.max(a, b);
-  const smaller = Math.min(a, b);
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <LabeledGroup count={a} label={String(a)} emoji={banana} />
-        <LabeledGroup count={b} label={String(b)} emoji={banana} />
-      </div>
-      <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4 text-center text-xl font-black text-emerald-900">
-        <p>{lang === "en" ? `${bigger} has more.` : `${bigger} ada lebih banyak.`}</p>
-        <p>{lang === "en" ? `${smaller} has less.` : `${smaller} ada lebih sedikit.`}</p>
-      </div>
-    </div>
-  );
-}
-
 function SameValueVisual({ count, emojis, lang, showSummary = true }: { count: number; emojis: string[]; lang: Lang; showSummary?: boolean }) {
   return (
     <div className="space-y-4">
@@ -15046,15 +15023,17 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
   const [activeIndex, setActiveIndex] = useState(0);
   const [completedIndex, setCompletedIndex] = useState(-1);
   const [counting, setCounting] = useState(false);
-  const banana = "🍌";
+  const banana = BANANA;
   const done = completedIndex >= nums.length - 1;
   const currentComplete = completedIndex >= activeIndex;
   const shown = nums.slice(0, activeIndex + 1);
+  const activeValue = nums[activeIndex] ?? 0;
 
-  const finishCurrentCount = useCallback(() => {
+  const finishCurrentCount = useCallback(async () => {
     setCompletedIndex(activeIndex);
+    await speakRecordedBananaTotal(activeValue, lang, banana);
     setCounting(false);
-  }, [activeIndex]);
+  }, [activeIndex, activeValue, banana, lang]);
 
   const handleCountAction = () => {
     if (counting || done) return;
@@ -15416,17 +15395,18 @@ function MissingNumberLine({ nums, marked = -1 }: { nums: Array<number | "?">; m
   return <NumberLineSequence nums={nums} marked={marked} arrow="right" />;
 }
 
-function SequencingExample({ nums, arrow }: { nums: number[]; arrow: "left" | "right" }) {
+function SequencingExample({ lang }: { lang: Lang }) {
   return (
     <div className="space-y-4">
       <NumberLine marked={-1} />
-      <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-4 md:flex-nowrap md:gap-1 lg:gap-2">
-        {nums.map((n, i) => (
-          <React.Fragment key={n}>
-            {i > 0 && <span className="shrink-0 text-xl font-black text-emerald-700 lg:text-2xl">{arrow === "right" ? "\u2192" : "\u2190"}</span>}
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 border-emerald-200 bg-white text-2xl font-black text-blue-950 md:min-w-0 md:max-w-14 md:flex-1">{n}</span>
-          </React.Fragment>
-        ))}
+      <div
+        className="flex min-h-28 flex-col items-center justify-center rounded-3xl border-2 border-emerald-100 bg-emerald-50 px-5 py-4 text-center"
+        aria-label={lang === "en" ? "Numbers increasing in value" : "Nilai nombor semakin meningkat"}
+      >
+        <p className="text-xl font-black text-emerald-900 sm:text-2xl">
+          {lang === "en" ? "Numbers increasing in value" : "Nilai nombor semakin meningkat"}
+        </p>
+        <span className="mt-1 text-6xl font-black leading-none text-emerald-600" aria-hidden="true">⟶</span>
       </div>
     </div>
   );
