@@ -1418,13 +1418,9 @@ function teenCountPracticeMethod(value: number, emoji: string): Record<Lang, str
   return {
     en: [
       `Count each ${objectName(emoji, 1, "en")} once: ${countSequence}.`,
-      `The last number is ${value}.`,
-      `So, there are ${value} ${objectName(emoji, value, "en")}.`,
     ],
     ms: [
       `Kira setiap ${objectName(emoji, 1, "ms")} sekali: ${countSequence}.`,
-      `Nombor terakhir ialah ${value}.`,
-      `Jadi, ada ${value} ${objectName(emoji, value, "ms")}.`,
     ],
   };
 }
@@ -1469,6 +1465,76 @@ const teenPracticeQuestions: Question[] = [
     { kind: "audioNumber", value: 18 },
     "choice",
     teenRecognitionPracticeMethod(18),
+  ),
+  q(
+    "adv-teen-rec-audio-word-10",
+    "advanced",
+    { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" },
+    ["ten", "eleven", "twelve", "thirteen"],
+    "ten",
+    { kind: "audioNumber", value: 10 },
+    "choice",
+    teenRecognitionPracticeMethod(10),
+  ),
+  q(
+    "adv-teen-rec-number-word-12",
+    "advanced",
+    { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" },
+    ["ten", "eleven", "twelve", "thirteen"],
+    "twelve",
+    { kind: "number", value: 12 },
+    "choice",
+    teenRecognitionPracticeMethod(12),
+  ),
+  q(
+    "adv-teen-rec-word-number-13",
+    "advanced",
+    { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" },
+    [11, 12, 13, 14],
+    13,
+    { kind: "word", value: 13 },
+    "choice",
+    teenRecognitionPracticeMethod(13),
+  ),
+  q(
+    "adv-teen-rec-audio-number-15",
+    "advanced",
+    { en: "Listen. Choose the number.", ms: "Dengar. Pilih nombor." },
+    [14, 15, 16, 17],
+    15,
+    { kind: "audioNumber", value: 15 },
+    "choice",
+    teenRecognitionPracticeMethod(15),
+  ),
+  q(
+    "adv-teen-rec-number-word-16",
+    "advanced",
+    { en: "Which word matches this number?", ms: "Perkataan mana padan dengan nombor ini?" },
+    ["fourteen", "fifteen", "sixteen", "seventeen"],
+    "sixteen",
+    { kind: "number", value: 16 },
+    "choice",
+    teenRecognitionPracticeMethod(16),
+  ),
+  q(
+    "adv-teen-rec-word-number-17",
+    "advanced",
+    { en: "Which number matches this word?", ms: "Nombor mana padan dengan perkataan ini?" },
+    [15, 16, 17, 18],
+    17,
+    { kind: "word", value: 17 },
+    "choice",
+    teenRecognitionPracticeMethod(17),
+  ),
+  q(
+    "adv-teen-rec-audio-word-19",
+    "advanced",
+    { en: "Which word did you hear?", ms: "Perkataan mana yang kamu dengar?" },
+    ["seventeen", "eighteen", "nineteen", "twenty"],
+    "nineteen",
+    { kind: "audioNumber", value: 19 },
+    "choice",
+    teenRecognitionPracticeMethod(19),
   ),
   q(
     "adv-teen-value-count-10",
@@ -2228,6 +2294,19 @@ function GameFileScreen({
         language: "EN",
       };
 
+  const formatLastPlayed = (updatedAt: string) => {
+    const dateTime = new Intl.DateTimeFormat(lang === "ms" ? "ms-MY" : "en-MY", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kuala_Lumpur",
+    }).format(new Date(updatedAt));
+    return `${dateTime} ${lang === "en" ? "MYT (Malaysia Time)" : "MYT (Waktu Malaysia)"}`;
+  };
+
   const openExisting = async (saveId: string) => {
     if (busySaveId) return;
     setBusySaveId(saveId);
@@ -2295,7 +2374,7 @@ function GameFileScreen({
                       <h2 className="truncate text-2xl font-black text-blue-950">{save.fileName}</h2>
                       <p className="mt-1 text-lg font-black text-emerald-800">{save.playerName}</p>
                       <p className="mt-2 text-sm font-bold text-slate-500">⭐ {save.stars} {copy.stars}</p>
-                      <p className="mt-1 text-xs font-bold text-slate-500">{copy.lastPlayed}: {new Date(save.updatedAt).toLocaleDateString(lang === "ms" ? "ms-MY" : "en-MY")}</p>
+                      <p className="mt-1 text-xs font-bold text-slate-500">{copy.lastPlayed}: {formatLastPlayed(save.updatedAt)}</p>
                       <button type="button" disabled={Boolean(busySaveId)} onClick={() => void openExisting(save.id)} className="mt-4 w-full rounded-2xl border-2 border-emerald-500 bg-emerald-400 px-4 py-3 text-base font-black text-emerald-950 shadow-[0_5px_0_#047857] disabled:opacity-60 enabled:active:translate-y-1">
                         {busySaveId === save.id ? "..." : copy.continue}
                       </button>
@@ -6907,7 +6986,7 @@ function TeenQuantityVisual({
             <p className="mb-3 text-center text-lg font-black text-amber-900">
               {lang === "en" ? `${ones} more` : `${ones} lagi`}
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="mx-auto flex max-w-36 flex-wrap justify-center gap-3">
               {Array.from({ length: ones }, (_, index) => {
                 const value = 11 + index;
                 const reached = activeTotal == null || value <= activeTotal;
@@ -8935,7 +9014,7 @@ function CountTotalBadge({ count, lang, unit }: { count: number; lang: Lang; uni
 
   return (
     <div
-      className={`mx-auto mt-3 inline-flex min-h-14 items-center justify-center rounded-full border-2 px-5 py-3 text-center text-xl font-black transition-opacity duration-200 ${visible ? "border-emerald-200 bg-emerald-100 text-emerald-950 opacity-100 shadow-[0_4px_0_rgba(5,150,105,.16)]" : "border-transparent opacity-0"}`}
+      className={`mx-auto mt-3 flex min-h-14 w-fit items-center justify-center rounded-full border-2 px-5 py-3 text-center text-xl font-black transition-opacity duration-200 ${visible ? "border-emerald-200 bg-emerald-100 text-emerald-950 opacity-100 shadow-[0_4px_0_rgba(5,150,105,.16)]" : "border-transparent opacity-0"}`}
       aria-label={totalLabel}
       aria-hidden={!visible}
     >
@@ -12639,7 +12718,7 @@ function LabeledGroup({ count, label, emoji }: { count: number; label: string; e
   );
 }
 
-function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, fixedColumns, largeTiles = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, highlightActiveCount = true, cyber = false, lang = "en" }: {
+function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemainingOnly = false, animateCrossOut = false, compact = false, fixedColumns, rowPattern, largeTiles = false, showCrossCount = false, intervalMs = COUNTING_STEP_MS, speakCrossCount = false, speakCount = false, visibleCount, onCountProgress, onCrossCountComplete, onCountComplete, highlightActiveCount = true, cyber = false, lang = "en" }: {
   count: number;
   emoji: string;
   crossed?: number;
@@ -12648,6 +12727,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   animateCrossOut?: boolean;
   compact?: boolean;
   fixedColumns?: number;
+  rowPattern?: number[];
   largeTiles?: boolean;
   showCrossCount?: boolean;
   intervalMs?: number;
@@ -12846,70 +12926,77 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       ? "max-w-full"
       : "max-w-[28rem]";
   let leftIndex = 0;
+  const tiles = Array.from({ length: count }, (_, i) => {
+    const gone = i < visibleCrossed;
+    const willBeTaken = i < crossed;
+    const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
+    const label = shouldCount ? ++leftIndex : 0;
+    const labelVisible = shouldCount && label <= displayedCount;
+    const isActiveCount = highlightActiveCount
+      && (visibleCount !== undefined || countingInProgress)
+      && labelVisible
+      && label === displayedCount;
+    const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
+    const hasCountedLabel = labelVisible && !gone;
+    const isUncounted = shouldCount && !labelVisible && !gone;
+    return (
+      <div
+        key={i}
+        style={balancedTileStyle}
+        className={`relative flex flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,box-shadow,transform] duration-300 ${
+          isActiveCount
+            ? cyber
+              ? "scale-105 border-yellow-200 bg-cyan-950/90 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]"
+              : "scale-105 border-yellow-500 bg-white ring-4 ring-yellow-300 shadow-[0_0_18px_rgba(250,204,21,.55)]"
+            : hasCountedLabel
+              ? cyber
+                ? "border-cyan-400 bg-cyan-950/90 ring-2 ring-cyan-700/70"
+                : "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
+              : gone
+                ? cyber
+                  ? "border-red-800 bg-slate-900/70"
+                  : "border-red-200 bg-slate-100"
+                : cyber
+                  ? isUncounted
+                    ? "border-slate-700 bg-slate-950/80"
+                    : "border-cyan-900 bg-slate-900/90"
+                  : "border-amber-100 bg-amber-50"
+        } ${tileSizeClass}`}
+      >
+        {crossLabelVisible ? (
+          <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-red-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity">
+            {i + 1}
+          </span>
+        ) : (
+          <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1 text-xs font-black leading-none shadow-sm transition-opacity ${isActiveCount ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
+            {labelVisible ? label : "."}
+          </span>
+        )}
+        <span className={`relative inline-flex items-center justify-center ${iconSizeClass}`}>
+          <SpriteIcon value={emoji} className={`h-full w-full ${isUncounted ? "opacity-40 grayscale" : "opacity-100 saturate-100 grayscale-0"}`} />
+          {gone && (
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-0 z-10 flex items-center justify-center font-black leading-none text-red-500 drop-shadow-sm transition-opacity duration-300 ${compact ? "text-4xl" : "text-5xl"}`}
+            >
+              &times;
+            </span>
+          )}
+        </span>
+      </div>
+    );
+  });
+  let rowStart = 0;
+  const arrangedRows = rowPattern?.map((amount, rowIndex) => {
+    const row = tiles.slice(rowStart, rowStart + amount);
+    rowStart += amount;
+    return <div key={rowIndex} className={`flex w-full items-center justify-center ${largeTiles ? "gap-x-4" : compact ? "gap-x-3" : "gap-x-4"}`}>{row}</div>;
+  });
   return (
     <div
-      className={`${layoutClass} mx-auto w-full ${containerWidthClass} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
+      className={`${rowPattern ? "flex flex-col items-center justify-center" : layoutClass} mx-auto w-full ${containerWidthClass} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
     >
-      {Array.from({ length: count }, (_, i) => {
-        const gone = i < visibleCrossed;
-        const willBeTaken = i < crossed;
-        const shouldCount = showCount && (!countRemainingOnly || !willBeTaken);
-        const label = shouldCount ? ++leftIndex : 0;
-        const labelVisible = shouldCount && label <= displayedCount;
-        const isActiveCount = highlightActiveCount
-          && (visibleCount !== undefined || countingInProgress)
-          && labelVisible
-          && label === displayedCount;
-        const crossLabelVisible = showCrossCount && willBeTaken && i < visibleCrossed;
-        const hasCountedLabel = labelVisible && !gone;
-        const isUncounted = shouldCount && !labelVisible && !gone;
-        return (
-          <div
-            key={i}
-            style={balancedTileStyle}
-            className={`relative flex flex-col items-center justify-center overflow-visible rounded-2xl border-2 pt-4 shadow-inner transition-[background-color,border-color,box-shadow,transform] duration-300 ${
-              isActiveCount
-                ? cyber
-                  ? "scale-105 border-yellow-200 bg-cyan-950/90 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]"
-                  : "scale-105 border-yellow-500 bg-white ring-4 ring-yellow-300 shadow-[0_0_18px_rgba(250,204,21,.55)]"
-                : hasCountedLabel
-                  ? cyber
-                    ? "border-cyan-400 bg-cyan-950/90 ring-2 ring-cyan-700/70"
-                    : "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
-                  : gone
-                    ? cyber
-                      ? "border-red-800 bg-slate-900/70"
-                      : "border-red-200 bg-slate-100"
-                    : cyber
-                      ? isUncounted
-                        ? "border-slate-700 bg-slate-950/80"
-                        : "border-cyan-900 bg-slate-900/90"
-                      : "border-amber-100 bg-amber-50"
-            } ${tileSizeClass}`}
-          >
-            {crossLabelVisible ? (
-              <span className="absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full bg-red-600 px-1 text-xs font-black leading-none text-white shadow-sm transition-opacity">
-                {i + 1}
-              </span>
-            ) : (
-              <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1 text-xs font-black leading-none shadow-sm transition-opacity ${isActiveCount ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"} ${labelVisible ? "opacity-100" : "opacity-0"}`}>
-                {labelVisible ? label : "."}
-              </span>
-            )}
-            <span className={`relative inline-flex items-center justify-center ${iconSizeClass}`}>
-              <SpriteIcon value={emoji} className={`h-full w-full ${isUncounted ? "opacity-40 grayscale" : "opacity-100 saturate-100 grayscale-0"}`} />
-              {gone && (
-                <span
-                  aria-hidden="true"
-                  className={`pointer-events-none absolute inset-0 z-10 flex items-center justify-center font-black leading-none text-red-500 drop-shadow-sm transition-opacity duration-300 ${compact ? "text-4xl" : "text-5xl"}`}
-                >
-                  &times;
-                </span>
-              )}
-            </span>
-          </div>
-        );
-      })}
+      {arrangedRows ?? tiles}
     </div>
   );
 }
@@ -14514,9 +14601,9 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
     return <div className={`mx-auto rounded-3xl border-4 border-dashed p-8 text-center text-2xl font-black ${cyber ? "border-cyan-700 bg-slate-950/80 text-cyan-300" : "border-slate-200 bg-white text-slate-400"}`}>{numbered ? "0" : lang === "en" ? "empty" : "kosong"}</div>;
   }
   return (
-    <div className={`mobile-object-group grid w-full min-w-0 justify-items-center gap-y-6 overflow-hidden rounded-3xl border-2 px-5 pb-5 pt-8 sm:px-7 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"}`}>
+    <div className={`mobile-object-group mx-auto flex w-full min-w-0 flex-col items-center gap-y-6 overflow-hidden rounded-3xl border-2 px-5 pb-5 pt-8 sm:px-7 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"}`}>
       {balancedIndexRows(count, 4).map((row, rowIndex) => (
-        <div key={rowIndex} className="flex w-full min-w-0 items-center justify-center gap-3">
+        <div key={rowIndex} className="mx-auto flex w-fit max-w-full min-w-0 items-center justify-center gap-3">
           {row.map((i) => {
         const gone = i < crossed;
         return (
@@ -14606,7 +14693,7 @@ function NumberLine({ marked }: { marked: number | number[] }) {
   return <NumberLineSequence nums={NUMBERS} marked={marked} arrow="right" />;
 }
 
-function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, announceTotal = false, compact = false, fixedColumns, cyber = false }: {
+function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, announceTotal = false, compact = false, fixedColumns, rowPattern, cyber = false }: {
   count: number;
   emoji: string;
   lang: Lang;
@@ -14615,6 +14702,7 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
   announceTotal?: boolean;
   compact?: boolean;
   fixedColumns?: 1 | 2;
+  rowPattern?: number[];
   cyber?: boolean;
 }) {
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -14677,6 +14765,7 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
         visibleCount={visibleCount}
         compact={compact}
         fixedColumns={fixedColumns}
+        rowPattern={rowPattern}
         cyber={cyber}
         lang={lang}
         highlightActiveCount={busy}
@@ -14686,13 +14775,13 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
           type="button"
           onClick={() => void countWholeGroup()}
           disabled={busy}
-          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-5 py-2 font-black text-white shadow-[0_4px_0_#1e3a8a] active:translate-y-1 disabled:opacity-60"
+          className="relative mx-auto block rounded-2xl border-2 border-blue-700 bg-blue-600 px-5 py-2 font-black text-white shadow-[0_4px_0_#1e3a8a] active:translate-y-1 disabled:opacity-60"
         >
           {busy
             ? (lang === "en" ? "Counting..." : "Mengira...")
             : lang === "en"
-              ? `Count ${count} ${objectName(emoji, count, lang)}`
-              : `Kira ${count} ${objectName(emoji, count, lang)}`}
+              ? `Count the number of ${objectName(emoji, 2, lang)}`
+              : `Kira bilangan ${objectName(emoji, 2, lang)}`}
           {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
         </button>
       )}
@@ -16420,7 +16509,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
   );
 }
 
-function SequentialCountResult({ count, emoji, lang, cyber = false }: { count: number; emoji: string; lang: Lang; cyber?: boolean }) {
+function SequentialCountResult({ count, emoji, lang, cyber = false, maxPerRow = 4 }: { count: number; emoji: string; lang: Lang; cyber?: boolean; maxPerRow?: number }) {
   const [currentCount, setCurrentCount] = useState(0);
   const [complete, setComplete] = useState(false);
 
@@ -16444,6 +16533,7 @@ function SequentialCountResult({ count, emoji, lang, cyber = false }: { count: n
         onProgress={setCurrentCount}
         onComplete={finishCounting}
         cyber={cyber}
+        rowPattern={balancedIndexRows(count, maxPerRow).map((row) => row.length)}
       />
       <div className="min-h-16" aria-live="polite">
         {complete ? (
@@ -16490,7 +16580,7 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
         ? <ContainerScene count={0} emoji={emoji} container={visual.container} numbered lang={lang} />
         : <ObjectGroup count={0} emoji={emoji} numbered cyber={cyber} lang={lang} />;
     }
-    return <SequentialCountResult count={visual.count} emoji={emoji} lang={lang} cyber={cyber} />;
+    return <SequentialCountResult count={visual.count} emoji={emoji} lang={lang} cyber={cyber} maxPerRow={visual.container === "tray" ? 5 : 4} />;
   }
   if (visual.kind === "add") {
     return <AdditionBananaEquation lang={lang} a={visual.a} b={visual.b} emoji={visual.emoji ?? "🍌"} autoStart />;
