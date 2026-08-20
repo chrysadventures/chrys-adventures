@@ -566,7 +566,7 @@ function spriteSrc(value: string) {
 function SpriteIcon({ value, className = "h-10 w-10", fallbackClassName = "" }: { value: string; className?: string; fallbackClassName?: string }) {
   const src = spriteSrc(value);
   if (src) {
-    return <img src={src} alt="" aria-hidden="true" className={`${className} object-contain`} />;
+    return <img src={src} alt="" aria-hidden="true" className={`${className} object-contain ${value === "⭐" ? "scale-125" : ""}`} />;
   }
   return <span className={fallbackClassName}>{cleanDisplayText(value)}</span>;
 }
@@ -827,8 +827,8 @@ const valuePracticeQuestionBank: Question[] = [
     { kind: "audioNumber", value: 0 },
     "tapObjects",
     {
-      en: ['The audio said "z e r o".', "Zero means nothing.", "So, choose No objects."],
-      ms: ['Audio menyebut "k o s o n g".', "Kosong maksudnya tiada apa-apa.", "Jadi, pilih Tiada objek."],
+      en: ['The audio said "z e r o".', "Zero means nothing."],
+      ms: ['Audio menyebut "k o s o n g".', "Kosong maksudnya tiada apa-apa."],
     },
   ),
   q("val-symbol-group-1", "numbers", { en: "Look at the number. Choose the right number of objects.", ms: "Lihat nombor. Pilih bilangan objek yang betul." }, [], 1, { kind: "number", value: 1 }, "tapObjects"),
@@ -1398,19 +1398,17 @@ function teenNumberMethod(value: number): Record<Lang, string[]> {
   };
 }
 
-function teenRecognitionPracticeMethod(value: number, answerKind: "number" | "word"): Record<Lang, string[]> {
+function teenRecognitionPracticeMethod(value: number): Record<Lang, string[]> {
   const wordEn = numberWordFor(value, "en");
   const wordMs = numberWordFor(value, "ms");
   return {
     en: [
       `The number word is ${wordEn}.`,
       `${wordEn.charAt(0).toUpperCase() + wordEn.slice(1)} is written as ${value}.`,
-      answerKind === "number" ? `Choose ${value}.` : `Choose ${wordEn}.`,
     ],
     ms: [
       `Perkataan nombor ialah ${wordMs}.`,
       `${wordMs.charAt(0).toUpperCase() + wordMs.slice(1)} ditulis sebagai ${value}.`,
-      answerKind === "number" ? `Pilih ${value}.` : `Pilih ${wordMs}.`,
     ],
   };
 }
@@ -1440,7 +1438,7 @@ const teenPracticeQuestions: Question[] = [
     11,
     { kind: "audioNumber", value: 11 },
     "choice",
-    teenRecognitionPracticeMethod(11, "number"),
+    teenRecognitionPracticeMethod(11),
   ),
   q(
     "adv-teen-rec-number-word-14",
@@ -1450,7 +1448,7 @@ const teenPracticeQuestions: Question[] = [
     "fourteen",
     { kind: "number", value: 14 },
     "choice",
-    teenRecognitionPracticeMethod(14, "word"),
+    teenRecognitionPracticeMethod(14),
   ),
   q(
     "adv-teen-rec-word-number-20",
@@ -1460,7 +1458,7 @@ const teenPracticeQuestions: Question[] = [
     20,
     { kind: "word", value: 20 },
     "choice",
-    teenRecognitionPracticeMethod(20, "number"),
+    teenRecognitionPracticeMethod(20),
   ),
   q(
     "adv-teen-rec-audio-word-18",
@@ -1470,7 +1468,7 @@ const teenPracticeQuestions: Question[] = [
     "eighteen",
     { kind: "audioNumber", value: 18 },
     "choice",
-    teenRecognitionPracticeMethod(18, "word"),
+    teenRecognitionPracticeMethod(18),
   ),
   q(
     "adv-teen-value-count-10",
@@ -4187,20 +4185,20 @@ function ComparisonSymbolIntroduction({ lang, symbol }: { lang: Lang; symbol: ">
 
           {showSides && (
             <g className="comparison-result-reveal">
-              <ellipse cx={openX} cy="160" rx="38" ry="72" fill="rgba(16,185,129,.04)" stroke="#6ee7b7" strokeWidth="3" />
-              <circle cx={pointX} cy="160" r="30" fill="rgba(6,182,212,.05)" stroke="#67e8f9" strokeWidth="3" />
+              <ellipse cx={openX} cy="152" rx="38" ry="72" fill="rgba(16,185,129,.04)" stroke="#6ee7b7" strokeWidth="3" />
+              <circle cx={pointX} cy="152" r="30" fill="rgba(6,182,212,.05)" stroke="#67e8f9" strokeWidth="3" />
 
               <rect x={openLabelX} y="12" width="150" height="48" rx="20" fill="#064e3b" stroke="#6ee7b7" strokeWidth="3" />
               <text x={openLabelX + 75} y="43" textAnchor="middle" fill="#d1fae5" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
                 {lang === "en" ? "OPEN SIDE" : "BAHAGIAN TERBUKA"}
               </text>
-              <line x1={openLabelX + 75} y1="62" x2={openX} y2="100" stroke="#6ee7b7" strokeWidth="3" strokeLinecap="round" markerEnd={`url(#open-arrow-${isGreater ? "greater" : "less"})`} />
+              <line x1={openLabelX + 75} y1="62" x2={openX} y2="92" stroke="#6ee7b7" strokeWidth="3" strokeLinecap="round" markerEnd={`url(#open-arrow-${isGreater ? "greater" : "less"})`} />
 
               <rect x={pointLabelX} y="260" width="150" height="48" rx="20" fill="#164e63" stroke="#67e8f9" strokeWidth="3" />
               <text x={pointLabelX + 75} y="291" textAnchor="middle" fill="#cffafe" fontSize="20" fontWeight="900" fontFamily="Nunito, sans-serif">
                 {lang === "en" ? "POINT SIDE" : "BAHAGIAN RUNCING"}
               </text>
-              <line x1={pointLabelX + 75} y1="258" x2={pointX} y2="190" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" markerEnd={`url(#point-arrow-${isGreater ? "greater" : "less"})`} />
+              <line x1={pointLabelX + 75} y1="258" x2={pointX} y2="182" stroke="#67e8f9" strokeWidth="3" strokeLinecap="round" markerEnd={`url(#point-arrow-${isGreater ? "greater" : "less"})`} />
             </g>
           )}
         </svg>
@@ -4409,7 +4407,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         {pileSection("right", b)}
       </div>
       {stagedReveal && revealStage >= 1 && (
-        <p className="comparison-result-reveal mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100 sm:text-2xl" aria-live="polite">
+        <p className="comparison-explanation-bar-reveal mx-auto mt-5 max-w-3xl rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-5 py-4 text-center text-xl font-black text-emerald-100 sm:text-2xl" aria-live="polite">
           {lang === "en" ? symbol === "<" ? (
             <>{a} {leftObjectName} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LESS</span> than {b} {rightObjectName}.</>
           ) : symbol === "=" ? (
@@ -4426,7 +4424,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         </p>
       )}
       {stagedReveal && revealStage >= 3 && (
-        <div className="comparison-result-reveal mx-auto mt-3 grid max-w-3xl items-center gap-3 rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5">
+        <div className="comparison-explanation-bar-reveal mx-auto mt-3 grid max-w-3xl items-center gap-3 rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5">
           <p className="text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
             {lang === "en" ? symbol === "<" ? (
               <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">less than</span> {b}.</>
@@ -7167,10 +7165,10 @@ function DigitLengthComparison({ lang }: { lang: Lang }) {
         <p className="text-xl font-black text-cyan-100">
           {lang === "en" ? "Look at how many digits each number uses." : "Lihat berapa digit yang digunakan oleh setiap nombor."}
         </p>
-        <div className="mx-auto mt-6 grid max-w-5xl gap-4 lg:grid-cols-[0.8fr_1.15fr_1.55fr]">
+        <div className="mx-auto mt-6 grid max-w-6xl gap-4 lg:grid-cols-[0.75fr_1.15fr_1.7fr]">
           {examples.map((example) => (
             <div key={example.value} className="rounded-[1.6rem] border-2 border-cyan-300 bg-slate-950/75 p-4 shadow-[0_5px_0_#164e63]">
-              <div className="flex min-h-36 flex-wrap items-start justify-center gap-3">
+              <div className="flex min-h-36 flex-nowrap items-start justify-center gap-2 xl:gap-3">
                 {example.value.split("").map((digit, index) => (
                   <div key={`${example.value}-${index}`} className="flex flex-col items-center">
                     <span
@@ -12822,7 +12820,7 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
           : fixedColumns === 4
             ? "grid grid-cols-[repeat(4,3rem)] place-content-center"
             : fixedColumns === 5
-              ? "grid grid-cols-[repeat(5,3.5rem)] place-content-center"
+              ? "flex flex-wrap justify-center"
               : fixedColumns
                 ? "grid place-content-center"
                 : "flex flex-wrap justify-center";
@@ -12842,10 +12840,15 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
   const iconSizeClass = balancedTeenGrid
     ? "h-11 w-full max-w-10"
     : largeTiles ? "h-14 w-12" : compact ? "h-10 w-10" : "h-12 w-12";
+  const containerWidthClass = fixedColumns === 5
+    ? "max-w-[27rem]"
+    : fixedColumns
+      ? "max-w-full"
+      : "max-w-[28rem]";
   let leftIndex = 0;
   return (
     <div
-      className={`${layoutClass} mx-auto w-full ${fixedColumns ? "max-w-full" : "max-w-[28rem]"} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
+      className={`${layoutClass} mx-auto w-full ${containerWidthClass} rounded-3xl border-2 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"} ${spacingClass}`}
     >
       {Array.from({ length: count }, (_, i) => {
         const gone = i < visibleCrossed;
@@ -13200,7 +13203,6 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
   const isCountQuestion = qn.visual.kind === "count";
   const isValueQuestion = qn.id.startsWith("val-");
   const isTeenValueCountQuestion = qn.id.startsWith("adv-teen-value-count-");
-  const showsTeenCountingSolution = isTeenValueCountQuestion && (isCorrect || showSolution);
   const groupChoiceVisual = qn.visual.kind === "groupChoices" ? qn.visual : null;
   const hidesQuestionVisual =
     (qn.visual.kind === "horizontalAdd" && qn.visual.display === "none") ||
@@ -13504,7 +13506,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
                   </button>
                 </div>
               )}
-              {((!isCorrect && showSolution && !isTeenValueCountQuestion) || showsTeenCountingSolution) && (
+              {showSolution && (
                 <WorkedMethod
                   q={qn}
                   lang={lang}
@@ -13514,6 +13516,15 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
               )}
               {(isCorrect || showSolution) && (
                 <div className="mt-4 flex gap-3">
+                  {isCorrect && !showSolution && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSolution(true)}
+                      className={`flex-1 rounded-2xl border-2 px-6 py-3 font-black active:translate-y-1 ${cyber ? "border-cyan-300 bg-cyan-950 text-cyan-100 shadow-[0_5px_0_#164e63]" : "border-emerald-300 bg-white text-emerald-800 shadow-[0_5px_0_rgba(5,150,105,.18)]"}`}
+                    >
+                      {lang === "en" ? "See solution" : "Lihat penyelesaian"}
+                    </button>
+                  )}
                   <button onClick={next} className="flex-[2] rounded-2xl border-2 border-blue-700 bg-blue-600 px-6 py-3 font-black text-white shadow-[0_6px_0_#1e3a8a] active:translate-y-1">
                     {index === randomizedQuestions.length - 1 ? t.finish : t.nextQuestion}
                   </button>
@@ -15639,7 +15650,7 @@ function TracePad({ value, t, lang, onComplete, cyber = false }: { value: number
           </div>
           {confirmed && (
             <div
-              className={`trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none sm:text-[16rem] ${cyber ? "text-yellow-200" : "text-amber-500"}`}
+              className={`trace-model-zoom trace-confirmed-number pointer-events-none absolute inset-0 z-10 grid place-items-center text-[12rem] font-black leading-none sm:text-[16rem] ${cyber ? "text-yellow-200/80" : "text-amber-500/90"}`}
               aria-hidden="true"
               style={getNumberTextStyle(value)}
             >
@@ -15675,7 +15686,7 @@ function TracePad({ value, t, lang, onComplete, cyber = false }: { value: number
           />
           <div className="mt-auto grid gap-3">
             <button onClick={clear} className={`rounded-2xl border-2 px-4 py-3 font-black active:translate-y-1 active:shadow-none ${cyber ? "border-cyan-300 bg-slate-900 text-cyan-50 shadow-[0_4px_0_#164e63]" : "border-slate-200 bg-white text-slate-600 shadow-[0_4px_0_rgba(15,23,42,.10)]"}`}>
-              {lang === "en" ? "Clear all" : "Padamkan semua"}
+              {lang === "en" ? "Restart" : "Mula semula"}
             </button>
             <button
               onClick={confirmed ? onComplete : confirmTrace}
@@ -15858,7 +15869,7 @@ function WriteNumberPad({
             />
             <div className="mt-auto grid gap-3">
               <button onClick={clear} className="rounded-2xl border-2 border-slate-200 bg-white px-4 py-3 font-black text-slate-600 shadow-[0_4px_0_rgba(15,23,42,.10)] active:translate-y-1 active:shadow-none">
-                {lang === "en" ? "Clear all" : "Padamkan semua"}
+                {lang === "en" ? "Restart" : "Mula semula"}
               </button>
               <button
                 onClick={checkAnswer}
@@ -16194,6 +16205,47 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   );
 }
 
+function NumberRecognitionSolution({ value, lang, cyber }: { value: number; lang: Lang; cyber: boolean }) {
+  const word = numberWordFor(value, lang);
+  const namedWord = word.charAt(0).toUpperCase() + word.slice(1);
+  const spelling = word.split("").join(" - ");
+
+  return (
+    <div className={`rounded-3xl border-2 p-4 ${cyber ? "border-cyan-500 bg-slate-950/80" : "border-emerald-100 bg-emerald-50"}`}>
+      <h4 className={`mb-4 text-lg font-black ${cyber ? "text-yellow-200" : "text-emerald-900"}`}>
+        {lang === "en" ? "How to solve it" : "Cara selesaikan"}
+      </h4>
+      <div className={`grid gap-5 rounded-[2rem] border-4 p-5 md:grid-cols-2 ${cyber ? "border-cyan-300 bg-slate-950 shadow-[0_7px_0_#164e63]" : "border-blue-200 bg-white shadow-[0_7px_0_rgba(30,64,175,.12)]"}`}>
+        <div className={`grid min-h-72 place-items-center rounded-[1.75rem] border-2 p-5 ${cyber ? "border-cyan-400 bg-cyan-950/55" : "border-blue-100 bg-blue-50"}`}>
+          <span
+            className="grid h-60 w-60 max-w-full place-items-center rounded-[2.5rem] border-4 border-yellow-300 bg-yellow-300 text-8xl font-black text-slate-950 shadow-[0_10px_0_#a16207]"
+            style={getNumberTextStyle(value)}
+          >
+            {value}
+          </span>
+        </div>
+        <div className={`flex min-h-72 flex-col items-center justify-center rounded-[1.75rem] border-2 p-5 text-center ${cyber ? "border-cyan-400 bg-cyan-950/55" : "border-blue-100 bg-blue-50"}`}>
+          <p className={`mb-4 text-sm font-black uppercase tracking-[.18em] ${cyber ? "text-cyan-300" : "text-blue-700"}`}>
+            {lang === "en" ? "Listen and learn" : "Dengar dan belajar"}
+          </p>
+          <AudioHearButton
+            label={lang === "en" ? `Hear ${word}` : `Dengar ${word}`}
+            onClick={() => speakNumber(value, lang)}
+            cyber={cyber}
+          />
+          <p className={`mt-5 text-xl font-black ${cyber ? "text-cyan-50" : "text-blue-950"}`}>
+            {lang === "en" ? `The audio says ${word}.` : `Audio menyebut ${word}.`}
+          </p>
+          <p className={`mt-2 text-5xl font-black ${cyber ? "text-yellow-200" : "text-amber-700"}`}>
+            “{namedWord}”
+          </p>
+          <p className={`mt-3 text-xl font-black tracking-wide ${cyber ? "text-cyan-100" : "text-slate-600"}`}>{spelling}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = false }: {
   q: Question;
   lang: Lang;
@@ -16209,6 +16261,10 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     q.inputMode === "tapObjects" && typeof q.answer === "number" && q.answer > 0
       ? { kind: "count", count: q.answer, emoji: "🍌" }
       : q.visual;
+  const recognitionValue = (q.id.startsWith("rec-") || q.id.startsWith("adv-teen-rec-")) &&
+    (solutionVisual.kind === "number" || solutionVisual.kind === "word" || solutionVisual.kind === "audioNumber")
+      ? solutionVisual.value
+      : null;
   const lastStep = stepIndex >= q.method[lang].length - 1;
   const isAdvancedAdditionPart1 =
     q.id.startsWith("adv-add-1-") && solutionVisual.kind === "horizontalAdd";
@@ -16273,6 +16329,10 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     announcedStaticTotalRef.current = announcementKey;
     void speakRecordedBananaTotal(answer, lang);
   }, [lang, lastStep, q.answer, q.id, staticBananaCalculation]);
+
+  if (recognitionValue !== null) {
+    return <NumberRecognitionSolution value={recognitionValue} lang={lang} cyber={cyber} />;
+  }
 
   if (isAdvancedAdditionPart1) {
     return (

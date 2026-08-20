@@ -404,6 +404,13 @@
     70%  { transform: translateY(-3px) scale(1.03); opacity: 1; }
     100% { transform: translateY(0) scale(1); opacity: 1; }
   }
+  @keyframes comparisonExplanationBarReveal {
+    0%   { transform: translateY(28px) scale(0.78); opacity: 0; filter: brightness(1.55) drop-shadow(0 0 0 rgba(34, 211, 238, 0)); }
+    52%  { transform: translateY(-7px) scale(1.06); opacity: 1; filter: brightness(1.22) drop-shadow(0 0 12px rgba(34, 211, 238, 0.42)); }
+    74%  { transform: translateY(3px) scale(0.985); filter: brightness(1.06) drop-shadow(0 0 6px rgba(34, 211, 238, 0.22)); }
+    90%  { transform: translateY(-1px) scale(1.015); }
+    100% { transform: translateY(0) scale(1); opacity: 1; filter: brightness(1) drop-shadow(0 0 0 rgba(34, 211, 238, 0)); }
+  }
   @keyframes comparisonSymbolPop {
     0%   { transform: scale(0.05) rotate(-18deg); opacity: 0; filter: brightness(2.4); }
     48%  { transform: scale(1.55) rotate(8deg); opacity: 1; filter: brightness(1.7); }
@@ -422,6 +429,10 @@
   }
   .comparison-result-reveal {
     animation: comparisonResultReveal 0.62s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .comparison-explanation-bar-reveal {
+    transform-origin: center;
+    animation: comparisonExplanationBarReveal 0.82s cubic-bezier(0.34,1.35,0.5,1) both;
   }
   .comparison-symbol-pop {
     transform-origin: center;
@@ -504,9 +515,9 @@
   .trace-model-zoom   { animation: traceModelZoom 3.8s ease-in-out both; }
   .trace-confirmed-number {
     text-shadow:
-      0 4px 0 #bfdbfe,
-      0 0 18px rgba(255, 255, 255, 0.95),
-      0 0 4px rgba(15, 23, 42, 0.35);
+      0 2px 0 rgba(191, 219, 254, 0.5),
+      0 0 6px rgba(255, 255, 255, 0.24),
+      0 0 2px rgba(15, 23, 42, 0.24);
   }
   .combo-anim         { animation: comboSlide 2.7s ease forwards; }
   .level-clear        { animation: levelClear 0.8s cubic-bezier(0.34,1.56,0.64,1); }
@@ -972,6 +983,7 @@ video {
   .slide-in-up,
   .trace-model-zoom,
   .comparison-result-reveal,
+  .comparison-explanation-bar-reveal,
   .comparison-symbol-pop,
   .comparison-symbol-ring,
   .combo-anim,
