@@ -7398,7 +7398,14 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     await wait(1000);
     if (countRunRef.current !== runId) return;
     setResultStage(1);
-    await wait(1800);
+    // Reveal and announce the banana total before introducing the matching
+    // second object group. This shared sequence covers every teen value from
+    // 10 through 20 in lesson mode.
+    await wait(250);
+    if (countRunRef.current !== runId) return;
+    if (soundEnabled) await speakRecordedBananaTotal(number, lang, BANANA);
+    if (countRunRef.current !== runId) return;
+    await wait(500);
     if (countRunRef.current !== runId) return;
     setResultStage(2);
     await wait(900);
