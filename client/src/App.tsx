@@ -181,6 +181,8 @@ const AUDIO_CLEAR_START_PRIME_MS = 320;
 const AUDIO_CLEAR_START_SETTLE_MS = 12;
 const AUDIO_PHRASE_JOIN_GAP_MS = 35;
 const AUDIO_SEQUENCE_JOIN_WINDOW_MS = 700;
+const AUDIO_NUMBER_OBJECT_JOIN_GAP_MS = 8;
+const AUDIO_NUMBER_OBJECT_TAIL_TRIM_MS = 160;
 const COUNTING_STEP_MS = 1400;
 const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
@@ -16424,6 +16426,7 @@ async function speakNumber(
   onStart?: (value: number) => void,
   onAudibleStart?: () => void,
   startMode: AudioStartMode = "clear",
+  tailTrimMs = 0,
 ): Promise<boolean> {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) {
     onStart?.(value);
@@ -16431,13 +16434,13 @@ async function speakNumber(
     return false;
   }
   if (activeCountingRunId !== null) {
-    queuedAudioAfterCounting = () => { void speakNumber(value, lang, onStart, onAudibleStart); };
+    queuedAudioAfterCounting = () => { void speakNumber(value, lang, onStart, onAudibleStart, startMode, tailTrimMs); };
     return false;
   }
   stopNumberAudio();
   const runId = audioRunId;
   onStart?.(value);
-  return playNumberFile(value, lang, runId, onAudibleStart, startMode);
+  return playNumberFile(value, lang, runId, onAudibleStart, startMode, tailTrimMs);
 }
 
 async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
@@ -16535,9 +16538,16 @@ async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string
   const totalPlayed = await playRecordedVoiceFile(EN_OBJECT_TOTAL_AUDIO_FILES.total, onAudibleStart);
   if (!totalPlayed) return false;
   await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  const numberPlayed = await speakNumber(value, lang, undefined, undefined, "joined");
+  const numberPlayed = await speakNumber(
+    value,
+    lang,
+    undefined,
+    undefined,
+    "joined",
+    AUDIO_NUMBER_OBJECT_TAIL_TRIM_MS,
+  );
   if (!numberPlayed) return false;
-  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  await wait(AUDIO_NUMBER_OBJECT_JOIN_GAP_MS);
   return playRecordedVoiceFile(objectFile, undefined, "joined");
 }
 
@@ -16842,6 +16852,7 @@ function playNumberFile(
   runId: number,
   onAudibleStart?: () => void,
   startMode: AudioStartMode = "clear",
+  tailTrimMs = 0,
 ) {
   const file = NUMBER_AUDIO_FILES[lang][value];
   if (!file) return Promise.resolve(false);
@@ -16850,10 +16861,12 @@ function playNumberFile(
     const audio = getNumberAudio(value, lang);
     let settled = false;
     let timeoutId: number | null = null;
+    let tailTrimTimeoutId: number | null = null;
     const finish = (played: boolean) => {
       if (settled) return;
       settled = true;
       if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (tailTrimTimeoutId !== null) window.clearTimeout(tailTrimTimeoutId);
       if (activeNumberAudio === audio) activeNumberAudio = null;
       resolve(played);
     };
@@ -16874,7 +16887,18 @@ function playNumberFile(
       onAudibleStart,
       startMode,
     ).then((started) => {
-      if (!started) finish(false);
+      if (!started) {
+        finish(false);
+        return;
+      }
+      if (tailTrimMs > 0 && Number.isFinite(audio.duration)) {
+        const remainingMs = Math.max(0, ((audio.duration - audio.currentTime) / audio.playbackRate) * 1000);
+        const safeTailTrimMs = Math.min(tailTrimMs, remainingMs * 0.18);
+        tailTrimTimeoutId = window.setTimeout(() => {
+          audio.pause();
+          finish(true);
+        }, Math.max(0, remainingMs - safeTailTrimMs));
+      }
     });
     if (runId !== audioRunId) {
       audio.pause();
