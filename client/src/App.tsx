@@ -177,8 +177,8 @@ const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
 // Give the browser/audio device a brief silent warm-up before every clip. Some
 // devices otherwise wake up on the first syllable and make the beginning sound
 // muffled or clipped. The clip is rewound before the audible playback starts.
-const AUDIO_CLEAR_START_PRIME_MS = 180;
-const AUDIO_CLEAR_START_SETTLE_MS = 45;
+const AUDIO_CLEAR_START_PRIME_MS = 260;
+const AUDIO_CLEAR_START_SETTLE_MS = 80;
 const COUNTING_STEP_MS = 1400;
 const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
@@ -1088,15 +1088,15 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     };
   }
   if (visual.kind === "audioNumber") {
-    const word = WORDS.en[visual.value];
-    const wordMs = WORDS.ms[visual.value];
-    const spelledWord = word.split("").join(" ");
-    const spelledWordMs = wordMs.split("").join(" ");
+    const word = numberWordFor(visual.value, "en");
+    const wordMs = numberWordFor(visual.value, "ms");
+    const spelledWord = word.split("").join(" - ");
+    const spelledWordMs = wordMs.split("").join(" - ");
     const namedWord = word.charAt(0).toUpperCase() + word.slice(1);
     const namedWordMs = wordMs.charAt(0).toUpperCase() + wordMs.slice(1);
     return {
-      en: [`The audio said "${spelledWord}".`, `The symbol for ${namedWord.toLowerCase()} is ${visual.value}.`],
-      ms: [`Audio menyebut "${spelledWordMs}".`, `Simbol bagi ${namedWordMs.toLowerCase()} ialah ${visual.value}.`],
+      en: [`The audio says ${word}.`, `"${namedWord}" is spelled ${spelledWord}.`, `The symbol for ${word} is ${visual.value}.`],
+      ms: [`Audio menyebut ${wordMs}.`, `"${namedWordMs}" dieja ${spelledWordMs}.`, `Simbol bagi ${wordMs} ialah ${visual.value}.`],
     };
   }
   if (visual.kind === "numberWithGroup") {
@@ -7630,13 +7630,20 @@ function MenuCard({
       className={`menu-card group relative min-h-48 overflow-hidden rounded-[2rem] border-4 p-5 text-left transition active:translate-y-1 md:p-6 ${complete ? "border-emerald-500 ring-4 ring-emerald-200 shadow-[0_9px_0_#047857,0_0_28px_rgba(16,185,129,.35)]" : theme.border} ${step ? "learning-menu-card" : ""}`}
     >
       <span className={`absolute inset-x-0 top-0 h-3 ${complete ? "bg-emerald-500" : theme.accent}`} aria-hidden="true" />
-      {complete && <span className="pointer-events-none absolute -right-10 top-7 rotate-45 bg-emerald-600 px-12 py-2 text-xs font-black uppercase tracking-wider text-white shadow-md" aria-hidden="true">{lang === "en" ? "Completed" : "Selesai"}</span>}
+      {complete && (
+        <span
+          className="pointer-events-none absolute right-4 top-4 rounded-full border-2 border-white/90 bg-emerald-600 px-3 py-1 text-[.68rem] font-black uppercase tracking-wider text-white shadow-md sm:right-5 sm:top-5 sm:text-xs"
+          aria-hidden="true"
+        >
+          {lang === "en" ? "Completed" : "Selesai"}
+        </span>
+      )}
       <span className="relative z-10 flex items-start justify-between gap-3 pt-2">
         <span className={`grid h-20 w-20 shrink-0 place-items-center rounded-[1.4rem] border-2 shadow-inner ${complete ? "border-emerald-300 bg-emerald-50 text-emerald-700" : theme.badge}`}>
           {typeof icon === "string" ? <SpriteIcon value={icon} className="h-14 w-14" /> : icon}
         </span>
         {step !== undefined && (
-          <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 border-white text-lg font-black text-white shadow-md ${complete ? "bg-emerald-600 ring-4 ring-emerald-200" : theme.step}`}>
+          <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 border-white text-lg font-black text-white shadow-md ${complete ? "mt-10 bg-emerald-600 ring-4 ring-emerald-200" : theme.step}`}>
             {complete ? <Check className="h-7 w-7" strokeWidth={5} aria-hidden="true" /> : step}
             {complete && <span className="absolute -bottom-2 -left-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-blue-950 text-[.65rem] text-white">{step}</span>}
           </span>
@@ -8021,9 +8028,8 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
         : "0 maksudnya tiada.\nJadi, ada 0 pisang.";
     }
     if (phase === 0) return `Ini ${n}.`;
-    if (phase === 1) return `Ini ${n} pisang.`;
-    if (phase === 2) return `Kira setiap pisang. Nombor terakhir ialah ${n}.`;
-    if (phase === 3) return `Objek berbeza. Nombor sama, ${n}.`;
+    if (phase === 1) return `Ini ${n} pisang. Kira setiap pisang.`;
+    if (phase === 2) return `Objek berbeza. Nombor sama, ${n}.`;
     return `Susunan berbeza. Masih ${n}.`;
   }
   if (n === 0) {
@@ -8032,22 +8038,24 @@ function getNumberValueLessonText(n: number, phase: number, lang: Lang) {
       : "0 means none.\nSo, there are 0 bananas.";
   }
   if (phase === 0) return `This is ${n}.`;
-  if (phase === 1) return `This is ${n} bananas.`;
-  if (phase === 2) return `Count each banana. The last number is ${n}.`;
-  if (phase === 3) return `Different objects. Same number, ${n}.`;
+  if (phase === 1) return `This is ${n} ${n === 1 ? "banana" : "bananas"}. Count each banana.`;
+  if (phase === 2) return `Different objects. Same number, ${n}.`;
   return `Different arrangement. Still ${n}.`;
 }
 
 function getNumberValueMaxPhase(n: number) {
   if (n === 0) return 1;
-  return 3;
+  return 2;
 }
 
 function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: string; phase: number; lang: Lang }) {
   const [counting, setCounting] = useState(false);
   const [singleCountValue, setSingleCountValue] = useState(0);
   const [singleCountComplete, setSingleCountComplete] = useState(false);
+  const [singleCountAudioActive, setSingleCountAudioActive] = useState(false);
   const [pairedCount, setPairedCount] = useState(0);
+  const [pairedCountAudioActive, setPairedCountAudioActive] = useState(false);
+  const [pairedTotalStage, setPairedTotalStage] = useState<0 | 1 | 2>(0);
   const [countRun, setCountRun] = useState(0);
   const [comparisonEmojiA, comparisonEmojiB] = VALUE_COMPARISON_PAIRS[(Math.max(1, n) - 1) % VALUE_COMPARISON_PAIRS.length];
 
@@ -8055,7 +8063,10 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     setCounting(false);
     setSingleCountValue(0);
     setSingleCountComplete(false);
+    setSingleCountAudioActive(false);
     setPairedCount(0);
+    setPairedCountAudioActive(false);
+    setPairedTotalStage(0);
     setCountRun(0);
   }, [n, emoji, phase]);
 
@@ -8072,29 +8083,38 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
     return <NumberTile value={n} lang={lang} large showWord={false} />;
   }
   if (phase === 1) {
-    return (
-      <div className="space-y-4">
-        <NumberTile value={n} lang={lang} showWord={false} />
-        <ObjectGroup count={n} emoji={emoji} lang={lang} />
-      </div>
-    );
-  }
-  if (phase === 2) {
     const objectLabel = valueObjectLabel(n, emoji, lang);
     const totalText = lang === "en"
       ? `Total: ${objectLabel}`
       : `Jumlah: ${objectLabel}`;
     return (
       <div className="space-y-3">
+        <NumberTile value={n} lang={lang} showWord={false} />
+        <div className={`rounded-3xl border-4 p-4 transition-colors duration-300 ${singleCountComplete ? "border-emerald-100 bg-emerald-50" : "border-slate-100 bg-white"}`}>
+          {singleCountValue > 0
+            ? <CountedObjectRow
+                key={`${n}-${emoji}-count-on`}
+                count={n}
+                emoji={emoji}
+                showCount
+                visibleCount={singleCountValue}
+                highlightActiveCount={singleCountAudioActive}
+                lang={lang}
+                intervalMs={COUNTING_STEP_MS}
+              />
+            : <ObjectGroup count={n} emoji={emoji} lang={lang} />}
+        </div>
         <button
           onClick={async () => {
             if (counting) return;
             setCounting(true);
-            const nextValue = singleCountComplete ? 1 : singleCountValue + 1;
-            await speakNumber(nextValue, lang);
-            setSingleCountValue(nextValue);
-            if (nextValue >= n) await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
-            setSingleCountComplete(nextValue >= n);
+            setSingleCountValue(0);
+            setSingleCountComplete(false);
+            setSingleCountAudioActive(false);
+            await playWholeNumberValueCount(n, lang, setSingleCountValue, setSingleCountAudioActive);
+            await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+            setSingleCountComplete(true);
+            await speakRecordedBananaTotal(n, lang, BANANA);
             setCounting(false);
           }}
           disabled={counting}
@@ -8102,7 +8122,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
         >
           {singleCountComplete
               ? (lang === "en" ? "Count again" : "Kira lagi")
-              : (lang === "en" ? "Count one" : "Kira satu")}
+              : (lang === "en" ? `Count ${n} ${objectName(emoji, n, lang)}` : `Kira ${n} ${objectName(emoji, n, lang)}`)}
           <span
             className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
             aria-hidden="true"
@@ -8110,33 +8130,23 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             <PointerIcon />
           </span>
         </button>
-        {singleCountValue > 0
-          ? <CountedObjectRow
-              key={`${n}-${emoji}-count-on`}
-              count={n}
-              emoji={emoji}
-              showCount
-              visibleCount={singleCountValue}
-              lang={lang}
-              intervalMs={COUNTING_STEP_MS}
-            />
-          : <ObjectGroup count={n} emoji={emoji} lang={lang} />}
-        <p className={`rounded-2xl px-4 py-3 text-xl font-black ${singleCountComplete ? "bg-emerald-50 text-emerald-900" : "bg-blue-50 text-blue-900"}`} aria-live="polite">
-          {singleCountComplete
-            ? totalText
-            : singleCountValue > 0
-              ? (lang === "en" ? `Counting: ${singleCountValue}` : `Mengira: ${singleCountValue}`)
-              : (lang === "en" ? "Count each object one by one." : "Kira setiap objek satu demi satu.")}
-        </p>
+        {singleCountComplete && (
+          <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-xl font-black text-emerald-900" aria-live="polite">
+            {totalText}
+          </p>
+        )}
       </div>
     );
   }
-  if (phase === 3) {
+  if (phase === 2) {
     const firstGroupCount = Math.min(pairedCount, n);
     const secondGroupCount = Math.max(0, pairedCount - n);
-    const comparisonComplete = pairedCount >= n * 2;
+    const comparisonComplete = pairedTotalStage === 2;
+    const countingFirstGroup = pairedCount < n;
+    const activeEmoji = countingFirstGroup ? comparisonEmojiA : comparisonEmojiB;
     const firstValueLabel = valueObjectLabel(n, comparisonEmojiA, lang);
     const secondValueLabel = valueObjectLabel(n, comparisonEmojiB, lang);
+    const activeObjectName = objectName(activeEmoji, n, lang);
     return (
       <div className="space-y-4">
         <button
@@ -8144,10 +8154,23 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
           onClick={async () => {
             if (counting) return;
             setCounting(true);
-            const nextProgress = comparisonComplete ? 1 : pairedCount + 1;
-            const spokenValue = nextProgress <= n ? nextProgress : nextProgress - n;
-            await speakNumber(spokenValue, lang);
-            setPairedCount(nextProgress);
+            if (comparisonComplete) {
+              setPairedCount(0);
+              setPairedTotalStage(0);
+              setPairedCountAudioActive(false);
+            }
+            const completedStage = pairedTotalStage === 1 && !comparisonComplete ? 2 : 1;
+            const baseCount = completedStage === 1 ? 0 : n;
+            const completedEmoji = completedStage === 1 ? comparisonEmojiA : comparisonEmojiB;
+            await playWholeNumberValueCount(
+              n,
+              lang,
+              (value) => setPairedCount(baseCount + value),
+              setPairedCountAudioActive,
+            );
+            await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+            setPairedTotalStage(completedStage);
+            await speakTemporaryObjectTotal(n, completedEmoji, lang);
             setCounting(false);
           }}
           disabled={counting}
@@ -8155,7 +8178,9 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
         >
           {comparisonComplete
             ? (lang === "en" ? "Count again" : "Kira lagi")
-            : (lang === "en" ? "Count one" : "Kira satu")}
+            : lang === "en"
+              ? `Count ${n} ${activeObjectName}`
+              : `Kira ${n} ${activeObjectName}`}
           <span
             className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md"
             aria-hidden="true"
@@ -8171,22 +8196,29 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             emoji={comparisonEmojiA}
             counted={firstGroupCount > 0}
             visibleCount={firstGroupCount}
-            showLabel={firstGroupCount >= n}
-            active={firstGroupCount > 0 && firstGroupCount < n}
-            complete={firstGroupCount >= n}
+            showLabel={pairedTotalStage >= 1}
+            delayTotalLabel={false}
+            active={pairedCountAudioActive && firstGroupCount > 0 && firstGroupCount <= n && pairedTotalStage === 0}
+            complete={pairedTotalStage >= 1}
             lang={lang}
           />
-          <LabeledValueGroup
-            label={lang === "en" ? `Total: ${secondValueLabel}` : `Jumlah: ${secondValueLabel}`}
-            count={n}
-            emoji={comparisonEmojiB}
-            counted={secondGroupCount > 0}
-            visibleCount={secondGroupCount}
-            showLabel={comparisonComplete}
-            active={secondGroupCount > 0 && !comparisonComplete}
-            complete={comparisonComplete}
-            lang={lang}
-          />
+          <div
+            className={`transition duration-300 ${pairedTotalStage < 1 ? "pointer-events-none grayscale opacity-35" : ""}`}
+            aria-disabled={pairedTotalStage < 1}
+          >
+            <LabeledValueGroup
+              label={lang === "en" ? `Total: ${secondValueLabel}` : `Jumlah: ${secondValueLabel}`}
+              count={n}
+              emoji={comparisonEmojiB}
+              counted={secondGroupCount > 0}
+              visibleCount={secondGroupCount}
+              showLabel={pairedTotalStage >= 2}
+              delayTotalLabel={false}
+              active={pairedCountAudioActive && secondGroupCount > 0 && pairedTotalStage === 1}
+              complete={pairedTotalStage >= 2}
+              lang={lang}
+            />
+          </div>
         </div>
       </div>
     );
@@ -8218,7 +8250,7 @@ function ZeroContainerCard({ label, container, lang }: { label: string; containe
   );
 }
 
-function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, slowLabelReveal = false, active = false, complete = false, cyber = false, fixedColumns, largeTiles = false, lang }: {
+function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, visibleCount, onCountProgress, showLabel = true, delayTotalLabel = true, slowLabelReveal = false, active = false, complete = false, cyber = false, fixedColumns, largeTiles = false, lang }: {
   label: string;
   count: number;
   emoji: string;
@@ -8227,6 +8259,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
   visibleCount?: number;
   onCountProgress?: (value: number) => void;
   showLabel?: boolean;
+  delayTotalLabel?: boolean;
   slowLabelReveal?: boolean;
   active?: boolean;
   complete?: boolean;
@@ -8237,7 +8270,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
 }) {
   const isTotalLabel = label.startsWith("Total:") || label.startsWith("Jumlah:");
   const delayedTotalLabelVisible = useDelayedTotalVisibility(showLabel && isTotalLabel, label);
-  const labelVisible = showLabel && (!isTotalLabel || delayedTotalLabelVisible);
+  const labelVisible = showLabel && (!isTotalLabel || !delayTotalLabel || delayedTotalLabelVisible);
 
   return (
     <div className={`rounded-3xl border-4 p-4 text-center transition-[border-color,background-color,box-shadow] duration-300 ${
@@ -14232,6 +14265,63 @@ function AudioHearButton({ label, onClick, cyber = false }: { label: string; onC
   );
 }
 
+function AudioNumberSolutionCard({ value, lang, cyber = false }: { value: number; lang: Lang; cyber?: boolean }) {
+  const word = numberWordFor(value, lang);
+  const displayWord = word.charAt(0).toUpperCase() + word.slice(1);
+  const spelledWord = word.split("").join(" - ");
+  const replayLabel = lang === "en" ? `Hear ${word} again` : `Dengar ${word} sekali lagi`;
+
+  return (
+    <div
+      className={`mx-auto grid w-full max-w-4xl gap-4 rounded-[2rem] border-4 p-4 sm:grid-cols-2 sm:gap-5 sm:p-5 ${
+        cyber
+          ? "border-cyan-300 bg-slate-950 shadow-[0_8px_0_#164e63,0_0_28px_rgba(34,211,238,.16)]"
+          : "border-blue-100 bg-white/90 shadow-[0_8px_0_rgba(30,64,175,.12)]"
+      }`}
+    >
+      <div
+        className={`grid min-h-56 place-items-center rounded-[1.6rem] border-2 p-5 ${
+          cyber ? "border-cyan-400 bg-cyan-950/45" : "border-yellow-200 bg-yellow-50"
+        }`}
+      >
+        <div
+          className={`grid h-40 w-40 place-items-center rounded-[2rem] border-4 text-7xl font-black sm:h-48 sm:w-48 sm:text-8xl ${
+            cyber
+              ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_8px_0_#a16207,0_0_24px_rgba(250,204,21,.2)]"
+              : "border-yellow-500 bg-yellow-400 text-white shadow-[0_8px_0_#b7791f]"
+          }`}
+          style={getNumberTextStyle(value)}
+          aria-label={`${lang === "en" ? "Number" : "Nombor"} ${value}`}
+        >
+          {value}
+        </div>
+      </div>
+
+      <div
+        className={`flex min-h-56 flex-col items-center justify-center rounded-[1.6rem] border-2 p-5 text-center ${
+          cyber ? "border-cyan-400 bg-cyan-950/45" : "border-blue-100 bg-blue-50/70"
+        }`}
+      >
+        <p className={`text-sm font-black uppercase tracking-[0.16em] ${cyber ? "text-cyan-300" : "text-blue-600"}`}>
+          {lang === "en" ? "Listen and learn" : "Dengar dan belajar"}
+        </p>
+        <div className="mt-4">
+          <AudioHearButton label={replayLabel} onClick={() => speakNumber(value, lang)} cyber={cyber} />
+        </div>
+        <p className={`mt-5 text-lg font-black sm:text-xl ${cyber ? "text-cyan-50" : "text-slate-700"}`}>
+          {lang === "en" ? `The audio says ${word}.` : `Audio menyebut ${word}.`}
+        </p>
+        <p className={`mt-2 text-4xl font-black sm:text-5xl ${cyber ? "text-yellow-200" : "text-blue-950"}`}>
+          &ldquo;{displayWord}&rdquo;
+        </p>
+        <p className={`mt-3 break-words text-lg font-black tracking-wide sm:text-xl ${cyber ? "text-cyan-100" : "text-slate-600"}`}>
+          {spelledWord}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function SpeakerIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-8 w-8" aria-hidden="true">
@@ -16259,6 +16349,10 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
       </div>
     );
   }
+  if (visual.kind === "audioNumber") {
+    if (!NUMBER_AUDIO_ENABLED) return null;
+    return <AudioNumberSolutionCard value={visual.value} lang={lang} cyber={cyber} />;
+  }
   if (visual.kind === "subtract") {
     const emoji = visual.emoji ?? "🍌";
     return <InteractiveSubtractionFlow start={visual.a} takeAway={visual.b} emoji={emoji} lang={lang} />;
@@ -16272,19 +16366,20 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
   return <VisualDisplay visual={visual} lang={lang} cyber={cyber} />;
 }
 
-async function speakNumber(value: number, lang: Lang, onStart?: (value: number) => void): Promise<boolean> {
+async function speakNumber(value: number, lang: Lang, onStart?: (value: number) => void, onAudibleStart?: () => void): Promise<boolean> {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) {
     onStart?.(value);
+    onAudibleStart?.();
     return false;
   }
   if (activeCountingRunId !== null) {
-    queuedAudioAfterCounting = () => { void speakNumber(value, lang, onStart); };
+    queuedAudioAfterCounting = () => { void speakNumber(value, lang, onStart, onAudibleStart); };
     return false;
   }
   stopNumberAudio();
   const runId = audioRunId;
   onStart?.(value);
-  return playNumberFile(value, lang, runId);
+  return playNumberFile(value, lang, runId, onAudibleStart);
 }
 
 async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
@@ -16362,17 +16457,20 @@ async function speakComparisonPrompt(left: number, right: number, lang: Lang): P
   await speakNumber(right, lang);
 }
 
-async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA) {
+async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA, onAudibleStart?: () => void) {
   if (emoji !== BANANA || value < 0 || value > 20) return false;
-  return speakBananaTotal(value, lang);
+  return speakBananaTotal(value, lang, onAudibleStart);
 }
 
-async function speakBananaTotal(value: number, lang: Lang) {
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
+async function speakBananaTotal(value: number, lang: Lang, onAudibleStart?: () => void) {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted) {
+    onAudibleStart?.();
+    return false;
+  }
   const file = BANANA_TOTAL_AUDIO_FILES[lang][value];
   if (!file) return false;
   if (activeCountingRunId !== null) {
-    queuedAudioAfterCounting = () => { void speakBananaTotal(value, lang); };
+    queuedAudioAfterCounting = () => { void speakBananaTotal(value, lang, onAudibleStart); };
     return false;
   }
 
@@ -16396,7 +16494,7 @@ async function speakBananaTotal(value: number, lang: Lang) {
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
     timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 6500);
-    void playAudioFromClearStart(audio, () => activeNumberAudio === audio)
+    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, onAudibleStart)
       .then((started) => {
         if (!started) finish(false);
       });
@@ -16502,7 +16600,9 @@ function primeSuccessFanfareOutput() {
       await wait(AUDIO_CLEAR_START_PRIME_MS);
       if (runId !== successFanfarePrimeRunId || activeCelebrationAudio === audio) return;
       audio.pause();
-      resetAudioToStart(audio);
+      await seekAudioToStart(audio);
+      await wait(AUDIO_CLEAR_START_SETTLE_MS);
+      if (runId !== successFanfarePrimeRunId || activeCelebrationAudio === audio) return;
       audio.volume = restoreVolume;
     })
     .catch(() => {
@@ -16519,15 +16619,58 @@ function resetAudioToStart(audio: HTMLAudioElement) {
   }
 }
 
+function waitForAudioReady(audio: HTMLAudioElement, timeoutMs = 3500): Promise<boolean> {
+  if (audio.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (ready: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      audio.removeEventListener("loadeddata", onReady);
+      audio.removeEventListener("canplay", onReady);
+      audio.removeEventListener("error", onError);
+      resolve(ready);
+    };
+    const onReady = () => finish(true);
+    const onError = () => finish(false);
+    const timeoutId = window.setTimeout(() => finish(audio.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA), timeoutMs);
+    audio.addEventListener("loadeddata", onReady, { once: true });
+    audio.addEventListener("canplay", onReady, { once: true });
+    audio.addEventListener("error", onError, { once: true });
+    audio.load();
+  });
+}
+
+function seekAudioToStart(audio: HTMLAudioElement, timeoutMs = 600): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      audio.removeEventListener("seeked", finish);
+      resolve();
+    };
+    const timeoutId = window.setTimeout(finish, timeoutMs);
+    audio.addEventListener("seeked", finish, { once: true });
+    resetAudioToStart(audio);
+    if (audio.currentTime === 0) window.setTimeout(finish, 0);
+  });
+}
+
 async function playAudioFromClearStart(
   audio: HTMLAudioElement,
   isCurrent: () => boolean,
+  onAudibleStart?: () => void,
 ): Promise<boolean> {
   if (!isCurrent()) return false;
   audio.preload = "auto";
   const audibleVolume = audio.volume;
   audio.pause();
-  resetAudioToStart(audio);
+  if (!await waitForAudioReady(audio) || !isCurrent()) return false;
+  await seekAudioToStart(audio);
+  if (!isCurrent()) return false;
   audio.volume = 0;
 
   try {
@@ -16552,9 +16695,11 @@ async function playAudioFromClearStart(
     return false;
   }
 
-  // Keep this as one continuous play request. Pausing and calling play again
-  // after the warm-up can be treated as autoplay and blocked by the browser.
-  resetAudioToStart(audio);
+  // Stop the silent warm-up completely, then wait for the seek back to zero to
+  // finish. Resetting currentTime while playback continues can race the media
+  // decoder and lose the first consonant on mobile devices.
+  audio.pause();
+  await seekAudioToStart(audio);
   await wait(AUDIO_CLEAR_START_SETTLE_MS);
   if (!isCurrent()) {
     audio.pause();
@@ -16562,9 +16707,15 @@ async function playAudioFromClearStart(
     return false;
   }
 
-  resetAudioToStart(audio);
   audio.volume = audibleVolume;
-  return true;
+  try {
+    await audio.play();
+    onAudibleStart?.();
+    return true;
+  } catch {
+    audio.volume = audibleVolume;
+    return false;
+  }
 }
 
 function playSuccessFanfare(onFinished?: () => void) {
@@ -16586,10 +16737,10 @@ function playSuccessFanfare(onFinished?: () => void) {
   };
   audio.onended = clear;
   audio.onerror = clear;
-  // The pointer/key interaction has already warmed the output. Start the
-  // fanfare audibly in one direct request so effect-triggered playback is not
-  // mistaken for muted autoplay by the browser.
-  void audio.play().catch(clear);
+  void playAudioFromClearStart(audio, () => activeCelebrationAudio === audio)
+    .then((started) => {
+      if (!started) clear();
+    });
   return true;
 }
 
@@ -16600,7 +16751,7 @@ function getSuccessFanfareAudio() {
   return successFanfareAudio;
 }
 
-function playNumberFile(value: number, lang: Lang, runId: number) {
+function playNumberFile(value: number, lang: Lang, runId: number, onAudibleStart?: () => void) {
   const file = NUMBER_AUDIO_FILES[lang][value];
   if (!file) return Promise.resolve(false);
   return new Promise<boolean>((resolve) => {
@@ -16629,6 +16780,7 @@ function playNumberFile(value: number, lang: Lang, runId: number) {
     void playAudioFromClearStart(
       audio,
       () => runId === audioRunId && activeNumberAudio === audio,
+      onAudibleStart,
     ).then((started) => {
       if (!started) finish(false);
     });
@@ -16720,6 +16872,72 @@ async function speakMathCue(cue: MathCue, lang: Lang) {
 
 function speakText(_text: string, _lang: Lang, _options: { requireInteraction?: boolean; allowWhenWordAudioDisabled?: boolean } = {}) {
   // Recorded-audio-only policy: never fall back to browser-generated speech.
+}
+
+async function playWholeNumberValueCount(
+  count: number,
+  lang: Lang,
+  onValue: (value: number) => void,
+  onAudioActive: (active: boolean) => void,
+) {
+  let audioSequenceStarted = false;
+  await speakCountingSequence(
+    count,
+    lang,
+    COUNTING_STEP_MS,
+    (value) => {
+      audioSequenceStarted = true;
+      onValue(value);
+      onAudioActive(true);
+    },
+    () => onAudioActive(false),
+  );
+
+  if (!audioSequenceStarted) {
+    for (let value = 1; value <= count; value += 1) {
+      onValue(value);
+      onAudioActive(true);
+      await wait(COUNTING_STEP_MS);
+      onAudioActive(false);
+      if (value < count) await wait(180);
+    }
+  }
+  onValue(count);
+  onAudioActive(false);
+}
+
+/**
+ * Temporary, tightly-scoped narration for the Number Values comparison objects.
+ * Recorded leaf/rock/etc. total clips do not exist yet, so this is the only place
+ * where browser speech is used. Replace it when those recordings are supplied.
+ */
+async function speakTemporaryObjectTotal(count: number, emoji: string, lang: Lang): Promise<boolean> {
+  if (!NUMBER_AUDIO_ENABLED || audioMuted || !("speechSynthesis" in window)) return false;
+
+  const object = objectName(emoji, count, lang);
+  const text = lang === "en"
+    ? `Total: ${numberWordFor(count, lang)} ${object}.`
+    : `Jumlah: ${numberWordFor(count, lang)} ${object}.`;
+
+  stopNumberAudio();
+  window.speechSynthesis.cancel();
+  return new Promise<boolean>((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    let settled = false;
+    const finish = (played: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      resolve(played);
+    };
+    const timeoutId = window.setTimeout(() => finish(false), 6500);
+    utterance.lang = lang === "en" ? "en-GB" : "ms-MY";
+    utterance.rate = 0.86;
+    utterance.pitch = 1;
+    utterance.onend = () => finish(true);
+    utterance.onerror = () => finish(false);
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 function wait(ms: number) {
