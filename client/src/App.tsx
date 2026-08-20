@@ -391,19 +391,6 @@ const DIGIT_LABELS: Record<Lang, readonly [string, string, string]> = {
   ms: ["Digit pertama", "Digit kedua", "Digit ketiga"],
 };
 
-const DIGIT_LABEL_AUDIO_FILES: Record<Lang, readonly [string, string, string]> = {
-  en: [
-    "en-first-digit.mp3",
-    "en-second-digit.mp3",
-    "en-third-digit.mp3",
-  ],
-  ms: [
-    "ms-digit-pertama.mp3",
-    "ms-digit-kedua.mp3",
-    "ms-digit-ketiga.mp3",
-  ],
-};
-
 const COMPARISON_AUDIO_FILES: Record<Lang, { greater: string; less: string }> = {
   en: {
     greater: "en-greater-than.mp3",
@@ -415,24 +402,11 @@ const COMPARISON_AUDIO_FILES: Record<Lang, { greater: string; less: string }> = 
   },
 };
 
-const COMPARISON_PROMPT_AUDIO_FILES: Record<Lang, { compare: string; and: string }> = {
-  en: {
-    compare: "compare.mp3",
-    and: "and.mp3",
-  },
-  ms: {
-    compare: "ms-bandingkan.mp3",
-    and: "ms-dan.mp3",
-  },
-};
-
 const BM_RECORDED_AUDIO_FILES = new Set<string>([
   ...Object.values(NUMBER_AUDIO_FILES.ms),
   ...Object.values(BANANA_TOTAL_AUDIO_FILES.ms),
   ...Object.values(MATH_CUE_AUDIO_FILES.ms ?? {}),
-  ...DIGIT_LABEL_AUDIO_FILES.ms,
   ...Object.values(COMPARISON_AUDIO_FILES.ms),
-  ...Object.values(COMPARISON_PROMPT_AUDIO_FILES.ms),
   ...Object.values(MS_OBJECT_TOTAL_AUDIO_FILES).flatMap((files) => Object.values(files)),
   COUNT_PROMPT_AUDIO_FILES.ms,
 ].filter((file): file is string => Boolean(file)));
@@ -4348,7 +4322,6 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
   const [completedSides, setCompletedSides] = useState({ left: false, right: false });
   const [countingSide, setCountingSide] = useState<"left" | "right" | null>(null);
   const [revealStage, setRevealStage] = useState<0 | 1 | 2 | 3>(stagedReveal ? 0 : 3);
-  const [comparisonAudioPlaying, setComparisonAudioPlaying] = useState(false);
   const countingRunRef = useRef(0);
   const item = ADVANCED_COMPARE_OBJECTS[object];
   const bothPilesCounted = completedSides.left && completedSides.right;
@@ -4361,7 +4334,6 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     setCompletedSides({ left: false, right: false });
     setCountingSide(null);
     setRevealStage(stagedReveal ? 0 : 2);
-    setComparisonAudioPlaying(false);
 
     return () => {
       countingRunRef.current += 1;
@@ -4384,14 +4356,10 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       await wait(prefersReducedMotion ? 100 : 2000);
       if (cancelled) return;
       setRevealStage(2);
+      if (symbol) await speakComparisonSymbol(symbol, lang);
       await wait(prefersReducedMotion ? 100 : 1000);
       if (cancelled) return;
       setRevealStage(3);
-      if (symbol) {
-        setComparisonAudioPlaying(true);
-        await speakComparisonSentence(a, b, symbol, lang);
-        if (!cancelled) setComparisonAudioPlaying(false);
-      }
     };
     void revealComparison();
     return () => {
@@ -4399,13 +4367,6 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       stopNumberAudio();
     };
   }, [a, b, bothPilesCounted, lang, prefersReducedMotion, stagedReveal, symbol]);
-
-  const replayComparison = async () => {
-    if (!symbol || comparisonAudioPlaying) return;
-    setComparisonAudioPlaying(true);
-    await speakComparisonSentence(a, b, symbol, lang);
-    setComparisonAudioPlaying(false);
-  };
 
   const countPile = async (side: "left" | "right", count: number) => {
     if (countingSide !== null) return;
@@ -4434,6 +4395,8 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     if (NUMBER_AUDIO_ENABLED && !audioMuted) await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
     if (countingRunRef.current !== runId) return;
     setCompletedSides((current) => ({ ...current, [side]: true }));
+    await speakRecordedBananaTotal(count, lang, item.emoji);
+    if (countingRunRef.current !== runId) return;
     setCountingSide(null);
   };
 
@@ -4503,7 +4466,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         </p>
       )}
       {stagedReveal && revealStage >= 3 && (
-        <div className="comparison-explanation-bar-reveal mx-auto mt-3 grid max-w-3xl items-center gap-3 rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5">
+        <div className="comparison-explanation-bar-reveal mx-auto mt-3 max-w-3xl rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:px-5">
           <p className="text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
             {lang === "en" ? symbol === "<" ? (
               <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">less than</span> {b}.</>
@@ -4519,17 +4482,6 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
               <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">lebih besar daripada</span> {b}.</>
             )}
           </p>
-          <button
-            type="button"
-            onClick={() => void replayComparison()}
-            disabled={comparisonAudioPlaying}
-            className="mx-auto inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-4 font-black text-slate-950 shadow-[0_5px_0_#0e7490] transition hover:bg-cyan-400 active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
-          >
-            <SpeakerIcon />
-            {comparisonAudioPlaying
-              ? (lang === "en" ? "Playing..." : "Sedang dimainkan...")
-              : (lang === "en" ? "Hear again" : "Dengar sekali lagi")}
-          </button>
         </div>
       )}
     </div>
@@ -7144,7 +7096,6 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
     for (let index = 0; index < labels.length; index += 1) {
       if (runRef.current !== runId) return;
       setActiveIndex(index);
-      await speakDigitLabel(index, lang);
       await wait(prefersReducedMotion ? 250 : 650);
       if (runRef.current !== runId) return;
       setCompletedIndex(index);
@@ -7197,12 +7148,11 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
           disabled={running}
           className="relative mx-auto mt-8 inline-flex items-center justify-center gap-3 rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-6 py-3 text-lg font-black text-slate-950 shadow-[0_6px_0_#0e7490] active:translate-y-1 disabled:opacity-70"
         >
-          <SpeakerIcon />
           {running
             ? (lang === "en" ? "Labeling digits..." : "Melabel digit...")
             : completedIndex === labels.length - 1
-              ? (lang === "en" ? "Hear the labels again" : "Dengar label sekali lagi")
-              : (lang === "en" ? "Hear and highlight the labels" : "Dengar dan serlahkan label")}
+              ? (lang === "en" ? "Highlight the labels again" : "Serlahkan label sekali lagi")
+              : (lang === "en" ? "Highlight the labels" : "Serlahkan label")}
           {!running && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
               <PointerIcon />
@@ -7256,14 +7206,9 @@ function DigitLengthComparison({ lang }: { lang: Lang }) {
                     >
                       {digit}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => void speakDigitLabel(index, lang)}
-                      className="mt-4 whitespace-nowrap rounded-full border-2 border-cyan-300 bg-slate-900 px-3 py-2 text-sm font-black text-cyan-100 shadow-[0_4px_0_#155e75] transition hover:border-yellow-300 hover:text-yellow-200 active:translate-y-1 sm:text-base"
-                      aria-label={lang === "en" ? `Hear ${digitLabels[index]}` : `Dengar ${digitLabels[index]}`}
-                    >
+                    <span className="mt-4 whitespace-nowrap rounded-full border-2 border-cyan-300 bg-slate-900 px-3 py-2 text-sm font-black text-cyan-100 shadow-[0_4px_0_#155e75] sm:text-base">
                       {digitLabels[index]}
-                    </button>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -16386,10 +16331,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
     if (announcedComparisonStepRef.current === announcementKey) return;
     announcedComparisonStepRef.current = announcementKey;
 
-    if (stepIndex === 0) {
-      void speakComparisonPrompt(left, right, lang);
-      return;
-    }
+    if (stepIndex === 0) return;
 
     const symbol = left > right ? ">" : left < right ? "<" : "=";
     void speakComparisonResultSentence(left, right, symbol, lang);
@@ -16668,14 +16610,6 @@ async function speakNumber(
   return playNumberFile(value, lang, runId, onAudibleStart, startMode, tailTrimMs);
 }
 
-async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
-  if (!DIGIT_LABELS[lang][index]) return false;
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
-
-  const file = DIGIT_LABEL_AUDIO_FILES[lang][index];
-  return file ? playRecordedVoiceFile(file) : false;
-}
-
 async function playRecordedVoiceFile(
   file: string,
   onAudibleStart?: () => void,
@@ -16716,54 +16650,30 @@ async function playRecordedVoiceFile(
 }
 
 async function speakComparisonResultSentence(
-  left: number,
-  right: number,
+  _left: number,
+  _right: number,
   symbol: ">" | "<" | "=",
   lang: Lang,
 ): Promise<void> {
-  if (left < 0 || left > 20 || right < 0 || right > 20) return;
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
-
-  const comparisonFile = symbol !== "="
-    ? COMPARISON_AUDIO_FILES[lang][symbol === ">" ? "greater" : "less"]
-    : null;
-  if (symbol !== "=" && !comparisonFile) return;
-
-  await speakNumber(left, lang);
-  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  if (symbol === "=") {
-    await speakMathCue("equals", lang, "joined");
-  } else if (comparisonFile) {
-    await playRecordedVoiceFile(comparisonFile, undefined, "joined");
-  }
-  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  await speakNumber(right, lang, undefined, undefined, "joined");
+  await speakComparisonSymbol(symbol, lang);
 }
 
-async function speakComparisonPrompt(left: number, right: number, lang: Lang): Promise<void> {
-  if (left < 0 || left > 20 || right < 0 || right > 20) return;
+async function speakComparisonSymbol(symbol: ">" | "<" | "=", lang: Lang): Promise<void> {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
-
-  const promptFiles = COMPARISON_PROMPT_AUDIO_FILES[lang];
-  await playRecordedVoiceFile(promptFiles.compare);
-  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  await speakNumber(left, lang, undefined, undefined, "joined");
-  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  await playRecordedVoiceFile(promptFiles.and, undefined, "joined");
-  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  await speakNumber(right, lang, undefined, undefined, "joined");
+  if (symbol === "=") {
+    await speakMathCue("equals", lang);
+    return;
+  }
+  await playRecordedVoiceFile(COMPARISON_AUDIO_FILES[lang][symbol === ">" ? "greater" : "less"]);
 }
 
 async function speakComparisonSentence(
-  left: number,
-  right: number,
+  _left: number,
+  _right: number,
   symbol: ">" | "<" | "=",
   lang: Lang,
 ): Promise<void> {
-  await speakComparisonPrompt(left, right, lang);
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
-  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
-  await speakComparisonResultSentence(left, right, symbol, lang);
+  await speakComparisonSymbol(symbol, lang);
 }
 
 async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA, onAudibleStart?: () => void) {
@@ -17180,12 +17090,8 @@ function getNumberAudio(value: number, lang: Lang) {
 function preloadNumberAudioFiles() {
   getSuccessFanfareAudio().load();
   [
-    ...DIGIT_LABEL_AUDIO_FILES.en,
-    ...DIGIT_LABEL_AUDIO_FILES.ms,
     ...Object.values(COMPARISON_AUDIO_FILES.en),
     ...Object.values(COMPARISON_AUDIO_FILES.ms),
-    ...Object.values(COMPARISON_PROMPT_AUDIO_FILES.en),
-    ...Object.values(COMPARISON_PROMPT_AUDIO_FILES.ms),
     EN_OBJECT_TOTAL_AUDIO_FILES.total,
     ...Object.values(COUNT_PROMPT_AUDIO_FILES),
     ...Object.values(EN_OBJECT_TOTAL_AUDIO_FILES.objects).flatMap(({ singular, plural }) => singular ? [singular, plural] : [plural]),
