@@ -179,6 +179,8 @@ const MATH_CUE_AUDIO_PLAYBACK_RATE = 1;
 // requested clip or leaking the celebration fanfare into ordinary button taps.
 const AUDIO_CLEAR_START_PRIME_MS = 320;
 const AUDIO_CLEAR_START_SETTLE_MS = 12;
+const AUDIO_PHRASE_JOIN_GAP_MS = 35;
+const AUDIO_SEQUENCE_JOIN_WINDOW_MS = 700;
 const COUNTING_STEP_MS = 1400;
 const COUNT_TOTAL_REVEAL_DELAY_MS = 500;
 const SEQUENCING_PLUS_ONE_COUNTING_STEP_MS = 1100;
@@ -433,6 +435,7 @@ let successFanfareAudio: HTMLAudioElement | null = null;
 let audioOutputContext: AudioContext | null = null;
 let audioOutputKeepAlive: OscillatorNode | null = null;
 let audioOutputKeepAliveGain: GainNode | null = null;
+let lastAudioClipFinishedAt = Number.NEGATIVE_INFINITY;
 let audioRunId = 0;
 let activeCountingRunId: number | null = null;
 let lastCountingFinishedAt = 0;
@@ -16413,7 +16416,15 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
   return <VisualDisplay visual={visual} lang={lang} cyber={cyber} />;
 }
 
-async function speakNumber(value: number, lang: Lang, onStart?: (value: number) => void, onAudibleStart?: () => void): Promise<boolean> {
+type AudioStartMode = "clear" | "joined";
+
+async function speakNumber(
+  value: number,
+  lang: Lang,
+  onStart?: (value: number) => void,
+  onAudibleStart?: () => void,
+  startMode: AudioStartMode = "clear",
+): Promise<boolean> {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) {
     onStart?.(value);
     onAudibleStart?.();
@@ -16426,7 +16437,7 @@ async function speakNumber(value: number, lang: Lang, onStart?: (value: number) 
   stopNumberAudio();
   const runId = audioRunId;
   onStart?.(value);
-  return playNumberFile(value, lang, runId, onAudibleStart);
+  return playNumberFile(value, lang, runId, onAudibleStart, startMode);
 }
 
 async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
@@ -16437,7 +16448,11 @@ async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
   return file ? playRecordedVoiceFile(file) : false;
 }
 
-async function playRecordedVoiceFile(file: string, onAudibleStart?: () => void): Promise<boolean> {
+async function playRecordedVoiceFile(
+  file: string,
+  onAudibleStart?: () => void,
+  startMode: AudioStartMode = "clear",
+): Promise<boolean> {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
   stopNumberAudio();
   return new Promise<boolean>((resolve) => {
@@ -16459,7 +16474,7 @@ async function playRecordedVoiceFile(file: string, onAudibleStart?: () => void):
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
     timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 6500);
-    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, onAudibleStart)
+    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, onAudibleStart, startMode)
       .then((started) => {
         if (!started) finish(false);
       });
@@ -16481,14 +16496,14 @@ async function speakComparisonSentence(
   if (symbol !== "=" && !comparisonFile) return;
 
   await speakNumber(left, lang);
-  await wait(220);
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
   if (symbol === "=") {
-    await speakMathCue("equals", lang);
+    await speakMathCue("equals", lang, "joined");
   } else if (comparisonFile) {
-    await playRecordedVoiceFile(comparisonFile);
+    await playRecordedVoiceFile(comparisonFile, undefined, "joined");
   }
-  await wait(220);
-  await speakNumber(right, lang);
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  await speakNumber(right, lang, undefined, undefined, "joined");
 }
 
 async function speakComparisonPrompt(left: number, right: number, lang: Lang): Promise<void> {
@@ -16496,12 +16511,12 @@ async function speakComparisonPrompt(left: number, right: number, lang: Lang): P
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
 
   await playRecordedVoiceFile(MALAY_COMPARISON_PROMPT_AUDIO_FILES.compare);
-  await wait(180);
-  await speakNumber(left, lang);
-  await wait(180);
-  await playRecordedVoiceFile(MALAY_COMPARISON_PROMPT_AUDIO_FILES.and);
-  await wait(180);
-  await speakNumber(right, lang);
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  await speakNumber(left, lang, undefined, undefined, "joined");
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  await playRecordedVoiceFile(MALAY_COMPARISON_PROMPT_AUDIO_FILES.and, undefined, "joined");
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  await speakNumber(right, lang, undefined, undefined, "joined");
 }
 
 async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA, onAudibleStart?: () => void) {
@@ -16519,11 +16534,11 @@ async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string
 
   const totalPlayed = await playRecordedVoiceFile(EN_OBJECT_TOTAL_AUDIO_FILES.total, onAudibleStart);
   if (!totalPlayed) return false;
-  await wait(120);
-  const numberPlayed = await speakNumber(value, lang);
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  const numberPlayed = await speakNumber(value, lang, undefined, undefined, "joined");
   if (!numberPlayed) return false;
-  await wait(120);
-  return playRecordedVoiceFile(objectFile);
+  await wait(AUDIO_PHRASE_JOIN_GAP_MS);
+  return playRecordedVoiceFile(objectFile, undefined, "joined");
 }
 
 async function speakBananaTotal(value: number, lang: Lang, onAudibleStart?: () => void) {
@@ -16704,6 +16719,7 @@ async function playAudioFromClearStart(
   audio: HTMLAudioElement,
   isCurrent: () => boolean,
   onAudibleStart?: () => void,
+  startMode: AudioStartMode = "clear",
 ): Promise<boolean> {
   if (!isCurrent()) return false;
   audio.preload = "auto";
@@ -16713,6 +16729,27 @@ async function playAudioFromClearStart(
   if (!await waitForAudioReady(audio) || !isCurrent()) return false;
   await seekAudioToStart(audio);
   if (!isCurrent()) return false;
+
+  const joinsRecentClip = performance.now() - lastAudioClipFinishedAt <= AUDIO_SEQUENCE_JOIN_WINDOW_MS;
+  const shouldJoin = startMode === "joined" || joinsRecentClip;
+  const noteAudioFinished = () => {
+    lastAudioClipFinishedAt = performance.now();
+  };
+
+  if (shouldJoin) {
+    audio.volume = audibleVolume;
+    audio.loop = wasLooping;
+    audio.addEventListener("ended", noteAudioFinished, { once: true });
+    try {
+      await audio.play();
+      onAudibleStart?.();
+      return true;
+    } catch {
+      audio.removeEventListener("ended", noteAudioFinished);
+      return false;
+    }
+  }
+
   audio.volume = 0;
   audio.loop = true;
 
@@ -16754,11 +16791,13 @@ async function playAudioFromClearStart(
   }
 
   audio.volume = audibleVolume;
+  audio.addEventListener("ended", noteAudioFinished, { once: true });
   try {
     await audio.play();
     onAudibleStart?.();
     return true;
   } catch {
+    audio.removeEventListener("ended", noteAudioFinished);
     audio.volume = audibleVolume;
     return false;
   }
@@ -16797,7 +16836,13 @@ function getSuccessFanfareAudio() {
   return successFanfareAudio;
 }
 
-function playNumberFile(value: number, lang: Lang, runId: number, onAudibleStart?: () => void) {
+function playNumberFile(
+  value: number,
+  lang: Lang,
+  runId: number,
+  onAudibleStart?: () => void,
+  startMode: AudioStartMode = "clear",
+) {
   const file = NUMBER_AUDIO_FILES[lang][value];
   if (!file) return Promise.resolve(false);
   return new Promise<boolean>((resolve) => {
@@ -16827,6 +16872,7 @@ function playNumberFile(value: number, lang: Lang, runId: number, onAudibleStart
       audio,
       () => runId === audioRunId && activeNumberAudio === audio,
       onAudibleStart,
+      startMode,
     ).then((started) => {
       if (!started) finish(false);
     });
@@ -16885,7 +16931,7 @@ function preloadNumberAudioFiles() {
   });
 }
 
-async function speakMathCue(cue: MathCue, lang: Lang) {
+async function speakMathCue(cue: MathCue, lang: Lang, startMode: AudioStartMode = "clear") {
   if (!MATH_CUE_AUDIO_ENABLED || audioMuted) return;
   if (activeCountingRunId !== null) {
     queuedAudioAfterCounting = () => void speakMathCue(cue, lang);
@@ -16912,7 +16958,7 @@ async function speakMathCue(cue: MathCue, lang: Lang) {
     audio.preservesPitch = true;
     audio.onended = finish;
     audio.onerror = finish;
-    void playAudioFromClearStart(audio, () => activeNumberAudio === audio)
+    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, undefined, startMode)
       .then((started) => {
         if (!started) finish();
       });
