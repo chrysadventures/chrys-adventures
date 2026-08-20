@@ -1,12 +1,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const LIVE_ORIGIN = "https://jaredtehyh-cell.github.io";
+const LIVE_ORIGINS = new Set([
+  "https://jaredtehyh-cell.github.io",
+  "https://chrysadventures.github.io",
+]);
 
 const allowedOrigin = (origin: string | null) => {
-  if (!origin) return LIVE_ORIGIN;
-  if (origin === LIVE_ORIGIN || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
-  return LIVE_ORIGIN;
+  if (!origin) return "https://chrysadventures.github.io";
+  if (LIVE_ORIGINS.has(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return origin;
+  return "https://chrysadventures.github.io";
 };
 
 const corsHeaders = (request: Request) => ({
