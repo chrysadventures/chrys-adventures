@@ -313,6 +313,21 @@ const BANANA_TOTAL_AUDIO_FILES: Record<Lang, Partial<Record<number, string>>> = 
   ms: Object.fromEntries(Array.from({ length: 21 }, (_, value) => [value, `ms-total-${value}-bananas.mp3`])) as Record<number, string>,
 };
 
+const EN_OBJECT_TOTAL_AUDIO_FILES = {
+  total: "total.mp3",
+  count: "count.mp3",
+  objects: {
+    "\u{1F343}": { singular: "leaf.mp3", plural: "leaves.mp3" },
+    "\u{1FAA8}": { singular: "rock.mp3", plural: "rocks.mp3" },
+    "\u{1F96D}": { plural: "mangoes.mp3" },
+    "\u{1F338}": { plural: "flowers.mp3" },
+    "\u{1F965}": { plural: "coconuts.mp3" },
+    "\u{1F344}": { plural: "mushrooms.mp3" },
+    "\u{1F34E}": { plural: "apples.mp3" },
+    "\u{1F34A}": { plural: "oranges.mp3" },
+  } as Record<string, { singular?: string; plural: string }>,
+} as const;
+
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
   en: {
     plus: "en-plus-clear.mp3",
@@ -8172,7 +8187,7 @@ function NumberValueStepVisual({ n, emoji, phase, lang }: { n: number; emoji: st
             );
             await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
             setPairedTotalStage(completedStage);
-            await speakTemporaryObjectTotal(n, completedEmoji, lang);
+            await speakRecordedBananaTotal(n, lang, completedEmoji);
             setCounting(false);
           }}
           disabled={counting}
@@ -14508,6 +14523,10 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
     setBusy(true);
     setVisibleCount(0);
     onProgress?.(0);
+    if (lang === "en" && NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await playRecordedVoiceFile(EN_OBJECT_TOTAL_AUDIO_FILES.count);
+      await wait(120);
+    }
     const reveal = (value: number) => {
       if (countRunRef.current !== runId) return;
       setVisibleCount(value);
@@ -16392,7 +16411,7 @@ async function speakDigitLabel(index: number, lang: Lang): Promise<boolean> {
   return file ? playRecordedVoiceFile(file) : false;
 }
 
-async function playRecordedVoiceFile(file: string): Promise<boolean> {
+async function playRecordedVoiceFile(file: string, onAudibleStart?: () => void): Promise<boolean> {
   if (!NUMBER_AUDIO_ENABLED || audioMuted) return false;
   stopNumberAudio();
   return new Promise<boolean>((resolve) => {
@@ -16414,7 +16433,7 @@ async function playRecordedVoiceFile(file: string): Promise<boolean> {
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
     timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 6500);
-    void playAudioFromClearStart(audio, () => activeNumberAudio === audio)
+    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, onAudibleStart)
       .then((started) => {
         if (!started) finish(false);
       });
@@ -16460,8 +16479,25 @@ async function speakComparisonPrompt(left: number, right: number, lang: Lang): P
 }
 
 async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA, onAudibleStart?: () => void) {
-  if (emoji !== BANANA || value < 0 || value > 20) return false;
-  return speakBananaTotal(value, lang, onAudibleStart);
+  if (value < 0 || value > 20) return false;
+  if (emoji === BANANA) return speakBananaTotal(value, lang, onAudibleStart);
+  if (lang !== "en") return false;
+
+  const objectFiles = EN_OBJECT_TOTAL_AUDIO_FILES.objects[emoji];
+  if (!objectFiles) return false;
+  const objectFile = value === 1 && objectFiles.singular ? objectFiles.singular : objectFiles.plural;
+  if (activeCountingRunId !== null) {
+    queuedAudioAfterCounting = () => { void speakRecordedBananaTotal(value, lang, emoji, onAudibleStart); };
+    return false;
+  }
+
+  const totalPlayed = await playRecordedVoiceFile(EN_OBJECT_TOTAL_AUDIO_FILES.total, onAudibleStart);
+  if (!totalPlayed) return false;
+  await wait(120);
+  const numberPlayed = await speakNumber(value, lang);
+  if (!numberPlayed) return false;
+  await wait(120);
+  return playRecordedVoiceFile(objectFile);
 }
 
 async function speakBananaTotal(value: number, lang: Lang, onAudibleStart?: () => void) {
@@ -16825,6 +16861,9 @@ function preloadNumberAudioFiles() {
     ...Object.values(COMPARISON_AUDIO_FILES.en),
     ...Object.values(COMPARISON_AUDIO_FILES.ms),
     ...Object.values(MALAY_COMPARISON_PROMPT_AUDIO_FILES),
+    EN_OBJECT_TOTAL_AUDIO_FILES.total,
+    EN_OBJECT_TOTAL_AUDIO_FILES.count,
+    ...Object.values(EN_OBJECT_TOTAL_AUDIO_FILES.objects).flatMap(({ singular, plural }) => singular ? [singular, plural] : [plural]),
   ].forEach((file) => {
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
     audio.preload = "auto";
@@ -16895,6 +16934,10 @@ async function playWholeNumberValueCount(
   onValue: (value: number) => void,
   onAudioActive: (active: boolean) => void,
 ) {
+  if (lang === "en" && NUMBER_AUDIO_ENABLED && !audioMuted) {
+    await playRecordedVoiceFile(EN_OBJECT_TOTAL_AUDIO_FILES.count);
+    await wait(120);
+  }
   let audioSequenceStarted = false;
   await speakCountingSequence(
     count,
@@ -16919,40 +16962,6 @@ async function playWholeNumberValueCount(
   }
   onValue(count);
   onAudioActive(false);
-}
-
-/**
- * Temporary, tightly-scoped narration for the Number Values comparison objects.
- * Recorded leaf/rock/etc. total clips do not exist yet, so this is the only place
- * where browser speech is used. Replace it when those recordings are supplied.
- */
-async function speakTemporaryObjectTotal(count: number, emoji: string, lang: Lang): Promise<boolean> {
-  if (!NUMBER_AUDIO_ENABLED || audioMuted || !("speechSynthesis" in window)) return false;
-
-  const object = objectName(emoji, count, lang);
-  const text = lang === "en"
-    ? `Total: ${numberWordFor(count, lang)} ${object}.`
-    : `Jumlah: ${numberWordFor(count, lang)} ${object}.`;
-
-  stopNumberAudio();
-  window.speechSynthesis.cancel();
-  return new Promise<boolean>((resolve) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    let settled = false;
-    const finish = (played: boolean) => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timeoutId);
-      resolve(played);
-    };
-    const timeoutId = window.setTimeout(() => finish(false), 6500);
-    utterance.lang = lang === "en" ? "en-GB" : "ms-MY";
-    utterance.rate = 0.86;
-    utterance.pitch = 1;
-    utterance.onend = () => finish(true);
-    utterance.onerror = () => finish(false);
-    window.speechSynthesis.speak(utterance);
-  });
 }
 
 function wait(ms: number) {
