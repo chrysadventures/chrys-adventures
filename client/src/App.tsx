@@ -12803,11 +12803,15 @@ function CountedObjectRow({ count, emoji, crossed = 0, showCount, countRemaining
       ? "grid grid-cols-[3rem] place-content-center"
       : fixedColumns === 2
         ? "grid grid-cols-[repeat(2,3rem)] place-content-center"
-        : fixedColumns === 5
-          ? "grid grid-cols-[repeat(5,3.5rem)] place-content-center"
-          : fixedColumns
-            ? "grid place-content-center"
-            : "flex flex-wrap justify-center";
+        : fixedColumns === 3
+          ? "grid grid-cols-[repeat(3,3rem)] place-content-center"
+          : fixedColumns === 4
+            ? "grid grid-cols-[repeat(4,3rem)] place-content-center"
+            : fixedColumns === 5
+              ? "grid grid-cols-[repeat(5,3.5rem)] place-content-center"
+              : fixedColumns
+                ? "grid place-content-center"
+                : "flex flex-wrap justify-center";
   const balancedTileStyle = balancedTeenGrid
     ? { flex: `0 0 calc((100% - ${(teenColumnCount - 1) * 0.5}rem) / ${teenColumnCount})` }
     : undefined;
@@ -15057,7 +15061,10 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
             ? "md:w-[9rem]"
             : n === 2
               ? "md:w-[11rem]"
-              : "md:w-[13rem]";
+              : n === 3
+                ? "md:w-[14rem]"
+                : "md:w-[17rem]";
+          const cardMaxWidth = n === 4 ? "max-w-72" : "max-w-64";
           return (
             <React.Fragment key={`${n}-${index}`}>
               {index > 0 && (
@@ -15065,7 +15072,7 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
                   <ArrowRight className="h-8 w-8 rotate-90 sm:rotate-0" strokeWidth={3} />
                 </div>
               )}
-              <div className={`w-full max-w-64 shrink-0 self-center rounded-3xl border-2 p-2 text-center shadow-inner transition-colors lg:p-3 ${cardWidth} ${complete ? "border-emerald-400 bg-emerald-50" : isCurrentCounting ? "border-blue-400 bg-blue-50" : "border-emerald-100 bg-white"}`}>
+              <div className={`w-full ${cardMaxWidth} shrink-0 self-center rounded-3xl border-2 p-2 text-center shadow-inner transition-colors lg:p-3 ${cardWidth} ${complete ? "border-emerald-400 bg-emerald-50" : isCurrentCounting ? "border-blue-400 bg-blue-50" : "border-emerald-100 bg-white"}`}>
                 <p className="mb-2 text-4xl font-black text-blue-950">{n}</p>
                 {isCurrentCounting ? (
                   <CountedObjectRow
@@ -15074,14 +15081,14 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
                     showCount
                     speakCount
                     compact
-                    fixedColumns={n === 1 ? 1 : 2}
+                    fixedColumns={n}
                     lang={lang}
                     onCountComplete={finishCurrentCount}
                   />
                 ) : complete ? (
-                  <CountedObjectRow count={n} emoji={banana} showCount compact fixedColumns={n === 1 ? 1 : 2} visibleCount={n} highlightActiveCount={false} lang={lang} />
+                  <CountedObjectRow count={n} emoji={banana} showCount compact fixedColumns={n} visibleCount={n} highlightActiveCount={false} lang={lang} />
                 ) : (
-                  <CountedObjectRow count={n} emoji={banana} showCount compact fixedColumns={n === 1 ? 1 : 2} visibleCount={0} highlightActiveCount={false} lang={lang} />
+                  <CountedObjectRow count={n} emoji={banana} showCount compact fixedColumns={n} visibleCount={0} highlightActiveCount={false} lang={lang} />
                 )}
                 <p
                   className={`mt-3 min-h-10 rounded-full px-3 py-2 text-lg font-black transition-opacity ${complete ? "bg-emerald-100 text-emerald-950 opacity-100" : "opacity-0"}`}
@@ -15094,31 +15101,42 @@ function TapRevealOrder({ nums, lang, mode }: { nums: number[]; lang: Lang; mode
           );
         })}
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <button
-          onClick={handleCountAction}
-          disabled={counting || done}
-          className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] disabled:opacity-50"
-        >
-          {done
-            ? (lang === "en" ? "Done" : "Selesai")
-            : counting
-              ? (lang === "en" ? "Counting..." : "Mengira...")
-              : currentComplete
-                ? (lang === "en" ? "Show the next number" : "Lihat nombor seterusnya")
-                : (lang === "en" ? "Start counting" : "Mula mengira")}
-          {!counting && !done && (
-            <span className="absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-sm">
-              <PointerIcon />
-            </span>
-          )}
-        </button>
-        <p className="text-lg font-black text-slate-700">
-          {mode === "up"
-            ? (lang === "en" ? "The numbers get bigger." : "Nombor makin besar.")
-            : (lang === "en" ? "The numbers get smaller." : "Nombor makin kecil.")}
-        </p>
-      </div>
+      {done && mode === "up" ? (
+        <div className="mx-auto w-full max-w-3xl space-y-3">
+          <NumberLineSequence nums={[1, 2, 3, 4]} marked={-1} arrow="right" />
+          <p className="text-center text-lg font-black text-emerald-900 sm:text-xl">
+            {lang === "en"
+              ? "Numbers increase in an ascending order."
+              : "Nombor meningkat dalam susunan menaik."}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={handleCountAction}
+            disabled={counting || done}
+            className="relative rounded-2xl border-2 border-blue-700 bg-blue-600 px-7 py-3 font-black text-white shadow-[0_5px_0_#1e3a8a] disabled:opacity-50"
+          >
+            {done
+              ? (lang === "en" ? "Done" : "Selesai")
+              : counting
+                ? (lang === "en" ? "Counting..." : "Mengira...")
+                : currentComplete
+                  ? (lang === "en" ? "Show the next number" : "Lihat nombor seterusnya")
+                  : (lang === "en" ? "Start counting" : "Mula mengira")}
+            {!counting && !done && (
+              <span className="absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-sm">
+                <PointerIcon />
+              </span>
+            )}
+          </button>
+          <p className="text-lg font-black text-slate-700">
+            {mode === "up"
+              ? (lang === "en" ? "The numbers get bigger." : "Nombor makin besar.")
+              : (lang === "en" ? "The numbers get smaller." : "Nombor makin kecil.")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
