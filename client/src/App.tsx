@@ -330,6 +330,48 @@ const EN_OBJECT_TOTAL_AUDIO_FILES = {
   } as Record<string, { singular?: string; plural: string }>,
 } as const;
 
+const MS_OBJECT_TOTAL_AUDIO_FILES: Record<string, Partial<Record<number, string>>> = {
+  "\u{1F343}": {
+    1: "bm 1 daun.mp3",
+    5: "bm 5 daun.mp3",
+    9: "bm 9 daun.mp3",
+  },
+  "\u{1FAA8}": {
+    1: "bm 1 batu.mp3",
+    5: "bm 5 batu.mp3",
+    9: "bm 9 batu.mp3",
+  },
+  "\u{1F96D}": {
+    2: "bm 2 mangga.mp3",
+    6: "bm 6 mangga.mp3",
+  },
+  "\u{1F338}": {
+    2: "bm 2 bunga.mp3",
+    6: "bm 6 bunga.mp3",
+  },
+  "\u{1F965}": {
+    3: "bm 3 kelapa.mp3",
+    7: "bm 7 kelapa.mp3",
+  },
+  "\u{1F344}": {
+    3: "bm 3 cendawan.mp3",
+    7: "bm 7 cendawan.mp3",
+  },
+  "\u{1F34E}": {
+    4: "bm 4 epal.mp3",
+    8: "bm 8 epal.mp3",
+  },
+  "\u{1F34A}": {
+    4: "bm 4 oren.mp3",
+    8: "bm 8 oren.mp3",
+  },
+};
+
+const COUNT_PROMPT_AUDIO_FILES: Record<Lang, string> = {
+  en: EN_OBJECT_TOTAL_AUDIO_FILES.count,
+  ms: "kira.mp3",
+};
+
 const MATH_CUE_AUDIO_FILES: Partial<Record<Lang, Partial<Record<MathCue, string>>>> = {
   en: {
     plus: "en-plus-clear.mp3",
@@ -376,6 +418,17 @@ const MALAY_COMPARISON_PROMPT_AUDIO_FILES = {
   compare: "ms-bandingkan.mp3",
   and: "ms-dan.mp3",
 } as const;
+
+const BM_RECORDED_AUDIO_FILES = new Set<string>([
+  ...Object.values(NUMBER_AUDIO_FILES.ms),
+  ...Object.values(BANANA_TOTAL_AUDIO_FILES.ms),
+  ...Object.values(MATH_CUE_AUDIO_FILES.ms ?? {}),
+  ...DIGIT_LABEL_AUDIO_FILES.ms,
+  ...Object.values(COMPARISON_AUDIO_FILES.ms),
+  ...Object.values(MALAY_COMPARISON_PROMPT_AUDIO_FILES),
+  ...Object.values(MS_OBJECT_TOTAL_AUDIO_FILES).flatMap((files) => Object.values(files)),
+  COUNT_PROMPT_AUDIO_FILES.ms,
+].filter((file): file is string => Boolean(file)));
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
 // These URLs are consumed inside index.css's .page-bg::before rule. The CSS
@@ -484,6 +537,15 @@ function keepAudioOutputAwake() {
   } catch {
     // Audio still works through HTMLAudioElement when Web Audio is unavailable.
   }
+}
+
+function setBmAudioWakeSignal(active: boolean) {
+  if (!audioOutputContext || !audioOutputKeepAliveGain) return;
+  const now = audioOutputContext.currentTime;
+  audioOutputKeepAliveGain.gain.cancelScheduledValues(now);
+  // A very quiet 20 Hz signal wakes mobile audio hardware without replaying a
+  // soft copy of the spoken clip. This preserves the first BM syllable clearly.
+  audioOutputKeepAliveGain.gain.setTargetAtTime(active ? 0.003 : 0, now, 0.006);
 }
 
 function cleanDisplayText(value: string) {
@@ -14554,8 +14616,8 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
     setBusy(true);
     setVisibleCount(0);
     onProgress?.(0);
-    if (lang === "en" && NUMBER_AUDIO_ENABLED && !audioMuted) {
-      await playRecordedVoiceFile(EN_OBJECT_TOTAL_AUDIO_FILES.count);
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await playRecordedVoiceFile(COUNT_PROMPT_AUDIO_FILES[lang]);
       await wait(120);
     }
     const reveal = (value: number) => {
@@ -16419,6 +16481,7 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
 }
 
 type AudioStartMode = "clear" | "joined";
+type AudioClarityProfile = "default" | "bm";
 
 async function speakNumber(
   value: number,
@@ -16477,7 +16540,13 @@ async function playRecordedVoiceFile(
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
     timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 6500);
-    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, onAudibleStart, startMode)
+    void playAudioFromClearStart(
+      audio,
+      () => activeNumberAudio === audio,
+      onAudibleStart,
+      startMode,
+      BM_RECORDED_AUDIO_FILES.has(file) ? "bm" : "default",
+    )
       .then((started) => {
         if (!started) finish(false);
       });
@@ -16525,7 +16594,10 @@ async function speakComparisonPrompt(left: number, right: number, lang: Lang): P
 async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string = BANANA, onAudibleStart?: () => void) {
   if (value < 0 || value > 20) return false;
   if (emoji === BANANA) return speakBananaTotal(value, lang, onAudibleStart);
-  if (lang !== "en") return false;
+  if (lang === "ms") {
+    const file = MS_OBJECT_TOTAL_AUDIO_FILES[emoji]?.[value];
+    return file ? playRecordedVoiceFile(file, onAudibleStart) : false;
+  }
 
   const objectFiles = EN_OBJECT_TOTAL_AUDIO_FILES.objects[emoji];
   if (!objectFiles) return false;
@@ -16583,7 +16655,13 @@ async function speakBananaTotal(value: number, lang: Lang, onAudibleStart?: () =
     audio.onended = () => finish(true);
     audio.onerror = () => finish(false);
     timeoutId = window.setTimeout(() => finish(audio.currentTime > 0), 6500);
-    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, onAudibleStart)
+    void playAudioFromClearStart(
+      audio,
+      () => activeNumberAudio === audio,
+      onAudibleStart,
+      "clear",
+      lang === "ms" ? "bm" : "default",
+    )
       .then((started) => {
         if (!started) finish(false);
       });
@@ -16730,6 +16808,7 @@ async function playAudioFromClearStart(
   isCurrent: () => boolean,
   onAudibleStart?: () => void,
   startMode: AudioStartMode = "clear",
+  clarityProfile: AudioClarityProfile = "default",
 ): Promise<boolean> {
   if (!isCurrent()) return false;
   audio.preload = "auto";
@@ -16762,12 +16841,15 @@ async function playAudioFromClearStart(
 
   audio.volume = 0;
   audio.loop = true;
+  const useBmWakeSignal = clarityProfile === "bm";
+  if (useBmWakeSignal) setBmAudioWakeSignal(true);
 
   try {
     // Calling play immediately preserves the browser's user-gesture permission;
     // its promise resolves only after enough of the clip has decoded to start.
     await audio.play();
   } catch {
+    if (useBmWakeSignal) setBmAudioWakeSignal(false);
     audio.loop = wasLooping;
     audio.volume = audibleVolume;
     return false;
@@ -16781,6 +16863,7 @@ async function playAudioFromClearStart(
   }
 
   await wait(AUDIO_CLEAR_START_PRIME_MS);
+  if (useBmWakeSignal) setBmAudioWakeSignal(false);
   if (!isCurrent()) {
     audio.pause();
     audio.loop = wasLooping;
@@ -16886,6 +16969,7 @@ function playNumberFile(
       () => runId === audioRunId && activeNumberAudio === audio,
       onAudibleStart,
       startMode,
+      lang === "ms" ? "bm" : "default",
     ).then((started) => {
       if (!started) {
         finish(false);
@@ -16927,8 +17011,9 @@ function preloadNumberAudioFiles() {
     ...Object.values(COMPARISON_AUDIO_FILES.ms),
     ...Object.values(MALAY_COMPARISON_PROMPT_AUDIO_FILES),
     EN_OBJECT_TOTAL_AUDIO_FILES.total,
-    EN_OBJECT_TOTAL_AUDIO_FILES.count,
+    ...Object.values(COUNT_PROMPT_AUDIO_FILES),
     ...Object.values(EN_OBJECT_TOTAL_AUDIO_FILES.objects).flatMap(({ singular, plural }) => singular ? [singular, plural] : [plural]),
+    ...Object.values(MS_OBJECT_TOTAL_AUDIO_FILES).flatMap((files) => Object.values(files)),
   ].forEach((file) => {
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
     audio.preload = "auto";
@@ -16982,7 +17067,13 @@ async function speakMathCue(cue: MathCue, lang: Lang, startMode: AudioStartMode 
     audio.preservesPitch = true;
     audio.onended = finish;
     audio.onerror = finish;
-    void playAudioFromClearStart(audio, () => activeNumberAudio === audio, undefined, startMode)
+    void playAudioFromClearStart(
+      audio,
+      () => activeNumberAudio === audio,
+      undefined,
+      startMode,
+      lang === "ms" ? "bm" : "default",
+    )
       .then((started) => {
         if (!started) finish();
       });
@@ -16999,8 +17090,8 @@ async function playWholeNumberValueCount(
   onValue: (value: number) => void,
   onAudioActive: (active: boolean) => void,
 ) {
-  if (lang === "en" && NUMBER_AUDIO_ENABLED && !audioMuted) {
-    await playRecordedVoiceFile(EN_OBJECT_TOTAL_AUDIO_FILES.count);
+  if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+    await playRecordedVoiceFile(COUNT_PROMPT_AUDIO_FILES[lang]);
     await wait(120);
   }
   let audioSequenceStarted = false;
