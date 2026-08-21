@@ -5450,15 +5450,14 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
     runRef.current = runId;
     setVisibleTotal(0);
     setStage("plus");
-    await wait(prefersReducedMotion ? 0 : 100);
+    await speakMathCue("plus", lang);
     if (runRef.current !== runId) return;
-    setStage("one");
-    speakNumber(1, lang);
-    await wait(950);
+    await speakNumber(1, lang, undefined, () => {
+      if (runRef.current === runId) setStage("one");
+    }, "joined", COUNTING_NUMBER_TAIL_TRIM_MS);
     if (runRef.current !== runId) return;
     setStage("equals");
     await speakMathCue("equals", lang);
-    await wait(350);
     if (runRef.current !== runId) return;
     setStage("counting");
     if (!audioMuted) {
@@ -9796,9 +9795,9 @@ function RealWorldOperationExample({ lang, operation }: { lang: Lang; operation:
       return;
     }
     for (let value = 1; value <= count; value += 1) {
-      await wait(prefersReducedMotion ? 100 : COUNTING_STEP_MS);
       if (runRef.current !== runId) return;
       onCount(value);
+      if (value < count) await wait(prefersReducedMotion ? 100 : COUNTING_STEP_MS);
     }
   };
 
@@ -9816,12 +9815,18 @@ function RealWorldOperationExample({ lang, operation }: { lang: Lang; operation:
     await speakMathCue(addition ? "plus" : "minus", lang);
     if (runRef.current !== runId) return;
     setPhase("operate");
-    for (let value = 1; value <= change; value += 1) {
-      setChangedCount(value);
-      speakNumber(value, lang);
-      await wait(prefersReducedMotion ? 120 : COUNTING_STEP_MS);
-      if (runRef.current !== runId) return;
+    if (!audioMuted) {
+      await speakCountingSequence(change, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) setChangedCount(value);
+      });
+    } else {
+      for (let value = 1; value <= change; value += 1) {
+        if (runRef.current !== runId) return;
+        setChangedCount(value);
+        if (value < change) await wait(prefersReducedMotion ? 120 : COUNTING_STEP_MS);
+      }
     }
+    if (runRef.current !== runId) return;
 
     await speakMathCue("equals", lang);
     if (runRef.current !== runId) return;
@@ -11282,12 +11287,18 @@ function ButterfliesFlyHomeStory({ lang, t, onPrev, onDone, actions = [] }: {
     if (runRef.current !== runId) return;
     await speakMathCue("minus", lang);
     setPhase("takingAway");
-    for (let value = 1; value <= 2; value += 1) {
-      setFlownCount(value);
-      speakNumber(value, lang);
-      await wait(prefersReducedMotion ? 180 : COUNTING_STEP_MS);
-      if (runRef.current !== runId) return;
+    if (!audioMuted) {
+      await speakCountingSequence(2, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) setFlownCount(value);
+      });
+    } else {
+      for (let value = 1; value <= 2; value += 1) {
+        if (runRef.current !== runId) return;
+        setFlownCount(value);
+        if (value < 2) await wait(prefersReducedMotion ? 180 : COUNTING_STEP_MS);
+      }
     }
+    if (runRef.current !== runId) return;
     await speakMathCue("equals", lang);
     setPhase("countingLeft");
     await playSubtractionStoryCount(4, lang, setLeftCount, runRef, runId, prefersReducedMotion);
@@ -11368,12 +11379,18 @@ function AllBananasSharedStory({ lang, t, onPrev, onDone, actions = [] }: {
     if (runRef.current !== runId) return;
     await speakMathCue("minus", lang);
     setPhase("takingAway");
-    for (let value = 1; value <= 5; value += 1) {
-      setSharedCount(value);
-      speakNumber(value, lang);
-      await wait(prefersReducedMotion ? 150 : COUNTING_STEP_MS);
-      if (runRef.current !== runId) return;
+    if (!audioMuted) {
+      await speakCountingSequence(5, lang, COUNTING_STEP_MS, (value) => {
+        if (runRef.current === runId) setSharedCount(value);
+      });
+    } else {
+      for (let value = 1; value <= 5; value += 1) {
+        if (runRef.current !== runId) return;
+        setSharedCount(value);
+        if (value < 5) await wait(prefersReducedMotion ? 150 : COUNTING_STEP_MS);
+      }
     }
+    if (runRef.current !== runId) return;
     await speakMathCue("equals", lang);
     setPhase("countingLeft");
     await playSubtractionStoryCount(0, lang, () => undefined, runRef, runId, prefersReducedMotion);
@@ -17410,22 +17427,33 @@ async function speakNumberValuesSequence(
   stopNumberAudio();
   const runId = audioRunId;
   activeCountingRunId = runId;
-  const gapMs = Math.max(180, COUNTING_INTER_NUMBER_GAP_MS + intervalMs - COUNTING_STEP_MS);
+  const targetStepMs = Math.max(COUNTING_INTER_NUMBER_GAP_MS, intervalMs);
   try {
     for (let index = 0; index < values.length; index += 1) {
       const value = values[index];
       if (runId !== audioRunId) return;
-      onCount?.(value);
-      await playNumberFile(
+      let visualAdvanced = false;
+      let audibleStartedAt = performance.now();
+      const advanceVisual = () => {
+        if (visualAdvanced || runId !== audioRunId) return;
+        visualAdvanced = true;
+        audibleStartedAt = performance.now();
+        onCount?.(value);
+      };
+      const played = await playNumberFile(
         value,
         lang,
         runId,
-        undefined,
+        advanceVisual,
         index === 0 ? "clear" : "joined",
         COUNTING_NUMBER_TAIL_TRIM_MS,
       );
       if (runId !== audioRunId) return;
-      if (index < values.length - 1) await wait(gapMs);
+      if (!played) advanceVisual();
+      if (index < values.length - 1) {
+        const elapsedMs = performance.now() - audibleStartedAt;
+        await wait(Math.max(COUNTING_INTER_NUMBER_GAP_MS, targetStepMs - elapsedMs));
+      }
     }
   } finally {
     if (activeCountingRunId === runId) activeCountingRunId = null;
@@ -17446,25 +17474,36 @@ async function speakCountingSequence(
   stopNumberAudio();
   const runId = audioRunId;
   activeCountingRunId = runId;
-  const gapMs = Math.max(180, COUNTING_INTER_NUMBER_GAP_MS + intervalMs - COUNTING_STEP_MS);
+  const targetStepMs = Math.max(COUNTING_INTER_NUMBER_GAP_MS, intervalMs);
   const finalValue = Math.min(count, 20);
   const firstValue = Math.max(1, startValue);
   let completed = false;
   try {
     for (let value = firstValue; value <= finalValue; value += 1) {
       if (runId !== audioRunId) return;
-      onCount?.(value);
-      await playNumberFile(
+      let visualAdvanced = false;
+      let audibleStartedAt = performance.now();
+      const advanceVisual = () => {
+        if (visualAdvanced || runId !== audioRunId) return;
+        visualAdvanced = true;
+        audibleStartedAt = performance.now();
+        onCount?.(value);
+      };
+      const played = await playNumberFile(
         value,
         lang,
         runId,
-        undefined,
+        advanceVisual,
         value === firstValue ? "clear" : "joined",
         COUNTING_NUMBER_TAIL_TRIM_MS,
       );
       if (runId !== audioRunId) return;
+      if (!played) advanceVisual();
       onCountComplete?.(value);
-      if (value < finalValue) await wait(gapMs);
+      if (value < finalValue) {
+        const elapsedMs = performance.now() - audibleStartedAt;
+        await wait(Math.max(COUNTING_INTER_NUMBER_GAP_MS, targetStepMs - elapsedMs));
+      }
     }
     completed = true;
   } finally {
