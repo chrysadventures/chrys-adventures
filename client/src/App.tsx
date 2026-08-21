@@ -492,6 +492,11 @@ const DIGIT_LABELS: Record<Lang, readonly [string, string, string]> = {
   ms: ["Digit pertama", "Digit kedua", "Digit ketiga"],
 };
 
+const DIGIT_LABEL_AUDIO_FILES: Record<Lang, readonly [string, string, string]> = {
+  en: ["en-first-digit.mp3", "en-second-digit.mp3", "en-third-digit.mp3"],
+  ms: ["ms-digit-pertama.mp3", "ms-digit-kedua.mp3", "ms-digit-ketiga.mp3"],
+};
+
 const COMPARISON_AUDIO_FILES: Record<Lang, { greater: string; less: string }> = {
   en: {
     greater: "en-greater-than.mp3",
@@ -507,6 +512,7 @@ const BM_RECORDED_AUDIO_FILES = new Set<string>([
   ...Object.values(NUMBER_AUDIO_FILES.ms),
   ...Object.values(BANANA_TOTAL_AUDIO_FILES.ms),
   ...Object.values(MATH_CUE_AUDIO_FILES.ms ?? {}),
+  ...DIGIT_LABEL_AUDIO_FILES.ms,
   ...Object.values(COMPARISON_AUDIO_FILES.ms),
   ...Object.values(MS_OBJECT_TOTAL_AUDIO_FILES).flatMap((files) => Object.values(files)),
   ...Object.values(MS_OBJECT_NAME_AUDIO_FILES),
@@ -531,7 +537,6 @@ const CYBER_BACKGROUND_STYLE = {
   "--app-bg-mobile": `url("${BACKGROUND_BASE}advanced-sunset-bg-mobile.png")`,
 } as React.CSSProperties;
 const BASKET_SPRITE = `${SPRITE_BASE}basket.png`;
-const ADVANCED_BANANA_ICON = `${SPRITE_BASE}advanced-banana.png`;
 const OBJECT_SPRITES: Record<string, string> = {
   "\u{1F350}": `${SPRITE_BASE}pear.png`,
   "\u{1F349}": `${SPRITE_BASE}watermelon.png`,
@@ -2889,8 +2894,8 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
         >
           <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
-            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] shadow-inner">
-              <img src={ADVANCED_BANANA_ICON} alt="" className="h-20 w-20 rounded-[1.2rem] object-cover shadow-[0_0_18px_rgba(250,204,21,.35)]" />
+            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] p-1 shadow-inner">
+              <img src={chrysRunning} alt="" className="h-full w-full object-contain drop-shadow-[0_0_10px_rgba(250,204,21,.3)]" />
             </span>
             <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
             <span className="mt-2 block text-lg font-bold text-orange-50">{t.advancedAdventureShort}</span>
@@ -7383,6 +7388,7 @@ type DigitIntroStep = 0 | 1 | 2 | 3 | 4;
 function DigitLabelSequence({ lang }: { lang: Lang }) {
   const digits = [2, 5, 8];
   const labels = DIGIT_LABELS[lang];
+  const labelAudioFiles = DIGIT_LABEL_AUDIO_FILES[lang];
   const [activeIndex, setActiveIndex] = useState(-1);
   const [completedIndex, setCompletedIndex] = useState(-1);
   const [running, setRunning] = useState(false);
@@ -7404,8 +7410,17 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
 
     for (let index = 0; index < labels.length; index += 1) {
       if (runRef.current !== runId) return;
-      setActiveIndex(index);
-      await wait(prefersReducedMotion ? 250 : 650);
+      setActiveIndex(-1);
+      const played = await playRecordedVoiceFile(
+        labelAudioFiles[index],
+        () => {
+          if (runRef.current === runId) setActiveIndex(index);
+        },
+      );
+      if (!played) {
+        setActiveIndex(index);
+        await wait(prefersReducedMotion ? 250 : 650);
+      }
       if (runRef.current !== runId) return;
       setCompletedIndex(index);
     }
@@ -7458,10 +7473,10 @@ function DigitLabelSequence({ lang }: { lang: Lang }) {
           className="relative mx-auto mt-8 inline-flex items-center justify-center gap-3 rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-6 py-3 text-lg font-black text-slate-950 shadow-[0_6px_0_#0e7490] active:translate-y-1 disabled:opacity-70"
         >
           {running
-            ? (lang === "en" ? "Labeling digits..." : "Melabel digit...")
+            ? (lang === "en" ? "Playing the labels..." : "Memainkan label...")
             : completedIndex === labels.length - 1
-              ? (lang === "en" ? "Highlight the labels again" : "Serlahkan label sekali lagi")
-              : (lang === "en" ? "Highlight the labels" : "Serlahkan label")}
+              ? (lang === "en" ? "Hear and highlight the labels again" : "Dengar dan serlahkan label sekali lagi")
+              : (lang === "en" ? "Hear and highlight the labels" : "Dengar dan serlahkan label")}
           {!running && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 shadow-md" aria-hidden="true">
               <PointerIcon />
@@ -17628,6 +17643,8 @@ function preloadNumberAudioFiles() {
     ...Object.values(COMPARISON_AUDIO_FILES.ms),
     EN_OBJECT_TOTAL_AUDIO_FILES.total,
     ...Object.values(COUNT_PROMPT_AUDIO_FILES),
+    ...DIGIT_LABEL_AUDIO_FILES.en,
+    ...DIGIT_LABEL_AUDIO_FILES.ms,
     ...Object.values(EN_OBJECT_TOTAL_AUDIO_FILES.objects).flatMap(({ singular, plural }) => singular ? [singular, plural] : [plural]),
     ...Object.values(EN_OBJECT_TOTAL_PHRASE_AUDIO_FILES).flatMap((files) => Object.values(files)),
     ...Object.values(MS_OBJECT_TOTAL_AUDIO_FILES).flatMap((files) => Object.values(files)),
