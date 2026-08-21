@@ -60,6 +60,20 @@ const cacheLocalSave = (pin: string, save: GameSave) => {
   writeLocalSaves(pin, [save, ...saves.filter((item) => item.id !== save.id)]);
 };
 
+const removeLocalSave = (pin: string, saveId: string) => {
+  writeLocalSaves(pin, readLocalSaves(pin).filter((item) => item.id !== saveId));
+};
+
+const toSummary = ({ id, fileName, playerName, stars, updatedAt }: GameSave): GameSaveSummary => ({
+  id,
+  fileName,
+  playerName,
+  stars,
+  updatedAt,
+});
+
+const normalizedFileName = (fileName: string) => fileName.trim().toLocaleLowerCase();
+
 export class GameSaveApiError extends Error {
   status: number;
 
@@ -92,10 +106,64 @@ async function requestGameSaveApi<T>(payload: Record<string, unknown>): Promise<
   return result as T;
 }
 
+async function syncLocalSaves(
+  pin: string,
+  cloudSaves: GameSaveSummary[],
+): Promise<GameSaveSummary[]> {
+  let syncedSaves = [...cloudSaves];
+
+  for (const localSave of readLocalSaves(pin)) {
+    const cloudSave = syncedSaves.find((save) =>
+      save.id === localSave.id
+      || normalizedFileName(save.fileName) === normalizedFileName(localSave.fileName));
+    const localIsNewer = !cloudSave
+      || Date.parse(localSave.updatedAt) > Date.parse(cloudSave.updatedAt);
+
+    if (!localIsNewer) {
+      if (cloudSave && cloudSave.id !== localSave.id) removeLocalSave(pin, localSave.id);
+      continue;
+    }
+
+    try {
+      let cloudSaveId = cloudSave?.id;
+      if (!cloudSaveId) {
+        const created = await requestGameSaveApi<{ save: GameSave }>({
+          action: "create",
+          pin,
+          fileName: localSave.fileName,
+          playerName: localSave.playerName,
+          lang: localSave.lang,
+          soundEnabled: localSave.soundEnabled,
+        });
+        cloudSaveId = created.save.id;
+      }
+
+      const updated = await requestGameSaveApi<{ save: GameSave }>({
+        action: "save",
+        pin,
+        saveId: cloudSaveId,
+        player: localSave.player,
+        lang: localSave.lang,
+        soundEnabled: localSave.soundEnabled,
+      });
+      if (updated.save.id !== localSave.id) removeLocalSave(pin, localSave.id);
+      cacheLocalSave(pin, updated.save);
+      syncedSaves = [
+        toSummary(updated.save),
+        ...syncedSaves.filter((save) => save.id !== updated.save.id && save.id !== localSave.id),
+      ];
+    } catch {
+      // Keep the local copy and retry the migration the next time this PIN reconnects.
+    }
+  }
+
+  return syncedSaves.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+}
+
 export async function listGameSaves(pin: string): Promise<GameSaveSummary[]> {
   try {
     const result = await requestGameSaveApi<{ saves: GameSaveSummary[] }>({ action: "list", pin });
-    return result.saves;
+    return syncLocalSaves(pin, result.saves);
   } catch (error) {
     if (!isOfflineFallbackAllowed(pin, error)) throw error;
     return readLocalSaves(pin).map(({ id, fileName, playerName, stars, updatedAt }) => ({
