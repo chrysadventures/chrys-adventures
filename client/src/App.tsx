@@ -12340,13 +12340,19 @@ function AdditionBananaEquation({
                         : "gap-0"
                     }`}
                   >
-                    {resultMergeStage === "joining" && (
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/70 ring-8 ring-yellow-200/70 motion-safe:animate-ping"
-                      />
-                    )}
-                    {[a, b].map((subgroupCount, subgroupIndex) => {
+                    {resultMergeStage === "joined" ? (
+                      <div className="relative z-10 grid w-full place-items-center rounded-2xl border-2 border-transparent bg-transparent p-2 shadow-none animate-[fadeIn_.35s_ease-out]">
+                        {renderBananaRows(index, count)}
+                      </div>
+                    ) : (
+                      <>
+                        {resultMergeStage === "joining" && (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/70 ring-8 ring-yellow-200/70 motion-safe:animate-ping"
+                          />
+                        )}
+                        {[a, b].map((subgroupCount, subgroupIndex) => {
                       const countOffset = subgroupIndex === 0 ? 0 : a;
                       const subgroupFinished = visibleCounts[index] >= countOffset + subgroupCount;
                       const subgroupIsCurrent = activeBanana?.groupIndex === index
@@ -12364,7 +12370,7 @@ function AdditionBananaEquation({
                              <div
                                aria-hidden="true"
                                className={`relative z-20 grid justify-self-center overflow-hidden transition-[max-height,opacity,transform,padding] ease-out ${
-                                 resultMergeStage === "joining" || resultMergeStage === "joined"
+                                 resultMergeStage === "joining"
                                    ? "max-h-0 scale-50 p-0 opacity-0 duration-200"
                                    : "max-h-20 scale-100 p-2 opacity-100 duration-300"
                                }`}
@@ -12383,12 +12389,10 @@ function AdditionBananaEquation({
                           )}
                           <div
                                className={`relative z-10 grid w-full place-items-center rounded-2xl border-2 p-2 transition-[border-color,background-color,box-shadow,border-radius] duration-1000 ease-in-out ${
-                               resultMergeStage === "joined"
-                                 ? "border-transparent bg-transparent shadow-none"
-                                 : subgroupHighlighted
-                                   ? cyber
-                                     ? "border-yellow-300 bg-yellow-300/10 ring-4 ring-yellow-300/20 shadow-lg"
-                                     : "border-yellow-500 bg-yellow-50 ring-4 ring-yellow-200 shadow-lg"
+                               subgroupHighlighted
+                                    ? cyber
+                                      ? "border-yellow-300 bg-yellow-300/10 ring-4 ring-yellow-300/20 shadow-lg"
+                                      : "border-yellow-500 bg-yellow-50 ring-4 ring-yellow-200 shadow-lg"
                                    : subgroupIsCurrent
                                      ? cyber
                                        ? "border-cyan-300 bg-cyan-950/70 ring-2 ring-cyan-600/30"
@@ -12413,7 +12417,9 @@ function AdditionBananaEquation({
                           </div>
                         </React.Fragment>
                       );
-                    })}
+                        })}
+                      </>
+                    )}
                   </div>
                 ) : (
                   renderBananaRows(index, count)
