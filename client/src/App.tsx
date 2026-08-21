@@ -372,31 +372,40 @@ const EN_OBJECT_TOTAL_PHRASE_AUDIO_FILES: Record<string, Partial<Record<number, 
 };
 
 const MS_OBJECT_TOTAL_AUDIO_FILES: Record<string, Partial<Record<number, string>>> = {
+  "\u{1F333}": {
+    10: "10 pokok.mp3",
+  },
   "\u{1F343}": {
     1: "bm 1 daun.mp3",
     5: "bm 5 daun.mp3",
     9: "bm 9 daun.mp3",
+    12: "12 daun.mp3",
   },
   "\u{1FAA8}": {
     1: "bm 1 batu.mp3",
     5: "bm 5 batu.mp3",
     9: "bm 9 batu.mp3",
+    11: "11 batu.mp3",
   },
   "\u{1F96D}": {
     2: "bm 2 mangga.mp3",
     6: "bm 6 mangga.mp3",
+    16: "16 mangga.mp3",
   },
   "\u{1F338}": {
     2: "bm 2 bunga.mp3",
     6: "bm 6 bunga.mp3",
+    14: "14 bunga.mp3",
   },
   "\u{1F965}": {
     3: "bm 3 kelapa.mp3",
     7: "bm 7 kelapa.mp3",
+    15: "15 kelapa.mp3",
   },
   "\u{1F344}": {
     3: "bm 3 cendawan.mp3",
     7: "bm 7 cendawan.mp3",
+    13: "13 cendawan.mp3",
   },
   "\u{1F34E}": {
     4: "bm 4 epal.mp3",
@@ -405,6 +414,18 @@ const MS_OBJECT_TOTAL_AUDIO_FILES: Record<string, Partial<Record<number, string>
   "\u{1F34A}": {
     4: "bm 4 oren.mp3",
     8: "bm 8 oren.mp3",
+  },
+  "\u{2B50}": {
+    17: "17 bintang.mp3",
+  },
+  "\u{1F41A}": {
+    18: "18 cangkerang.mp3",
+  },
+  "\u{1F4D8}": {
+    19: "19 buku.mp3",
+  },
+  "\u{1F388}": {
+    20: "20 belon.mp3",
   },
 };
 
@@ -1171,30 +1192,18 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
       };
   }
   if (visual.kind === "sequence") {
-    const missingIndex = visual.nums.findIndex((n) => n === "?");
-    const before = visual.nums[missingIndex - 1];
-    const after = visual.nums[missingIndex + 1];
-    const knownAdjacentGaps = visual.nums.slice(1).flatMap((value, index) => {
-      const previous = visual.nums[index];
-      return typeof previous === "number" && typeof value === "number" ? [value - previous] : [];
-    });
-    const sequenceStep = knownAdjacentGaps.find((gap) => gap !== 0) ?? 1;
-    const reference = typeof before === "number" ? before : typeof after === "number" ? after : Number(answer) - sequenceStep;
-    const distance = Math.abs(Number(answer) - reference);
-    const directionEn = Number(answer) >= reference ? "right" : "left";
-    const directionMs = Number(answer) >= reference ? "kanan" : "kiri";
-    const stepWordEn = distance === 1 ? "step" : "steps";
+    const answerNumber = Number(answer);
+    const previous = answerNumber > 0 ? answerNumber - 1 : null;
+    const next = answerNumber < 9 ? answerNumber + 1 : null;
     return {
       en: [
-        `Find ${reference} on the full number line.`,
-        `Move ${distance} ${stepWordEn} ${directionEn} to ${answer}.`,
-        `The missing number is ${answer}.`,
-      ],
+        previous === null ? "" : `${answerNumber} is after ${previous}.`,
+        next === null ? "" : `${answerNumber} is before ${next}.`,
+      ].filter(Boolean),
       ms: [
-        `Cari ${reference} pada garis nombor penuh.`,
-        `Bergerak ${distance} langkah ke ${directionMs} hingga ${answer}.`,
-        `Nombor yang hilang ialah ${answer}.`,
-      ],
+        previous === null ? "" : `${answerNumber} selepas ${previous}.`,
+        next === null ? "" : `${answerNumber} sebelum ${next}.`,
+      ].filter(Boolean),
     };
   }
   if (visual.kind === "number") {
@@ -5438,7 +5447,7 @@ function SequenceNumberLine({ direction, lang, onComplete }: { direction: "ascen
 
   return (
     <section className="rounded-[2rem] border-2 border-cyan-300 bg-slate-950/85 p-4 sm:p-5">
-      <div className="overflow-x-auto pb-3" aria-label={lang === "en" ? `${direction} number line` : `garisan nombor ${direction === "ascending" ? "menaik" : "menurun"}`}>
+      <div className="cyber-scrollbar overflow-x-auto pb-3" aria-label={lang === "en" ? `${direction} number line` : `garisan nombor ${direction === "ascending" ? "menaik" : "menurun"}`}>
         <div className="mx-auto flex w-max min-w-full items-center justify-center gap-1">
           {values.map((value, index) => (
             <React.Fragment key={value}>
@@ -8615,18 +8624,23 @@ function SequencingLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDon
     },
     {
       title: lang === "en" ? "Missing numbers" : "Nombor hilang",
-      text: lang === "en" ? "Count from 0. What comes next?" : "Kira dari 0. Apa nombor lepas ni?",
-      visual: <MissingNumberTeaching lang={lang} nums={[0, 1, 2, "?", 4, 5, 6, 7, 8, 9]} answer={3} />,
+      text: lang === "en" ? "What number is ?" : "Apakah nombor ?",
+      visual: <MissingNumberTeaching key="missing-full-up" lang={lang} nums={[0, 1, 2, "?", 4, 5, 6, 7, 8, 9]} answer={3} />,
     },
     {
       title: lang === "en" ? "Missing number: count down" : "Nombor hilang: kira turun",
-      text: lang === "en" ? "Which number is missing?" : "Nombor apa yang hilang?",
-      visual: <MissingNumberPlacementActivity key="missing-down" lang={lang} sequence={[9, 8, "?", 6]} answer={7} choices={[5, 7, 8]} direction="descending" />,
+      text: lang === "en" ? "What number is ?" : "Apakah nombor ?",
+      visual: <MissingNumberTeaching key="missing-full-down" lang={lang} nums={[9, 8, "?", 6, 5, 4, 3, 2, 1, 0]} answer={7} />,
     },
     {
-      title: lang === "en" ? "Missing number: count up" : "Nombor hilang: kira naik",
-      text: lang === "en" ? "Which number is missing?" : "Nombor apa yang hilang?",
-      visual: <MissingNumberPlacementActivity key="missing-up" lang={lang} sequence={[5, 6, "?", 8]} answer={7} choices={[4, 7, 9]} direction="ascending" />,
+      title: lang === "en" ? "Short count-up example" : "Contoh pendek kira naik",
+      text: lang === "en" ? "What number is ?" : "Apakah nombor ?",
+      visual: <MissingNumberTeaching key="missing-short-up" lang={lang} nums={[5, 6, "?", 8]} answer={7} />,
+    },
+    {
+      title: lang === "en" ? "Short count-down example" : "Contoh pendek kira turun",
+      text: lang === "en" ? "What number is ?" : "Apakah nombor ?",
+      visual: <MissingNumberTeaching key="missing-short-down" lang={lang} nums={[9, 8, "?", 6]} answer={7} />,
     },
   ];
   const current = slides[step];
@@ -14872,6 +14886,7 @@ function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<num
   const numberSize = compact
     ? "h-7 w-7 text-xs sm:h-10 sm:w-10 sm:text-base md:h-12 md:w-12 lg:h-14 lg:w-14 lg:text-xl"
     : "h-8 w-8 text-sm sm:h-11 sm:w-11 sm:text-lg md:h-14 md:w-14 md:text-xl lg:h-16 lg:w-16 lg:text-2xl";
+  const arrowPosition = `${compact ? "top-2 sm:top-3 md:top-3 lg:top-4" : "top-2.5 sm:top-3.5 md:top-4 lg:top-5"} absolute left-[calc(100%+0.125rem)] z-20 h-3 w-3 -translate-x-1/2 text-emerald-700 sm:left-[calc(100%+0.375rem)] sm:h-4 sm:w-4 md:left-[calc(100%+0.875rem)] md:h-6 md:w-6 lg:left-[calc(100%+1rem)] xl:left-[calc(100%+1.25rem)]`;
 
   return (
     <div className="w-full overflow-hidden rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-2 pb-3 sm:p-5 sm:pb-4">
@@ -14886,9 +14901,9 @@ function NumberLineSequence({ nums, marked, arrow = "right" }: { nums: Array<num
           return (
           <div key={`${n}-${i}`} className="relative z-10 flex flex-col items-center">
             {i < nums.length - 1 && (arrow === "right" ? (
-              <ArrowRight className="absolute -right-2 top-2 z-20 h-3 w-3 text-emerald-700 sm:-right-3 sm:top-3 sm:h-4 sm:w-4 md:-right-6 md:h-6 md:w-6 lg:top-4" strokeWidth={3} aria-hidden="true" />
+              <ArrowRight className={arrowPosition} strokeWidth={3} aria-hidden="true" />
             ) : (
-              <ArrowLeft className="absolute -right-2 top-2 z-20 h-3 w-3 text-emerald-700 sm:-right-3 sm:top-3 sm:h-4 sm:w-4 md:-right-6 md:h-6 md:w-6 lg:top-4" strokeWidth={3} aria-hidden="true" />
+              <ArrowLeft className={arrowPosition} strokeWidth={3} aria-hidden="true" />
             ))}
             <div className={`mb-2 grid place-items-center rounded-full border-2 font-black shadow-[0_3px_0_rgba(15,23,42,.12)] sm:mb-3 sm:border-4 ${numberSize} ${missing ? "border-amber-500 bg-yellow-50 text-yellow-900" : selected ? "border-amber-500 bg-yellow-300 text-blue-950" : "border-sky-300 bg-white text-blue-950"}`}>{n}</div>
             <div className={`h-6 w-1.5 rounded-full sm:h-8 sm:w-2 md:h-9 md:w-2.5 ${missing || selected ? "bg-amber-500" : "bg-sky-500"}`} />
@@ -14914,32 +14929,17 @@ function sequenceReferenceValues(nums: Array<number | "?">) {
     : typeof after === "number"
       ? after - step
       : 0;
-  const reference = typeof before === "number" ? before : typeof after === "number" ? after : answer;
-  return { answer, reference };
+  return { answer };
 }
 
 function SequenceReferenceSolution({ nums, lang }: { nums: Array<number | "?">; lang: Lang }) {
-  const { answer, reference } = sequenceReferenceValues(nums);
-  const distance = Math.abs(answer - reference);
-  const direction = answer >= reference
-    ? (lang === "en" ? "right" : "kanan")
-    : (lang === "en" ? "left" : "kiri");
+  const { answer } = sequenceReferenceValues(nums);
+  const before = answer > 0 ? answer - 1 : null;
+  const after = answer < 9 ? answer + 1 : null;
   return (
     <div className="space-y-4">
-      <NumberLine marked={[reference, answer]} />
-      <div className="flex flex-wrap items-center justify-center gap-3 text-center font-black">
-        <span className="rounded-full border-2 border-sky-300 bg-sky-50 px-4 py-2 text-sky-900">
-          {lang === "en" ? `Start at ${reference}` : `Mula pada ${reference}`}
-        </span>
-        <span className="rounded-full border-2 border-amber-300 bg-amber-50 px-4 py-2 text-amber-900">
-          {lang === "en"
-            ? `Move ${distance} ${distance === 1 ? "step" : "steps"} ${direction}`
-            : `Bergerak ${distance} langkah ke ${direction}`}
-        </span>
-        <span className="rounded-full border-2 border-emerald-300 bg-emerald-50 px-4 py-2 text-emerald-900">
-          {lang === "en" ? `Answer: ${answer}` : `Jawapan: ${answer}`}
-        </span>
-      </div>
+      <NumberLine marked={answer} />
+      <NumberOrderRelationship before={before} answer={answer} after={after} lang={lang} />
     </div>
   );
 }
@@ -15411,7 +15411,7 @@ function TapRevealSequence({ lang }: { lang: Lang }) {
   );
 }
 
-function NumberOrderRelationship({ before, answer, after, lang }: { before: number; answer: number; after: number; lang: Lang }) {
+function NumberOrderRelationship({ before, answer, after, lang }: { before: number | null; answer: number; after: number | null; lang: Lang }) {
   const numberNode = (value: number, active = false) => (
     <div className="text-center">
       <span
@@ -15430,28 +15430,47 @@ function NumberOrderRelationship({ before, answer, after, lang }: { before: numb
     </div>
   );
 
-  const relationshipArrow = (label: string) => (
-    <div className="min-w-0 text-center">
-      <span className="mb-2 block text-xs font-black uppercase tracking-wide text-emerald-800 sm:text-sm">{label}</span>
-      <div className="flex items-center" aria-hidden="true">
-        <span className="h-1 flex-1 rounded-full bg-emerald-400" />
-        <ArrowRight className="-ml-1 h-7 w-7 shrink-0 text-emerald-600" strokeWidth={3.5} />
-      </div>
+  const relationshipArrow = () => (
+    <div className="mt-7 flex min-w-0 items-center sm:mt-9" aria-hidden="true">
+      <span className="h-1 flex-1 rounded-full bg-emerald-400" />
+      <ArrowRight className="-ml-1 h-7 w-7 shrink-0 text-emerald-600" strokeWidth={3.5} />
     </div>
   );
 
   return (
-    <div className="mt-3 rounded-3xl border-2 border-emerald-200 bg-white px-3 py-4 sm:px-6" aria-live="polite" aria-label={`${answer} ${lang === "en" ? "comes after" : "selepas"} ${before}. ${answer} ${lang === "en" ? "comes before" : "sebelum"} ${after}.`}>
-      <div className="grid grid-cols-[auto_minmax(4rem,1fr)_auto_minmax(4rem,1fr)_auto] items-center gap-2 sm:gap-4">
-        {numberNode(before)}
-        {relationshipArrow(lang === "en" ? `AFTER ${before}` : `SELEPAS ${before}`)}
-        {numberNode(answer, true)}
-        {relationshipArrow(lang === "en" ? `BEFORE ${after}` : `SEBELUM ${after}`)}
-        {numberNode(after)}
-      </div>
-      <div className="mt-4 flex flex-wrap justify-center gap-2 text-base font-black text-emerald-950 sm:text-lg">
-        <span className="rounded-full bg-emerald-100 px-4 py-2">{lang === "en" ? `${answer} comes after ${before}` : `${answer} selepas ${before}`}</span>
-        <span className="rounded-full bg-sky-100 px-4 py-2">{lang === "en" ? `${answer} comes before ${after}` : `${answer} sebelum ${after}`}</span>
+    <div
+      className="mt-3 rounded-3xl border-2 border-emerald-200 bg-white px-3 py-4 sm:px-6"
+      aria-live="polite"
+      aria-label={[
+        before === null ? "" : `${answer} ${lang === "en" ? "comes after" : "selepas"} ${before}.`,
+        after === null ? "" : `${answer} ${lang === "en" ? "comes before" : "sebelum"} ${after}.`,
+      ].filter(Boolean).join(" ")}
+    >
+      <div className={`grid gap-4 ${before !== null && after !== null ? "md:grid-cols-2" : "mx-auto max-w-2xl"}`}>
+        {before !== null && (
+          <section className="rounded-3xl border-2 border-emerald-200 bg-emerald-50/70 p-4">
+            <div className="grid grid-cols-[auto_minmax(3rem,1fr)_auto] items-start gap-3 sm:gap-4">
+              {numberNode(before)}
+              {relationshipArrow()}
+              {numberNode(answer, true)}
+            </div>
+            <p className="mt-4 rounded-full bg-emerald-100 px-4 py-2 text-center text-base font-black text-emerald-950 sm:text-lg">
+              {lang === "en" ? `${answer} is after ${before}` : `${answer} selepas ${before}`}
+            </p>
+          </section>
+        )}
+        {after !== null && (
+          <section className="rounded-3xl border-2 border-sky-200 bg-sky-50/70 p-4">
+            <div className="grid grid-cols-[auto_minmax(3rem,1fr)_auto] items-start gap-3 sm:gap-4">
+              {numberNode(answer, true)}
+              {relationshipArrow()}
+              {numberNode(after)}
+            </div>
+            <p className="mt-4 rounded-full bg-sky-100 px-4 py-2 text-center text-base font-black text-emerald-950 sm:text-lg">
+              {lang === "en" ? `${answer} is before ${after}` : `${answer} sebelum ${after}`}
+            </p>
+          </section>
+        )}
       </div>
     </div>
   );
@@ -15464,18 +15483,21 @@ function MissingNumberTeaching({ nums, answer, lang }: { nums: Array<number | "?
   const [activeValue, setActiveValue] = useState<number | null>(null);
   const teachingRunRef = useRef(0);
   const missingIndex = nums.findIndex((n) => n === "?");
-  const before = nums[missingIndex - 1];
-  const after = nums[missingIndex + 1];
+  const numericValues = nums.filter((value): value is number => typeof value === "number");
+  const descending = numericValues.length > 1 && numericValues[1] < numericValues[0];
+  const before = numericValues.includes(answer - 1) ? answer - 1 : null;
+  const after = numericValues.includes(answer + 1) ? answer + 1 : null;
   const visibleNums = revealed ? nums.map((n) => n === "?" ? answer : n) : nums;
   const countValues = nums.slice(0, missingIndex).filter((value): value is number => typeof value === "number");
   const countWords = countValues.map((value) => WORDS[lang][value]).join(", ");
+  const countStart = countValues[0];
   const resultText = countValues.length === 0
     ? (lang === "en"
       ? `Counting starts at zero. The missing number is ${answer}.`
       : `Kiraan bermula dengan kosong. Nombor yang hilang ialah ${answer}.`)
     : (lang === "en"
-      ? `Count from 0: ${countWords}... the next number is ${answer}.`
-      : `Kira dari 0: ${countWords}... nombor lepas ni ialah ${answer}.`);
+      ? `${descending ? "Count down" : "Count up"} from ${countStart}: ${countWords}... the missing number is ${answer}.`
+      : `${descending ? "Kira turun" : "Kira naik"} dari ${countStart}: ${countWords}... nombor yang hilang ialah ${answer}.`);
   const orderParts = [
     typeof before === "number" ? (lang === "en" ? `${answer} comes after ${before}.` : `${answer} selepas ${before}.`) : "",
     typeof after === "number" ? (lang === "en" ? `${answer} comes before ${after}.` : `${answer} sebelum ${after}.`) : "",
@@ -15553,9 +15575,7 @@ function MissingNumberTeaching({ nums, answer, lang }: { nums: Array<number | "?
           <p className="mt-3 text-xl font-black text-yellow-950" aria-live="polite">{resultText}</p>
         )}
         {finished && orderText && (
-          typeof before === "number" && typeof after === "number"
-            ? <NumberOrderRelationship before={before} answer={answer} after={after} lang={lang} />
-            : <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-lg font-black text-emerald-900" aria-live="polite">{orderText}</p>
+          <NumberOrderRelationship before={before} answer={answer} after={after} lang={lang} />
         )}
       </div>
     </div>

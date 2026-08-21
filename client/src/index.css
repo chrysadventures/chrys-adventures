@@ -291,6 +291,35 @@
     scrollbar-color: #0ea5e9 rgba(224, 242, 254, 0.8);
   }
 
+  .cyber-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #22d3ee #0f2940;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar {
+    height: 0.75rem;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-track {
+    border: 1px solid #155e75;
+    border-radius: 999px;
+    background: #0f2940;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-thumb {
+    border: 2px solid #0f2940;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #0891b2, #22d3ee);
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #06b6d4, #67e8f9);
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-button {
+    display: none;
+  }
+
   .learning-stage-band {
     position: relative;
     padding: 1.5rem;
