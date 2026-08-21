@@ -5406,6 +5406,7 @@ function SequencingAnchorPhase({ lang, onComplete }: { lang: Lang; onComplete: (
 
 function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang: Lang; onComplete: () => void }) {
   const total = base + 1;
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [stage, setStage] = useState<"ready" | "countingBase" | "baseCounted" | "plus" | "one" | "equals" | "counting" | "combining" | "done">("ready");
   const [visibleBase, setVisibleBase] = useState(0);
   const [visibleTotal, setVisibleTotal] = useState(0);
