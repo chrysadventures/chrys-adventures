@@ -5169,7 +5169,7 @@ function SequencingBananaBox({ count, visibleCount = count, label, activeIndex =
 
   return (
     <div className="flex h-40 w-full min-w-0 flex-col justify-center rounded-[1.65rem] border-2 border-cyan-400 bg-slate-950/90 px-3 py-3 shadow-[inset_0_0_24px_rgba(34,211,238,.12),0_5px_0_#164e63] sm:h-44 sm:px-5">
-      {label && <p className="mb-2 text-center text-base font-black uppercase tracking-wide text-cyan-100">{label}</p>}
+      {label && <p className="mb-3 text-center text-base font-black uppercase tracking-wide text-cyan-100">{label}</p>}
       {interleavedRows ? (
         <div className="mx-auto grid w-fit grid-flow-col grid-rows-2 content-center gap-x-1.5 gap-y-4 sm:gap-x-3 sm:gap-y-5">
           {Array.from({ length: count }, (_, index) => renderBanana(index))}
@@ -5329,7 +5329,16 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
         />
         <span className={`grid h-16 w-16 place-items-center justify-self-center rounded-2xl border-2 text-5xl font-black transition-all duration-300 ${stage === "plus" ? "scale-125 border-yellow-200 bg-yellow-300 text-slate-950 shadow-[0_0_24px_rgba(250,204,21,.75)]" : "border-cyan-700 bg-slate-950 text-yellow-300"}`} aria-label={lang === "en" ? "plus" : "tambah"}>+</span>
         <div>
-          <SequencingBananaBox count={1} visibleCount={showOne ? 1 : 0} activeIndex={stage === "one" ? 0 : null} showFuture label={lang === "en" ? "1 more" : "1 lagi"} />
+          <SequencingBananaBox
+            count={1}
+            visibleCount={showOne ? 1 : 0}
+            activeIndex={stage === "one" || (stage === "counting" && visibleTotal === total) ? 0 : null}
+            showFuture
+            showCountLabels
+            countLabelThrough={stage === "counting" ? countedInOne : showOne ? 1 : 0}
+            countLabelStart={stage === "counting" ? total : 1}
+            label={lang === "en" ? "1 more" : "1 lagi"}
+          />
         </div>
       </div>
 
