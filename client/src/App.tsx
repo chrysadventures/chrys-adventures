@@ -17,6 +17,7 @@ import {
   Map as MapIcon,
   Minus,
   Plus,
+  RefreshCw,
   Search,
   Sparkles,
   Star,
@@ -2309,9 +2310,35 @@ function GameFileScreen({
   const [fileName, setFileName] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [busySaveId, setBusySaveId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => setSaves(initialSaves), [initialSaves]);
+
+  const refreshSaves = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setRefreshing(true);
+    try {
+      setSaves(await listGameSaves(pin));
+      setError("");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not refresh the game files.");
+    } finally {
+      if (showSpinner) setRefreshing(false);
+    }
+  }, [pin]);
+
+  useEffect(() => {
+    void refreshSaves(false);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refreshSaves(false);
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [refreshSaves]);
 
   const copy = lang === "en"
     ? {
@@ -2330,6 +2357,9 @@ function GameFileScreen({
         changePin: "Use a different PIN",
         stars: "stars",
         lastPlayed: "Last played",
+        cloudHelp: "Every game saved with this PIN is available here on any connected device.",
+        refresh: "Refresh games",
+        refreshing: "Refreshing...",
         language: "BM",
       }
     : {
@@ -2348,6 +2378,9 @@ function GameFileScreen({
         changePin: "Gunakan PIN lain",
         stars: "bintang",
         lastPlayed: "Kali terakhir dimainkan",
+        cloudHelp: "Setiap permainan yang disimpan dengan PIN ini tersedia di sini pada mana-mana peranti yang bersambung.",
+        refresh: "Muat semula permainan",
+        refreshing: "Sedang memuat semula...",
         language: "EN",
       };
 
@@ -2419,6 +2452,16 @@ function GameFileScreen({
               <p className="mt-2 text-sm font-black uppercase tracking-[0.18em] text-emerald-700">{copy.eyebrow}</p>
               <h1 className="mt-2 text-3xl font-black text-blue-950 sm:text-4xl">{copy.title}</h1>
               <p className="mt-2 text-base font-bold text-slate-600 sm:text-lg">{copy.help}</p>
+              <p className="mx-auto mt-3 max-w-2xl rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800">{copy.cloudHelp}</p>
+              <button
+                type="button"
+                onClick={() => void refreshSaves()}
+                disabled={refreshing || Boolean(busySaveId)}
+                className="mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-sky-300 bg-white px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_#7dd3fc] disabled:cursor-not-allowed disabled:opacity-60 enabled:active:translate-y-1"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+                {refreshing ? copy.refreshing : copy.refresh}
+              </button>
             </div>
 
             {error && <p role="alert" className="mx-auto mt-5 max-w-2xl rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-center text-sm font-black text-red-800">{error}</p>}
