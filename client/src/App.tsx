@@ -13406,7 +13406,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore, testingMode = false 
   ];
 
   return (
-    <main className="mx-auto w-full max-w-5xl pb-8">
+    <main className="cyber-lesson-panel mx-auto w-full max-w-6xl rounded-[2.25rem] p-4 sm:p-6">
       <section className="relative mb-5 overflow-hidden rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950 to-emerald-950 p-6 text-center shadow-[0_9px_0_#083344]">
         <span className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(34,211,238,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.2)_1px,transparent_1px)] [background-size:26px_26px]" aria-hidden="true" />
         <div className="relative">
