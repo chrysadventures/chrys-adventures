@@ -113,6 +113,7 @@ type Visual =
   | { kind: "groupChoices"; emoji: string; groups: number[]; audioValue?: number }
   | { kind: "groupObserve"; emoji: string; count: number }
   | { kind: "groupMake"; emoji: string; count: number }
+  | { kind: "groupBuildMany"; emoji: string; counts: number[] }
   | { kind: "groupTwo"; emoji: string; a: number; b: number }
   | { kind: "groupCompare"; emoji: string; a: number; b: number; ask: "same" | "more" | "fewer" }
   | { kind: "groupCombine"; emoji: string; a: number; b: number }
@@ -142,7 +143,7 @@ type Question = {
   answer: number | string;
   visual: Visual;
   method: Record<Lang, string[]>;
-  inputMode?: "choice" | "keypad" | "makeGroup" | "buildTotal" | "tapObjects" | "takeAway" | "buildTeen" | "makeTenBuild" | "carryBuild" | "borrowSubtract";
+  inputMode?: "choice" | "keypad" | "makeGroup" | "makeGroups" | "buildTotal" | "tapObjects" | "takeAway" | "buildTeen" | "makeTenBuild" | "carryBuild" | "borrowSubtract";
 };
 
 const DONT_KNOW_ANSWER = "__dont_know__";
@@ -642,7 +643,7 @@ const UI = {
     learnOperations: "Operations",
     learnOperationsShort: "Learning + and -",
     groupingMode: "Grouping Mode",
-    groupingModeShort: "Put groups together",
+    groupingModeShort: "Make and count separate groups",
     addition: "Addition",
     subtraction: "Subtraction",
     learnReal: "Real World",
@@ -706,7 +707,7 @@ const UI = {
     learnOperations: "Operasi",
     learnOperationsShort: "Belajar + dan -",
     groupingMode: "Kumpulan Nombor",
-    groupingModeShort: "Gabungkan kumpulan",
+    groupingModeShort: "Bina dan kira kumpulan berasingan",
     addition: "Tambah",
     subtraction: "Tolak",
     learnReal: "Menaplikasi Konsep",
@@ -1261,10 +1262,16 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
   if (visual.kind === "compareGroups") {
     const more = Math.max(visual.a, visual.b);
     const fewer = Math.min(visual.a, visual.b);
+    const moreGroup = visual.a > visual.b ? "Group A" : "Group B";
+    const fewerGroup = visual.a < visual.b ? "Group A" : "Group B";
+    const moreGroupMs = visual.a > visual.b ? "Kumpulan A" : "Kumpulan B";
+    const fewerGroupMs = visual.a < visual.b ? "Kumpulan A" : "Kumpulan B";
+    const moreEmoji = visual.a > visual.b ? visual.emojiA : visual.emojiB;
+    const fewerEmoji = visual.a < visual.b ? visual.emojiA : visual.emojiB;
     return visual.ask === "more"
       ? {
-        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a} ${objectName(visual.emojiA, visual.a, "en")}. Group B has ${visual.b} ${objectName(visual.emojiB, visual.b, "en")}.`, `${more} is more.`],
-        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a} ${objectName(visual.emojiA, visual.a, "ms")}. Kumpulan B ada ${visual.b} ${objectName(visual.emojiB, visual.b, "ms")}.`, `${more} lebih banyak.`],
+        en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a} ${objectName(visual.emojiA, visual.a, "en")}. Group B has ${visual.b} ${objectName(visual.emojiB, visual.b, "en")}.`, `${more} ${objectName(moreEmoji, more, "en")} is more than ${fewer} ${objectName(fewerEmoji, fewer, "en")}.`, `${moreGroup} has more ${objectName(moreEmoji, more, "en")} than ${fewerGroup}.`],
+        ms: ["Kira Kumpulan A.", "Kira Kumpulan B.", `Kumpulan A ada ${visual.a} ${objectName(visual.emojiA, visual.a, "ms")}. Kumpulan B ada ${visual.b} ${objectName(visual.emojiB, visual.b, "ms")}.`, `${more} ${objectName(moreEmoji, more, "ms")} lebih banyak daripada ${fewer} ${objectName(fewerEmoji, fewer, "ms")}.`, `${moreGroupMs} mempunyai lebih banyak ${objectName(moreEmoji, more, "ms")} daripada ${fewerGroupMs}.`],
       }
       : {
         en: ["Count Group A.", "Count Group B.", `Group A has ${visual.a} ${objectName(visual.emojiA, visual.a, "en")}. Group B has ${visual.b} ${objectName(visual.emojiB, visual.b, "en")}.`, `${fewer} is less.`],
@@ -1284,6 +1291,14 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
       ms: [`Kira ${objectName(visual.emoji, count, "ms")}.`, `Kumpulan ini ada ${count} ${objectName(visual.emoji, count, "ms")}.`],
     };
   }
+  if (visual.kind === "groupBuildMany") {
+    const englishGroups = visual.counts.map((count, index) => `Group ${index + 1} has ${count} ${objectName(visual.emoji, count, "en")}.`);
+    const malayGroups = visual.counts.map((count, index) => `Kumpulan ${index + 1} ada ${count} ${objectName(visual.emoji, count, "ms")}.`);
+    return {
+      en: ["Keep every group separate.", ...englishGroups],
+      ms: ["Pastikan setiap kumpulan berasingan.", ...malayGroups],
+    };
+  }
   if (visual.kind === "groupTwo") {
     return {
       en: [`Group 1 has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group 2 has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, "Keep the groups apart."],
@@ -1300,10 +1315,14 @@ function buildMethod(visual: Visual, answer: number | string): Record<Lang, stri
     }
     const more = visual.a > visual.b ? "Group A" : "Group B";
     const fewer = visual.a < visual.b ? "Group A" : "Group B";
+    const moreMs = visual.a > visual.b ? "Kumpulan A" : "Kumpulan B";
+    const fewerMs = visual.a < visual.b ? "Kumpulan A" : "Kumpulan B";
+    const largerCount = Math.max(visual.a, visual.b);
+    const smallerCount = Math.min(visual.a, visual.b);
     return visual.ask === "more"
       ? {
-        en: [`Group A has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group B has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, `${more} has more.`],
-        ms: [`Kumpulan A ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, `Kumpulan B ada ${visual.b} ${objectName(visual.emoji, visual.b, "ms")}.`, `${more} lebih banyak.`],
+        en: [`Group A has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group B has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, `${largerCount} bananas is more than ${smallerCount} bananas.`, `${more} has more bananas than ${fewer}.`],
+        ms: [`Kumpulan A ada ${visual.a} ${objectName(visual.emoji, visual.a, "ms")}.`, `Kumpulan B ada ${visual.b} ${objectName(visual.emoji, visual.b, "ms")}.`, `${largerCount} pisang lebih banyak daripada ${smallerCount} pisang.`, `${moreMs} mempunyai lebih banyak pisang daripada ${fewerMs}.`],
       }
       : {
         en: [`Group A has ${visual.a} ${objectName(visual.emoji, visual.a, "en")}.`, `Group B has ${visual.b} ${objectName(visual.emoji, visual.b, "en")}.`, `${fewer} has fewer.`],
@@ -2215,7 +2234,7 @@ function LessonCompletionScreen({ lang, sectionName, onContinue, cyber = false }
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center pb-8" aria-live="polite">
       <section className={`relative w-full overflow-hidden rounded-[2.5rem] border-4 p-6 text-center sm:p-10 ${cyber ? "border-yellow-300 bg-gradient-to-br from-slate-950 via-emerald-950 to-cyan-950 shadow-[0_12px_0_#083344,0_0_42px_rgba(250,204,21,.28)]" : "border-yellow-300 bg-gradient-to-br from-yellow-50 via-white to-emerald-50 shadow-[0_12px_0_rgba(161,98,7,.25),0_0_40px_rgba(250,204,21,.3)]"}`}>
-        <CorrectCelebration />
+        <CorrectCelebration playSound={false} />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(250,204,21,.3),transparent_38%)]" aria-hidden="true" />
         <div className="relative">
           <span className={`mx-auto inline-flex items-center gap-2 rounded-full border-2 px-5 py-2 text-sm font-black uppercase tracking-widest ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950" : "border-emerald-600 bg-emerald-600 text-white"}`}>
@@ -8726,34 +8745,37 @@ type NewGroupingActivity =
   | { kind: "observe"; count: number; emoji: string }
   | { kind: "makeOne"; target: number; emoji: string }
   | { kind: "makeTwo"; a: number; b: number; emoji: string }
-  | { kind: "makeThree"; a: number; b: number; c: number; emoji: string }
-  | { kind: "same"; a: number; b: number; emoji: string }
-  | { kind: "more"; a: number; b: number; emoji: string }
-  | { kind: "combine"; a: number; b: number; emoji: string };
+  | { kind: "makeThree"; a: number; b: number; c: number; emoji: string };
 
 const GROUPING_LESSON_STEPS: NewGroupingActivity[] = [
   { kind: "observe", count: 3, emoji: "🍌" },
-  { kind: "makeOne", target: 2, emoji: "🍌" },
-  { kind: "makeOne", target: 3, emoji: "🍌" },
+  { kind: "makeOne", target: 0, emoji: "🍌" },
+  { kind: "makeOne", target: 4, emoji: "🍌" },
+  { kind: "makeOne", target: 7, emoji: "🍌" },
+  { kind: "makeOne", target: 9, emoji: "🍌" },
   { kind: "makeTwo", a: 2, b: 3, emoji: "🍌" },
-  { kind: "makeThree", a: 2, b: 3, c: 4, emoji: "🍌" },
-  { kind: "same", a: 3, b: 3, emoji: "🍌" },
-  { kind: "more", a: 3, b: 5, emoji: "🍌" },
-  { kind: "combine", a: 1, b: 1, emoji: "🍌" },
-  { kind: "combine", a: 1, b: 2, emoji: "🍌" },
-  { kind: "combine", a: 2, b: 2, emoji: "🍌" },
-  { kind: "combine", a: 2, b: 3, emoji: "🍌" },
-  { kind: "combine", a: 3, b: 3, emoji: "🍌" },
-  { kind: "combine", a: 3, b: 4, emoji: "🍌" },
-  { kind: "combine", a: 4, b: 5, emoji: "🍌" },
+  { kind: "makeTwo", a: 0, b: 8, emoji: "🍌" },
+  { kind: "makeTwo", a: 6, b: 5, emoji: "🍌" },
+  { kind: "makeThree", a: 1, b: 4, c: 7, emoji: "🍌" },
+  { kind: "makeThree", a: 2, b: 6, c: 9, emoji: "🍌" },
 ];
 
 const fullGroupingPracticeQuestions: Question[] = [
-  q("group-practice-make-2", "numbers", { en: "Make a group of 2 bananas.", ms: "Bina kumpulan 2 pisang." }, [], 2, { kind: "groupMake", emoji: "🍌", count: 2 }, "makeGroup"),
-  q("group-practice-make-4", "numbers", { en: "Make a group of 4 bananas.", ms: "Bina kumpulan 4 pisang." }, [], 4, { kind: "groupMake", emoji: "🍌", count: 4 }, "makeGroup"),
-  q("group-practice-2-3", "numbers", { en: "What is the total of 2 bananas and 3 bananas?", ms: "Berapakah jumlah 2 pisang dan 3 pisang?" }, [4, 5, 6], 5, { kind: "groupCombine", emoji: "🍌", a: 2, b: 3 }),
-  q("group-practice-3-4", "numbers", { en: "What is the total of 3 bananas and 4 bananas?", ms: "Berapakah jumlah 3 pisang dan 4 pisang?" }, [6, 7, 8], 7, { kind: "groupCombine", emoji: "🍌", a: 3, b: 4 }),
-  q("group-practice-more", "numbers", { en: "Which banana group has more?", ms: "Kumpulan pisang mana lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
+  q("group-practice-count-1", "numbers", { en: "How many bananas are in Group 1?", ms: "Berapakah pisang dalam Kumpulan 1?" }, [2, 4, 6, 7], 4, { kind: "groupTwo", emoji: "🍌", a: 4, b: 7 }),
+  q("group-practice-count-2", "numbers", { en: "How many bananas are in Group 2?", ms: "Berapakah pisang dalam Kumpulan 2?" }, [3, 5, 6, 8], 8, { kind: "groupTwo", emoji: "🍌", a: 3, b: 8 }),
+  q("group-practice-count-3", "numbers", { en: "Count Group 1 separately. How many bananas are there?", ms: "Kira Kumpulan 1 secara berasingan. Berapakah pisang?" }, [0, 1, 2, 5], 1, { kind: "groupTwo", emoji: "🍌", a: 1, b: 5 }),
+  q("group-practice-count-4", "numbers", { en: "Count Group 2 separately. How many bananas are there?", ms: "Kira Kumpulan 2 secara berasingan. Berapakah pisang?" }, [4, 6, 7, 9], 6, { kind: "groupTwo", emoji: "🍌", a: 9, b: 6 }),
+  q("group-practice-more-3-5", "numbers", { en: "Which banana group has more?", ms: "Kumpulan pisang manakah lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "groupCompare", emoji: "🍌", a: 3, b: 5, ask: "more" }),
+  q("group-practice-more-8-4", "numbers", { en: "Which banana group has more?", ms: "Kumpulan pisang manakah lebih banyak?" }, ["Group A", "Group B"], "Group A", { kind: "groupCompare", emoji: "🍌", a: 8, b: 4, ask: "more" }),
+  q("group-practice-more-2-7", "numbers", { en: "Which banana group has more?", ms: "Kumpulan pisang manakah lebih banyak?" }, ["Group A", "Group B"], "Group B", { kind: "groupCompare", emoji: "🍌", a: 2, b: 7, ask: "more" }),
+  q("group-practice-make-0", "numbers", { en: "Make a group of 0 bananas.", ms: "Bina kumpulan 0 pisang." }, [], 0, { kind: "groupMake", emoji: "🍌", count: 0 }, "makeGroup"),
+  q("group-practice-make-5", "numbers", { en: "Make a group of 5 bananas.", ms: "Bina kumpulan 5 pisang." }, [], 5, { kind: "groupMake", emoji: "🍌", count: 5 }, "makeGroup"),
+  q("group-practice-make-9", "numbers", { en: "Make a group of 9 bananas.", ms: "Bina kumpulan 9 pisang." }, [], 9, { kind: "groupMake", emoji: "🍌", count: 9 }, "makeGroup"),
+  q("group-practice-build-two-2-7", "numbers", { en: "Make Group 1 with 2 bananas and Group 2 with 7 bananas.", ms: "Bina Kumpulan 1 dengan 2 pisang dan Kumpulan 2 dengan 7 pisang." }, [], "2,7", { kind: "groupBuildMany", emoji: "🍌", counts: [2, 7] }, "makeGroups"),
+  q("group-practice-build-two-4-8", "numbers", { en: "Make two separate groups: 4 bananas and 8 bananas.", ms: "Bina dua kumpulan berasingan: 4 pisang dan 8 pisang." }, [], "4,8", { kind: "groupBuildMany", emoji: "🍌", counts: [4, 8] }, "makeGroups"),
+  q("group-practice-build-three-1-3-6", "numbers", { en: "Make 3 separate groups with 1, 3, and 6 bananas.", ms: "Bina 3 kumpulan berasingan dengan 1, 3, dan 6 pisang." }, [], "1,3,6", { kind: "groupBuildMany", emoji: "🍌", counts: [1, 3, 6] }, "makeGroups"),
+  q("group-practice-build-three-0-4-9", "numbers", { en: "Make 3 separate groups with 0, 4, and 9 bananas.", ms: "Bina 3 kumpulan berasingan dengan 0, 4, dan 9 pisang." }, [], "0,4,9", { kind: "groupBuildMany", emoji: "🍌", counts: [0, 4, 9] }, "makeGroups"),
+  q("group-practice-build-three-2-5-8", "numbers", { en: "Make 3 separate groups with 2, 5, and 8 bananas.", ms: "Bina 3 kumpulan berasingan dengan 2, 5, dan 8 pisang." }, [], "2,5,8", { kind: "groupBuildMany", emoji: "🍌", counts: [2, 5, 8] }, "makeGroups"),
 ];
 
 function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
@@ -8838,11 +8860,11 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
 
   return (
     <main className="mx-auto w-full max-w-4xl pb-8">
-      {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} />}
+      {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} playSound={false} />}
       <LessonShell
         lang={lang}
         title={t.groupingMode}
-        helper={lang === "en" ? "Make groups. Count groups. Then put groups together." : "Bina kumpulan. Kira kumpulan. Kemudian gabungkan."}
+        helper={lang === "en" ? "Make groups. Count each group separately." : "Bina kumpulan. Kira setiap kumpulan secara berasingan."}
       >
         <div className="mb-4 grid gap-3 md:grid-cols-[auto_1fr] md:items-center">
           <img src={chrysHappy} alt="Chrys" className="mx-auto h-28 w-28 object-contain" />
@@ -8930,9 +8952,7 @@ function getNewGroupingMaxStep(activity: NewGroupingActivity) {
   if (activity.kind === "observe") return 2;
   if (activity.kind === "makeOne") return 1;
   if (activity.kind === "makeTwo") return 4;
-  if (activity.kind === "makeThree") return 6;
-  if (activity.kind === "combine") return 5;
-  return 2;
+  return 6;
 }
 
 function getActiveGroupingTarget(activity: NewGroupingActivity, step: number) {
@@ -8989,33 +9009,14 @@ function getNewGroupingInstruction(activity: NewGroupingActivity, step: number, 
       ? `You made 3 groups: ${activity.a}, ${activity.b}, and ${activity.c} ${objectName(activity.emoji, activity.c, "en")}.`
       : `Anda membina 3 kumpulan: ${activity.a}, ${activity.b}, dan ${activity.c} ${objectName(activity.emoji, activity.c, "ms")}.`;
   }
-  if (activity.kind === "same") {
-    if (step === 0) return lang === "en" ? "Look at both groups." : "Lihat dua kumpulan.";
-    if (step === 1) return lang === "en" ? "Count each group." : "Kira setiap kumpulan.";
-    return activity.a === activity.b
-      ? (lang === "en" ? "The groups are the same." : "Kumpulan ini sama.")
-      : (lang === "en" ? "The groups are different." : "Kumpulan ini berbeza.");
-  }
-  if (activity.kind === "more") {
-    if (step === 0) return lang === "en" ? "Look at both groups." : "Lihat dua kumpulan.";
-    if (step === 1) return lang === "en" ? "Count each group." : "Kira setiap kumpulan.";
-    return activity.a > activity.b
-      ? (lang === "en" ? "Group A has more." : "Kumpulan A lebih banyak.")
-      : (lang === "en" ? "Group B has more." : "Kumpulan B lebih banyak.");
-  }
-  if (step === 0) return lang === "en" ? `Group 1 has ${activity.a} ${objectName(activity.emoji, activity.a, "en")}.` : `Kumpulan 1 ada ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}.`;
-  if (step === 1) return lang === "en" ? "Count Group 1." : "Kira Kumpulan 1.";
-  if (step === 2) return lang === "en" ? `Group 2 has ${activity.b} ${objectName(activity.emoji, activity.b, "en")}.` : `Kumpulan 2 ada ${activity.b} ${objectName(activity.emoji, activity.b, "ms")}.`;
-  if (step === 3) return lang === "en" ? "Put the groups together." : "Gabungkan kumpulan.";
-  if (step === 4) return lang === "en" ? "Count them all." : "Kira semuanya.";
-  return lang === "en" ? `${activity.a} ${objectName(activity.emoji, activity.a, "en")} and ${activity.b} ${objectName(activity.emoji, activity.b, "en")} make ${activity.a + activity.b} ${objectName(activity.emoji, activity.a + activity.b, "en")}.` : `${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} menjadi ${activity.a + activity.b} ${objectName(activity.emoji, activity.a + activity.b, "ms")}.`;
+  return "";
 }
 
 function NewGroupingLessonVisual({ activity, step, groupA, groupB, groupC, lang }: { activity: NewGroupingActivity; step: number; groupA: number; groupB: number; groupC: number; lang: Lang }) {
   if (activity.kind === "observe") {
     return (
       <div className="space-y-4">
-        <GroupingTray count={activity.count} emoji={activity.emoji} counted={step >= 1} lang={lang} />
+        <GroupingTray count={activity.count} emoji={activity.emoji} counted={step >= 1} announceTotal lang={lang} />
         {step === 2 && <GroupingAnswerLine text={lang === "en" ? `${activity.count} bananas are in this group.` : `${activity.count} pisang dalam kumpulan ini.`} />}
       </div>
     );
@@ -9023,7 +9024,7 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, groupC, lang 
   if (activity.kind === "makeOne") {
     return (
       <div className="space-y-4">
-        <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={step >= 1 ? activity.target : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
+        <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={step >= 1 ? activity.target : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} announceTotal lang={lang} />
         {step >= 1 && <GroupingAnswerLine text={lang === "en" ? `This group has ${activity.target} ${objectName(activity.emoji, activity.target, "en")}.` : `Kumpulan ini ada ${activity.target} ${objectName(activity.emoji, activity.target, "ms")}.`} />}
       </div>
     );
@@ -9038,8 +9039,8 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, groupC, lang 
     return (
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
-          <GroupingTray label={groupOneLabel} count={step >= 1 ? activity.a : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} lang={lang} />
-          <GroupingTray label={groupTwoLabel} count={step >= 3 ? activity.b : groupB} emoji={activity.emoji} counted={step >= 3} active={step === 2} lang={lang} />
+          <GroupingTray label={groupOneLabel} count={step >= 1 ? activity.a : groupA} emoji={activity.emoji} counted={step >= 1} active={step === 0} announceTotal lang={lang} />
+          <GroupingTray label={groupTwoLabel} count={step >= 3 ? activity.b : groupB} emoji={activity.emoji} counted={step >= 3} active={step === 2} announceTotal lang={lang} />
         </div>
         {step >= 4 && <GroupingAnswerLine text={lang === "en" ? `Each group has its own number.` : `Setiap kumpulan ada nombor sendiri.`} />}
       </div>
@@ -9063,6 +9064,7 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, groupC, lang 
               emoji={activity.emoji}
               counted={step >= completedSteps[index]}
               active={step === activeSteps[index]}
+              announceTotal
               lang={lang}
             />
           ))}
@@ -9071,49 +9073,17 @@ function NewGroupingLessonVisual({ activity, step, groupA, groupB, groupC, lang 
       </div>
     );
   }
-  if (activity.kind === "same" || activity.kind === "more") {
-    const result = activity.kind === "same"
-      ? (activity.a === activity.b ? (lang === "en" ? `Yes. Both groups have ${activity.a} ${objectName(activity.emoji, activity.a, "en")}.` : `Ya. Kedua-dua kumpulan ada ${activity.a} ${objectName(activity.emoji, activity.a, "ms")}.`) : (lang === "en" ? `${activity.a} ${objectName(activity.emoji, activity.a, "en")} and ${activity.b} ${objectName(activity.emoji, activity.b, "en")} are different.` : `${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} berbeza.`))
-      : (activity.a > activity.b ? (lang === "en" ? "Group A has more." : "Kumpulan A lebih banyak.") : (lang === "en" ? "Group B has more." : "Kumpulan B lebih banyak."));
-    return (
-      <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <GroupingTray label="Group A" count={activity.a} emoji={activity.emoji} counted={step >= 1} lang={lang} />
-          <GroupingTray label="Group B" count={activity.b} emoji={activity.emoji} counted={step >= 1} lang={lang} />
-        </div>
-        {step >= 2 && <GroupingAnswerLine text={result} />}
-      </div>
-    );
-  }
-  const total = activity.a + activity.b;
-  return (
-    <div className="space-y-4">
-      {step < 3 ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={activity.a} emoji={activity.emoji} counted={step >= 1} lang={lang} />
-          <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={activity.b} emoji={activity.emoji} counted={step >= 2} lang={lang} />
-        </div>
-      ) : (
-        <GroupingTray label={lang === "en" ? "One big group" : "Satu kumpulan besar"} count={total} emoji={activity.emoji} counted={step >= 4} lang={lang} />
-      )}
-      {step === 3 && <GroupingAnswerLine text={lang === "en" ? "The groups move into one big group." : "Kumpulan bergerak menjadi satu kumpulan besar."} />}
-      {step === 5 && (
-        <div className="rounded-3xl border-2 border-emerald-200 bg-white p-4 text-center">
-          <p className="text-2xl font-black text-emerald-900">{lang === "en" ? `${activity.a} ${objectName(activity.emoji, activity.a, "en")} and ${activity.b} ${objectName(activity.emoji, activity.b, "en")} make ${total} ${objectName(activity.emoji, total, "en")}.` : `${activity.a} ${objectName(activity.emoji, activity.a, "ms")} dan ${activity.b} ${objectName(activity.emoji, activity.b, "ms")} menjadi ${total} ${objectName(activity.emoji, total, "ms")}.`}</p>
-          <p className="mt-2 text-4xl font-black text-blue-950">{activity.a} + {activity.b} = {total}</p>
-        </div>
-      )}
-    </div>
-  );
+  return null;
 }
 
-function GroupingTray({ label, count, emoji, counted, active = false, lang }: { label?: string; count: number; emoji: string; counted: boolean; active?: boolean; lang: Lang }) {
+function GroupingTray({ label, count, emoji, counted, active = false, announceTotal = false, lang }: { label?: string; count: number; emoji: string; counted: boolean; active?: boolean; announceTotal?: boolean; lang: Lang }) {
   const [currentCount, setCurrentCount] = useState(0);
   const [countComplete, setCountComplete] = useState(false);
   const finishCounting = useCallback(() => {
     setCurrentCount(count);
     setCountComplete(true);
-  }, [count]);
+    if (announceTotal) void speakRecordedBananaTotal(count, lang, emoji);
+  }, [announceTotal, count, emoji, lang]);
 
   useEffect(() => {
     setCurrentCount(0);
@@ -9143,6 +9113,47 @@ function GroupingTray({ label, count, emoji, counted, active = false, lang }: { 
             : <p className="mt-3 rounded-full bg-blue-50 px-4 py-3 text-lg font-black text-blue-900">{lang === "en" ? `Counting: ${currentCount}` : `Mengira: ${currentCount}`}</p>}
         </div>
       )}
+    </div>
+  );
+}
+
+function SeparateGroupCountingVisual({ a, b, emoji, lang }: { a: number; b: number; emoji: string; lang: Lang }) {
+  const [completedGroup, setCompletedGroup] = useState(0);
+
+  useEffect(() => {
+    setCompletedGroup(0);
+    stopNumberAudio();
+    return () => stopNumberAudio();
+  }, [a, b, emoji, lang]);
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="rounded-[2rem] border-4 border-emerald-200 bg-white p-4 text-center">
+        <h3 className="mb-3 text-2xl font-black text-blue-950">{lang === "en" ? "Group 1" : "Kumpulan 1"}</h3>
+        <ManualCountedObjectRow
+          count={a}
+          emoji={emoji}
+          lang={lang}
+          announceTotal
+          onComplete={() => setCompletedGroup((current) => Math.max(current, 1))}
+        />
+        {completedGroup >= 1 && <CountTotalBadge count={a} lang={lang} unit={objectName(emoji, a, lang)} />}
+      </div>
+      <div className={`rounded-[2rem] border-4 bg-white p-4 text-center transition ${completedGroup >= 1 ? "border-blue-300" : "border-slate-200 opacity-45"}`}>
+        <h3 className="mb-3 text-2xl font-black text-blue-950">{lang === "en" ? "Group 2" : "Kumpulan 2"}</h3>
+        {completedGroup >= 1 ? (
+          <ManualCountedObjectRow
+            count={b}
+            emoji={emoji}
+            lang={lang}
+            announceTotal
+            onComplete={() => setCompletedGroup(2)}
+          />
+        ) : (
+          <ObjectGroup count={b} emoji={emoji} lang={lang} />
+        )}
+        {completedGroup >= 2 && <CountTotalBadge count={b} lang={lang} unit={objectName(emoji, b, lang)} />}
+      </div>
     </div>
   );
 }
@@ -9315,7 +9326,7 @@ function SubtractionOnlyLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; 
   );
 }
 
-type RealWorldTeachingIndex = 0 | 1 | 2 | 3;
+type RealWorldTeachingIndex = 0 | 1;
 
 function RealWorldLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [phase, setPhase] = useState<RealWorldTeachingIndex | "practice">(0);
@@ -9337,7 +9348,7 @@ function RealWorldLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone
 
   const goNext = () => setPhase((current) => {
     if (current === "practice") return current;
-    return current === 3 ? "practice" : ((current + 1) as RealWorldTeachingIndex);
+    return current === 1 ? "practice" : ((current + 1) as RealWorldTeachingIndex);
   });
   const goPrevious = () => setPhase((current) => {
     if (current === "practice" || current === 0) return 0;
@@ -9350,8 +9361,8 @@ function RealWorldLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone
         lang={lang}
         title={t.learnReal}
         helper={lang === "en"
-          ? "Read the story. Find the numbers. Find the clue."
-          : "Baca cerita. Cari nombor. Cari petunjuk."}
+          ? "Read the story and follow the numbers."
+          : "Baca cerita dan ikuti nombornya."}
       >
         <RealWorldTeachingPhase
           phase={phase}
@@ -9375,26 +9386,18 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
   onSkip: () => void;
 }) {
   const title = [
-    lang === "en" ? "Addition clue words" : "Kata petunjuk tambah",
     lang === "en" ? "Addition story" : "Cerita tambah",
-    lang === "en" ? "Subtraction clue words" : "Kata petunjuk tolak",
     lang === "en" ? "Subtraction story" : "Cerita tolak",
   ][phase];
   const talk = [
     lang === "en"
-      ? "Words such as more tell us that an amount is added."
-      : "Perkataan seperti lagi memberitahu kita bahawa suatu jumlah ditambah.",
+      ? "Start with 3 shells. Then add 2 more."
+      : "Mula dengan 3 cangkerang. Kemudian tambah 2 lagi.",
     lang === "en"
-      ? "Find the starting amount, the amount added, and the addition clue."
-      : "Cari jumlah mula, jumlah yang ditambah dan petunjuk tambah.",
-    lang === "en"
-      ? "Words such as eats tell us that an amount is taken away."
-      : "Perkataan seperti makan memberitahu kita bahawa suatu jumlah ditolak.",
-    lang === "en"
-      ? "Find the starting amount, the amount removed, and the subtraction clue."
-      : "Cari jumlah mula, jumlah yang ditolak dan petunjuk tolak.",
+      ? "Start with 5 cookies. Then take away 2."
+      : "Mula dengan 5 biskut. Kemudian tolak 2.",
   ][phase];
-  const nextLabel = phase === 3 ? t.practice : t.next;
+  const nextLabel = phase === 1 ? t.practice : t.next;
 
   return (
     <div className="space-y-5">
@@ -9410,15 +9413,23 @@ function RealWorldTeachingPhase({ phase, lang, t, onPrevious, onNext, onSkip }: 
         </div>
       </div>
 
-      {phase === 0 && <RealWorldKeywordLesson lang={lang} operation="addition" />}
-      {phase === 1 && <RealWorldOperationExample lang={lang} operation="addition" />}
-      {phase === 2 && <RealWorldKeywordLesson lang={lang} operation="subtraction" />}
-      {phase === 3 && <RealWorldOperationExample lang={lang} operation="subtraction" />}
+      {phase === 0 && (
+        <div className="space-y-5">
+          <RealWorldKeywordLesson lang={lang} operation="addition" />
+          <RealWorldOperationExample lang={lang} operation="addition" />
+        </div>
+      )}
+      {phase === 1 && (
+        <div className="space-y-5">
+          <RealWorldKeywordLesson lang={lang} operation="subtraction" />
+          <RealWorldOperationExample lang={lang} operation="subtraction" />
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PreviousLessonButton label={t.previous} onClick={onPrevious} />
         <div className="flex flex-wrap justify-end gap-3">
-          {phase === 0 && <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkip} variant="green" />}
+          <SecondaryLessonButton label={skipPracticeLabel(lang)} onClick={onSkip} variant="green" />
           <LessonNextButton label={nextLabel} onClick={onNext} />
         </div>
       </div>
@@ -9585,10 +9596,9 @@ function RealWorldKeywordLesson({ lang, operation }: { lang: Lang; operation: Re
   const keywords = addition
     ? lang === "en" ? ["finds more", "gets more", "altogether", "in total"] : ["jumpa lagi", "dapat lagi", "kesemuanya", "jumlah"]
     : lang === "en" ? ["eats", "takes away", "gives away", "left"] : ["makan", "ambil", "beri", "tinggal"];
-  const clue = addition ? (lang === "en" ? "finds 2 more" : "jumpa 2 lagi") : (lang === "en" ? "eats 2" : "makan 2");
 
   return (
-    <div className={`space-y-5 rounded-[2rem] border-2 p-5 shadow-[0_6px_0_rgba(0,0,0,.10)] ${addition ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50"}`}>
+    <div className={`rounded-[2rem] border-2 p-5 shadow-[0_6px_0_rgba(0,0,0,.10)] ${addition ? "border-emerald-200 bg-emerald-50" : "border-orange-200 bg-orange-50"}`}>
       <div className="rounded-3xl bg-white p-5 text-center">
         <p className="text-lg font-black text-slate-600">
           {addition
@@ -9604,37 +9614,6 @@ function RealWorldKeywordLesson({ lang, operation }: { lang: Lang; operation: Re
         </div>
       </div>
 
-      <div className="grid items-center gap-5 rounded-3xl border-2 border-white bg-white p-5 md:grid-cols-[1fr_auto_1fr]">
-        <div className="text-center md:text-left">
-          <p className="text-2xl font-black leading-relaxed text-blue-950">
-            {addition ? (lang === "en" ? "Sara " : "Sara ") : (lang === "en" ? "Tom " : "Tom ")}
-            <span className="rounded-xl bg-yellow-200 px-2 py-1 text-yellow-950">{clue}</span>
-            {addition ? (lang === "en" ? " shells." : " cangkerang.") : (lang === "en" ? " cookies." : " biskut.")}
-          </p>
-          <p className="mt-4 text-lg font-black text-slate-600">
-            {addition
-              ? (lang === "en" ? "The words “finds 2 more” describe the change: add 2." : "Perkataan “jumpa 2 lagi” menerangkan perubahan: tambah 2.")
-              : (lang === "en" ? "The words “eats 2” describe the change: subtract 2." : "Perkataan “makan 2” menerangkan perubahan: tolak 2.")}
-          </p>
-        </div>
-        <div className={`grid h-24 min-w-28 place-items-center rounded-3xl text-5xl font-black text-white shadow-[0_5px_0_rgba(0,0,0,.18)] ${addition ? "bg-emerald-600" : "bg-red-600"}`} style={NUMBER_TEXT_STYLE}>
-          {addition ? "+2" : "−2"}
-        </div>
-        <div className={`flex min-h-40 items-center justify-center gap-4 rounded-3xl ${addition ? "bg-sky-50" : "bg-orange-50"}`}>
-          {[0, 1].map((index) => (
-            <div key={index} className="relative grid h-20 w-20 place-items-center rounded-full border-2 border-blue-200 bg-white shadow-sm">
-              <span className="absolute -top-2 grid h-7 min-w-7 place-items-center rounded-full bg-blue-600 px-2 text-sm font-black text-white">{index + 1}</span>
-              <span className="text-5xl drop-shadow-md" aria-hidden="true">{addition ? "🐚" : "🍪"}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <p className="rounded-2xl border-2 border-yellow-300 bg-yellow-100 p-4 text-center text-lg font-black text-yellow-950">
-        {addition
-          ? (lang === "en" ? "We know Sara adds 2. We still need her starting number." : "Kita tahu Sara tambah 2. Kita masih perlukan nombor mulanya.")
-          : (lang === "en" ? "We know Tom takes away 2. We still need his starting number." : "Kita tahu Tom tolak 2. Kita masih perlukan nombor mulanya.")}
-      </p>
     </div>
   );
 }
@@ -9711,7 +9690,9 @@ function RealWorldOperationExample({ lang, operation }: { lang: Lang; operation:
 
   const clue = addition ? (lang === "en" ? "finds 2 more" : "jumpa 2 lagi") : (lang === "en" ? "eats 2" : "makan 2");
   const currentInstruction = phase === "ready"
-    ? (lang === "en" ? "Press Start to build the equation from the story." : "Tekan Mula untuk membina persamaan daripada cerita.")
+    ? (addition
+      ? (lang === "en" ? "Start with 3 shells, then add 2 more." : "Mula dengan 3 cangkerang, kemudian tambah 2 lagi.")
+      : (lang === "en" ? "Start with 5 cookies, then take away 2." : "Mula dengan 5 biskut, kemudian tolak 2."))
     : phase === "countStart"
       ? (lang === "en" ? `First, count the starting ${start}.` : `Mula-mula, kira jumlah mula ${start}.`)
       : phase === "operate"
@@ -9732,7 +9713,7 @@ function RealWorldOperationExample({ lang, operation }: { lang: Lang; operation:
 
       <div className="rounded-3xl border-2 border-white bg-white p-4">
         <p className="mb-4 text-center text-xl font-black text-blue-950">{currentInstruction}</p>
-        <div className="grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+        <div className="grid items-stretch gap-4 md:grid-cols-2">
           <section className="rounded-3xl border-2 border-blue-200 bg-blue-50 p-4 text-center">
             <h4 className="text-lg font-black text-blue-900">{lang === "en" ? `Start with ${start}` : `Mula dengan ${start}`}</h4>
             <div className="mt-4 flex min-h-36 flex-wrap items-center justify-center gap-3">
@@ -9750,10 +9731,6 @@ function RealWorldOperationExample({ lang, operation }: { lang: Lang; operation:
               })}
             </div>
           </section>
-
-          <div className={`grid h-16 w-16 place-items-center justify-self-center rounded-2xl text-4xl font-black text-white transition-all ${phase === "operate" ? "scale-110 ring-4 ring-yellow-200" : ""} ${addition ? "bg-emerald-600" : "bg-red-600"}`} style={NUMBER_TEXT_STYLE}>
-            {addition ? "+2" : "−2"}
-          </div>
 
           <section className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
             <h4 className="text-lg font-black text-emerald-900">{addition ? (lang === "en" ? "2 more shells" : "2 cangkerang lagi") : (lang === "en" ? "2 cookies eaten" : "2 biskut dimakan")}</h4>
@@ -12022,83 +11999,63 @@ function AdditionBananaEquation({
     setIsCounting(true);
     setHasStarted(true);
     stopNumberAudio();
+    setVisibleCounts([0, 0, 0]);
+    setCompletedGroups(0);
+    setCompletedSigns(0);
+    setActiveSign(-1);
+    setActiveBanana(null);
+    setResultMergeStage("split");
 
-    let groupIndex = completedGroups;
-    let currentCounts = visibleCounts;
-    if (groupIndex >= groups.length) {
-      currentCounts = [0, 0, 0];
-      groupIndex = 0;
-      setVisibleCounts(currentCounts);
-      setCompletedGroups(0);
-      setCompletedSigns(0);
-      setResultMergeStage("split");
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await playRecordedVoiceFile(COUNT_PROMPT_AUDIO_FILES[lang]);
+      if (countRunRef.current !== runId) return;
     }
 
-    if (groups[groupIndex] === 0) {
+    for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
+      const groupCount = groups[groupIndex];
       setActiveGroup(groupIndex);
-      await speakNumber(0, lang);
+      setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? 0 : value));
+
+      const revealCount = (value: number) => {
+        if (countRunRef.current !== runId) return;
+        setActiveBanana({ groupIndex, objectIndex: value - 1 });
+        setVisibleCounts((current) => current.map((count, index) => index === groupIndex ? value : count));
+      };
+
+      if (groupCount === 0) {
+        await speakNumber(0, lang);
+      } else if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+        await speakCountingSequence(groupCount, lang, COUNTING_STEP_MS, revealCount);
+      } else {
+        for (let value = 1; value <= groupCount; value += 1) {
+          if (countRunRef.current !== runId) return;
+          revealCount(value);
+          await wait(prefersReducedMotion ? 80 : COUNTING_STEP_MS);
+        }
+      }
       if (countRunRef.current !== runId) return;
-      const nextCompletedGroups = groupIndex + 1;
-      setCompletedGroups(nextCompletedGroups);
+
+      setActiveBanana(null);
+      setCompletedGroups(groupIndex + 1);
+      await speakRecordedBananaTotal(groupCount, lang, emoji);
+      if (countRunRef.current !== runId) return;
+
       if (groupIndex < groups.length - 1) {
         setActiveSign(groupIndex);
         await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
         if (countRunRef.current !== runId) return;
         setCompletedSigns(groupIndex + 1);
         setActiveSign(-1);
-        setActiveGroup(groupIndex + 1);
-      } else {
-        setResultMergeStage("joining");
-        await wait(prefersReducedMotion ? 0 : 500);
-        setResultMergeStage("joined");
-        setActiveGroup(-1);
-        await speakRecordedBananaTotal(a + b, lang, emoji);
-        if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
-      }
-      setIsCounting(false);
-      return;
-    }
-
-    setActiveGroup(groupIndex);
-    setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? 0 : value));
-    const groupCount = groups[groupIndex];
-    const revealCount = (value: number) => {
-      if (countRunRef.current !== runId) return;
-      setActiveBanana({ groupIndex, objectIndex: value - 1 });
-      setVisibleCounts((current) => current.map((count, index) => index === groupIndex ? value : count));
-    };
-
-    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
-      await speakCountingSequence(groupCount, lang, COUNTING_STEP_MS, revealCount);
-    } else {
-      for (let value = 1; value <= groupCount; value += 1) {
-        if (countRunRef.current !== runId) return;
-        revealCount(value);
-        await wait(prefersReducedMotion ? 80 : COUNTING_STEP_MS);
+        if (groupIndex === 1) {
+          setResultMergeStage("joining");
+          await wait(prefersReducedMotion ? 0 : 500);
+          if (countRunRef.current !== runId) return;
+          setResultMergeStage("joined");
+        }
       }
     }
-    if (countRunRef.current !== runId) return;
-    setActiveBanana(null);
 
-    const nextCompletedGroups = groupIndex + 1;
-    setCompletedGroups(nextCompletedGroups);
-    if (groupIndex < groups.length - 1) {
-      setActiveSign(groupIndex);
-      await speakMathCue(groupIndex === 0 ? "plus" : "equals", lang);
-      if (countRunRef.current !== runId) return;
-      setCompletedSigns(groupIndex + 1);
-      setActiveSign(-1);
-      setActiveGroup(groupIndex + 1);
-    } else {
-      setResultMergeStage("joining");
-      await wait(prefersReducedMotion ? 0 : 500);
-      if (countRunRef.current !== runId) return;
-      setResultMergeStage("joined");
-      setActiveGroup(-1);
-      await speakRecordedBananaTotal(a + b, lang, emoji);
-      if (countRunRef.current !== runId) return;
-      if (!audioMuted && lang === "en") speakText(`The answer is ${a + b}.`, lang);
-    }
+    setActiveGroup(-1);
     setIsCounting(false);
   };
 
@@ -12137,17 +12094,11 @@ function AdditionBananaEquation({
 
   const renderBananaRows = (groupIndex: number, count: number, countOffset = 0) => (
     <div className="flex w-full flex-col items-center justify-center gap-5 py-4 sm:gap-6">
-      {Array.from({ length: Math.ceil(count / 5) }, (_, rowIndex) => {
-        const rowStart = rowIndex * 5;
-        const rowCount = Math.min(5, count - rowStart);
-        return (
-          <div key={rowIndex} className="flex items-center justify-center gap-2 sm:gap-3">
-            {Array.from({ length: rowCount }, (_, rowObjectIndex) => (
-              renderBanana(groupIndex, countOffset + rowStart + rowObjectIndex)
-            ))}
-          </div>
-        );
-      })}
+      {balancedIndexRows(count, 3).map((row, rowIndex) => (
+        <div key={rowIndex} className="flex items-center justify-center gap-2 sm:gap-3">
+          {row.map((rowObjectIndex) => renderBanana(groupIndex, countOffset + rowObjectIndex))}
+        </div>
+      ))}
     </div>
   );
 
@@ -12164,9 +12115,7 @@ function AdditionBananaEquation({
             ? (lang === "en" ? "Counting..." : "Mengira...")
             : completedGroups === groups.length
               ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
-              : lang === "en"
-                ? `Count ${groups[completedGroups]} ${objectName(emoji, groups[completedGroups], lang)}`
-                : `Kira ${groups[completedGroups]} ${objectName(emoji, groups[completedGroups], lang)}`}
+              : (lang === "en" ? "Count all bananas" : "Kira semua pisang")}
           {!isCounting && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
               <PointerIcon />
@@ -12441,13 +12390,10 @@ const BellyCounter = React.forwardRef<HTMLDivElement, {
       setVisible(nextValue);
       speakNumber(nextValue, lang);
     }, ADDITION_BANANA_TRAVEL_MS + index * ADDITION_BANANA_STAGGER_MS));
-    if (target === 5 && additions > 0) {
+    if (additions > 0) {
       const finalCountDelay = ADDITION_BANANA_TRAVEL_MS + (additions - 1) * ADDITION_BANANA_STAGGER_MS;
       timers.push(window.setTimeout(() => {
-        speakText(
-          lang === "en" ? "Chrys eats 5 bananas in total." : "Chrys makan 5 pisang semuanya.",
-          lang,
-        );
+        void speakRecordedBananaTotal(target, lang, BANANA);
       }, finalCountDelay + ADDITION_BANANA_COUNT_PAUSE_MS));
     }
     const completionDelay = ADDITION_BANANA_TRAVEL_MS
@@ -13437,7 +13383,7 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
     ((qn.visual.kind === "add" || qn.visual.kind === "subtract") && qn.visual.display === "none");
   const isAnimatedCupQuestion = qn.id === "rt-sub-cups-5-5";
   const answersLockedForAnimation = isAnimatedCupQuestion && !cupAnimationComplete;
-  const activePanelOwnsVisual = qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen" || qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild" || qn.inputMode === "borrowSubtract";
+  const activePanelOwnsVisual = qn.inputMode === "makeGroups" || qn.inputMode === "buildTotal" || qn.inputMode === "takeAway" || qn.inputMode === "buildTeen" || qn.inputMode === "makeTenBuild" || qn.inputMode === "carryBuild" || qn.inputMode === "borrowSubtract";
   const showGuidedAdditionLabels = qn.visual.kind === "add" && qn.visual.showLabels === true;
   const showGuidedSubtractionLabels = qn.visual.kind === "subtract" && qn.visual.showLabels === true;
   const correct = randomizedQuestions.reduce((sum, q, i) => sum + (answers[i] === q.answer ? 1 : 0), 0);
@@ -13782,7 +13728,7 @@ function GroupChoiceAnswerPanel({
   answered: boolean;
   revealCorrect: boolean;
   answer: number;
-  onAnswer: (answer: number) => void;
+  onAnswer: (answer: number | string) => void;
   cyber?: boolean;
 }) {
   return (
@@ -13845,23 +13791,95 @@ function ActiveAnswerPanel({
   lang: Lang;
   answered: boolean;
   selected: number | string | null;
-  onAnswer: (answer: number) => void;
+  onAnswer: (answer: number | string) => void;
   cyber?: boolean;
 }) {
   const [builtCount, setBuiltCount] = useState(0);
   const [selectedObjects, setSelectedObjects] = useState<number[]>([]);
   const [selectedNone, setSelectedNone] = useState(false);
   const [removedCount, setRemovedCount] = useState(0);
+  const [builtGroups, setBuiltGroups] = useState<number[]>([]);
   const [buildMessage, setBuildMessage] = useState<string | null>(null);
   const answer = Number(question.answer);
   const emoji =
     question.visual.kind === "groupMake" ? question.visual.emoji :
+    question.visual.kind === "groupBuildMany" ? question.visual.emoji :
     question.visual.kind === "count" ? question.visual.emoji :
     question.visual.kind === "add" ? (question.visual.emoji ?? "🍌") :
     question.visual.kind === "subtract" ? (question.visual.emoji ?? "🍌") :
     "🍌";
   const selectedNumber = typeof selected === "number" ? selected : Number(selected);
   const shownCount = answered && Number.isFinite(selectedNumber) ? selectedNumber : builtCount;
+
+  if (question.inputMode === "makeGroups" && question.visual.kind === "groupBuildMany") {
+    const targets = question.visual.counts;
+    const currentGroups = targets.map((_, groupIndex) => builtGroups[groupIndex] ?? 0);
+    const expectedAnswer = targets.join(",");
+    const updateGroup = (groupIndex: number, change: number) => {
+      if (answered) return;
+      setBuiltGroups((current) => targets.map((_, index) => {
+        const currentValue = current[index] ?? 0;
+        return index === groupIndex ? Math.max(0, Math.min(9, currentValue + change)) : currentValue;
+      }));
+    };
+
+    return (
+      <div className="rounded-[2rem] border-2 border-emerald-200 bg-emerald-50 p-4 text-center">
+        <p className="mb-4 text-xl font-black text-emerald-950">
+          {lang === "en" ? "Build every group separately." : "Bina setiap kumpulan secara berasingan."}
+        </p>
+        <div className={`grid gap-4 ${targets.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+          {targets.map((target, groupIndex) => {
+            const count = currentGroups[groupIndex];
+            return (
+              <div key={`build-group-${groupIndex}`} className="rounded-3xl border-4 border-emerald-200 bg-white p-4">
+                <h3 className="text-xl font-black text-blue-950">
+                  {lang === "en" ? `Group ${groupIndex + 1}: make ${target}` : `Kumpulan ${groupIndex + 1}: bina ${target}`}
+                </h3>
+                <div className="my-4 min-h-32 rounded-3xl border-2 border-blue-100 bg-blue-50/50 p-4">
+                  <ObjectGroup count={count} emoji={emoji} numbered lang={lang} />
+                </div>
+                <CountTotalBadge count={count} lang={lang} unit={objectName(emoji, count, lang)} />
+                {!answered && (
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    <button
+                      type="button"
+                      disabled={count <= 0}
+                      onClick={() => updateGroup(groupIndex, -1)}
+                      className="rounded-2xl border-2 border-blue-200 bg-blue-50 px-4 py-2 font-black text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1 disabled:opacity-40"
+                    >
+                      {lang === "en" ? "Remove one" : "Buang satu"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={count >= 9}
+                      onClick={() => updateGroup(groupIndex, 1)}
+                      className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-4 py-2 font-black text-white shadow-[0_4px_0_#047857] active:translate-y-1 disabled:opacity-40"
+                    >
+                      {lang === "en" ? "Add one" : "Tambah satu"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          disabled={answered}
+          onClick={() => onAnswer(currentGroups.join(","))}
+          className="mt-5 rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
+        >
+          {lang === "en" ? "Check all groups" : "Semak semua kumpulan"}
+        </button>
+        {answered && selected !== expectedAnswer && (
+          <p className="mt-4 rounded-2xl border-2 border-yellow-300 bg-yellow-50 px-4 py-3 font-black text-orange-800">
+            {lang === "en" ? "Count each group separately and try again." : "Kira setiap kumpulan secara berasingan dan cuba lagi."}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   if (question.inputMode === "makeTenBuild" && question.visual.kind === "horizontalAdd") {
     return (
@@ -14310,9 +14328,9 @@ function ActiveAnswerPanel({
     );
   }
 
-  const instruction = lang === "en"
-    ? "Tap bananas to build your group."
-    : "Tekan pisang untuk bina kumpulan.";
+  const instruction = answer === 0
+    ? (lang === "en" ? "Leave the group empty to make 0." : "Biarkan kumpulan kosong untuk bina 0.")
+    : (lang === "en" ? "Tap bananas to build your group." : "Tekan pisang untuk bina kumpulan.");
 
   return (
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
@@ -14336,7 +14354,7 @@ function ActiveAnswerPanel({
           {lang === "en" ? "Tap banana" : "Tekan pisang"}
         </button>
         <button
-          disabled={answered || builtCount === 0}
+          disabled={answered || (builtCount === 0 && answer !== 0)}
           onClick={() => onAnswer(builtCount)}
           className="rounded-2xl border-2 border-blue-700 bg-blue-600 px-8 py-3 text-xl font-black text-white shadow-[0_5px_0_#1e3a8a] active:translate-y-1 disabled:opacity-40"
         >
@@ -14347,7 +14365,7 @@ function ActiveAnswerPanel({
   );
 }
 
-function CorrectCelebration() {
+function CorrectCelebration({ playSound = true }: { playSound?: boolean }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [isVisible, setIsVisible] = useState(true);
   const colors = ["#facc15", "#22c55e", "#3b82f6", "#fb7185", "#a855f7", "#f97316", "#14b8a6"];
@@ -14366,7 +14384,7 @@ function CorrectCelebration() {
     const finishCelebration = () => {
       if (!cancelled) setIsVisible(false);
     };
-    const audioStarted = playSuccessFanfare(finishCelebration);
+    const audioStarted = playSound ? playSuccessFanfare(finishCelebration) : false;
     const hideTimer = window.setTimeout(
       finishCelebration,
       prefersReducedMotion ? 100 : audioStarted ? 13000 : 3000,
@@ -14375,9 +14393,9 @@ function CorrectCelebration() {
     return () => {
       cancelled = true;
       window.clearTimeout(hideTimer);
-      stopCelebrationAudio();
+      if (playSound) stopCelebrationAudio();
     };
-  }, [prefersReducedMotion]);
+  }, [playSound, prefersReducedMotion]);
 
   if (!isVisible) return null;
 
@@ -14737,13 +14755,13 @@ function SpellWordCard({ value, lang }: { value: number; lang: Lang }) {
   );
 }
 
-function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabels = false, cyber = false, lang = "en" }: { count: number; emoji: string; numbered?: boolean; crossed?: number; crossedLabels?: boolean; cyber?: boolean; lang?: Lang }) {
+function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabels = false, cyber = false, lang = "en", maxPerRow = 4 }: { count: number; emoji: string; numbered?: boolean; crossed?: number; crossedLabels?: boolean; cyber?: boolean; lang?: Lang; maxPerRow?: number }) {
   if (count === 0) {
     return <div className={`mx-auto rounded-3xl border-4 border-dashed p-8 text-center text-2xl font-black ${cyber ? "border-cyan-700 bg-slate-950/80 text-cyan-300" : "border-slate-200 bg-white text-slate-400"}`}>{numbered ? "0" : lang === "en" ? "empty" : "kosong"}</div>;
   }
   return (
     <div className={`mobile-object-group mx-auto flex w-full min-w-0 flex-col items-center gap-y-6 overflow-hidden rounded-3xl border-2 px-5 pb-5 pt-8 sm:px-7 ${cyber ? "border-cyan-700/80 bg-slate-950/75 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]" : "border-slate-100 bg-white"}`}>
-      {balancedIndexRows(count, 4).map((row, rowIndex) => (
+      {balancedIndexRows(count, maxPerRow).map((row, rowIndex) => (
         <div key={rowIndex} className="mx-auto flex w-fit max-w-full min-w-0 items-center justify-center gap-3">
           {row.map((i) => {
         const gone = i < crossed;
@@ -15134,6 +15152,12 @@ function CountedCompareGroupsSolution({ visual, lang }: {
   const finishSecondGroup = useCallback(() => setStage(2), []);
   const smaller = Math.min(visual.a, visual.b);
   const larger = Math.max(visual.a, visual.b);
+  const largerGroup = visual.a > visual.b ? "Group A" : "Group B";
+  const smallerGroup = visual.a < visual.b ? "Group A" : "Group B";
+  const largerGroupMs = visual.a > visual.b ? "Kumpulan A" : "Kumpulan B";
+  const smallerGroupMs = visual.a < visual.b ? "Kumpulan A" : "Kumpulan B";
+  const largerEmoji = visual.a > visual.b ? visual.emojiA : visual.emojiB;
+  const smallerEmoji = visual.a < visual.b ? visual.emojiA : visual.emojiB;
 
   useEffect(() => {
     setStage(0);
@@ -15187,7 +15211,7 @@ function CountedCompareGroupsSolution({ visual, lang }: {
         </div>
       </div>
 
-      <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-center text-lg font-black text-emerald-900" aria-live="polite">
+      <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-center text-lg font-black text-emerald-900" aria-live="polite">
         {stage === 0
           ? (lang === "en" ? "Count Group A first." : "Kira Kumpulan A dahulu.")
           : stage === 1
@@ -15197,9 +15221,22 @@ function CountedCompareGroupsSolution({ visual, lang }: {
                 ? (lang === "en" ? "The groups are the same." : "Kumpulan ini sama.")
                 : (lang === "en" ? "The groups are different." : "Kumpulan ini berbeza.")
               : visual.ask === "more"
-                ? (lang === "en" ? `${larger} is more.` : `${larger} lebih banyak.`)
+                ? (
+                  <div className="space-y-1">
+                    <p>
+                      {lang === "en"
+                        ? `${larger} ${objectName(largerEmoji, larger, "en")} is more than ${smaller} ${objectName(smallerEmoji, smaller, "en")}.`
+                        : `${larger} ${objectName(largerEmoji, larger, "ms")} lebih banyak daripada ${smaller} ${objectName(smallerEmoji, smaller, "ms")}.`}
+                    </p>
+                    <p>
+                      {lang === "en"
+                        ? `${largerGroup} has more ${objectName(largerEmoji, larger, "en")} than ${smallerGroup}.`
+                        : `${largerGroupMs} mempunyai lebih banyak ${objectName(largerEmoji, larger, "ms")} daripada ${smallerGroupMs}.`}
+                    </p>
+                  </div>
+                )
                 : (lang === "en" ? `${smaller} is less.` : `${smaller} lebih sedikit.`)}
-      </p>
+      </div>
     </div>
   );
 }
@@ -15658,7 +15695,7 @@ function MissingNumberPlacementActivity({ lang, sequence, answer, choices, direc
 
   return (
     <div className="space-y-4 rounded-3xl border-2 border-blue-100 bg-blue-50 p-4">
-      {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} />}
+      {celebrationKey > 0 && <CorrectCelebration key={celebrationKey} playSound={false} />}
       <div className="rounded-3xl border-2 border-white bg-white p-3 sm:p-5">
         <NumberLineSequence nums={displayedSequence} marked={checked ? answer : selected ?? -1} arrow="right" />
         <p className="mt-3 text-center text-lg font-black text-blue-950">
@@ -16110,7 +16147,7 @@ function WriteNumberPad({
 
   return (
     <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border-2 border-amber-100 bg-white p-4 sm:p-6">
-      {matched && <CorrectCelebration />}
+      {matched && <CorrectCelebration playSound={false} />}
       <h3 className="mb-2 text-center text-2xl font-black text-blue-950">{lang === "en" ? `Write ${value} yourself` : `Tulis ${value} sendiri`}</h3>
       <p className="mb-3 text-center text-sm font-bold text-slate-500">
         {lang === "en" ? "Try without the tracing guide." : "Cuba tanpa panduan garisan."}
@@ -16250,6 +16287,58 @@ function AdvancedCompareTestVisual({ a, b, emoji, representation, lang }: Extrac
   );
 }
 
+function AdditionGroupsAudioButton({ a, b, emoji = BANANA, lang, cyber = false }: { a: number; b: number; emoji?: string; lang: Lang; cyber?: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const runRef = useRef(0);
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const countBothGroups = async () => {
+    if (busy) return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setBusy(true);
+    stopNumberAudio();
+
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await playRecordedVoiceFile(COUNT_PROMPT_AUDIO_FILES[lang]);
+      if (runRef.current !== runId) return;
+    }
+
+    const countGroup = async (count: number) => {
+      if (count === 0) await speakNumber(0, lang);
+      else if (NUMBER_AUDIO_ENABLED && !audioMuted) await speakCountingSequence(count, lang, COUNTING_STEP_MS);
+      else await wait(getReducedMotionPreference() ? 80 : Math.max(120, count * 80));
+      if (runRef.current !== runId) return false;
+      await speakRecordedBananaTotal(count, lang, emoji);
+      return runRef.current === runId;
+    };
+
+    if (!await countGroup(a)) return;
+    await speakMathCue("plus", lang);
+    if (runRef.current !== runId) return;
+    if (!await countGroup(b)) return;
+    setBusy(false);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => void countBothGroups()}
+      disabled={busy}
+      className={`relative mx-auto mb-4 block rounded-2xl border-2 px-6 py-3 font-black active:translate-y-1 disabled:cursor-wait disabled:opacity-70 ${cyber ? "border-cyan-300 bg-cyan-700 text-white shadow-[0_5px_0_#164e63]" : "border-blue-700 bg-blue-600 text-white shadow-[0_5px_0_#1e3a8a]"}`}
+    >
+      {busy
+        ? (lang === "en" ? "Counting both groups..." : "Mengira kedua-dua kumpulan...")
+        : (lang === "en" ? "Count both groups" : "Kira kedua-dua kumpulan")}
+      {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true"><PointerIcon /></span>}
+    </button>
+  );
+}
+
 function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrossedLabels = false, cyber = false }: { visual: Visual; lang?: Lang; revealNumbers?: boolean; revealCrossedLabels?: boolean; cyber?: boolean }) {
   if (visual.kind === "teenQuantityArrangement") {
     return <TeenQuantityArrangementVisual count={visual.count} emoji={visual.emoji} rowPattern={visual.rowPattern} lang={lang} />;
@@ -16262,13 +16351,16 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
 
     if (visual.display === "objects") {
       return (
-        <div className="mobile-wide-grid grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-          <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
-            {cyber ? <AdvancedBananaRow count={visual.a} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.a : 0} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
-          </div>
-          <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
-          <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
-            {cyber ? <AdvancedBananaRow count={visual.b} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.b : 0} /> : <ObjectGroup count={visual.b} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} />}
+        <div>
+          <AdditionGroupsAudioButton a={visual.a} b={visual.b} lang={lang} cyber={cyber} />
+          <div className="mobile-wide-grid grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+            <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
+              {cyber ? <AdvancedBananaRow count={visual.a} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.a : 0} rowPattern={balancedIndexRows(visual.a, 3).map((row) => row.length)} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} maxPerRow={3} />}
+            </div>
+            <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
+            <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
+              {cyber ? <AdvancedBananaRow count={visual.b} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.b : 0} rowPattern={balancedIndexRows(visual.b, 3).map((row) => row.length)} /> : <ObjectGroup count={visual.b} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} maxPerRow={3} />}
+            </div>
           </div>
         </div>
       );
@@ -16338,6 +16430,22 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
   if (visual.kind === "groupObserve" || visual.kind === "groupMake") {
     return <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={visual.count} emoji={visual.emoji} counted={revealNumbers} lang={lang} />;
   }
+  if (visual.kind === "groupBuildMany") {
+    return (
+      <div className={`grid gap-4 ${visual.counts.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+        {visual.counts.map((count, groupIndex) => (
+          <GroupingTray
+            key={`group-preview-${groupIndex}`}
+            label={lang === "en" ? `Group ${groupIndex + 1}` : `Kumpulan ${groupIndex + 1}`}
+            count={count}
+            emoji={visual.emoji}
+            counted={revealNumbers}
+            lang={lang}
+          />
+        ))}
+      </div>
+    );
+  }
   if (visual.kind === "groupChoices") {
     return (
       <div className="mobile-wide-grid grid gap-4 xl:grid-cols-3">
@@ -16350,18 +16458,13 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
     );
   }
   if (visual.kind === "groupTwo") {
-    return (
-      <div className="grid gap-4 md:grid-cols-2">
-        <GroupingTray label={lang === "en" ? "Group 1" : "Kumpulan 1"} count={visual.a} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
-        <GroupingTray label={lang === "en" ? "Group 2" : "Kumpulan 2"} count={visual.b} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
-      </div>
-    );
+    return <SeparateGroupCountingVisual a={visual.a} b={visual.b} emoji={visual.emoji} lang={lang} />;
   }
   if (visual.kind === "groupCompare") {
     return (
       <div className="grid gap-4 md:grid-cols-2">
-        <GroupingTray label="Group A" count={visual.a} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
-        <GroupingTray label="Group B" count={visual.b} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+        <GroupingTray label={lang === "en" ? "Group A" : "Kumpulan A"} count={visual.a} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
+        <GroupingTray label={lang === "en" ? "Group B" : "Kumpulan B"} count={visual.b} emoji={visual.emoji} counted={revealNumbers} lang={lang} />
       </div>
     );
   }
@@ -16447,6 +16550,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
     if (visual.container) {
       return (
         <div className="space-y-3">
+          <AdditionGroupsAudioButton a={visual.a} b={visual.b} emoji={emoji} lang={lang} cyber={cyber} />
           <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
             <ContainerScene
               count={visual.a}
@@ -16460,7 +16564,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
             />
             <span className="text-center text-4xl font-black text-blue-700">+</span>
             <div className="rounded-3xl border-2 border-amber-100 bg-white p-3 text-center">
-              <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} />
+              <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} maxPerRow={3} />
               <p className="mt-3 text-xl font-black text-amber-900">
                 {lang === "en"
                   ? `${visual.b} more ${objectName(emoji, visual.b, lang)}`
@@ -16474,10 +16578,11 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
     }
     return (
       <div className="space-y-3">
+        <AdditionGroupsAudioButton a={visual.a} b={visual.b} emoji={emoji} lang={lang} cyber={cyber} />
         <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-          <ObjectGroup count={visual.a} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} />
+          <ObjectGroup count={visual.a} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} maxPerRow={3} />
           <span className="text-center text-4xl font-black text-blue-700">+</span>
-          <ObjectGroup count={visual.b} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} />
+          <ObjectGroup count={visual.b} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} maxPerRow={3} />
         </div>
         <p className="text-center text-3xl font-black text-slate-400">= ?</p>
       </div>
@@ -16782,6 +16887,22 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
   }
   if (visual.kind === "groupObserve" || visual.kind === "groupMake") {
     return <GroupingTray label={lang === "en" ? "Group box" : "Kotak kumpulan"} count={visual.count} emoji={visual.emoji} counted lang={lang} />;
+  }
+  if (visual.kind === "groupBuildMany") {
+    return (
+      <div className={`grid gap-4 ${visual.counts.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+        {visual.counts.map((count, groupIndex) => (
+          <GroupingTray
+            key={`group-solution-${groupIndex}`}
+            label={lang === "en" ? `Group ${groupIndex + 1}` : `Kumpulan ${groupIndex + 1}`}
+            count={count}
+            emoji={visual.emoji}
+            counted
+            lang={lang}
+          />
+        ))}
+      </div>
+    );
   }
   if (visual.kind === "groupTwo") {
     return <CountedGroupTwoSolution visual={visual} lang={lang} />;
