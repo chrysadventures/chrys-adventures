@@ -14925,7 +14925,7 @@ function SpellWordCard({ value, lang }: { value: number; lang: Lang }) {
   );
 }
 
-function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabels = false, cyber = false, lang = "en", maxPerRow = 4 }: { count: number; emoji: string; numbered?: boolean; crossed?: number; crossedLabels?: boolean; cyber?: boolean; lang?: Lang; maxPerRow?: number }) {
+function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabels = false, cyber = false, lang = "en", maxPerRow = 4, countedThrough, isCounting = false }: { count: number; emoji: string; numbered?: boolean; crossed?: number; crossedLabels?: boolean; cyber?: boolean; lang?: Lang; maxPerRow?: number; countedThrough?: number; isCounting?: boolean }) {
   if (count === 0) {
     return <div className={`mx-auto rounded-3xl border-4 border-dashed p-8 text-center text-2xl font-black ${cyber ? "border-cyan-700 bg-slate-950/80 text-cyan-300" : "border-slate-200 bg-white text-slate-400"}`}>{numbered ? "0" : lang === "en" ? "empty" : "kosong"}</div>;
   }
@@ -14935,10 +14935,17 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
         <div key={rowIndex} className="mx-auto flex w-fit max-w-full min-w-0 items-center justify-center gap-3">
           {row.map((i) => {
         const gone = i < crossed;
+        const countingMode = countedThrough !== undefined;
+        const counted = !countingMode || i < countedThrough;
+        const active = countingMode && isCounting && i === countedThrough - 1;
         return (
           <div className={`relative grid h-12 w-12 place-items-center rounded-xl border-2 pt-3 text-3xl shadow-inner sm:h-16 sm:w-16 sm:rounded-2xl sm:text-4xl ${
             gone
               ? cyber ? "border-red-700 bg-slate-900" : "border-red-200 bg-amber-50"
+              : active
+                ? "z-10 scale-110 border-yellow-400 bg-yellow-50 ring-4 ring-yellow-300 shadow-[0_0_18px_rgba(250,204,21,.65)]"
+              : countingMode && !counted
+                ? cyber ? "border-cyan-900 bg-slate-950 opacity-30" : "border-slate-200 bg-slate-50 opacity-30"
               : numbered
                 ? cyber ? "border-cyan-400 bg-cyan-950 ring-2 ring-cyan-700" : "border-blue-400 bg-blue-50 ring-2 ring-blue-100"
                 : cyber ? "border-cyan-900 bg-slate-900" : "border-amber-100 bg-amber-50"
@@ -14946,8 +14953,8 @@ function ObjectGroup({ count, emoji, numbered = false, crossed = 0, crossedLabel
             <span className="opacity-100 saturate-100 grayscale-0">
               <SpriteIcon value={emoji} className="h-9 w-9 sm:h-12 sm:w-12" />
             </span>
-            {(numbered || (crossedLabels && gone)) && (
-              <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1.5 text-xs font-black leading-none text-white shadow-sm ${gone ? "bg-red-600" : "bg-blue-600"}`}>
+            {((numbered && counted) || (crossedLabels && gone)) && (
+              <span className={`absolute -top-2 left-1/2 z-20 grid h-6 min-w-6 -translate-x-1/2 place-items-center rounded-full px-1.5 text-xs font-black leading-none shadow-sm ${gone ? "bg-red-600 text-white" : active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>
                 {i + 1}
               </span>
             )}
@@ -16435,6 +16442,100 @@ function AdvancedCompareTestVisual({ a, b, emoji, representation, lang }: Extrac
   );
 }
 
+function AdditionGroupsCountingVisual({ a, b, emoji = BANANA, lang, cyber = false }: { a: number; b: number; emoji?: string; lang: Lang; cyber?: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const [hasCounted, setHasCounted] = useState(false);
+  const [activeGroup, setActiveGroup] = useState<"a" | "b" | null>(null);
+  const [countedA, setCountedA] = useState(0);
+  const [countedB, setCountedB] = useState(0);
+  const runRef = useRef(0);
+
+  useEffect(() => () => {
+    runRef.current += 1;
+    stopNumberAudio();
+  }, []);
+
+  const countBothGroups = async () => {
+    if (busy) return;
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    setBusy(true);
+    setHasCounted(false);
+    setActiveGroup("a");
+    setCountedA(0);
+    setCountedB(0);
+    stopNumberAudio();
+
+    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await playRecordedVoiceFile(COUNT_PROMPT_AUDIO_FILES[lang]);
+      if (runRef.current !== runId) return;
+    }
+
+    const countGroup = async (group: "a" | "b", count: number) => {
+      setActiveGroup(group);
+      const updateVisualCount = (value: number) => {
+        if (runRef.current !== runId) return;
+        if (group === "a") setCountedA(value);
+        else setCountedB(value);
+      };
+
+      if (count === 0) {
+        await speakNumber(0, lang);
+      } else if (NUMBER_AUDIO_ENABLED && !audioMuted) {
+        await speakCountingSequence(count, lang, COUNTING_STEP_MS, updateVisualCount);
+      } else {
+        for (let value = 1; value <= count; value += 1) {
+          if (runRef.current !== runId) return false;
+          updateVisualCount(value);
+          await wait(getReducedMotionPreference() ? 80 : COUNTING_STEP_MS);
+        }
+      }
+      if (runRef.current !== runId) return false;
+      await wait(500);
+      if (runRef.current !== runId) return false;
+      await speakRecordedBananaTotal(count, lang, emoji);
+      return runRef.current === runId;
+    };
+
+    if (!await countGroup("a", a)) return;
+    if (!await countGroup("b", b)) return;
+    setActiveGroup(null);
+    setHasCounted(true);
+    setBusy(false);
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => void countBothGroups()}
+        disabled={busy}
+        className={`relative mx-auto mb-4 block rounded-2xl border-2 px-6 py-3 font-black active:translate-y-1 disabled:cursor-wait disabled:opacity-70 ${cyber ? "border-cyan-300 bg-cyan-700 text-white shadow-[0_5px_0_#164e63]" : "border-blue-700 bg-blue-600 text-white shadow-[0_5px_0_#1e3a8a]"}`}
+      >
+        {busy
+          ? (lang === "en" ? "Counting both groups..." : "Mengira kedua-dua kumpulan...")
+          : hasCounted
+            ? (lang === "en" ? "Count again" : "Kira lagi")
+            : (lang === "en" ? "Count both groups" : "Kira kedua-dua kumpulan")}
+        {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true"><PointerIcon /></span>}
+      </button>
+      <div className="mobile-wide-grid grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
+          {cyber
+            ? <AdvancedBananaRow count={a} emoji={emoji} showCountLabels={busy || hasCounted} countedThrough={countedA} isCounting={busy && activeGroup === "a"} rowPattern={balancedIndexRows(a, 3).map((row) => row.length)} spacious />
+            : <ObjectGroup count={a} emoji={emoji} numbered={busy || hasCounted} countedThrough={countedA} isCounting={busy && activeGroup === "a"} lang={lang} maxPerRow={3} />}
+        </div>
+        <span data-math-cue="plus" className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
+        <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
+          {cyber
+            ? <AdvancedBananaRow count={b} emoji={emoji} showCountLabels={busy || hasCounted} countedThrough={countedB} isCounting={busy && activeGroup === "b"} rowPattern={balancedIndexRows(b, 3).map((row) => row.length)} spacious />
+            : <ObjectGroup count={b} emoji={emoji} numbered={busy || hasCounted} countedThrough={countedB} isCounting={busy && activeGroup === "b"} lang={lang} maxPerRow={3} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdditionGroupsAudioButton({ a, b, emoji = BANANA, lang, cyber = false }: { a: number; b: number; emoji?: string; lang: Lang; cyber?: boolean }) {
   const [busy, setBusy] = useState(false);
   const runRef = useRef(0);
@@ -16460,6 +16561,8 @@ function AdditionGroupsAudioButton({ a, b, emoji = BANANA, lang, cyber = false }
       if (count === 0) await speakNumber(0, lang);
       else if (NUMBER_AUDIO_ENABLED && !audioMuted) await speakCountingSequence(count, lang, COUNTING_STEP_MS);
       else await wait(getReducedMotionPreference() ? 80 : Math.max(120, count * 80));
+      if (runRef.current !== runId) return false;
+      await wait(500);
       if (runRef.current !== runId) return false;
       await speakRecordedBananaTotal(count, lang, emoji);
       return runRef.current === runId;
@@ -16496,20 +16599,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
     if (visual.display === "none") return null;
 
     if (visual.display === "objects") {
-      return (
-        <div>
-          <AdditionGroupsAudioButton a={visual.a} b={visual.b} lang={lang} cyber={cyber} />
-          <div className="mobile-wide-grid grid items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-            <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
-              {cyber ? <AdvancedBananaRow count={visual.a} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.a : 0} rowPattern={balancedIndexRows(visual.a, 3).map((row) => row.length)} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} maxPerRow={3} />}
-            </div>
-            <span data-math-cue="plus" className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
-            <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
-              {cyber ? <AdvancedBananaRow count={visual.b} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.b : 0} rowPattern={balancedIndexRows(visual.b, 3).map((row) => row.length)} /> : <ObjectGroup count={visual.b} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} maxPerRow={3} />}
-            </div>
-          </div>
-        </div>
-      );
+      return <AdditionGroupsCountingVisual a={visual.a} b={visual.b} lang={lang} cyber={cyber} />;
     }
 
     return (
