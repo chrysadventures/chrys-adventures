@@ -12295,7 +12295,7 @@ function AdditionBananaEquation({
       </div>
       <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
         {groups.map((count, index) => (
-          <React.Fragment key={`${index}-${count}`}>
+          <React.Fragment key={`${index}-${count}-${revealBuiltAnswer && completedGroups === groups.length ? "answer-revealed" : "counting"}`}>
             {index > 0 && (
               <span
                 data-math-cue={index === 1 ? "plus" : "equals"}
@@ -12319,7 +12319,7 @@ function AdditionBananaEquation({
             )}
             <div
               aria-current={activeGroup === index ? "step" : undefined}
-              className={`relative flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow,transform] duration-700 ease-out ${index === 2 && revealBuiltAnswer && completedGroups < groups.length ? "invisible" : ""} ${index === 2 && revealBuiltAnswer && completedGroups === groups.length ? "comparison-result-reveal" : ""} ${
+              className={`relative isolate flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,box-shadow,transform] duration-700 ease-out ${index === 2 && revealBuiltAnswer && completedGroups < groups.length ? "invisible" : ""} ${index === 2 && revealBuiltAnswer && completedGroups === groups.length ? "comparison-result-reveal" : ""} ${
                   index === 2 && resultMergeStage === "joining"
                     ? cyber
                       ? "scale-[1.025] border-yellow-300 bg-yellow-300/10 ring-8 ring-yellow-300/20 shadow-[0_0_36px_rgba(250,204,21,.35)]"
@@ -12334,8 +12334,8 @@ function AdditionBananaEquation({
                       : "border-blue-500 bg-blue-50 ring-4 ring-blue-200"
                     : !hasStarted || (index > activeGroup && completedGroups <= index)
                       ? cyber
-                        ? "border-slate-800 bg-slate-950 opacity-45 grayscale"
-                        : "border-slate-200 bg-slate-100 opacity-50 grayscale"
+                        ? "border-slate-800 bg-slate-950"
+                        : "border-slate-200 bg-slate-100"
                       : cyber
                         ? "border-emerald-700 bg-slate-950/85"
                         : "border-emerald-300 bg-white"
