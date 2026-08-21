@@ -1970,6 +1970,7 @@ function App() {
             player={player}
             go={go}
             lastScore={lastAdvancedTestScore}
+            testingMode={accessPin === "000000"}
           />
         )}
         {screen === "advancedTestTeenNumbers" && (
@@ -13064,12 +13065,13 @@ function AnimatedCupSubtractionVisual({ lang, onComplete }: { lang: Lang; onComp
   );
 }
 
-function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
+function AdvancedTestMenu({ lang, t, player, go, lastScore, testingMode = false }: {
   lang: Lang;
   t: UIStrings;
   player: Player;
   go: (screen: Screen) => void;
   lastScore: AdvancedTestScore | null;
+  testingMode?: boolean;
 }) {
   const tests: Array<{
     id: AdvancedTestId;
@@ -13084,7 +13086,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
       screen: "advancedTestTeenNumbers",
       title: lang === "en" ? "Teen Numbers" : "Nombor Belasan",
       subtitle: lang === "en" ? "10 questions · Numbers 10-20" : "10 soalan · Nombor 10-20",
-      unlocked: Boolean(player.progress.advancedTeenNumbers),
+      unlocked: testingMode || Boolean(player.progress.advancedTeenNumbers),
       icon: "10-20",
     },
     {
@@ -13092,7 +13094,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
       screen: "advancedTestCompareBigger",
       title: lang === "en" ? "Compare Bigger" : "Banding Nombor",
       subtitle: lang === "en" ? "12 questions · Greater than, less than, or equal" : "12 soalan · Lebih besar, lebih kecil, atau sama",
-      unlocked: Boolean(player.progress.advancedCompareBigger),
+      unlocked: testingMode || Boolean(player.progress.advancedCompareBigger),
       icon: "< > =",
     },
     {
@@ -13100,7 +13102,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
       screen: "advancedTestSequencing",
       title: lang === "en" ? "Sequencing" : "Urutan",
       subtitle: lang === "en" ? "10 questions · What comes next" : "10 soalan · Nombor seterusnya",
-      unlocked: Boolean(player.progress.advancedSequencing),
+      unlocked: testingMode || Boolean(player.progress.advancedSequencing),
       icon: "+1",
     },
     {
@@ -13108,7 +13110,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
       screen: "advancedTestAddition",
       title: lang === "en" ? "Addition" : "Tambah",
       subtitle: lang === "en" ? "16 questions · Adding up to 20" : "16 soalan · Tambah sehingga 20",
-      unlocked: Boolean(player.progress.advancedAdditionPart1) && Boolean(player.progress.advancedAdditionPart2),
+      unlocked: testingMode || (Boolean(player.progress.advancedAdditionPart1) && Boolean(player.progress.advancedAdditionPart2)),
       icon: "10+",
     },
     {
@@ -13116,7 +13118,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore }: {
       screen: "advancedTestSubtraction",
       title: lang === "en" ? "Subtraction" : "Tolak",
       subtitle: lang === "en" ? "16 questions · Subtracting up to 20" : "16 soalan · Tolak sehingga 20",
-      unlocked: Boolean(player.progress.advancedSubtraction),
+      unlocked: testingMode || Boolean(player.progress.advancedSubtraction),
       icon: "10−",
     },
   ];
