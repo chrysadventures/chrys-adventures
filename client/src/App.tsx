@@ -14245,8 +14245,10 @@ function ActiveAnswerPanel({
           </div>
         </div>
 
-        <div className="mx-auto mt-6 max-w-4xl rounded-[1.75rem] border-2 border-cyan-300 bg-slate-950/85 px-2 pb-4 pt-6 sm:px-4">
-          <p className="mb-4 text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Your row: ${builtTotal}` : `Baris kamu: ${builtTotal}`}</p>
+        <span data-math-cue="equals" className="mx-auto mt-5 grid h-12 w-12 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-3xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">=</span>
+
+        <div className="mx-auto mt-5 max-w-4xl rounded-[1.75rem] border-2 border-cyan-300 bg-slate-950/85 px-2 pb-4 pt-6 sm:px-4">
+          <p className="mb-4 text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? `Build the answer: ${builtTotal}` : `Bina jawapan: ${builtTotal}`}</p>
           {builtTotal > 0
             ? <AdvancedBananaRow count={builtTotal} countedThrough={builtTotal} showCountLabels />
             : <div className="grid min-h-16 place-items-center rounded-2xl border-2 border-dashed border-cyan-800 text-lg font-black text-cyan-500">{lang === "en" ? "Your row starts empty" : "Baris kamu bermula kosong"}</div>}
