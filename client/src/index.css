@@ -193,6 +193,24 @@
     background-size: cover;
   }
 
+  .page-bg::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .learning-theme::after {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.2));
+  }
+
+  .sunset-theme::after {
+    background:
+      linear-gradient(180deg, rgba(73, 32, 55, 0.08), rgba(49, 47, 31, 0.18)),
+      radial-gradient(circle at 50% 32%, rgba(255, 210, 119, 0.12), transparent 42%);
+  }
+
   .jungle-leaves {
     background: transparent;
   }
@@ -212,31 +230,34 @@
   }
 
   .soft-panel {
-    background: rgba(255, 255, 255, 0.9);
-    border: 3px solid rgba(255, 255, 255, 0.86);
-    box-shadow: 0 10px 0 rgba(31, 78, 49, 0.16), 0 16px 34px rgba(18, 65, 88, 0.12);
+    background: rgba(255, 255, 255, 0.92);
+    border: 3px solid rgba(255, 255, 255, 0.96);
+    box-shadow: 0 9px 0 rgba(59, 130, 246, 0.14), 0 16px 34px rgba(18, 65, 88, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .lesson-panel {
     background:
-      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246,253,255,0.92)),
-      radial-gradient(circle at top left, rgba(254, 240, 138, 0.28), transparent 18rem);
+      linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,255,247,0.93)),
+      radial-gradient(circle at top left, rgba(254, 240, 138, 0.32), transparent 18rem);
     border: 3px solid rgba(255, 255, 255, 0.92);
-    box-shadow: 0 10px 0 rgba(25, 76, 72, 0.16), 0 20px 42px rgba(23, 78, 100, 0.14);
+    box-shadow: 0 10px 0 rgba(57, 121, 78, 0.16), 0 20px 42px rgba(23, 78, 100, 0.14);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 
   .cyber-lesson-panel {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    border: 3px solid rgba(103, 232, 249, 0.92);
+    border: 3px solid rgba(255, 197, 118, 0.94);
     background:
-      linear-gradient(rgba(34, 211, 238, 0.11) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34, 211, 238, 0.11) 1px, transparent 1px),
-      radial-gradient(circle at 78% 8%, rgba(250, 204, 21, 0.18), transparent 30rem),
-      linear-gradient(135deg, #020617 0%, #083344 54%, #052e2b 100%);
-    background-size: 28px 28px, 28px 28px, auto, auto;
-    box-shadow: 0 10px 0 #083344, 0 22px 46px rgba(2, 6, 23, 0.3);
+      radial-gradient(circle at 78% 8%, rgba(255, 199, 109, 0.18), transparent 30rem),
+      linear-gradient(145deg, rgba(48, 29, 47, 0.96) 0%, rgba(65, 47, 43, 0.95) 54%, rgba(45, 57, 34, 0.95) 100%);
+    box-shadow: 0 10px 0 rgba(103, 52, 45, 0.88), 0 22px 46px rgba(48, 24, 35, 0.34);
+    backdrop-filter: blur(13px);
+    -webkit-backdrop-filter: blur(13px);
   }
 
   .cyber-lesson-panel > * {
@@ -262,7 +283,7 @@
 
   .learning-menu-hero {
     background:
-      linear-gradient(122deg, rgba(7, 89, 133, 0.98), rgba(8, 145, 178, 0.96) 54%, rgba(5, 150, 105, 0.96)),
+      linear-gradient(122deg, rgba(255,255,255,0.96), rgba(246,253,255,0.9) 54%, rgba(240,253,244,0.91)),
       var(--app-bg-desktop);
     background-position: center;
     background-size: cover;
@@ -273,12 +294,8 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%),
-      linear-gradient(315deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%);
-    background-position: 0 0, 18px 18px;
-    background-size: 36px 36px;
-    opacity: 0.42;
+    background: radial-gradient(circle at 84% 20%, rgba(253, 224, 71, 0.22), transparent 15rem);
+    opacity: 1;
   }
 
   .learning-trail-strip {
@@ -293,7 +310,7 @@
 
   .cyber-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #22d3ee #0f2940;
+    scrollbar-color: #f5a45d #4c2d3d;
   }
 
   .cyber-scrollbar::-webkit-scrollbar {
@@ -301,19 +318,101 @@
   }
 
   .cyber-scrollbar::-webkit-scrollbar-track {
-    border: 1px solid #155e75;
+    border: 1px solid #d88655;
     border-radius: 999px;
-    background: #0f2940;
+    background: #4c2d3d;
   }
 
   .cyber-scrollbar::-webkit-scrollbar-thumb {
-    border: 2px solid #0f2940;
+    border: 2px solid #4c2d3d;
     border-radius: 999px;
-    background: linear-gradient(90deg, #0891b2, #22d3ee);
+    background: linear-gradient(90deg, #e27654, #f6bf68);
   }
 
   .cyber-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #06b6d4, #67e8f9);
+    background: linear-gradient(90deg, #ef8a5b, #ffd083);
+  }
+
+  .sunset-theme .app-header {
+    border-color: rgba(255, 205, 133, 0.9) !important;
+    background: linear-gradient(135deg, rgba(56, 32, 50, 0.94), rgba(62, 56, 38, 0.94)) !important;
+    box-shadow: 0 6px 0 rgba(100, 52, 46, 0.88), 0 14px 30px rgba(54, 25, 38, 0.22) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .sunset-theme .advanced-sunset-surface {
+    border-color: rgba(255, 198, 119, 0.92) !important;
+    background: linear-gradient(145deg, rgba(54, 31, 48, 0.95), rgba(72, 55, 39, 0.94), rgba(46, 61, 34, 0.94)) !important;
+    box-shadow: 0 9px 0 rgba(105, 57, 45, 0.88), 0 18px 38px rgba(55, 26, 38, 0.28) !important;
+  }
+
+  .sunset-theme .advanced-sunset-card {
+    border-color: rgba(247, 180, 101, 0.86) !important;
+    background: linear-gradient(145deg, rgba(53, 31, 48, 0.94), rgba(59, 62, 38, 0.94)) !important;
+    box-shadow: 0 8px 0 rgba(104, 55, 44, 0.86), 0 14px 30px rgba(50, 25, 37, 0.24) !important;
+  }
+
+  .sunset-theme .advanced-sunset-copy {
+    color: #fff3db !important;
+  }
+
+  .sunset-theme .advanced-sunset-accent {
+    color: #ffd38a !important;
+  }
+
+  .sunset-theme [class*="border-cyan"] {
+    border-color: rgba(247, 180, 101, 0.82) !important;
+  }
+
+  .sunset-theme [class*="text-cyan"] {
+    color: #fff0d6 !important;
+  }
+
+  .sunset-theme [class*="bg-cyan"] {
+    background-color: rgba(128, 69, 62, 0.92) !important;
+  }
+
+  .sunset-theme [class*="bg-slate-950"],
+  .sunset-theme [class*="bg-slate-900"] {
+    background-color: rgba(49, 29, 45, 0.94) !important;
+  }
+
+  .sunset-theme [class*="from-slate-950"],
+  .sunset-theme [class*="from-emerald-950"],
+  .sunset-theme [class*="from-emerald-900"] {
+    --tw-gradient-from: rgba(55, 31, 48, 0.96) var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgba(55, 31, 48, 0) var(--tw-gradient-to-position) !important;
+  }
+
+  .sunset-theme [class*="to-cyan-950"],
+  .sunset-theme [class*="to-emerald-950"] {
+    --tw-gradient-to: rgba(58, 64, 37, 0.96) var(--tw-gradient-to-position) !important;
+  }
+
+  .sunset-theme [class*="via-cyan-950"],
+  .sunset-theme [class*="via-emerald-950"] {
+    --tw-gradient-via: rgba(104, 55, 51, 0.95) var(--tw-gradient-via-position) !important;
+  }
+
+  @media (max-width: 1024px) {
+    .learning-theme::after {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.17));
+    }
+
+    .sunset-theme::after {
+      background: linear-gradient(180deg, rgba(77, 34, 55, 0.05), rgba(44, 49, 29, 0.16));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .learning-theme::after {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.13));
+    }
+
+    .sunset-theme::after {
+      background: linear-gradient(180deg, rgba(76, 32, 52, 0.04), rgba(42, 48, 28, 0.13));
+    }
   }
 
   .cyber-scrollbar::-webkit-scrollbar-button {
@@ -363,7 +462,7 @@
   @media (max-width: 640px) {
     .learning-menu-hero {
       background-image:
-        linear-gradient(150deg, rgba(7, 89, 133, 0.98), rgba(8, 145, 178, 0.96) 58%, rgba(5, 150, 105, 0.96)),
+        linear-gradient(150deg, rgba(255,255,255,0.96), rgba(246,253,255,0.91) 58%, rgba(240,253,244,0.92)),
         var(--app-bg-mobile);
     }
 

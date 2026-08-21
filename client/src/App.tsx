@@ -480,16 +480,16 @@ const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/`;
 // /assets/images/ on both GitHub Pages and a root custom domain.
 const BACKGROUND_BASE = "../assets/images/";
 const DEFAULT_BACKGROUND_STYLE = {
-  "--app-bg-color": "#9ee8f5",
-  "--app-bg-desktop": `url("${BACKGROUND_BASE}jungle-bg-desktop.png")`,
-  "--app-bg-tablet": `url("${BACKGROUND_BASE}jungle-bg-tablet.png")`,
-  "--app-bg-mobile": `url("${BACKGROUND_BASE}jungle-bg-mobile.png")`,
+  "--app-bg-color": "#8cccf8",
+  "--app-bg-desktop": `url("${BACKGROUND_BASE}learning-meadow-bg-desktop.png")`,
+  "--app-bg-tablet": `url("${BACKGROUND_BASE}learning-meadow-bg-tablet.png")`,
+  "--app-bg-mobile": `url("${BACKGROUND_BASE}learning-meadow-bg-mobile.png")`,
 } as React.CSSProperties;
 const CYBER_BACKGROUND_STYLE = {
-  "--app-bg-color": "#031727",
-  "--app-bg-desktop": `url("${BACKGROUND_BASE}cyber-bg-desktop.png")`,
-  "--app-bg-tablet": `url("${BACKGROUND_BASE}cyber-bg-tablet.png")`,
-  "--app-bg-mobile": `url("${BACKGROUND_BASE}cyber-bg-mobile.png")`,
+  "--app-bg-color": "#b55858",
+  "--app-bg-desktop": `url("${BACKGROUND_BASE}advanced-sunset-bg-desktop.png")`,
+  "--app-bg-tablet": `url("${BACKGROUND_BASE}advanced-sunset-bg-tablet.png")`,
+  "--app-bg-mobile": `url("${BACKGROUND_BASE}advanced-sunset-bg-mobile.png")`,
 } as React.CSSProperties;
 const BASKET_SPRITE = `${SPRITE_BASE}basket.png`;
 const ADVANCED_BANANA_ICON = `${SPRITE_BASE}advanced-banana.png`;
@@ -1938,7 +1938,7 @@ function App() {
   return (
     <AudioEnabledContext.Provider value={soundEnabled}>
       <div
-        className="page-bg min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden"
+        className={`page-bg ${isCyberBackground ? "sunset-theme" : "learning-theme"} min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden`}
         style={backgroundStyle}
         onPointerDownCapture={markAudioInteraction}
         onKeyDownCapture={markAudioInteraction}
@@ -1972,7 +1972,7 @@ function App() {
           )}
         />
         <div className="mb-2 flex justify-end px-1 text-xs font-black" aria-live="polite">
-          <span className={saveStatus === "error" ? "text-red-600" : screen.startsWith("advanced") ? "text-cyan-100" : "text-emerald-800"}>
+          <span className={saveStatus === "error" ? "text-red-600" : screen.startsWith("advanced") ? "text-amber-50" : "text-emerald-800"}>
             {saveStatus === "saving"
               ? (lang === "en" ? "Saving..." : "Menyimpan...")
               : saveStatus === "error"
@@ -2846,16 +2846,16 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
           type="button"
           onClick={() => go("advancedMenu")}
           aria-label={lang === "en" ? "Open Advanced Adventure" : "Buka Pengembaraan Lanjutan"}
-          className="group relative h-full overflow-hidden rounded-[2rem] border-4 border-emerald-300 bg-gradient-to-br from-emerald-950 via-green-900 to-teal-950 p-6 text-left text-white shadow-[0_9px_0_#064e3b] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-300 active:translate-y-1 md:p-8"
+          className="group relative h-full overflow-hidden rounded-[2rem] border-4 border-orange-200 bg-gradient-to-br from-[#47283f] via-[#785044] to-[#465833] p-6 text-left text-white shadow-[0_9px_0_#7c493c] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-300 active:translate-y-1 md:p-8"
         >
           <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
-            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-300/70 bg-emerald-800 shadow-inner">
+            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] shadow-inner">
               <img src={ADVANCED_BANANA_ICON} alt="" className="h-20 w-20 rounded-[1.2rem] object-cover shadow-[0_0_18px_rgba(250,204,21,.35)]" />
             </span>
             <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
-            <span className="mt-2 block text-lg font-bold text-emerald-100">{t.advancedAdventureShort}</span>
-            <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-900/90 px-4 py-2 text-sm font-black text-emerald-100 shadow-sm">
+            <span className="mt-2 block text-lg font-bold text-orange-50">{t.advancedAdventureShort}</span>
+            <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-[#523344]/90 px-4 py-2 text-sm font-black text-orange-50 shadow-sm">
               {advancedCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
               {lang === "en" ? `${advancedCompleted} of 6 missions complete` : `${advancedCompleted} daripada 6 misi selesai`}
             </span>
@@ -2865,7 +2865,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
             </span>
             <span className="mt-3 flex flex-wrap gap-2">
               {advancedTopics.map((topic) => (
-                <span key={topic} className="max-w-full rounded-full border border-emerald-300/70 bg-emerald-800/80 px-3 py-1.5 text-sm font-black leading-snug text-emerald-50 shadow-sm">
+                <span key={topic} className="max-w-full rounded-full border border-orange-200/70 bg-[#604039]/80 px-3 py-1.5 text-sm font-black leading-snug text-orange-50 shadow-sm">
                   {topic}
                 </span>
               ))}
@@ -3045,20 +3045,20 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 
   return (
     <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
-      <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-200 p-5 text-white shadow-[0_10px_0_#075985] sm:p-7 md:p-8">
+      <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-white p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
         <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
           <div className="mx-auto grid h-32 w-32 place-items-center md:h-36 md:w-36">
             <img src={chrysHappy} alt="Chrys" className="h-28 w-28 object-contain drop-shadow-xl md:h-32 md:w-32" />
           </div>
           <div className="text-center md:text-left">
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-cyan-100/80 bg-blue-950/35 px-4 py-2 text-sm font-black uppercase text-cyan-50">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-sky-200 bg-sky-50/90 px-4 py-2 text-sm font-black uppercase text-blue-900">
               <Compass className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
               {lang === "en" ? "Chrys's learning journey" : "Perjalanan pembelajaran Chrys"}
             </span>
-            <h2 className="mt-3 text-3xl font-black leading-tight text-white sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-black leading-tight text-blue-950 sm:text-4xl">
               {lang === "en" ? `Ready to explore, ${player.name}?` : `Sedia meneroka, ${player.name}?`}
             </h2>
-            <p className="mt-2 max-w-2xl text-base font-bold text-cyan-50/95 sm:text-lg">{t.menuTitle}</p>
+            <p className="mt-2 max-w-2xl text-base font-bold text-slate-600 sm:text-lg">{t.menuTitle}</p>
           </div>
           <div className="mx-auto flex gap-2 md:flex-col">
             <span className="flex items-center gap-2 rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-4 py-3 font-black text-blue-950 shadow-[0_5px_0_#ca8a04]">
@@ -3149,20 +3149,19 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
-      <section className="relative overflow-hidden rounded-[2rem] border-4 border-cyan-300 bg-gradient-to-br from-slate-950 via-emerald-950 to-cyan-950 p-6 text-white shadow-[0_10px_0_#083344] sm:p-8">
-        <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgba(34,211,238,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.22)_1px,transparent_1px)] [background-size:28px_28px]" aria-hidden="true" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(250,204,21,.2),transparent_34%)]" aria-hidden="true" />
+      <section className="advanced-sunset-surface relative overflow-hidden rounded-[2rem] border-4 p-6 text-white sm:p-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(255,205,123,.18),transparent_38%)]" aria-hidden="true" />
         <div className="relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-          <span className="grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-cyan-300 bg-slate-950/70 shadow-[0_6px_0_#0891b2,0_0_22px_rgba(34,211,238,.18)]">
+            <span className="grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-amber-200 bg-[#3b2638]/80 shadow-[0_6px_0_#7c493c,0_0_22px_rgba(255,194,111,.16)]">
             <img src={chrysRunning} alt="Chrys ready for an expedition" className="h-24 w-24 object-contain" />
           </span>
           <div>
-            <p className="flex w-fit items-center gap-2 rounded-full border border-cyan-300/70 bg-cyan-950/70 px-4 py-2 text-sm font-black uppercase text-cyan-100">
+            <p className="flex w-fit items-center gap-2 rounded-full border border-amber-200/70 bg-[#4b2d3c]/80 px-4 py-2 text-sm font-black uppercase text-amber-50">
               <Compass className="h-5 w-5" aria-hidden="true" />
-              {lang === "en" ? "Cyber learning trail" : "Laluan belajar siber"}
+              {lang === "en" ? "Sunset learning trail" : "Laluan belajar senja"}
             </p>
             <h2 className="mt-3 text-4xl font-black text-yellow-200">{t.advancedMenuTitle}</h2>
-            <p className="mt-2 text-lg font-bold text-cyan-50">
+            <p className="mt-2 text-lg font-bold text-amber-50">
               {player.name}, {t.advancedMenuHelp}
             </p>
           </div>
@@ -3170,14 +3169,14 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
             <span className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-4 py-3 text-center font-black text-slate-950 shadow-[0_5px_0_#a16207]">
               {lang === "en" ? "6 missions" : "6 misi"}
             </span>
-            <span className="rounded-2xl border-2 border-cyan-300 bg-cyan-950/80 px-4 py-3 text-center font-black text-cyan-50 shadow-[0_5px_0_#155e75]">
+            <span className="rounded-2xl border-2 border-orange-200 bg-[#4b2d3c]/80 px-4 py-3 text-center font-black text-orange-50 shadow-[0_5px_0_#7c493c]">
               {lang === "en" ? "Numbers 10-20" : "Nombor 10-20"}
             </span>
           </div>
         </div>
       </section>
 
-      <section className="rounded-[1.75rem] border-2 border-cyan-200 bg-slate-950/90 p-4 shadow-[0_7px_0_#083344]" aria-label={lang === "en" ? "Advanced learning trail" : "Laluan pembelajaran lanjutan"}>
+      <section className="advanced-sunset-card rounded-[1.75rem] border-2 p-4" aria-label={lang === "en" ? "Advanced learning trail" : "Laluan pembelajaran lanjutan"}>
         <div className="flex items-center gap-2 sm:gap-4">
           {missionStates.map((complete, index) => (
             <React.Fragment key={index}>
@@ -3200,16 +3199,15 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
       <button
         type="button"
         onClick={() => go("advancedTestMenu")}
-        className="group relative overflow-hidden rounded-[2rem] border-4 border-yellow-300 bg-gradient-to-r from-slate-950 via-cyan-950 to-emerald-950 p-5 text-left shadow-[0_9px_0_#a16207] transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 active:translate-y-1 sm:p-6"
+        className="advanced-sunset-surface group relative overflow-hidden rounded-[2rem] border-4 border-yellow-300 p-5 text-left transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-200 active:translate-y-1 sm:p-6"
       >
-        <span className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(34,211,238,.2)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.2)_1px,transparent_1px)] [background-size:24px_24px]" aria-hidden="true" />
         <span className="relative flex items-center gap-4">
           <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 text-slate-950 shadow-[0_5px_0_#a16207]">
             <Flag className="h-8 w-8" strokeWidth={3} aria-hidden="true" />
           </span>
           <span>
             <span className="block text-2xl font-black text-yellow-200 sm:text-3xl">{t.advancedTestMode}</span>
-            <span className="mt-1 block font-bold text-cyan-50">{t.advancedTestHelp}</span>
+            <span className="mt-1 block font-bold text-amber-50">{t.advancedTestHelp}</span>
           </span>
           <ArrowRight className="ml-auto hidden h-9 w-9 text-yellow-200 transition-transform group-hover:translate-x-1 sm:block" strokeWidth={3} aria-hidden="true" />
         </span>
@@ -3230,7 +3228,7 @@ function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false,
   lang: Lang;
 }) {
   return (
-    <section className={`relative overflow-hidden rounded-[2rem] border-2 p-5 sm:p-7 ${locked ? "border-slate-600 bg-slate-950/90 shadow-[0_8px_0_#083344]" : complete ? "border-emerald-300 bg-gradient-to-br from-emerald-950 to-cyan-950 shadow-[0_8px_0_#047857,0_0_32px_rgba(16,185,129,.28)]" : "border-cyan-200 bg-gradient-to-br from-slate-950/95 to-emerald-950/95 shadow-[0_8px_0_#083344]"}`}>
+    <section className={`advanced-sunset-card relative overflow-hidden rounded-[2rem] border-2 p-5 sm:p-7 ${locked ? "opacity-75" : complete ? "ring-2 ring-amber-200/50" : ""}`}>
       {complete && <span className="pointer-events-none absolute -right-12 top-8 rotate-45 border-y border-emerald-200 bg-emerald-500 px-14 py-2 text-xs font-black uppercase tracking-wider text-slate-950" aria-hidden="true">{lang === "en" ? "Complete" : "Selesai"}</span>}
       <div className="mb-5 flex items-start gap-4">
         <span className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 text-2xl font-black shadow-[0_5px_0_#0f172a] ${locked ? "border-slate-500 bg-slate-800 text-slate-400" : complete ? "border-emerald-200 bg-emerald-500 text-slate-950 ring-4 ring-emerald-300/30" : "border-yellow-300 bg-yellow-300 text-slate-950"}`}>
@@ -3238,7 +3236,7 @@ function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false,
           {complete && <span className="absolute -bottom-2 -left-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-slate-950 text-[.65rem] text-white">{mission}</span>}
         </span>
         <div>
-          <p className={`text-sm font-black uppercase ${locked ? "text-slate-400" : "text-cyan-300"}`}>{lang === "en" ? `Cyber mission ${mission}` : `Misi siber ${mission}`}</p>
+          <p className={`text-sm font-black uppercase ${locked ? "text-stone-300" : "text-orange-200"}`}>{lang === "en" ? `Adventure mission ${mission}` : `Misi pengembaraan ${mission}`}</p>
           <h3 className={`text-2xl font-black sm:text-3xl ${locked ? "text-slate-300" : "text-white"}`}>{title}</h3>
           <p className={`mt-1 font-bold ${locked ? "text-slate-400" : "text-cyan-100"}`}>{subtitle}</p>
         </div>
@@ -14653,12 +14651,12 @@ function LessonShell({ lang, title, helper, children, variant = "default" }: {
     >
       <div className="mb-5 text-center" data-narration-ignore="true">
         {cyber && (
-          <p className="mb-2 text-sm font-black uppercase tracking-wide text-cyan-300">
-            {lang === "en" ? "Cyber learning mission" : "Misi pembelajaran siber"}
+          <p className="mb-2 text-sm font-black uppercase tracking-wide text-orange-200">
+            {lang === "en" ? "Sunset learning mission" : "Misi pembelajaran senja"}
           </p>
         )}
-        <h2 className={`text-3xl font-black leading-tight md:text-4xl ${cyber ? "text-yellow-200" : "text-blue-950"}`}>{title}</h2>
-        {helper && <p className={`mx-auto mt-2 max-w-2xl text-sm font-bold leading-snug md:text-base ${cyber ? "text-cyan-100" : "text-slate-600"}`}>{helper}</p>}
+        <h2 className={`text-3xl font-black leading-tight md:text-4xl ${cyber ? "text-amber-100" : "text-blue-950"}`}>{title}</h2>
+        {helper && <p className={`mx-auto mt-2 max-w-2xl text-sm font-bold leading-snug md:text-base ${cyber ? "text-orange-50" : "text-slate-600"}`}>{helper}</p>}
       </div>
       {WORD_AUDIO_ENABLED && soundEnabled && (
         <div className="mb-5 flex justify-center" data-lesson-narration-control="true" data-narration-ignore="true">
