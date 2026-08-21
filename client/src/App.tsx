@@ -12108,6 +12108,7 @@ function AdditionBananaEquation({
   emoji = String.fromCodePoint(0x1f34c),
   autoStart = false,
   cyber = false,
+  revealBuiltAnswer = false,
 }: {
   lang: Lang;
   a?: number;
@@ -12115,6 +12116,7 @@ function AdditionBananaEquation({
   emoji?: string;
   autoStart?: boolean;
   cyber?: boolean;
+  revealBuiltAnswer?: boolean;
 }) {
   const groups = [a, b, a + b];
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -12167,7 +12169,8 @@ function AdditionBananaEquation({
       if (countRunRef.current !== runId) return;
     }
 
-    for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
+    const groupsToCount = revealBuiltAnswer ? groups.slice(0, 2) : groups;
+    for (let groupIndex = 0; groupIndex < groupsToCount.length; groupIndex += 1) {
       const groupCount = groups[groupIndex];
       setActiveGroup(groupIndex);
       setVisibleCounts((current) => current.map((value, index) => index === groupIndex ? 0 : value));
@@ -12213,6 +12216,11 @@ function AdditionBananaEquation({
           setResultMergeStage("joined");
         }
       }
+    }
+
+    if (revealBuiltAnswer) {
+      setVisibleCounts((current) => current.map((count, index) => index === 2 ? groups[2] : count));
+      setCompletedGroups(groups.length);
     }
 
     setActiveGroup(-1);
@@ -12275,7 +12283,9 @@ function AdditionBananaEquation({
             ? (lang === "en" ? "Counting..." : "Mengira...")
             : completedGroups === groups.length
               ? (lang === "en" ? "Count Again!" : "Kira Lagi!")
-              : (lang === "en" ? "Count all bananas" : "Kira semua pisang")}
+              : revealBuiltAnswer
+                ? (lang === "en" ? "Count both groups" : "Kira kedua-dua kumpulan")
+                : (lang === "en" ? "Count all bananas" : "Kira semua pisang")}
           {!isCounting && (
             <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-yellow-700 shadow-md" aria-hidden="true">
               <PointerIcon />
@@ -12309,7 +12319,7 @@ function AdditionBananaEquation({
             )}
             <div
               aria-current={activeGroup === index ? "step" : undefined}
-              className={`relative flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow,transform] duration-700 ease-out ${
+              className={`relative flex h-full min-h-[25rem] flex-col rounded-2xl border-2 p-3 shadow-[0_3px_0_rgba(0,0,0,.08)] transition-[border-color,background-color,opacity,filter,box-shadow,transform] duration-700 ease-out ${index === 2 && revealBuiltAnswer && completedGroups < groups.length ? "invisible" : ""} ${index === 2 && revealBuiltAnswer && completedGroups === groups.length ? "comparison-result-reveal" : ""} ${
                   index === 2 && resultMergeStage === "joining"
                     ? cyber
                       ? "scale-[1.025] border-yellow-300 bg-yellow-300/10 ring-8 ring-yellow-300/20 shadow-[0_0_36px_rgba(250,204,21,.35)]"
@@ -16981,6 +16991,7 @@ function WorkedMethod({ q, lang, visualOnlyOperationSolutions = false, cyber = f
             b={solutionVisual.b}
             emoji={String.fromCodePoint(0x1f34c)}
             cyber
+            revealBuiltAnswer={q.inputMode === "buildTotal"}
           />
         </div>
       </div>
