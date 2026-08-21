@@ -3849,24 +3849,43 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
 
   const countAllBananas = async () => {
     if (busy || stage !== "combined") return;
+    const runId = animationRunRef.current + 1;
+    animationRunRef.current = runId;
+    stopNumberAudio();
     setBusy(true);
     setCountedThrough(0);
     setStage("counting");
     if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
-      await speakCountingSequence(total, lang, COUNTING_STEP_MS, (value) => setCountedThrough(value));
+      await speakCountingSequence(total, lang, COUNTING_STEP_MS, (value) => {
+        if (animationRunRef.current === runId) setCountedThrough(value);
+      });
     } else {
       for (let value = 1; value <= total; value += 1) {
         await wait(prefersReducedMotion ? 80 : Math.max(300, COUNTING_STEP_MS));
+        if (animationRunRef.current !== runId) return;
         setCountedThrough(value);
       }
     }
+    if (animationRunRef.current !== runId) return;
     setCountedThrough(total);
+    await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+    if (animationRunRef.current !== runId) return;
     setStage("equation");
     setBusy(false);
     if (!completionReportedRef.current) {
       completionReportedRef.current = true;
       onSolved();
     }
+  };
+
+  const resetScenario = () => {
+    animationRunRef.current += 1;
+    stopNumberAudio();
+    setMoved(0);
+    setStage("moving");
+    setBusy(false);
+    setCountedThrough(0);
+    setFlyingBanana(null);
   };
 
   const movingText = source === "alyse"
@@ -3971,6 +3990,10 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
         {stage === "equation" && (
           <div>
             <p className="text-4xl font-black text-yellow-200 sm:text-5xl" style={getNumberTextStyle(total)}>{base} + {extra} = {total}</p>
+            <button type="button" onClick={resetScenario} className="relative mx-auto mt-5 rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-7 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63] active:translate-y-1">
+              {lang === "en" ? "Count again" : "Kira lagi"}
+              <span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>
+            </button>
           </div>
         )}
       </div>
@@ -5713,6 +5736,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
   const cookie = String.fromCodePoint(0x1f36a);
   const [leftCount, setLeftCount] = useState(0);
   const [rightCount, setRightCount] = useState(0);
+  const [completedTrays, setCompletedTrays] = useState({ left: false, right: false });
   const [countingTray, setCountingTray] = useState<"left" | "right" | null>(null);
   const [readyToTransfer, setReadyToTransfer] = useState(false);
   const [transferred, setTransferred] = useState(0);
@@ -5744,10 +5768,12 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
   }, []);
 
   const countTray = async (side: "left" | "right", count: number) => {
-    if (countingTray || readyToTransfer || transferring || (side === "left" ? leftCount === count : rightCount === count)) return;
+    if (countingTray || transferring || transferComplete) return;
     const runId = runRef.current + 1;
     runRef.current = runId;
     stopNumberAudio();
+    setReadyToTransfer(false);
+    setCompletedTrays((current) => ({ ...current, [side]: false }));
     setCountingTray(side);
     const update = side === "left" ? setLeftCount : setRightCount;
     update(0);
@@ -5766,11 +5792,26 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
     update(count);
     await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
     if (runRef.current !== runId) return;
+    setCompletedTrays((current) => ({ ...current, [side]: true }));
     setCountingTray(null);
-    const bothCounted = side === "left" ? rightCount === 8 : leftCount === 5;
-    if (bothCounted) {
+    const otherTrayComplete = side === "left" ? completedTrays.right : completedTrays.left;
+    if (otherTrayComplete) {
       setReadyToTransfer(true);
     }
+  };
+
+  const resetIntro = () => {
+    runRef.current += 1;
+    stopNumberAudio();
+    setLeftCount(0);
+    setRightCount(0);
+    setCompletedTrays({ left: false, right: false });
+    setCountingTray(null);
+    setReadyToTransfer(false);
+    setTransferred(0);
+    setTransferring(false);
+    setTransferComplete(false);
+    setFlyingCookie(null);
   };
 
   const transferCookies = async () => {
@@ -5849,7 +5890,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
   const alyseRowPattern = [5, 5, 3];
 
   const tray = ({ side, initialCount, displayCount, countedThrough, name, character, borderClass, textClass, trayRef, objectAreaRef, rowPattern, slotCount }: { side: "left" | "right"; initialCount: number; displayCount: number; countedThrough: number; name: string; character: string; borderClass: string; textClass: string; trayRef: React.RefObject<HTMLDivElement | null>; objectAreaRef: React.RefObject<HTMLDivElement | null>; rowPattern?: number[]; slotCount: number }) => {
-    const finished = countedThrough === initialCount;
+    const finished = completedTrays[side] && countedThrough === initialCount;
     const busy = countingTray === side;
     return (
       <div ref={trayRef} className={`rounded-[1.75rem] border-2 bg-slate-950/75 p-4 ${borderClass}`}>
@@ -5859,24 +5900,29 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
         </div>
         <div className="relative mx-auto aspect-[1.29/1] w-full max-w-[32rem]" aria-label={lang === "en" ? `${displayCount} cookies in ${name}` : `${displayCount} biskut di ${name}`}>
           <img src={trayImage} alt="" className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_10px_8px_rgba(0,0,0,.28)]" />
-          <div ref={objectAreaRef} className="absolute inset-x-[10%] inset-y-[18%] grid place-items-center">
+          <div ref={objectAreaRef} className="absolute inset-x-[10%] inset-y-[18%] grid -translate-y-2 place-items-center sm:-translate-y-3">
             {displayCount > 0
               ? <AdvancedBananaRow count={slotCount} visibleThrough={displayCount} hiddenIndex={side === "left" ? flyingCookie?.sourceIndex : null} countedThrough={readyToTransfer ? displayCount : countedThrough} showCountLabels isCounting={countingTray === side || (transferring && side === "right" && !flyingCookie)} splitOnDesktop={!rowPattern} rowPattern={rowPattern} emoji={cookie} largeObjects spacious />
               : <span className="text-5xl font-black text-slate-400">0</span>}
           </div>
         </div>
+        {finished && (
+          <p className="mx-auto mt-3 w-fit rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63]">
+            {lang === "en" ? `Total: ${displayCount} cookies` : `Jumlah: ${displayCount} biskut`}
+          </p>
+        )}
         <button
           type="button"
-          disabled={countingTray !== null || finished}
+          disabled={countingTray !== null || transferring || transferComplete}
           onClick={() => void countTray(side, initialCount)}
           className="relative mt-3 rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63] active:translate-y-1 disabled:cursor-default disabled:text-white disabled:opacity-100"
         >
           {busy
             ? (lang === "en" ? "Counting..." : "Sedang mengira...")
             : finished
-              ? (lang === "en" ? `Total: ${displayCount} cookies` : `Jumlah: ${displayCount} biskut`)
+              ? (lang === "en" ? "Count again" : "Kira lagi")
               : (lang === "en" ? `Count ${name}` : `Kira ${name}`)}
-          {!finished && !countingTray && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
+          {!countingTray && !transferring && !transferComplete && <span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
         </button>
       </div>
     );
@@ -5929,6 +5975,10 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
         <div className="comparison-result-reveal mx-auto mt-6 max-w-2xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/80 px-6 py-4 text-emerald-100" role="status">
           <p className="text-2xl font-black">{lang === "en" ? "Alyse now has all 13 cookies." : "Alyse kini mempunyai kesemua 13 biskut."}</p>
           <p className="mt-2 text-xl font-black text-cyan-100">{lang === "en" ? "Chrys gave her 5 cookies, so 8 + 5 = 13." : "Chrys memberinya 5 biskut, jadi 8 + 5 = 13."}</p>
+          <button type="button" onClick={resetIntro} className="relative mx-auto mt-5 rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-7 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63] active:translate-y-1">
+            {lang === "en" ? "Count again" : "Kira lagi"}
+            <span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>
+          </button>
         </div>
       )}
     </div>
