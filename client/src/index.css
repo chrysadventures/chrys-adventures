@@ -988,6 +988,26 @@ video {
   }
 }
 
+/* Recorded operation cues and their visible symbols stay in sync. */
+[data-math-cue] {
+  scale: 1;
+  transform-origin: center;
+  transition:
+    scale 180ms cubic-bezier(0.2, 0.85, 0.25, 1),
+    filter 180ms ease,
+    outline-color 180ms ease;
+}
+
+:root[data-active-math-cue="plus"] [data-math-cue="plus"],
+:root[data-active-math-cue="equals"] [data-math-cue="equals"],
+:root[data-active-math-cue="minus"] [data-math-cue="minus"] {
+  z-index: 20;
+  scale: 1.16;
+  outline: 4px solid #fde047;
+  outline-offset: 4px;
+  filter: brightness(1.22) drop-shadow(0 0 14px rgba(250, 204, 21, 0.82));
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

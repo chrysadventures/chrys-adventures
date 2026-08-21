@@ -541,8 +541,21 @@ let lastCountingFinishedAt = 0;
 let queuedAudioAfterCounting: (() => void) | null = null;
 let audioMuted = !NUMBER_AUDIO_ENABLED;
 let audioUserInteracted = false;
+let mathCueVisualRunId = 0;
 const numberAudioCache = new Map<string, HTMLAudioElement>();
 const AudioEnabledContext = React.createContext(NUMBER_AUDIO_ENABLED);
+
+function beginMathCueVisual(cue: MathCue) {
+  const runId = mathCueVisualRunId + 1;
+  mathCueVisualRunId = runId;
+  document.documentElement.dataset.activeMathCue = cue;
+  return runId;
+}
+
+function clearMathCueVisual(runId?: number) {
+  if (runId !== undefined && runId !== mathCueVisualRunId) return;
+  delete document.documentElement.dataset.activeMathCue;
+}
 
 function markAudioInteraction() {
   audioUserInteracted = true;
@@ -3335,7 +3348,7 @@ function VerticalAdditionCard({ a, b, answer, carried, lang }: { a: number; b: n
       </div>
       <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] text-center text-4xl font-black text-yellow-200" style={getNumberTextStyle(a)}>
         <span aria-hidden="true" /><span className="relative">{carried && <small className="absolute -top-5 left-1/2 -translate-x-1/2 text-lg text-emerald-300">1</small>}</span><span>{a}</span>
-        <span className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span /><span>{b}</span>
+        <span data-math-cue="plus" className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span /><span>{b}</span>
         <span className="col-span-3 my-2 border-t-4 border-cyan-300" />
         <span aria-hidden="true" />{answerDigits.map((digit, index) => <span key={index}>{digit}</span>)}
       </div>
@@ -3515,7 +3528,7 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
       <div className={`flex min-h-16 items-center justify-center gap-1 rounded-2xl border-2 px-2 py-3 ${colour === "cyan" ? "border-cyan-300 bg-cyan-950/80" : "border-yellow-300 bg-slate-950"}`}>
         {values.map((value, index) => (
           <React.Fragment key={`${value}-${index}`}>
-            {index > 0 && <span className="text-lg font-black text-white">+</span>}
+            {index > 0 && <span data-math-cue="plus" className="text-lg font-black text-white">+</span>}
             <span className={`grid h-9 min-w-6 place-items-center rounded-lg border-2 px-0.5 text-lg font-black ${colour === "cyan" ? "border-cyan-300 text-cyan-100" : "border-yellow-300 text-yellow-100"}`}>{value}</span>
           </React.Fragment>
         ))}
@@ -3544,7 +3557,7 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
             </div>
             <div className="flex items-end gap-2">
               {valueGroup(example.tens, example.tensLabel, "cyan")}
-              <span className="mb-5 text-2xl font-black text-white">+</span>
+              <span data-math-cue="plus" className="mb-5 text-2xl font-black text-white">+</span>
               {valueGroup(example.ones, example.onesLabel, "yellow")}
             </div>
             <p className="mt-5 rounded-2xl border border-emerald-300 bg-emerald-950/70 px-3 py-3 text-center text-xl font-black leading-relaxed text-emerald-100">{example.equation}</p>
@@ -3978,7 +3991,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
 
       {(stage === "combined" || stage === "counting" || stage === "equation") && (
         <div ref={combinedRef} className="mt-5 animate-[fadeIn_.5s_ease-out]">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
+          <div data-math-cue="equals" className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
           <div className="rounded-[1.75rem] border-2 border-cyan-300 bg-slate-950/85 px-2 pb-4 pt-6 sm:px-4">
             <p className="mb-4 text-center text-sm font-black uppercase tracking-wide text-cyan-200">{lang === "en" ? "Combined banana row" : "Baris pisang gabungan"}</p>
             <AdvancedBananaRow count={total} countedThrough={countedThrough} showCountLabels={stage === "counting" || stage === "equation"} isCounting={stage === "counting"} label={lang === "en" ? `${total} bananas together` : `${total} pisang sekali`} />
@@ -4130,10 +4143,10 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
           <AdvancedBananaRow count={8} countedThrough={firstCount} showCountLabels isCounting={stage === "countFirst" && busy} emoji={cookie} />
           {!firstFinished && <button type="button" disabled={busy} onClick={() => void countRow(8, setFirstCount, "countSecond")} className="relative mx-auto mt-5 rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#164e63]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 8 cookies" : "Kira 8 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
         </div>
-        <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-all duration-500 ${secondVisible ? "scale-100 border-yellow-300 bg-yellow-300 text-slate-950 opacity-100 shadow-[0_5px_0_#a16207]" : "scale-75 border-slate-700 bg-slate-900 text-slate-700 opacity-30"}`} aria-hidden="true">+</span>
+        <span data-math-cue="plus" className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-all duration-500 ${secondVisible ? "scale-100 border-yellow-300 bg-yellow-300 text-slate-950 opacity-100 shadow-[0_5px_0_#a16207]" : "scale-75 border-slate-700 bg-slate-900 text-slate-700 opacity-30"}`} aria-hidden="true">+</span>
         <div className={`${trayClass} border-emerald-300 transition-all duration-500 ${secondVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-30"}`}>
           <p className="mb-5 text-center text-lg font-black text-emerald-100">{lang === "en" ? "After Chrys gives 5 cookies" : "Selepas Chrys memberi 5 biskut"}</p>
-          <AdvancedBananaRow count={5} countedThrough={secondCount} showCountLabels isCounting={stage === "countSecond" && busy} emoji={cookie} />
+          <AdvancedBananaRow count={5} countedThrough={secondCount} showCountLabels isCounting={stage === "countSecond" && busy} emoji={cookie} rowPattern={[3, 2]} />
           {stage === "countSecond" && <button type="button" disabled={busy} onClick={() => void countRow(5, setSecondCount, "readyJoin")} className="relative mx-auto mt-5 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 5 cookies" : "Kira 5 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
           {secondFinished && <p className="mt-4 text-center text-3xl font-black text-emerald-200">5</p>}
         </div>
@@ -4141,11 +4154,11 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
 
       {showJoinArea && (
         <div className="mt-7 border-t-2 border-cyan-700 pt-6">
-          <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
+          <div data-math-cue="equals" className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
           {stage === "readyJoin" && (
             <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
               <div className={`${trayClass} border-cyan-400`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} /></div>
-              <div className={`${trayClass} border-emerald-300`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} /></div>
+              <div className={`${trayClass} border-emerald-300`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} rowPattern={[3, 2]} /></div>
             </div>
           )}
           {stage === "readyJoin" && <button type="button" onClick={() => void joinTrays()} className="relative mx-auto mt-5 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Join the two trays" : "Gabungkan dua dulang"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
@@ -4158,7 +4171,7 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
                     <AdvancedBananaRow count={8} countedThrough={8} showCountLabels splitOnDesktop emoji={cookie} />
                   </div>
                   <div className="cookie-group-join-right flex min-w-0 flex-1 items-center rounded-r-[1.5rem] border-2 border-l-0 border-emerald-300 bg-emerald-950/65 p-4">
-                    <AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} />
+                    <AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} rowPattern={[3, 2]} />
                   </div>
                 </div>
               ) : (
@@ -4780,7 +4793,7 @@ function AdvancedStoryOperationBox({
             return (
               <React.Fragment key={`${groupIndex}-${groupCount}`}>
                 {groupIndex === 1 && (
-                  <span className={`place-items-center overflow-hidden font-black text-yellow-200 transition-[max-width,opacity,transform] duration-700 ${state.joined ? "hidden" : "grid max-w-12 text-3xl opacity-100"}`}>+</span>
+                  <span data-math-cue="plus" className={`place-items-center overflow-hidden font-black text-yellow-200 transition-[max-width,opacity,transform] duration-700 ${state.joined ? "hidden" : "grid max-w-12 text-3xl opacity-100"}`}>+</span>
                 )}
                 <div className={`${state.joined ? "contents" : "grid grid-cols-2 place-items-center gap-2 rounded-2xl border-2 p-2 transition-[border-color,background-color,border-radius,box-shadow] duration-1000"} ${
                   state.joined
@@ -5378,7 +5391,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
           countLabelThrough={visibleBase}
           label={lang === "en" ? `${base} bananas` : `${base} pisang`}
         />
-        <span className={`grid h-16 w-16 place-items-center justify-self-center rounded-2xl border-2 text-5xl font-black transition-all duration-300 ${stage === "plus" ? "scale-125 border-yellow-200 bg-yellow-300 text-slate-950 shadow-[0_0_24px_rgba(250,204,21,.75)]" : "border-cyan-700 bg-slate-950 text-yellow-300"}`} aria-label={lang === "en" ? "plus" : "tambah"}>+</span>
+        <span data-math-cue="plus" className={`grid h-16 w-16 place-items-center justify-self-center rounded-2xl border-2 text-5xl font-black transition-all duration-300 ${stage === "plus" ? "scale-125 border-yellow-200 bg-yellow-300 text-slate-950 shadow-[0_0_24px_rgba(250,204,21,.75)]" : "border-cyan-700 bg-slate-950 text-yellow-300"}`} aria-label={lang === "en" ? "plus" : "tambah"}>+</span>
         <div>
           <SequencingBananaBox
             count={1}
@@ -5415,7 +5428,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
 
       {(stage === "equals" || showBottomGroups || stage === "combining" || stage === "done") && (
         <div className="comparison-result-reveal mt-5 border-t-2 border-cyan-400/40 pt-5">
-          <p className={`mx-auto mb-4 grid h-16 w-20 place-items-center rounded-2xl border-2 text-5xl font-black transition-all ${stage === "equals" ? "scale-125 border-cyan-100 bg-cyan-300 text-slate-950 shadow-[0_0_24px_rgba(103,232,249,.7)]" : "border-cyan-400 bg-slate-950 text-cyan-200"}`} aria-label={lang === "en" ? "equals to" : "sama dengan"}>=</p>
+          <p data-math-cue="equals" className={`mx-auto mb-4 grid h-16 w-20 place-items-center rounded-2xl border-2 text-5xl font-black transition-all ${stage === "equals" ? "scale-125 border-cyan-100 bg-cyan-300 text-slate-950 shadow-[0_0_24px_rgba(103,232,249,.7)]" : "border-cyan-400 bg-slate-950 text-cyan-200"}`} aria-label={lang === "en" ? "equals to" : "sama dengan"}>=</p>
 
           {showBottomGroups && (
             <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border-2 border-cyan-400 bg-slate-950/80 p-4 sm:p-5">
@@ -5428,7 +5441,7 @@ function SequencingPlusOnePhase({ base, lang, onComplete }: { base: 9 | 10; lang
                 <div>
                   <SequencingBananaBox count={base} visibleCount={countedInBase} activeIndex={stage === "counting" && visibleTotal <= base ? visibleTotal - 1 : null} showFuture showCountLabels countLabelThrough={countedInBase} label={lang === "en" ? `Group of ${base}` : `Kumpulan ${base}`} />
                 </div>
-                <span className="text-center text-4xl font-black text-yellow-300" aria-hidden="true">+</span>
+                <span data-math-cue="plus" className="text-center text-4xl font-black text-yellow-300" aria-hidden="true">+</span>
                 <div>
                   <SequencingBananaBox count={1} visibleCount={countedInOne} activeIndex={stage === "counting" && visibleTotal === total ? 0 : null} showFuture showCountLabels countLabelThrough={countedInOne} countLabelStart={base + 1} label={lang === "en" ? "Group of 1" : "Kumpulan 1"} />
                 </div>
@@ -5979,7 +5992,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
       )}
       <div className="mx-auto grid max-w-[78rem] items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         {tray({ side: "left", initialCount: 5, displayCount: chrysCookieCount, countedThrough: leftCount, name: lang === "en" ? "Chrys's tray" : "Dulang Chrys", character: chrysThinking, borderClass: "border-cyan-400", textClass: "text-cyan-100", trayRef: chrysTrayRef, objectAreaRef: chrysCookieAreaRef, slotCount: 5 })}
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">{readyToTransfer ? "→" : "+"}</span>
+        <span data-math-cue={readyToTransfer ? undefined : "plus"} className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">{readyToTransfer ? "→" : "+"}</span>
         {tray({ side: "right", initialCount: 8, displayCount: alyseCookieCount, countedThrough: rightCount, name: lang === "en" ? "Alyse's tray" : "Dulang Alyse", character: alyseGuide, borderClass: "border-emerald-300", textClass: "text-emerald-100", trayRef: alyseTrayRef, objectAreaRef: alyseCookieAreaRef, rowPattern: alyseRowPattern, slotCount: 13 })}
       </div>
       {readyToTransfer && !transferComplete && (
@@ -6058,7 +6071,7 @@ function AdvancedVerticalAdditionStory({ lang, character, characterName, story, 
           <AdvancedBananaRow count={a} emoji={object.emoji} label={lang === "en" ? `${a} ${object.enPlural}` : `${a} ${object.ms}`} />
           <p className="mt-2 text-center text-lg font-black text-cyan-100">{lang === "en" ? `${a} ${object.enPlural}` : `${a} ${object.ms}`}</p>
         </div>
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
+        <span data-math-cue="plus" className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
         <div className="rounded-3xl border-2 border-emerald-400 bg-slate-950/80 p-4">
           <AdvancedBananaRow count={b} emoji={object.emoji} label={lang === "en" ? `${b} ${object.enPlural}` : `${b} ${object.ms}`} />
           <p className="mt-2 text-center text-lg font-black text-emerald-100">{lang === "en" ? `${b} ${object.enPlural}` : `${b} ${object.ms}`}</p>
@@ -6167,7 +6180,7 @@ function AdvancedPart2PanelAForm({ beat, complete, combined, tenInColumn, remain
       {beat === 2 && combined && <div className="slide-in-up mb-4 grid grid-cols-2 gap-3"><div className="overflow-hidden rounded-2xl border-2 border-cyan-400 bg-cyan-950/60 p-2"><p className="mb-1 text-center text-xs font-black uppercase text-cyan-200">{lang === "en" ? "Tens column" : "Lajur puluh"}</p><div className="relative h-28"><div className="absolute left-1/2 top-1/2 flex w-[31rem] -translate-x-1/2 -translate-y-1/2 scale-[.30] items-center justify-center gap-4 sm:scale-[.38]">{([0, 1] as const).map((index) => <div key={index} className={`rounded-[1.75rem] transition-all ${tensCounting && tensCounted === index + 1 ? "scale-110 ring-8 ring-yellow-300 shadow-[0_0_30px_rgba(250,204,21,.7)]" : ""}`}><TenBananaBundle lang={lang} compact /></div>)}</div></div></div><div className="grid place-items-center rounded-2xl border-2 border-cyan-900 bg-slate-900/60 text-4xl font-black text-cyan-800">0</div></div>}
       <div className="relative grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] text-center text-5xl font-black text-yellow-200" style={getNumberTextStyle(problem.total)}>
         <span aria-hidden="true" /><span>{aDigits[0]}</span><span>{aDigits[1]}</span>
-        <span className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span>{bDigits[0]}</span><span>{bDigits[1]}</span>
+        <span data-math-cue="plus" className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span>{bDigits[0]}</span><span>{bDigits[1]}</span>
         <span className="col-span-3 my-3 border-t-4 border-cyan-300" />
         <span aria-hidden="true" /><span className={`transition-all duration-500 ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{complete ? answerDigits[0] : "0"}</span>
         <span className={`transition-all duration-500 ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{complete ? answerDigits[1] : beat === 0 && remainderCounted === 3 ? "3" : beat === 2 && tensCounted === 2 ? "0" : "0"}</span>
@@ -6267,7 +6280,7 @@ function AdvancedPart2MethodPanel({ beat, lang, onComplete }: { beat: AdvancedPa
         {beat === 0 && step === 2 && <span className="absolute -right-2 top-1/2 rounded-xl border border-cyan-400 bg-cyan-950 px-2 py-1 text-lg font-black text-cyan-200 opacity-80">13</span>}
         <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-4 text-center" style={getNumberTextStyle(problem.total)}>
           <span aria-hidden="true" /><span className={digitClass(tensOperandsActive)}>{aDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{aDigits[1]}</span>
-          <span className="grid place-items-center text-4xl font-black text-cyan-300" aria-hidden="true">+</span><span className={digitClass(tensOperandsActive)}>{bDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{bDigits[1]}</span>
+          <span data-math-cue="plus" className="grid place-items-center text-4xl font-black text-cyan-300" aria-hidden="true">+</span><span className={digitClass(tensOperandsActive)}>{bDigits[0]}</span><span className={digitClass(onesOperandsActive)}>{bDigits[1]}</span>
           <span className="col-span-3 my-2 border-t-4 border-cyan-300" />
           <span aria-hidden="true" /><span className={`${digitClass(tensResultVisible && (beat === 0 ? step === 6 || finalGlow : step === 4 || finalGlow))} ${tensResultVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
           <span className={`${digitClass(onesResultVisible && (beat === 0 ? step === 4 || finalGlow : step === 2 || finalGlow))} ${onesResultVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[1]}</span>
@@ -6651,7 +6664,7 @@ function AdvancedSubtractionPanelAForm({ beat, complete, lang }: { beat: Advance
       </div>
       <div className="relative grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(problem.answer)}>
         <span aria-hidden="true" /><span>{aDigits[0]}</span><span>{aDigits[1]}</span>
-        <span className="grid place-items-center text-cyan-300" aria-hidden="true">−</span><span>{bDigits[0]}</span><span>{bDigits[1]}</span>
+        <span data-math-cue="minus" className="grid place-items-center text-cyan-300" aria-hidden="true">−</span><span>{bDigits[0]}</span><span>{bDigits[1]}</span>
         <span className="col-span-3 my-3 border-t-4 border-cyan-300" />
         <span aria-hidden="true" /><span className={`transition-all ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{answerDigits[0]}</span>
         <span className={`transition-all ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{answerDigits[1]}</span>
@@ -6670,7 +6683,7 @@ function VerticalSubtractionCard({ a, b, answer, borrowing = false, showBorrow =
       <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] gap-3 text-center text-4xl font-black text-yellow-200 min-[380px]:text-5xl" style={getNumberTextStyle(a)}>
         <span aria-hidden="true" /><span className="relative rounded-xl border border-cyan-900 py-2">{aDigits[0]}{borrowing && showBorrow && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -rotate-[32deg] bg-red-400" /><span className="absolute -right-1 -top-4 text-xl text-yellow-300">0</span></>}</span>
         <span className="relative rounded-xl border border-cyan-900 py-2">{borrowing && showBorrow && <span className="absolute -left-1 -top-4 text-xl text-yellow-300">1</span>}{aDigits[1]}</span>
-        <span className="grid place-items-center text-cyan-300" aria-hidden="true">−</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[0]}</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[1]}</span>
+        <span data-math-cue="minus" className="grid place-items-center text-cyan-300" aria-hidden="true">−</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[0]}</span><span className="rounded-xl border border-cyan-900 py-2">{bDigits[1]}</span>
         <span className="col-span-3 border-t-4 border-cyan-300" />
         <span aria-hidden="true" /><span>{answerDigits[0]}</span><span>{answerDigits[1]}</span>
       </div>
@@ -6732,7 +6745,7 @@ function AdvancedSubtractionVerticalCard({ beat, step, lang }: { beat: AdvancedS
           {borrowed && <><span className="absolute left-1/2 top-1/2 h-1 w-12 -translate-x-1/2 -translate-y-1/2 -rotate-[32deg] rounded bg-red-400" aria-hidden="true" /><span className="absolute -right-1 -top-4 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 text-lg text-slate-950">0</span></>}
         </span>
         <span className={digitClass(onesActive || borrowed)}>{borrowed && <span className="absolute -left-1 -top-4 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-200 bg-yellow-400 text-lg text-slate-950">1</span>}{aDigits[1]}</span>
-        <span className="grid place-items-center text-4xl font-black text-cyan-300" aria-hidden="true">−</span><span className={digitClass(tensActive)}>{bDigits[0]}</span>
+        <span data-math-cue="minus" className="grid place-items-center text-4xl font-black text-cyan-300" aria-hidden="true">−</span><span className={digitClass(tensActive)}>{bDigits[0]}</span>
         <span className={digitClass(onesActive)}>{bDigits[1]}</span>
         <span className="col-span-3 my-2 border-t-4 border-cyan-300" />
         <span aria-hidden="true" /><span className={`${digitClass(tensVisible)} ${tensVisible ? "opacity-100" : "opacity-0"}`}>{answerDigits[0]}</span>
@@ -6979,7 +6992,7 @@ function AdvancedSubtractionBorrowingIntro({ lang }: { lang: Lang }) {
     <section className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-5 shadow-[inset_0_0_28px_rgba(34,211,238,.12)] sm:p-7">
       <div className="mx-auto grid max-w-4xl items-center gap-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,.8fr)]">
         <div className="relative mx-auto"><TenBananaBundle lang={lang} compact /></div>
-        <span className="text-center text-5xl font-black text-cyan-300">+</span>
+        <span data-math-cue="plus" className="text-center text-5xl font-black text-cyan-300">+</span>
         <div className="relative rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-5"><AdvancedSubtractionLooseBananas count={4} countedThrough={4} /><span className="absolute -right-3 -top-4 grid h-12 w-12 place-items-center rounded-full border-4 border-yellow-200 bg-yellow-400 text-3xl font-black text-slate-950 shadow-[0_0_20px_rgba(250,204,21,.55)]">?</span></div>
       </div>
       <p className="mx-auto mt-6 max-w-3xl rounded-2xl border border-cyan-500 bg-cyan-950/60 px-5 py-4 text-center text-xl font-black text-cyan-50">{lang === "en" ? "If the ones are not enough, this ten-basket can open into 10 ones." : "Jika sa tidak cukup, bakul puluh ini boleh dibuka menjadi 10 sa."}</p>
@@ -7132,7 +7145,7 @@ function TeenQuantityVisual({
       ))}
       {tens === 1 && ones > 0 && (
         <>
-          <span className="text-center text-5xl font-black text-yellow-300" aria-hidden="true">+</span>
+          <span data-math-cue="plus" className="text-center text-5xl font-black text-yellow-300" aria-hidden="true">+</span>
           <div className="rounded-[1.75rem] border-4 border-yellow-300 bg-amber-50 p-4">
             <p className="mb-3 text-center text-lg font-black text-amber-900">
               {lang === "en" ? `${ones} more` : `${ones} lagi`}
@@ -9749,7 +9762,9 @@ function RealWorldOperationExample({ lang, operation }: { lang: Lang; operation:
         </div>
 
         <div className="mt-5 rounded-3xl border-2 border-violet-200 bg-violet-50 p-4 text-center">
-          <p className="text-3xl font-black text-violet-950" style={NUMBER_TEXT_STYLE}>{start} {addition ? "+" : "−"} {change} = {phase === "done" ? answer : "?"}</p>
+          <p className="text-3xl font-black text-violet-950" style={NUMBER_TEXT_STYLE}>
+            {start} <span data-math-cue={addition ? "plus" : "minus"}>{addition ? "+" : "−"}</span> {change} <span data-math-cue="equals">=</span> {phase === "done" ? answer : "?"}
+          </p>
           <div className="mt-4 flex min-h-24 flex-wrap items-center justify-center gap-3">
             {Array.from({ length: answer }, (_, index) => {
               const active = phase === "countResult" && index + 1 === resultCount;
@@ -9796,7 +9811,7 @@ function FindClueWordExample({ lang }: { lang: Lang }) {
         >
           <div className="flex min-h-32 items-center justify-center gap-3 rounded-3xl bg-sky-50 p-4">
             <SpriteIcon value="🐚" className="h-14 w-14 drop-shadow-md" />
-            <span className="text-4xl font-black text-blue-800">+</span>
+            <span data-math-cue="plus" className="text-4xl font-black text-blue-800">+</span>
             <SpriteIcon value="🐚" className="h-14 w-14 drop-shadow-md" />
             <SpriteIcon value="🐚" className="h-14 w-14 drop-shadow-md" />
           </div>
@@ -10689,7 +10704,7 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
           </div>
         </div>
 
-        <span className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">-</span>
+        <span data-math-cue="minus" className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">-</span>
 
         <div className={`rounded-3xl border-2 p-4 text-center transition-[border-color,background-color,box-shadow] ${phase === "crossing" ? "border-red-500 bg-red-50 ring-4 ring-red-100" : "border-red-200 bg-red-50"}`}>
           <p className="mb-4 text-xl font-black text-red-900">{lang === "en" ? `Cross out ${takeAway}` : `Pangkah ${takeAway}`}</p>
@@ -10705,7 +10720,7 @@ function SubtractionBananaEquation({ lang, start, takeAway, objectEmoji = BANANA
           </div>
         </div>
 
-        <span className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">=</span>
+        <span data-math-cue="equals" className="grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 border-yellow-500 bg-yellow-200 text-4xl font-black text-blue-950 shadow-[0_4px_0_#d97706]">=</span>
 
         <div className={`rounded-3xl border-2 p-4 text-center transition-[border-color,background-color,box-shadow] ${phase === "counting" ? "border-blue-500 bg-blue-50 ring-4 ring-blue-100" : phase === "done" ? "border-emerald-500 bg-emerald-50 ring-4 ring-emerald-100" : "border-blue-200 bg-blue-50"}`}>
           <p className="mb-4 text-xl font-black text-blue-950">{lang === "en" ? "Count what is left" : "Kira yang tinggal"}</p>
@@ -10979,7 +10994,7 @@ function MangoTraySubtractionStory({ lang, t, onPrev, onDone, actions = [] }: {
           </section>
 
           <div className="flex items-center justify-center md:flex-col">
-            <div className={`grid h-16 w-16 place-items-center rounded-2xl border-2 border-yellow-500 bg-yellow-100 text-4xl font-black text-blue-950 shadow-[0_5px_0_#a86000] ${phase === "packing" ? "ring-4 ring-red-200" : ""}`} aria-label={lang === "en" ? "minus" : "tolak"}>-</div>
+            <div data-math-cue="minus" className={`grid h-16 w-16 place-items-center rounded-2xl border-2 border-yellow-500 bg-yellow-100 text-4xl font-black text-blue-950 shadow-[0_5px_0_#a86000] ${phase === "packing" ? "ring-4 ring-red-200" : ""}`} aria-label={lang === "en" ? "minus" : "tolak"}>-</div>
           </div>
 
           <section className={`rounded-[2rem] border-4 p-4 transition-colors ${phase === "packing" ? "border-emerald-400 bg-emerald-50" : "border-emerald-200 bg-white"}`}>
@@ -11693,6 +11708,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
         </div>
 
         <span
+          data-math-cue="plus"
           className={`grid h-14 w-14 place-items-center self-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow,transform] duration-300 ${
             activePart === "source-plus"
               ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
@@ -11756,6 +11772,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
         </div>
 
         <span
+          data-math-cue="equals"
           className={`grid h-14 w-14 place-items-center self-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow,transform] duration-300 ${
             activePart === "source-equals"
               ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
@@ -11812,6 +11829,7 @@ function ZeroAdditionEquation({ lang }: { lang: Lang }) {
           }`}
         >
           <span
+            data-math-cue="plus"
             className={`grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow,transform] duration-300 ${
               activePart === "plus" || mergeStage === "cue"
                 ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
@@ -12128,6 +12146,7 @@ function AdditionBananaEquation({
           <React.Fragment key={`${index}-${count}`}>
             {index > 0 && (
               <span
+                data-math-cue={index === 1 ? "plus" : "equals"}
                 className={`grid h-14 w-14 place-items-center justify-self-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,color,box-shadow] duration-300 ${
                    activeSign === index - 1
                     ? cyber
@@ -12209,6 +12228,7 @@ function AdditionBananaEquation({
                                }`}
                              >
                               <span
+                                data-math-cue="plus"
                                 className={`grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-[background-color,border-color,box-shadow,transform] duration-300 ${
                                   resultMergeStage === "cue"
                                     ? "scale-110 border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_5px_0_#d97706]"
@@ -12617,7 +12637,7 @@ function AdditionExampleVisual({ step }: { step: number }) {
       {!showJoined ? (
         <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
           <LabeledGroup count={2} label="2" emoji="🍌" />
-          <div className="text-center text-5xl font-black text-blue-800">+</div>
+          <div data-math-cue="plus" className="text-center text-5xl font-black text-blue-800">+</div>
           {step >= 1 ? <LabeledGroup count={3} label="3" emoji="🍌" /> : <div className="rounded-3xl border-4 border-dashed border-slate-200 p-8 text-center font-black text-slate-300">?</div>}
         </div>
       ) : (
@@ -14063,7 +14083,7 @@ function ActiveAnswerPanel({
           <div className="rounded-3xl border-2 border-cyan-500 bg-slate-950/75 p-3">
             <AdvancedBananaRow count={question.visual.a} />
           </div>
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-3xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
+          <span data-math-cue="plus" className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-3xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">+</span>
           <div className="rounded-3xl border-2 border-emerald-400 bg-slate-950/75 p-3">
             <AdvancedBananaRow count={question.visual.b} />
           </div>
@@ -14133,7 +14153,7 @@ function ActiveAnswerPanel({
         <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr]">
           {groupCounts.map((groupCount, groupIndex) => (
             <React.Fragment key={groupIndex}>
-              {groupIndex > 0 && <span className="text-4xl font-black text-blue-900" aria-hidden="true">+</span>}
+              {groupIndex > 0 && <span data-math-cue="plus" className="text-4xl font-black text-blue-900" aria-hidden="true">+</span>}
               <div className="rounded-3xl border-2 border-amber-200 bg-amber-50 p-4">
                 <ObjectGroup count={groupCount} emoji={emoji} numbered lang={lang} />
                 <p className="mt-3 text-xl font-black text-amber-900">
@@ -16357,7 +16377,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
             <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
               {cyber ? <AdvancedBananaRow count={visual.a} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.a : 0} rowPattern={balancedIndexRows(visual.a, 3).map((row) => row.length)} /> : <ObjectGroup count={visual.a} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} maxPerRow={3} />}
             </div>
-            <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
+            <span data-math-cue="plus" className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black ${cyber ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_5px_0_#a16207]" : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_5px_0_#d97706]"}`} aria-hidden="true">+</span>
             <div className={`rounded-[2rem] border-2 p-3 ${cyber ? "border-cyan-400 bg-slate-950/70" : "border-yellow-300 bg-yellow-50"}`}>
               {cyber ? <AdvancedBananaRow count={visual.b} showCountLabels={visual.showLabels === true} countedThrough={visual.showLabels ? visual.b : 0} rowPattern={balancedIndexRows(visual.b, 3).map((row) => row.length)} /> : <ObjectGroup count={visual.b} emoji={"\u{1F34C}"} numbered={visual.showLabels} lang={lang} maxPerRow={3} />}
             </div>
@@ -16369,7 +16389,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
     return (
       <div className={`mx-auto max-w-xl rounded-[2rem] border-4 p-6 text-center ${cyber ? "border-cyan-300 bg-slate-950 shadow-[0_7px_0_#164e63]" : "border-yellow-300 bg-yellow-50"}`}>
         <p className={`text-5xl font-black sm:text-6xl ${cyber ? "text-yellow-200" : "text-blue-950"}`} style={getNumberTextStyle(visual.a)}>
-          {visual.a} <span className={cyber ? "text-cyan-300" : "text-blue-600"}>+</span> {visual.b} <span className={cyber ? "text-cyan-300" : "text-blue-600"}>=</span> ?
+          {visual.a} <span data-math-cue="plus" className={cyber ? "text-cyan-300" : "text-blue-600"}>+</span> {visual.b} <span data-math-cue="equals" className={cyber ? "text-cyan-300" : "text-blue-600"}>=</span> ?
         </p>
       </div>
     );
@@ -16384,7 +16404,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
     return (
       <div className={`mx-auto max-w-xl rounded-[2rem] border-4 p-6 text-center ${cyber ? "border-cyan-300 bg-slate-950 shadow-[0_7px_0_#164e63]" : "border-yellow-300 bg-yellow-50"}`}>
         <p className={`text-5xl font-black sm:text-6xl ${cyber ? "text-yellow-200" : "text-blue-950"}`} style={getNumberTextStyle(visual.a)}>
-          {visual.a} <span className={cyber ? "text-cyan-300" : "text-blue-600"}>−</span> {visual.b} <span className={cyber ? "text-cyan-300" : "text-blue-600"}>=</span> ?
+          {visual.a} <span data-math-cue="minus" className={cyber ? "text-cyan-300" : "text-blue-600"}>−</span> {visual.b} <span data-math-cue="equals" className={cyber ? "text-cyan-300" : "text-blue-600"}>=</span> ?
         </p>
       </div>
     );
@@ -16562,7 +16582,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
                 : `${visual.a} ${objectName(emoji, visual.a, lang)} di dalam bakul`}
               lang={lang}
             />
-            <span className="text-center text-4xl font-black text-blue-700">+</span>
+            <span data-math-cue="plus" className="text-center text-4xl font-black text-blue-700">+</span>
             <div className="rounded-3xl border-2 border-amber-100 bg-white p-3 text-center">
               <ObjectGroup count={visual.b} emoji={emoji} numbered={revealNumbers} lang={lang} maxPerRow={3} />
               <p className="mt-3 text-xl font-black text-amber-900">
@@ -16581,7 +16601,7 @@ function VisualDisplay({ visual, lang = "en", revealNumbers = true, revealCrosse
         <AdditionGroupsAudioButton a={visual.a} b={visual.b} emoji={emoji} lang={lang} cyber={cyber} />
         <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
           <ObjectGroup count={visual.a} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} maxPerRow={3} />
-          <span className="text-center text-4xl font-black text-blue-700">+</span>
+          <span data-math-cue="plus" className="text-center text-4xl font-black text-blue-700">+</span>
           <ObjectGroup count={visual.b} emoji={emoji} numbered={visual.showLabels === true || revealNumbers} lang={lang} maxPerRow={3} />
         </div>
         <p className="text-center text-3xl font-black text-slate-400">= ?</p>
@@ -16936,7 +16956,7 @@ function SolutionVisual({ visual, lang, cyber = false }: { visual: Visual; lang:
           <p className={`text-4xl font-black ${cyber ? "text-yellow-200" : "text-blue-950"}`}>{word}</p>
           <p className={`mt-2 text-lg font-black ${cyber ? "text-cyan-100" : "text-slate-600"}`}>{word.split("").join(" - ")}</p>
         </div>
-        <span className="text-center text-4xl font-black text-amber-500" aria-hidden="true">=</span>
+        <span data-math-cue="equals" className="text-center text-4xl font-black text-amber-500" aria-hidden="true">=</span>
         <NumberTile value={visual.value} lang={lang} showWord={false} />
       </div>
     );
@@ -17221,6 +17241,8 @@ function stopNumberAudio() {
   queuedAudioAfterCounting = null;
   activeNumberAudio?.pause();
   activeNumberAudio = null;
+  mathCueVisualRunId += 1;
+  clearMathCueVisual();
 }
 
 function stopCelebrationAudio() {
@@ -17530,11 +17552,13 @@ async function speakMathCue(cue: MathCue, lang: Lang, startMode: AudioStartMode 
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${recordedFile}`);
     let settled = false;
     let timeoutId: number | null = null;
+    let visualRunId: number | null = null;
     const finish = () => {
       if (settled) return;
       settled = true;
       if (timeoutId !== null) window.clearTimeout(timeoutId);
       if (activeNumberAudio === audio) activeNumberAudio = null;
+      if (visualRunId !== null) clearMathCueVisual(visualRunId);
       resolve();
     };
     timeoutId = window.setTimeout(finish, 6500);
@@ -17547,7 +17571,7 @@ async function speakMathCue(cue: MathCue, lang: Lang, startMode: AudioStartMode 
     void playAudioFromClearStart(
       audio,
       () => activeNumberAudio === audio,
-      undefined,
+      () => { visualRunId = beginMathCueVisual(cue); },
       startMode,
       lang === "ms" ? "bm" : "default",
     )
