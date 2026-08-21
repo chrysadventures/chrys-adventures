@@ -3775,7 +3775,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
     ? largeObjects ? "h-10 w-10 sm:h-14 sm:w-14" : "h-9 w-9 sm:h-12 sm:w-12"
     : largeObjects ? "h-9 w-9 sm:h-12 sm:w-12" : "h-8 w-8 sm:h-11 sm:w-11";
   const renderBananas = (start: number, amount: number) => (
-    <div className={`flex items-center justify-center ${useSafeObjectSpacing ? "gap-2.5 sm:gap-3" : "gap-1 sm:gap-1.5"}`}>
+    <div className={`flex items-center justify-center ${showCountLabels && spacious ? "pt-4 sm:pt-5" : ""} ${spacious ? "gap-4 sm:gap-5" : useSafeObjectSpacing ? "gap-2.5 sm:gap-3" : "gap-1 sm:gap-1.5"}`}>
       {Array.from({ length: amount }, (_, offset) => {
         const index = start + offset;
         const visible = index < visibleThrough && index !== hiddenIndex;
@@ -3797,7 +3797,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
           >
             <SpriteIcon value={emoji} className={objectSizeClass} />
             {showCountLabels && counted && (
-              <span className={`absolute -top-2 left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black shadow sm:-top-2.5 sm:h-6 sm:min-w-6 sm:text-xs ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>
+              <span className={`absolute left-1/2 z-20 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black shadow sm:h-6 sm:min-w-6 sm:text-xs ${spacious ? "-top-5 sm:-top-6" : "-top-2 sm:-top-2.5"} ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>
                 {index + 1}
               </span>
             )}
@@ -3824,10 +3824,10 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
 
   return (
     <div className={`${compact ? "w-fit max-w-full shrink-0" : "w-full min-w-0"} px-2 py-2 sm:px-3 sm:py-3`} aria-label={label}>
-      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > maxObjectsPerRow ? `flex-col ${useSafeObjectSpacing ? "gap-4" : "gap-2"}` : ""}`}>
+      <div className={`hidden min-h-14 items-center justify-center sm:flex ${rowPattern || splitOnDesktop || count > maxObjectsPerRow ? `flex-col ${spacious ? "gap-7" : useSafeObjectSpacing ? "gap-4" : "gap-2"}` : ""}`}>
         {customRows ?? (splitOnDesktop ? splitRows : desktopRows)}
       </div>
-      <div className={`flex min-h-14 flex-col items-center justify-center sm:hidden ${useSafeObjectSpacing ? "gap-4" : "gap-2"}`}>
+      <div className={`flex min-h-14 flex-col items-center justify-center sm:hidden ${spacious ? "gap-7" : useSafeObjectSpacing ? "gap-4" : "gap-2"}`}>
         {customRows ?? (splitOnDesktop ? splitRows : mobileRows)}
       </div>
     </div>
@@ -3842,7 +3842,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
   const [busy, setBusy] = useState(false);
   const [countedThrough, setCountedThrough] = useState(0);
   const completionReportedRef = useRef(false);
-  const [flyingBanana, setFlyingBanana] = useState<{ left: number; top: number; x: number; y: number; midX: number; midY: number; size: number; sourceIndex: number } | null>(null);
+  const [flyingBanana, setFlyingBanana] = useState<{ left: number; top: number; x: number; y: number; curve: Array<{ x: number; y: number }>; size: number; sourceIndex: number } | null>(null);
   const destinationRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<HTMLDivElement>(null);
   const combinedRef = useRef<HTMLDivElement>(null);
@@ -3893,13 +3893,22 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
         const top = sourceBounds.top + (sourceBounds.height / 2) - (size / 2);
         const x = (destinationBounds.left + (destinationBounds.width / 2) - (size / 2)) - left;
         const y = (destinationBounds.top + (destinationBounds.height / 2) - (size / 2)) - top;
+        const controlX = x * 0.52;
+        const controlY = Math.min(0, y) - Math.max(100, Math.min(180, Math.abs(x) * 0.22));
+        const curve = Array.from({ length: 7 }, (_, curveIndex) => {
+          const progress = (curveIndex + 1) / 8;
+          const remainingProgress = 1 - progress;
+          return {
+            x: (2 * remainingProgress * progress * controlX) + (progress * progress * x),
+            y: (2 * remainingProgress * progress * controlY) + (progress * progress * y),
+          };
+        });
         setFlyingBanana({
           left,
           top,
           x,
           y,
-          midX: x / 2,
-          midY: (y / 2) - 76,
+          curve,
           size,
           sourceIndex,
         });
@@ -3969,7 +3978,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
 
   return (
     <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 shadow-[inset_0_0_35px_rgba(34,211,238,.12)] sm:p-7">
-      <style>{`@keyframes advancedObjectSlotFlight{0%{transform:translate3d(0,0,0) scale(1);opacity:1}45%{transform:translate3d(var(--flight-mid-x),var(--flight-mid-y),0) scale(1.06);opacity:1}100%{transform:translate3d(var(--flight-x),var(--flight-y),0) scale(1);opacity:1}}@media(prefers-reduced-motion:reduce){.advanced-object-slot-flight{animation:none!important}}`}</style>
+      <style>{`@keyframes advancedObjectCurveFlight{0%{transform:translate3d(0,0,0) scale(1);opacity:1}12.5%{transform:translate3d(var(--flight-x-1),var(--flight-y-1),0) scale(1.02)}25%{transform:translate3d(var(--flight-x-2),var(--flight-y-2),0) scale(1.04)}37.5%{transform:translate3d(var(--flight-x-3),var(--flight-y-3),0) scale(1.055)}50%{transform:translate3d(var(--flight-x-4),var(--flight-y-4),0) scale(1.06)}62.5%{transform:translate3d(var(--flight-x-5),var(--flight-y-5),0) scale(1.055)}75%{transform:translate3d(var(--flight-x-6),var(--flight-y-6),0) scale(1.04)}87.5%{transform:translate3d(var(--flight-x-7),var(--flight-y-7),0) scale(1.02)}100%{transform:translate3d(var(--flight-x),var(--flight-y),0) scale(1);opacity:1}}@media(prefers-reduced-motion:reduce){.advanced-object-slot-flight{animation:none!important}}`}</style>
       {flyingBanana && (
         <span
           className="advanced-object-slot-flight pointer-events-none fixed z-[80] grid place-items-center rounded-xl border-2 border-yellow-300 bg-amber-950 shadow-[0_0_20px_rgba(250,204,21,.65)]"
@@ -3980,9 +3989,21 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
             height: flyingBanana.size,
             "--flight-x": `${flyingBanana.x}px`,
             "--flight-y": `${flyingBanana.y}px`,
-            "--flight-mid-x": `${flyingBanana.midX}px`,
-            "--flight-mid-y": `${flyingBanana.midY}px`,
-            animation: "advancedObjectSlotFlight 1200ms cubic-bezier(.22,.72,.24,1) both",
+            "--flight-x-1": `${flyingBanana.curve[0].x}px`,
+            "--flight-y-1": `${flyingBanana.curve[0].y}px`,
+            "--flight-x-2": `${flyingBanana.curve[1].x}px`,
+            "--flight-y-2": `${flyingBanana.curve[1].y}px`,
+            "--flight-x-3": `${flyingBanana.curve[2].x}px`,
+            "--flight-y-3": `${flyingBanana.curve[2].y}px`,
+            "--flight-x-4": `${flyingBanana.curve[3].x}px`,
+            "--flight-y-4": `${flyingBanana.curve[3].y}px`,
+            "--flight-x-5": `${flyingBanana.curve[4].x}px`,
+            "--flight-y-5": `${flyingBanana.curve[4].y}px`,
+            "--flight-x-6": `${flyingBanana.curve[5].x}px`,
+            "--flight-y-6": `${flyingBanana.curve[5].y}px`,
+            "--flight-x-7": `${flyingBanana.curve[6].x}px`,
+            "--flight-y-7": `${flyingBanana.curve[6].y}px`,
+            animation: "advancedObjectCurveFlight 1200ms linear both",
           } as React.CSSProperties}
           aria-hidden="true"
         >
@@ -4130,11 +4151,13 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
     runRef.current = runId;
     setBusy(true);
     setStage("joining");
-    await wait(prefersReducedMotion ? 120 : 1300);
+    await wait(prefersReducedMotion ? 120 : 1450);
     if (runRef.current !== runId) return;
     setStage("countTotal");
     setTotalCount(0);
     window.requestAnimationFrame(() => combinedRef.current?.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" }));
+    await wait(prefersReducedMotion ? 80 : 620);
+    if (runRef.current !== runId) return;
     if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
       await speakCountingSequence(13, lang, COUNTING_STEP_MS, (value) => {
         if (runRef.current === runId) setTotalCount(value);
@@ -4174,22 +4197,22 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
   const secondVisible = stage !== "countFirst";
   const secondFinished = !["countFirst", "countSecond"].includes(stage);
   const showJoinArea = ["readyJoin", "joining", "countTotal", "done"].includes(stage);
-  const showingCombinedBox = ["joining", "countTotal", "done"].includes(stage);
+  const showingCombinedBox = ["countTotal", "done"].includes(stage);
 
   return (
     <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 sm:p-7">
-      <style>{`@keyframes cookieGroupJoinLeft{0%{transform:translateX(-3rem);opacity:.55}100%{transform:translateX(0);opacity:1}}@keyframes cookieGroupJoinRight{0%{transform:translateX(3rem);opacity:.55}100%{transform:translateX(0);opacity:1}}.cookie-group-join-left{animation:cookieGroupJoinLeft 1300ms cubic-bezier(.22,.72,.24,1) both}.cookie-group-join-right{animation:cookieGroupJoinRight 1300ms cubic-bezier(.22,.72,.24,1) both}@media(prefers-reduced-motion:reduce){.cookie-group-join-left,.cookie-group-join-right{animation:none}}`}</style>
+      <style>{`@keyframes cookieTrayJoinLeft{0%{transform:translate3d(0,0,0) scale(1);opacity:1}72%{transform:translate3d(var(--cookie-join-x),var(--cookie-join-y),0) scale(1.1);opacity:1}100%{transform:translate3d(var(--cookie-join-x),var(--cookie-join-y),0) scale(.98);opacity:0}}@keyframes cookieTrayJoinRight{0%{transform:translate3d(0,0,0) scale(1);opacity:1}72%{transform:translate3d(var(--cookie-join-x),var(--cookie-join-y),0) scale(1.1);opacity:1}100%{transform:translate3d(var(--cookie-join-x),var(--cookie-join-y),0) scale(.98);opacity:0}}@keyframes cookieTotalGroupPop{0%{transform:scale(.72) translateY(1.25rem);opacity:0}62%{transform:scale(1.06) translateY(0);opacity:1}100%{transform:scale(1);opacity:1}}.cookie-tray-join-left{--cookie-join-x:48%;--cookie-join-y:3rem;animation:cookieTrayJoinLeft 1450ms cubic-bezier(.2,.72,.24,1) both;transform-origin:center;will-change:transform,opacity}.cookie-tray-join-right{--cookie-join-x:-48%;--cookie-join-y:3rem;animation:cookieTrayJoinRight 1450ms cubic-bezier(.2,.72,.24,1) both;transform-origin:center;will-change:transform,opacity}.cookie-total-group-pop{animation:cookieTotalGroupPop 620ms cubic-bezier(.18,.85,.28,1.18) both;transform-origin:center;will-change:transform,opacity}@media(max-width:767px){.cookie-tray-join-left{--cookie-join-x:0;--cookie-join-y:42%;transform-origin:center bottom}.cookie-tray-join-right{--cookie-join-x:0;--cookie-join-y:-42%;transform-origin:center top}}@media(prefers-reduced-motion:reduce){.cookie-tray-join-left,.cookie-tray-join-right,.cookie-total-group-pop{animation:none}}`}</style>
       <h4 className="text-center text-2xl font-black text-yellow-200">{lang === "en" ? "Now count the two parts" : "Sekarang kira dua bahagian"}</h4>
       <div className="mx-auto mt-6 grid max-w-6xl items-center gap-4 md:grid-cols-[minmax(0,1.18fr)_auto_minmax(0,.82fr)]">
         <div className={`${trayClass} border-cyan-400`}>
           <p className="mb-5 text-center text-lg font-black text-cyan-100">{lang === "en" ? "Alyse's tray at the beginning" : "Dulang Alyse pada awalnya"}</p>
-          <AdvancedBananaRow count={8} countedThrough={firstCount} showCountLabels isCounting={stage === "countFirst" && busy} emoji={cookie} />
+          <AdvancedBananaRow count={8} countedThrough={firstCount} showCountLabels isCounting={stage === "countFirst" && busy} emoji={cookie} spacious />
           {!firstFinished && <button type="button" disabled={busy} onClick={() => void countRow(8, setFirstCount, "countSecond")} className="relative mx-auto mt-5 rounded-2xl border-2 border-cyan-200 bg-cyan-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#164e63]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 8 cookies" : "Kira 8 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
         </div>
         <span data-math-cue="plus" className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 text-4xl font-black transition-all duration-500 ${secondVisible ? "scale-100 border-yellow-300 bg-yellow-300 text-slate-950 opacity-100 shadow-[0_5px_0_#a16207]" : "scale-75 border-slate-700 bg-slate-900 text-slate-700 opacity-30"}`} aria-hidden="true">+</span>
         <div className={`${trayClass} border-emerald-300 transition-all duration-500 ${secondVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-30"}`}>
           <p className="mb-5 text-center text-lg font-black text-emerald-100">{lang === "en" ? "After Chrys gives 5 cookies" : "Selepas Chrys memberi 5 biskut"}</p>
-          <AdvancedBananaRow count={5} countedThrough={secondCount} showCountLabels isCounting={stage === "countSecond" && busy} emoji={cookie} rowPattern={[3, 2]} />
+          <AdvancedBananaRow count={5} countedThrough={secondCount} showCountLabels isCounting={stage === "countSecond" && busy} emoji={cookie} rowPattern={[3, 2]} spacious />
           {stage === "countSecond" && <button type="button" disabled={busy} onClick={() => void countRow(5, setSecondCount, "readyJoin")} className="relative mx-auto mt-5 rounded-2xl border-2 border-emerald-200 bg-emerald-600 px-6 py-3 font-black text-white shadow-[0_5px_0_#065f46]">{busy ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count 5 cookies" : "Kira 5 biskut")}<span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
           {secondFinished && <p className="mt-4 text-center text-3xl font-black text-emerald-200">5</p>}
         </div>
@@ -4198,31 +4221,20 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
       {showJoinArea && (
         <div className="mt-7 border-t-2 border-cyan-700 pt-6">
           <div data-math-cue="equals" className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl border-2 border-cyan-200 bg-cyan-400 text-4xl font-black text-slate-950 shadow-[0_5px_0_#164e63]" aria-hidden="true">=</div>
-          {stage === "readyJoin" && (
+          {(stage === "readyJoin" || stage === "joining") && (
             <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
-              <div className={`${trayClass} border-cyan-400`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} /></div>
-              <div className={`${trayClass} border-emerald-300`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} rowPattern={[3, 2]} /></div>
+              <div className={`${trayClass} border-cyan-400 ${stage === "joining" ? "cookie-tray-join-left" : ""}`}><AdvancedBananaRow count={8} countedThrough={8} showCountLabels emoji={cookie} spacious /></div>
+              <div className={`${trayClass} border-emerald-300 ${stage === "joining" ? "cookie-tray-join-right" : ""}`}><AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} rowPattern={[3, 2]} spacious /></div>
             </div>
           )}
           {stage === "readyJoin" && <button type="button" onClick={() => void joinTrays()} className="relative mx-auto mt-5 flex min-h-16 items-center justify-center rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-8 text-xl font-black text-slate-950 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Join the two trays" : "Gabungkan dua dulang"}<span className="pointer-events-none absolute -right-3 -top-3 grid h-10 w-10 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span></button>}
           {showingCombinedBox && (
             <div ref={combinedRef} className="comparison-result-reveal mx-auto max-w-5xl rounded-[1.75rem] border-2 border-yellow-300 bg-slate-950/90 p-6 shadow-[0_0_28px_rgba(250,204,21,.16)]">
               <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
-              {stage === "joining" ? (
-                <div className="mx-auto flex max-w-4xl items-stretch justify-center overflow-hidden px-2">
-                  <div className="cookie-group-join-left flex min-w-0 flex-1 items-center rounded-l-[1.5rem] border-2 border-r-0 border-cyan-400 bg-cyan-950/65 p-4">
-                    <AdvancedBananaRow count={8} countedThrough={8} showCountLabels splitOnDesktop emoji={cookie} />
-                  </div>
-                  <div className="cookie-group-join-right flex min-w-0 flex-1 items-center rounded-r-[1.5rem] border-2 border-l-0 border-emerald-300 bg-emerald-950/65 p-4">
-                    <AdvancedBananaRow count={5} countedThrough={5} showCountLabels emoji={cookie} rowPattern={[3, 2]} />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels isCounting={stage === "countTotal"} rowPattern={[5, 5, 3]} emoji={cookie} largeObjects />
+              <div className="cookie-total-group-pop">
+                  <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels isCounting={stage === "countTotal"} rowPattern={[5, 5, 3]} emoji={cookie} largeObjects spacious />
                   <p className="mt-5 text-center text-2xl font-black text-cyan-100">{stage === "done" ? (lang === "en" ? "Total: 13 cookies" : "Jumlah: 13 biskut") : (lang === "en" ? `Counting: ${totalCount}` : `Mengira: ${totalCount}`)}</p>
-                </>
-              )}
+              </div>
             </div>
           )}
         </div>
