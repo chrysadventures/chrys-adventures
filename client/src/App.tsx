@@ -333,6 +333,44 @@ const EN_OBJECT_TOTAL_AUDIO_FILES = {
   } as Record<string, { singular?: string; plural: string }>,
 } as const;
 
+const EN_OBJECT_TOTAL_PHRASE_AUDIO_FILES: Record<string, Partial<Record<number, string>>> = {
+  "\u{1F333}": {
+    10: "10 trees.mp3",
+  },
+  "\u{1FAA8}": {
+    11: "11 rocks.mp3",
+  },
+  "\u{1F343}": {
+    12: "12 leaves.mp3",
+  },
+  "\u{1F344}": {
+    13: "13 mushrooms.mp3",
+  },
+  "\u{1F338}": {
+    14: "14 flowers.mp3",
+  },
+  "\u{1F965}": {
+    9: "9 coconut.mp3",
+    12: "12 coconut.mp3",
+    15: "15 coconuts.mp3",
+  },
+  "\u{1F96D}": {
+    16: "16 mangoes.mp3",
+  },
+  "\u{2B50}": {
+    17: "17 stars.mp3",
+  },
+  "\u{1F41A}": {
+    18: "18 shells.mp3",
+  },
+  "\u{1F4D8}": {
+    19: "19 books.mp3",
+  },
+  "\u{1F388}": {
+    20: "20 balloons.mp3",
+  },
+};
+
 const MS_OBJECT_TOTAL_AUDIO_FILES: Record<string, Partial<Record<number, string>>> = {
   "\u{1F343}": {
     1: "bm 1 daun.mp3",
@@ -447,6 +485,7 @@ const OBJECT_SPRITES: Record<string, string> = {
   "🪨": `${SPRITE_BASE}stone.png`,
   "🥥": `${SPRITE_BASE}coconut.png`,
   "🍄": `${SPRITE_BASE}mushroom.png`,
+  "🐟": `${SPRITE_BASE}fish.png`,
   "🌸": `${SPRITE_BASE}flower.png`,
   "🧺": BASKET_SPRITE,
   "🪵": `${SPRITE_BASE}log.png`,
@@ -4150,7 +4189,7 @@ function AdvancedComparePile({
   const objectTile = (index: number) => (
         <span
           key={index}
-          className={`relative grid h-16 w-16 shrink-0 place-items-center rounded-xl border-2 text-2xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] transition-colors sm:h-[4.5rem] sm:w-[4.5rem] sm:text-4xl ${
+          className={`relative grid shrink-0 place-items-center rounded-xl border-2 text-2xl shadow-[inset_0_0_12px_rgba(34,211,238,.16)] transition-colors sm:text-4xl ${object === "coconut" ? "h-[4.5rem] w-[4.5rem] sm:h-20 sm:w-20" : "h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"} ${
             index < visibleCount
               ? index === visibleCount - 1 && isCounting
               ? "z-10 scale-105 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]"
@@ -4164,22 +4203,21 @@ function AdvancedComparePile({
               index === visibleCount - 1 && isCounting ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"
             }`}>{index + 1}</span>
           )}
-          {object === "coconut" ? (
-            <img
-              src={`${SPRITE_BASE}coconut.png`}
-              alt=""
-              className="h-11 w-11 object-contain drop-shadow-md sm:h-14 sm:w-14"
-            />
-          ) : item.emoji}
+          <SpriteIcon
+            value={item.emoji}
+            className={`h-11 w-11 drop-shadow-md sm:h-14 sm:w-14 ${object === "coconut" ? "translate-y-1.5" : ""}`}
+            fallbackClassName="text-2xl sm:text-4xl"
+          />
         </span>
   );
+  const objectGap = object === "apple" ? "gap-5 sm:gap-6" : "gap-4 sm:gap-5";
   const centeredRows = (perRow: number, className: string) => (
-    <div className={`${className} min-h-48 flex-col justify-center gap-4 sm:gap-5`}>
+    <div className={`${className} min-h-48 flex-col justify-center ${objectGap}`}>
       {Array.from({ length: Math.ceil(count / perRow) }, (_, rowIndex) => {
         const rowStart = rowIndex * perRow;
         const rowCount = Math.min(perRow, count - rowStart);
         return (
-          <div key={rowIndex} className="flex justify-center gap-4 sm:gap-5">
+          <div key={rowIndex} className={`flex justify-center ${objectGap}`}>
             {Array.from({ length: rowCount }, (_, offset) => objectTile(rowStart + offset))}
           </div>
         );
@@ -4319,6 +4357,38 @@ function GreaterThanSymbolTeaching({ lang }: { lang: Lang }) {
   );
 }
 
+function EqualsSymbolTeaching({ lang }: { lang: Lang }) {
+  return (
+    <div className="rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 via-cyan-950/80 to-emerald-950/70 p-5 text-center shadow-[inset_0_0_28px_rgba(34,211,238,.12)] sm:p-7">
+      <p className="text-xl font-black text-cyan-50 sm:text-2xl">
+        {lang === "en" ? "The symbol = means equals to." : "Simbol = bermaksud sama dengan."}
+      </p>
+      <p className="mt-2 text-lg font-black text-cyan-100 sm:text-xl">
+        {lang === "en" ? "Use it when both sides have the same value." : "Gunakannya apabila kedua-dua belah mempunyai nilai yang sama."}
+      </p>
+      <div className="mx-auto mt-6 grid max-w-3xl grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+        <div className="rounded-3xl border-4 border-cyan-300 bg-slate-950/85 p-4 shadow-[0_6px_0_#164e63]">
+          <p className="text-6xl font-black text-yellow-200 sm:text-7xl" style={getNumberTextStyle(5)}>5</p>
+          <p className="mt-2 text-lg font-black uppercase text-cyan-100 sm:text-xl">{lang === "en" ? "Same value" : "Nilai sama"}</p>
+        </div>
+        <div className="grid h-24 w-24 place-items-center rounded-[2rem] border-4 border-yellow-300 bg-slate-900 text-7xl font-black text-yellow-200 shadow-[0_7px_0_#a16207,0_0_24px_rgba(250,204,21,.24)]" aria-label={lang === "en" ? "Equals symbol" : "Simbol sama dengan"}>
+          =
+        </div>
+        <div className="rounded-3xl border-4 border-emerald-300 bg-emerald-950/80 p-4 shadow-[0_6px_0_#065f46]">
+          <p className="text-6xl font-black text-yellow-200 sm:text-7xl" style={getNumberTextStyle(5)}>5</p>
+          <p className="mt-2 text-lg font-black uppercase text-emerald-100 sm:text-xl">{lang === "en" ? "Same value" : "Nilai sama"}</p>
+        </div>
+      </div>
+      <div className="mx-auto mt-6 max-w-3xl rounded-2xl border-2 border-yellow-300 bg-slate-950/80 px-5 py-4">
+        <p className="text-2xl font-black text-yellow-200 sm:text-3xl" style={NUMBER_TEXT_STYLE}>5 = 5</p>
+        <p className="mt-2 text-lg font-black text-cyan-50 sm:text-xl">
+          {lang === "en" ? "Five equals to five. Both sides match." : "Lima sama dengan lima. Kedua-dua belah sepadan."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = false }: { a: number; b: number; object: AdvancedCompareObject; lang: Lang; symbol?: ">" | "<" | "="; stagedReveal?: boolean }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visibleCounts, setVisibleCounts] = useState({ left: 0, right: 0 });
@@ -4327,6 +4397,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
   const [revealStage, setRevealStage] = useState<0 | 1 | 2 | 3>(stagedReveal ? 0 : 3);
   const [comparisonAudioPlaying, setComparisonAudioPlaying] = useState(false);
   const countingRunRef = useRef(0);
+  const comparisonRevealedRef = useRef(!stagedReveal);
   const item = ADVANCED_COMPARE_OBJECTS[object];
   const bothPilesCounted = completedSides.left && completedSides.right;
   const leftObjectName = lang === "en" ? (a === 1 ? item.en[0] : item.en[1]) : item.ms;
@@ -4339,6 +4410,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     setCountingSide(null);
     setRevealStage(stagedReveal ? 0 : 2);
     setComparisonAudioPlaying(false);
+    comparisonRevealedRef.current = !stagedReveal;
 
     return () => {
       countingRunRef.current += 1;
@@ -4348,6 +4420,11 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
 
   useEffect(() => {
     if (!stagedReveal) {
+      comparisonRevealedRef.current = true;
+      setRevealStage(3);
+      return;
+    }
+    if (comparisonRevealedRef.current) {
       setRevealStage(3);
       return;
     }
@@ -4363,6 +4440,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
       setRevealStage(2);
       await wait(prefersReducedMotion ? 100 : 1000);
       if (cancelled) return;
+      comparisonRevealedRef.current = true;
       setRevealStage(3);
       if (symbol) {
         setComparisonAudioPlaying(true);
@@ -4373,7 +4451,6 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
     void revealComparison();
     return () => {
       cancelled = true;
-      stopNumberAudio();
     };
   }, [a, b, bothPilesCounted, lang, prefersReducedMotion, stagedReveal, symbol]);
 
@@ -4386,6 +4463,8 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
 
   const countPile = async (side: "left" | "right", count: number) => {
     if (countingSide !== null) return;
+    stopNumberAudio();
+    setComparisonAudioPlaying(false);
     const runId = countingRunRef.current + 1;
     countingRunRef.current = runId;
     setCountingSide(side);
@@ -4441,7 +4520,9 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         >
           {isCounting
             ? (lang === "en" ? "Counting..." : "Mengira...")
-            : (lang === "en" ? `Count ${side} pile` : `Kira kumpulan ${side === "left" ? "kiri" : "kanan"}`)}
+            : isComplete
+              ? (lang === "en" ? "Count again" : "Kira lagi")
+              : (lang === "en" ? `Count ${side} pile` : `Kira kumpulan ${side === "left" ? "kiri" : "kanan"}`)}
           {!isCounting && <span className="pointer-events-none absolute -right-3 -top-3 grid h-8 w-8 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100 text-amber-700 shadow-sm" aria-hidden="true"><PointerIcon /></span>}
         </button>
       </section>
@@ -4469,7 +4550,7 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
           {lang === "en" ? symbol === "<" ? (
             <>{a} {leftObjectName} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">LESS</span> than {b} {rightObjectName}.</>
           ) : symbol === "=" ? (
-            <>{a} {leftObjectName} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">EQUAL TO</span> {b} {rightObjectName}.</>
+            <>{a} {leftObjectName} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">EQUALS TO</span> {b} {rightObjectName}.</>
           ) : (
             <>{a} {leftObjectName} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">MORE</span> than {b} {rightObjectName}.</>
           ) : symbol === "<" ? (
@@ -4482,21 +4563,32 @@ function AdvancedCompareVisual({ a, b, object, lang, symbol, stagedReveal = fals
         </p>
       )}
       {stagedReveal && revealStage >= 3 && (
-        <div className="comparison-explanation-bar-reveal mx-auto mt-3 grid max-w-3xl items-center gap-3 rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-4 py-3 text-center sm:grid-cols-[minmax(0,1fr)_auto] sm:px-5">
-          <p className="text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
-            {a} <span className="inline-grid min-w-14 place-items-center rounded-xl bg-yellow-300 px-3 py-1 text-3xl text-slate-950 shadow-[0_3px_0_#a16207]">{symbol}</span> {b}
+        <div className="mx-auto mt-3 grid max-w-3xl gap-3 text-center">
+          <p className="comparison-explanation-bar-reveal rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-5 py-4 text-xl font-black text-cyan-50 sm:text-2xl" aria-live="polite">
+            {lang === "en" ? symbol === "=" ? (
+              <>{a} <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">equals to</span> {b}.</>
+            ) : (
+              <>{a} is <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">{symbol === ">" ? "greater than" : "less than"}</span> {b}.</>
+            ) : (
+              <>{a} adalah <span className="rounded-xl bg-yellow-300 px-3 py-1 text-slate-950 shadow-[0_3px_0_#a16207]">{symbol === ">" ? "lebih besar daripada" : symbol === "<" ? "lebih kecil daripada" : "sama dengan"}</span> {b}.</>
+            )}
           </p>
-          <button
-            type="button"
-            onClick={() => void replayComparison()}
-            disabled={comparisonAudioPlaying}
-            className="mx-auto inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-4 font-black text-slate-950 shadow-[0_5px_0_#0e7490] transition hover:bg-cyan-400 active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
-          >
-            <SpeakerIcon />
-            {comparisonAudioPlaying
-              ? (lang === "en" ? "Playing..." : "Sedang dimainkan...")
-              : (lang === "en" ? "Hear again" : "Dengar sekali lagi")}
-          </button>
+          <div className="comparison-explanation-bar-reveal rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-5 py-4">
+            <p className="text-2xl font-black text-cyan-50 sm:text-3xl" aria-live="polite">
+              {a} <span className="inline-grid min-w-14 place-items-center rounded-xl bg-yellow-300 px-3 py-1 text-3xl text-slate-950 shadow-[0_3px_0_#a16207]">{symbol}</span> {b}
+            </p>
+            <button
+              type="button"
+              onClick={() => void replayComparison()}
+              disabled={comparisonAudioPlaying}
+              className="mx-auto mt-4 inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-4 font-black text-slate-950 shadow-[0_5px_0_#0e7490] transition hover:bg-cyan-400 active:translate-y-1 disabled:cursor-wait disabled:opacity-60"
+            >
+              <SpeakerIcon />
+              {comparisonAudioPlaying
+                ? (lang === "en" ? "Playing..." : "Sedang dimainkan...")
+                : (lang === "en" ? "Hear again" : "Dengar sekali lagi")}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -4871,9 +4963,9 @@ function AdvancedCompareBiggerLesson({ lang, t, onDone }: { lang: Lang; t: UIStr
     },
     {
       eyebrow: lang === "en" ? "Mission 2: Compare" : "Misi 2: Banding",
-      title: lang === "en" ? "Equals: =" : "Sama dengan: =",
-      text: lang === "en" ? "Use = when both sides have the same amount." : "Guna = apabila dua-dua belah ada jumlah yang sama.",
-      visual: <AdvancedCompareVisual a={5} b={5} object="apple" lang={lang} symbol="=" stagedReveal />,
+      title: lang === "en" ? "Meet the equals symbol" : "Kenali simbol sama dengan",
+      text: lang === "en" ? "First, learn what = means." : "Mula-mula, pelajari maksud =.",
+      visual: <EqualsSymbolTeaching lang={lang} />,
       note: "",
     },
     {
@@ -5533,6 +5625,7 @@ function AdvancedSequencingPractice({ lang, t, onBack, onDone }: { lang: Lang; t
           </div>
           {selected !== null && (
             <div className={`comparison-result-reveal mt-5 rounded-2xl border-2 px-5 py-4 text-center text-lg font-black ${correct ? "border-emerald-300 bg-emerald-950 text-emerald-100" : "border-orange-300 bg-orange-950 text-orange-100"}`}>
+              {correct && <CorrectCelebration key={question.id} />}
               <p className="text-2xl">{correct ? (lang === "en" ? "Correct!" : "Betul!") : (lang === "en" ? "Good try. Use the rule:" : "Cubaan baik. Guna peraturan:")}</p>
               <p className="mt-2">{feedback}</p>
               <button type="button" onClick={next} className="mt-4 rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-7 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207]">{index === ADVANCED_SEQUENCING_QUESTIONS.length - 1 ? t.finish : t.nextQuestion}</button>
@@ -6335,7 +6428,11 @@ function AdvancedAdditionPart2Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
               <div className="rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-5">
                 <p className="text-xl font-black uppercase text-cyan-100">{lang === "en" ? "Tens digit" : "Digit puluh"}</p>
                 <span className="mx-auto my-3 grid h-20 w-16 place-items-center rounded-2xl border-4 border-cyan-300 bg-slate-950 text-5xl font-black text-cyan-100 shadow-[0_5px_0_#164e63]">1</span>
-                <p className="text-lg font-black text-white">{lang === "en" ? "It counts groups of 10. 1 means 10. 2 means 20." : "Ia mengira kumpulan 10. 1 bermaksud 10. 2 bermaksud 20."}</p>
+                <div className="text-lg font-black text-white">
+                  <p>{lang === "en" ? "It counts groups of 10." : "Ia mengira kumpulan 10."}</p>
+                  <p className="mt-2">{lang === "en" ? "1 means 10." : "1 bermaksud 10."}</p>
+                  <p>{lang === "en" ? "2 means 20." : "2 bermaksud 20."}</p>
+                </div>
               </div>
               <div className="rounded-3xl border-2 border-yellow-300 bg-slate-950 p-5">
                 <p className="text-xl font-black uppercase text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p>
@@ -7445,6 +7542,10 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     await wait(500);
     if (countRunRef.current !== runId) return;
     setResultStage(2);
+    await wait(250);
+    if (countRunRef.current !== runId) return;
+    if (soundEnabled) await speakRecordedBananaTotal(number, lang, teenValueSecondObject(number));
+    if (countRunRef.current !== runId) return;
     await wait(900);
     if (countRunRef.current !== runId) return;
     setCounting(false);
@@ -16758,6 +16859,15 @@ async function speakRecordedBananaTotal(value: number, lang: Lang, emoji: string
     return file ? playRecordedVoiceFile(file, onAudibleStart) : false;
   }
 
+  const phraseFile = EN_OBJECT_TOTAL_PHRASE_AUDIO_FILES[emoji]?.[value];
+  if (phraseFile) {
+    if (activeCountingRunId !== null) {
+      queuedAudioAfterCounting = () => { void speakRecordedBananaTotal(value, lang, emoji, onAudibleStart); };
+      return false;
+    }
+    return playRecordedVoiceFile(phraseFile, onAudibleStart);
+  }
+
   const objectFiles = EN_OBJECT_TOTAL_AUDIO_FILES.objects[emoji];
   if (!objectFiles) return false;
   const objectFile = value === 1 && objectFiles.singular ? objectFiles.singular : objectFiles.plural;
@@ -17179,6 +17289,7 @@ function preloadNumberAudioFiles() {
     EN_OBJECT_TOTAL_AUDIO_FILES.total,
     ...Object.values(COUNT_PROMPT_AUDIO_FILES),
     ...Object.values(EN_OBJECT_TOTAL_AUDIO_FILES.objects).flatMap(({ singular, plural }) => singular ? [singular, plural] : [plural]),
+    ...Object.values(EN_OBJECT_TOTAL_PHRASE_AUDIO_FILES).flatMap((files) => Object.values(files)),
     ...Object.values(MS_OBJECT_TOTAL_AUDIO_FILES).flatMap((files) => Object.values(files)),
   ].forEach((file) => {
     const audio = new Audio(`${import.meta.env.BASE_URL}audio/${file}`);
