@@ -15257,6 +15257,7 @@ function CountedCompareGroupsSolution({ visual, lang }: {
             count={visual.a}
             emoji={visual.emojiA}
             lang={lang}
+            announceTotal
             onComplete={finishFirstGroup}
           />
           {stage >= 1 && (
@@ -15273,6 +15274,7 @@ function CountedCompareGroupsSolution({ visual, lang }: {
               count={visual.b}
               emoji={visual.emojiB}
               lang={lang}
+              announceTotal
               onComplete={finishSecondGroup}
             />
           ) : (
