@@ -4236,6 +4236,9 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
       completionReportedRef.current = true;
       onSolved();
     }
+    if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakRecordedBananaTotal(13, lang, cookie);
+    }
   };
 
   const resetMethod = () => {
@@ -4290,7 +4293,7 @@ function AdvancedCookieAdditionScenario({ lang, onSolved }: { lang: Lang; onSolv
               <p className="mb-5 text-center text-xl font-black text-yellow-200">{lang === "en" ? "Total number of cookies" : "Jumlah biskut"}</p>
               <div className="cookie-total-group-pop">
                   <AdvancedBananaRow count={13} countedThrough={totalCount} showCountLabels isCounting={stage === "countTotal"} rowPattern={[5, 5, 3]} emoji={cookie} largeObjects />
-                  <p className="mt-5 text-center text-2xl font-black text-cyan-100">{stage === "done" ? (lang === "en" ? "Total: 13 cookies" : "Jumlah: 13 biskut") : (lang === "en" ? `Counting: ${totalCount}` : `Mengira: ${totalCount}`)}</p>
+                  <p className={`mx-auto mt-5 w-fit rounded-2xl border-2 px-6 py-3 text-center text-2xl font-black ${stage === "done" ? "border-emerald-300 bg-emerald-950 text-emerald-100 shadow-[0_5px_0_#065f46]" : "border-transparent text-cyan-100"}`} aria-live="polite">{stage === "done" ? (lang === "en" ? "Total: 13 cookies" : "Jumlah: 13 biskut") : (lang === "en" ? `Counting: ${totalCount}` : `Mengira: ${totalCount}`)}</p>
               </div>
             </div>
           )}
@@ -5943,6 +5946,10 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
     await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
     if (runRef.current !== runId) return;
     setCompletedTrays((current) => ({ ...current, [side]: true }));
+    if (soundEnabled && NUMBER_AUDIO_ENABLED && !audioMuted) {
+      await speakRecordedBananaTotal(count, lang, cookie);
+    }
+    if (runRef.current !== runId) return;
     setCountingTray(null);
     const otherTrayComplete = side === "left" ? completedTrays.right : completedTrays.left;
     if (otherTrayComplete) {
@@ -6062,7 +6069,7 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
           </div>
         </div>
         {finished && (
-          <p className="mx-auto mt-3 w-fit rounded-2xl border-2 border-cyan-200 bg-blue-600 px-6 py-3 text-lg font-black text-white shadow-[0_5px_0_#164e63]">
+          <p className="mx-auto mt-3 w-fit rounded-2xl border-2 border-emerald-300 bg-emerald-950 px-6 py-3 text-lg font-black text-emerald-100 shadow-[0_5px_0_#065f46]" aria-live="polite">
             {lang === "en" ? `Total: ${displayCount} cookies` : `Jumlah: ${displayCount} biskut`}
           </p>
         )}
@@ -8790,7 +8797,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
         />
       ) : <ObjectGroup count={count} emoji={emoji} numbered={active} lang={lang} />}
       <p
-        className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black transition-opacity ease-out ${slowLabelReveal ? "duration-700" : "duration-200"} ${labelVisible ? (cyber ? "bg-cyan-950 text-cyan-50 opacity-100" : "bg-white text-emerald-950 opacity-100") : "opacity-0"}`}
+        className={`mt-3 min-h-7 rounded-2xl border-2 px-3 py-2 text-xl font-black transition-opacity ease-out ${slowLabelReveal ? "duration-700" : "duration-200"} ${labelVisible ? isTotalLabel ? (cyber ? "border-emerald-300 bg-emerald-950 text-emerald-100 opacity-100 shadow-[0_4px_0_#065f46]" : "border-emerald-200 bg-emerald-100 text-emerald-950 opacity-100 shadow-[0_4px_0_rgba(5,150,105,.16)]") : (cyber ? "border-transparent bg-cyan-950 text-cyan-50 opacity-100" : "border-transparent bg-white text-emerald-950 opacity-100") : "border-transparent opacity-0"}`}
         aria-live="polite"
       >
         {labelVisible ? label : "\u00a0"}
