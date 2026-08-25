@@ -3583,7 +3583,7 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
       ones: [1, 1, 1],
       tensLabel: lang === "en" ? "0 tens" : "0 puluh",
       onesLabel: lang === "en" ? "3 ones" : "3 sa",
-      equation: "03 = 1 + 1 + 1 = 3",
+      equation: "1 + 1 + 1 = 3",
     },
     {
       display: "12",
@@ -3591,7 +3591,7 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
       ones: [1, 1],
       tensLabel: lang === "en" ? "1 ten" : "1 puluh",
       onesLabel: lang === "en" ? "2 ones" : "2 sa",
-      equation: "12 = 10 + 1 + 1 = 12",
+      equation: "10 + 1 + 1 = 12",
     },
     {
       display: "20",
@@ -3599,7 +3599,7 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
       ones: [0],
       tensLabel: lang === "en" ? "2 tens" : "2 puluh",
       onesLabel: lang === "en" ? "0 ones" : "0 sa",
-      equation: "20 = 10 + 10 = 20",
+      equation: "10 + 10 = 20",
     },
   ];
 
@@ -3697,7 +3697,7 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
     if (stage !== "basket") return;
     const runId = ++runIdRef.current;
     setStage("movingTens");
-    await wait(prefersReducedMotion ? 100 : 800);
+    await wait(prefersReducedMotion ? 100 : 1100);
     if (runIdRef.current !== runId) return;
     setStage("tensPlaced");
   };
@@ -3741,13 +3741,28 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
 
   return (
     <section className="space-y-5 rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 shadow-[0_6px_0_#164e63] sm:p-6">
+      <style>{`@keyframes tenBasketToTensColumn{0%{transform:translate3d(0,0,0) scale(1);opacity:1}70%{transform:translate3d(-48%,-13rem,0) scale(.48);opacity:1}100%{transform:translate3d(-55%,-16rem,0) scale(.36);opacity:0}}@keyframes tensDigitIncrease{0%{transform:scale(.35);filter:brightness(1)}52%{transform:scale(1.32);filter:brightness(1.55)}76%{transform:scale(.92);filter:brightness(1.2)}100%{transform:scale(1);filter:brightness(1)}}@keyframes plusOnePop{0%{transform:translateY(-50%) scale(.3) rotate(-10deg);opacity:0}58%{transform:translateY(-50%) scale(1.2) rotate(4deg);opacity:1}100%{transform:translateY(-50%) scale(1) rotate(0);opacity:1}}.ten-basket-to-tens-column{animation:tenBasketToTensColumn 1100ms cubic-bezier(.22,.72,.2,1) both;transform-origin:center;will-change:transform,opacity}.tens-digit-increase{animation:tensDigitIncrease 850ms cubic-bezier(.2,.82,.25,1.18) both}.tens-plus-one-pop{animation:plusOnePop 700ms cubic-bezier(.18,.85,.3,1.2) both}@media(prefers-reduced-motion:reduce){.ten-basket-to-tens-column,.tens-digit-increase,.tens-plus-one-pop{animation:none}}`}</style>
       <div className="rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-4 text-center">
         <h4 className="text-3xl font-black text-yellow-200">17 = 10 + 7</h4>
         <p className="mt-2 text-lg font-black text-cyan-50">{lang === "en" ? "Make one group of 10. Then count the 7 bananas left." : "Buat satu kumpulan 10. Kemudian kira 7 pisang yang tinggal."}</p>
       </div>
 
-      <div className="mx-auto grid max-w-xl grid-cols-2 gap-4 rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/90 p-4 text-center shadow-[0_5px_0_#164e63]">
-        <div><p className="rounded-full border border-cyan-400 bg-cyan-950 py-2 text-sm font-black uppercase tracking-wider text-cyan-200">{lang === "en" ? "Tens digit" : "Digit puluh"}</p><span className={`mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${tensPlaced ? "scale-100 border-cyan-300 bg-cyan-950 text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,.45)]" : "scale-90 border-cyan-900 bg-slate-900 text-slate-700"}`}>{tensPlaced ? "1" : "?"}</span>{tensPlaced && <p className="mt-3 font-black text-cyan-100">{lang === "en" ? "1 means 10" : "1 bermaksud 10"}</p>}</div>
+      <div className="mx-auto grid max-w-xl grid-cols-2 items-start gap-4 rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/90 p-4 text-center shadow-[0_5px_0_#164e63]">
+        <div>
+          <p className="rounded-full border border-cyan-400 bg-cyan-950 py-2 text-sm font-black uppercase tracking-wider text-cyan-200">{lang === "en" ? "Tens digit" : "Digit puluh"}</p>
+          <span className={`relative mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${tensPlaced ? "tens-digit-increase scale-100 border-cyan-300 bg-cyan-950 text-cyan-100 shadow-[0_0_32px_rgba(34,211,238,.75),0_0_0_6px_rgba(250,204,21,.22)]" : "scale-90 border-cyan-900 bg-slate-900 text-slate-700"}`}>
+            {tensPlaced ? "1" : "?"}
+            {stage === "tensPlaced" && <span className="tens-plus-one-pop absolute -right-14 top-1/2 -translate-y-1/2 rounded-xl border-2 border-yellow-200 bg-yellow-400 px-2 py-1 text-2xl font-black leading-none text-slate-950 shadow-[0_4px_0_#a16207]">+1</span>}
+          </span>
+          <p className={`mt-3 font-black transition-opacity duration-300 ${tensPlaced ? "text-cyan-100 opacity-100" : "opacity-0"}`}>{lang === "en" ? "1 means 10" : "1 bermaksud 10"}</p>
+          <div className={`mx-auto mt-2 grid min-h-36 place-items-center transition-all duration-500 ${tensPlaced ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-75 opacity-0"}`} aria-hidden={!tensPlaced}>
+            <div className="relative h-36 w-36">
+              <div className="absolute left-1/2 top-1/2 w-60 -translate-x-1/2 -translate-y-1/2 scale-[.52]">
+                <TenBananaBundle lang={lang} compact />
+              </div>
+            </div>
+          </div>
+        </div>
         <div><p className="rounded-full border border-yellow-400 bg-slate-950 py-2 text-sm font-black uppercase tracking-wider text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p><span className={`mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${stage === "complete" ? "scale-100 border-yellow-300 bg-slate-950 text-yellow-100 shadow-[0_0_24px_rgba(250,204,21,.45)]" : "scale-90 border-yellow-900 bg-slate-900 text-slate-700"}`}>{stage === "complete" ? "7" : "?"}</span>{stage === "complete" && <p className="mt-3 font-black text-yellow-100">{lang === "en" ? "7 single ones" : "7 sa"}</p>}</div>
       </div>
 
@@ -3756,8 +3771,7 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
 
         <div className="relative mx-auto min-h-40 max-w-xl">
           {firstTenVisible && <div className={`mx-auto grid w-fit grid-cols-5 gap-x-4 gap-y-5 px-4 py-2 transition-all ease-in-out ${stage === "groupingTen" ? "translate-y-8 scale-50 opacity-0 duration-[900ms]" : "translate-y-0 scale-100 opacity-100 duration-300"}`}>{Array.from({ length: 10 }, (_, index) => renderBanana(index + 1, index < countedToTen, stage === "countingTen" && index === countedToTen - 1, `ten-${index}`))}</div>}
-          {basketVisible && <div className={`mx-auto w-fit max-w-full transition-all ease-in-out ${stage === "movingTens" ? "-translate-y-60 scale-[.3] opacity-0 duration-[800ms]" : "translate-y-0 scale-100 opacity-100 duration-500"}`}><TenBananaBundle lang={lang} compact /></div>}
-          {tensPlaced && <p className="slide-in-up mx-auto grid min-h-28 max-w-xl place-items-center rounded-3xl border-2 border-cyan-400 bg-cyan-950/60 px-5 text-center text-xl font-black text-cyan-100">{lang === "en" ? "The basket changed into 1 in the tens digit." : "Bakul itu berubah menjadi 1 dalam digit puluh."}</p>}
+          {basketVisible && <div className={`mx-auto w-fit max-w-full transition-all ease-in-out ${stage === "movingTens" ? "ten-basket-to-tens-column" : "translate-y-0 scale-100 opacity-100 duration-500"}`}><TenBananaBundle lang={lang} compact /></div>}
         </div>
 
         {basketVisible && <p className="mx-auto mt-4 max-w-2xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/75 px-5 py-4 text-center text-xl font-black text-emerald-100">{lang === "en" ? "This basket has 10 bananas. It represents 1 in the tens digit column." : "Bakul ini ada 10 pisang. Ia mewakili 1 dalam lajur digit puluh."}</p>}
@@ -7226,12 +7240,15 @@ function AdvancedSubtractionLesson({ lang, t, onDone }: { lang: Lang; t: UIStrin
 function TenBananaBundle({ lang, active = false, compact = false }: { lang: Lang; active?: boolean; compact?: boolean }) {
   return (
     <div className="relative max-w-full">
-      <div className={`relative mx-auto aspect-square max-w-full transition ${compact ? "w-52 sm:w-56" : "w-64 sm:w-72"} ${active ? "scale-105 drop-shadow-[0_0_18px_rgba(250,204,21,.7)]" : "drop-shadow-[0_10px_10px_rgba(0,0,0,.35)]"}`}>
+      <div className={`relative mx-auto aspect-square max-w-full transition ${compact ? "w-60 sm:w-64" : "w-72 sm:w-80"} ${active ? "scale-105 drop-shadow-[0_0_18px_rgba(250,204,21,.7)]" : "drop-shadow-[0_10px_10px_rgba(0,0,0,.35)]"}`}>
         <img src={BASKET_SPRITE} alt={lang === "en" ? "Basket holding 10 bananas" : "Bakul berisi 10 pisang"} className="absolute inset-0 h-full w-full object-contain" />
-        <div className="absolute inset-x-[19%] bottom-[25%] top-[27%] grid grid-cols-5 grid-rows-2 place-items-center gap-x-1 gap-y-2 overflow-hidden px-1 py-2">
+        <div className="absolute inset-x-[11%] bottom-[21%] top-[23%] grid grid-cols-5 grid-rows-2 place-items-center gap-x-1.5 gap-y-3 overflow-hidden px-1 py-3">
           {Array.from({ length: 10 }, (_, index) => (
-            <span key={index} className={`grid shrink-0 place-items-center ${compact ? "h-6 w-6" : "h-7 w-7 sm:h-8 sm:w-8"}`}>
-              <SpriteIcon value={BANANA} className={compact ? "h-6 w-6" : "h-7 w-7 sm:h-8 sm:w-8"} />
+            <span key={index} className={`relative grid shrink-0 place-items-center rounded-full border-2 border-cyan-400 bg-slate-950/75 shadow-[0_3px_0_rgba(8,47,73,.7)] ${compact ? "h-9 w-9" : "h-10 w-10 sm:h-11 sm:w-11"}`}>
+              <SpriteIcon value={BANANA} className={compact ? "h-7 w-7" : "h-8 w-8 sm:h-9 sm:w-9"} />
+              <span className="absolute -top-3 left-1/2 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full bg-blue-600 px-1 text-[.7rem] font-black leading-none text-white shadow-sm">
+                {index + 1}
+              </span>
             </span>
           ))}
         </div>
