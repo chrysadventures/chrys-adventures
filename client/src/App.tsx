@@ -8792,7 +8792,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
           largeTiles={largeTiles}
           lang={lang}
         />
-      ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
+      ) : <ObjectGroup count={count} emoji={emoji} numbered={active} lang={lang} />}
       <p
         className={`mt-3 min-h-7 rounded-2xl px-3 py-2 text-xl font-black transition-opacity ease-out ${slowLabelReveal ? "duration-700" : "duration-200"} ${labelVisible ? (cyber ? "bg-cyan-950 text-cyan-50 opacity-100" : "bg-white text-emerald-950 opacity-100") : "opacity-0"}`}
         aria-live="polite"
@@ -8952,10 +8952,13 @@ function GroupingMode({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: (
 
   const addObject = () => {
     if (!canEdit) return;
+    const nextCount = Math.min(9, activeCount + 1);
+    if (nextCount === activeCount) return;
     setChecked(false);
-    if ((activity.kind === "makeTwo" || activity.kind === "makeThree") && step === 2) setGroupB((count) => Math.min(9, count + 1));
-    else if (activity.kind === "makeThree" && step === 4) setGroupC((count) => Math.min(9, count + 1));
-    else setGroupA((count) => Math.min(9, count + 1));
+    if ((activity.kind === "makeTwo" || activity.kind === "makeThree") && step === 2) setGroupB(nextCount);
+    else if (activity.kind === "makeThree" && step === 4) setGroupC(nextCount);
+    else setGroupA(nextCount);
+    void speakNumber(nextCount, lang);
   };
 
   const removeObject = () => {
@@ -9251,7 +9254,7 @@ function GroupingTray({ label, count, emoji, counted, active = false, announceTo
           onCountProgress={setCurrentCount}
           onCountComplete={finishCounting}
         />
-      ) : <ObjectGroup count={count} emoji={emoji} lang={lang} />}
+      ) : <ObjectGroup count={count} emoji={emoji} numbered={active} lang={lang} />}
       {counted && (
         <div className="min-h-16" aria-live="polite">
           {countComplete
@@ -14041,10 +14044,11 @@ function ActiveAnswerPanel({
     const expectedAnswer = targets.join(",");
     const updateGroup = (groupIndex: number, change: number) => {
       if (answered) return;
-      setBuiltGroups((current) => targets.map((_, index) => {
-        const currentValue = current[index] ?? 0;
-        return index === groupIndex ? Math.max(0, Math.min(9, currentValue + change)) : currentValue;
-      }));
+      const currentValue = currentGroups[groupIndex] ?? 0;
+      const nextValue = Math.max(0, Math.min(9, currentValue + change));
+      if (nextValue === currentValue) return;
+      setBuiltGroups(targets.map((_, index) => index === groupIndex ? nextValue : (currentGroups[index] ?? 0)));
+      if (change > 0) void speakNumber(nextValue, lang);
     };
 
     return (
@@ -14561,7 +14565,7 @@ function ActiveAnswerPanel({
   return (
     <div className="rounded-3xl border-2 border-blue-100 bg-white p-4 text-center">
       <p className="mb-3 text-lg font-black text-slate-700">{instruction}</p>
-      <ObjectGroup count={shownCount} emoji={emoji} numbered={answered} lang={lang} />
+      <ObjectGroup count={shownCount} emoji={emoji} numbered lang={lang} />
       {answered && <CountTotalBadge count={shownCount} lang={lang} unit={objectName(emoji, shownCount, lang)} />}
       <div className="mt-4 flex flex-wrap justify-center gap-3">
         <button
@@ -14574,7 +14578,12 @@ function ActiveAnswerPanel({
         </button>
         <button
           disabled={answered || builtCount >= 9}
-          onClick={() => setBuiltCount((count) => Math.min(9, count + 1))}
+          onClick={() => {
+            const nextCount = Math.min(9, builtCount + 1);
+            if (nextCount === builtCount) return;
+            setBuiltCount(nextCount);
+            void speakNumber(nextCount, lang);
+          }}
           className="rounded-2xl border-2 border-emerald-700 bg-emerald-500 px-8 py-3 text-2xl font-black text-white shadow-[0_5px_0_#047857] active:translate-y-1 disabled:opacity-40"
         >
           {lang === "en" ? "Tap banana" : "Tekan pisang"}
