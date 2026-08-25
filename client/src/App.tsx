@@ -3735,7 +3735,7 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
   const renderBanana = (label: number, counted: boolean, active: boolean, key: string) => (
     <span key={key} className={`relative grid h-14 w-12 shrink-0 place-items-center rounded-xl border-2 transition-all duration-300 sm:h-16 sm:w-14 sm:rounded-2xl ${active ? "z-10 scale-110 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]" : counted ? "border-cyan-400 bg-cyan-950" : "border-cyan-900 bg-slate-900/90 opacity-35 grayscale"}`}>
       <SpriteIcon value={BANANA} className="h-9 w-9 sm:h-11 sm:w-11" />
-      <span className={`absolute -top-4 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black leading-none shadow ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{label}</span>
+      {counted && <span className={`absolute -top-4 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black leading-none shadow ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>{label}</span>}
     </span>
   );
 
@@ -6235,7 +6235,7 @@ function AdvancedPart2LooseBananas({ count, countedThrough = 0, counting = false
               return (
                 <span key={index} className={`relative grid shrink-0 place-items-center rounded-2xl border-2 transition-all ${movingFirstTen && index < 10 ? "translate-y-36 scale-75 opacity-0 duration-[900ms] ease-in-out" : "translate-y-0 duration-300"} ${compact ? "h-14 w-12" : "h-20 w-16"} ${active ? "z-10 scale-110 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]" : counted ? "border-cyan-400 bg-cyan-950" : "border-cyan-900 bg-slate-900/90 opacity-45 grayscale"}`}>
                   <SpriteIcon value={BANANA} className={compact ? "h-10 w-10" : "h-12 w-12"} />
-                  <span className={`absolute -top-3 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black shadow-md ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
+                  {counted && <span className={`absolute -top-3 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black shadow-md ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>{startLabel + index}</span>}
                 </span>
               );
             })}
@@ -6256,7 +6256,7 @@ function AdvancedPart2CountableTen({ lang, countedThrough = 0, counting = false,
           return (
             <span key={index} className={`relative grid h-9 w-9 place-items-center rounded-lg border transition-all duration-300 ${active ? "z-10 scale-105 border-yellow-200 ring-2 ring-yellow-300/90 shadow-[0_0_14px_rgba(250,204,21,.68)]" : counted ? "border-cyan-300 bg-cyan-950" : "border-slate-700 bg-slate-950/55 opacity-55 grayscale"}`}>
               <SpriteIcon value={BANANA} className="h-7 w-7" />
-              <span className={`absolute -top-2.5 left-1/2 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black leading-none shadow ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
+              {counted && <span className={`absolute -top-2.5 left-1/2 grid h-5 min-w-5 -translate-x-1/2 place-items-center rounded-full px-1 text-[10px] font-black leading-none shadow ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>{startLabel + index}</span>}
             </span>
           );
         })}
@@ -6707,7 +6707,7 @@ function AdvancedSubtractionLooseBananas({ count, countedThrough = 0, counting =
               return (
                 <span key={index} className={`relative grid h-12 w-9 shrink-0 place-items-center rounded-xl border-2 transition-all min-[380px]:h-16 min-[380px]:w-12 min-[380px]:rounded-2xl ${removed ? "pointer-events-none -translate-y-10 translate-x-12 rotate-12 scale-75 opacity-0 duration-700 motion-reduce:duration-75" : "translate-x-0 translate-y-0 opacity-100 duration-300"} ${active ? "z-10 scale-110 border-yellow-200 bg-cyan-950 ring-4 ring-yellow-300/90 shadow-[0_0_20px_rgba(250,204,21,.72)]" : counted ? "border-cyan-300 bg-cyan-950" : dashed ? "border-dashed border-cyan-400 bg-slate-950/70" : "border-cyan-900 bg-slate-900/90 opacity-45 grayscale"}`}>
                   <SpriteIcon value={BANANA} className="h-7 w-7 min-[380px]:h-10 min-[380px]:w-10" />
-                  <span className={`absolute -top-3 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black shadow-md ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : dashed ? "border border-cyan-300 bg-slate-950 text-cyan-100" : "bg-slate-700 text-slate-300"}`}>{startLabel + index}</span>
+                  {counted && <span className={`absolute -top-3 left-1/2 grid h-7 min-w-7 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black shadow-md ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>{startLabel + index}</span>}
                 </span>
               );
             })}
@@ -6767,7 +6767,7 @@ function AdvancedSubtractionWholeTens({ count, countedThrough, counting, lang, d
       {Array.from({ length: count }, (_, index) => {
         const counted = index < countedThrough;
         const active = counting && counted && index === countedThrough - 1;
-        return <div key={index} className={`relative rounded-[2rem] border-2 p-1 transition-all ${active ? "z-10 scale-105 border-yellow-200 ring-4 ring-yellow-300/80 shadow-[0_0_22px_rgba(250,204,21,.6)]" : counted ? "border-cyan-300" : dashed ? "border-dashed border-cyan-400 opacity-55" : "border-cyan-900 opacity-45 grayscale"}`}><AdvancedSubtractionCompactTen lang={lang} /><span className={`absolute -top-3 left-1/2 grid h-8 min-w-8 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black ${active ? "bg-yellow-400 text-slate-950" : counted ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300"}`}>{index + 1}</span></div>;
+        return <div key={index} className={`relative rounded-[2rem] border-2 p-1 transition-all ${active ? "z-10 scale-105 border-yellow-200 ring-4 ring-yellow-300/80 shadow-[0_0_22px_rgba(250,204,21,.6)]" : counted ? "border-cyan-300" : dashed ? "border-dashed border-cyan-400 opacity-55" : "border-cyan-900 opacity-45 grayscale"}`}><AdvancedSubtractionCompactTen lang={lang} />{counted && <span className={`absolute -top-3 left-1/2 grid h-8 min-w-8 -translate-x-1/2 place-items-center rounded-full px-1 text-sm font-black ${active ? "bg-yellow-400 text-slate-950" : "bg-blue-600 text-white"}`}>{index + 1}</span>}</div>;
       })}
     </div>
   );
@@ -7218,22 +7218,18 @@ function AdvancedSubtractionLesson({ lang, t, onDone }: { lang: Lang; t: UIStrin
 
 function TenBananaBundle({ lang, active = false, compact = false }: { lang: Lang; active?: boolean; compact?: boolean }) {
   return (
-    <div className={`mobile-ten-bundle relative max-w-full overflow-hidden rounded-[1.75rem] border-4 p-3 transition ${
-      active
-        ? "border-yellow-300 bg-amber-950/80 shadow-[0_0_0_6px_rgba(250,204,21,.24)]"
-        : "border-emerald-400 bg-emerald-950/75"
-    }`}>
-      <div className="grid grid-cols-5 place-items-center gap-1.5 overflow-hidden rounded-2xl border-2 border-emerald-400/80 bg-slate-950/85 p-2">
-        {Array.from({ length: 10 }, (_, index) => (
-          <span
-            key={index}
-            className={`grid place-items-center rounded-xl border border-amber-300/40 bg-slate-900 shadow-inner ${compact ? "h-10 w-10" : "h-12 w-12 sm:h-14 sm:w-14"}`}
-          >
-            <SpriteIcon value={BANANA} className={compact ? "h-8 w-8" : "h-10 w-10 sm:h-11 sm:w-11"} />
-          </span>
-        ))}
+    <div className="relative max-w-full">
+      <div className={`relative mx-auto aspect-square max-w-full transition ${compact ? "w-52 sm:w-56" : "w-64 sm:w-72"} ${active ? "scale-105 drop-shadow-[0_0_18px_rgba(250,204,21,.7)]" : "drop-shadow-[0_10px_10px_rgba(0,0,0,.35)]"}`}>
+        <img src={BASKET_SPRITE} alt={lang === "en" ? "Basket holding 10 bananas" : "Bakul berisi 10 pisang"} className="absolute inset-0 h-full w-full object-contain" />
+        <div className="absolute inset-x-[19%] bottom-[25%] top-[27%] grid grid-cols-5 grid-rows-2 place-items-center gap-x-1 gap-y-2 overflow-hidden px-1 py-2">
+          {Array.from({ length: 10 }, (_, index) => (
+            <span key={index} className={`grid shrink-0 place-items-center ${compact ? "h-6 w-6" : "h-7 w-7 sm:h-8 sm:w-8"}`}>
+              <SpriteIcon value={BANANA} className={compact ? "h-6 w-6" : "h-7 w-7 sm:h-8 sm:w-8"} />
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="mx-auto mt-3 flex w-fit items-center gap-2 rounded-full bg-emerald-800 px-4 py-2 text-white">
+      <div className="relative z-10 mx-auto -mt-5 flex w-fit items-center gap-2 rounded-full border-2 border-emerald-300 bg-emerald-900 px-4 py-2 text-white shadow-[0_4px_0_#064e3b]">
         <span className="text-2xl font-black" style={getNumberTextStyle(10)}>10</span>
         <span className="text-sm font-black">{lang === "en" ? "one ten" : "satu sepuluh"}</span>
       </div>
