@@ -3112,7 +3112,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 
   return (
     <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
-      <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-white p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
+      <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-300 p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
         <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
           <div className="mx-auto grid h-32 w-32 place-items-center md:h-36 md:w-36">
             <img src={chrysHappy} alt="Chrys" className="h-28 w-28 object-contain drop-shadow-xl md:h-32 md:w-32" />

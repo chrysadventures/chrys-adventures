@@ -232,8 +232,8 @@
   }
 
   .soft-panel {
-    background: linear-gradient(135deg, rgba(221, 245, 255, 0.95), rgba(255, 247, 204, 0.95) 54%, rgba(220, 248, 225, 0.95));
-    border: 3px solid rgba(174, 228, 249, 0.98);
+    background: linear-gradient(135deg, rgba(204, 239, 255, 0.96), rgba(255, 239, 164, 0.95) 54%, rgba(202, 241, 211, 0.96));
+    border: 3px solid rgba(125, 211, 252, 0.98);
     box-shadow: 0 9px 0 rgba(59, 130, 246, 0.14), 0 16px 34px rgba(18, 65, 88, 0.12);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -285,7 +285,7 @@
 
   .learning-menu-hero {
     background:
-      linear-gradient(122deg, rgba(255,255,255,0.96), rgba(246,253,255,0.9) 54%, rgba(240,253,244,0.91)),
+      linear-gradient(122deg, rgba(198, 237, 255, 0.94), rgba(255, 237, 155, 0.91) 54%, rgba(196, 240, 207, 0.94)),
       var(--app-bg-desktop);
     background-position: center;
     background-size: cover;
@@ -296,15 +296,17 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(circle at 84% 20%, rgba(253, 224, 71, 0.22), transparent 15rem);
+    background:
+      radial-gradient(circle at 84% 20%, rgba(250, 204, 21, 0.38), transparent 15rem),
+      radial-gradient(circle at 8% 82%, rgba(56, 189, 248, 0.22), transparent 13rem);
     opacity: 1;
   }
 
   .learning-trail-strip {
     overflow-x: auto;
-    border: 3px solid rgba(255, 255, 255, 0.9);
+    border: 3px solid rgba(125, 211, 252, 0.96);
     border-radius: 1.5rem;
-    background: rgba(240, 253, 250, 0.94);
+    background: linear-gradient(105deg, rgba(207, 242, 255, 0.97), rgba(218, 249, 213, 0.96) 52%, rgba(255, 236, 158, 0.96));
     box-shadow: 0 7px 0 rgba(6, 95, 70, 0.18), 0 12px 24px rgba(15, 118, 110, 0.12);
     scrollbar-width: thin;
     scrollbar-color: #0ea5e9 rgba(224, 242, 254, 0.8);
@@ -424,9 +426,9 @@
   .learning-stage-band {
     position: relative;
     padding: 1.5rem;
-    border-top: 4px solid rgba(255, 255, 255, 0.92);
-    border-bottom: 4px solid rgba(255, 255, 255, 0.92);
-    background: linear-gradient(100deg, rgba(231, 247, 255, 0.95), rgba(255, 253, 229, 0.91) 52%, rgba(232, 252, 236, 0.92));
+    border-top: 4px solid rgba(125, 211, 252, 0.9);
+    border-bottom: 4px solid rgba(110, 231, 183, 0.9);
+    background: linear-gradient(100deg, rgba(207, 241, 255, 0.97), rgba(255, 239, 170, 0.95) 52%, rgba(207, 245, 214, 0.96));
     box-shadow: 0 8px 0 rgba(15, 118, 110, 0.14);
   }
 
@@ -444,17 +446,29 @@
     background: #38bdf8;
   }
 
+  .learning-stage-sky {
+    background: linear-gradient(105deg, rgba(199, 238, 255, 0.97), rgba(255, 239, 170, 0.95) 53%, rgba(211, 247, 217, 0.96));
+  }
+
   .learning-stage-emerald::before {
     background: #34d399;
+  }
+
+  .learning-stage-emerald {
+    background: linear-gradient(105deg, rgba(205, 246, 216, 0.97), rgba(204, 240, 255, 0.95) 51%, rgba(255, 238, 164, 0.96));
   }
 
   .learning-stage-amber::before {
     background: #fbbf24;
   }
 
+  .learning-stage-amber {
+    background: linear-gradient(105deg, rgba(255, 235, 150, 0.97), rgba(217, 247, 213, 0.96) 50%, rgba(205, 239, 255, 0.96));
+  }
+
   .learning-menu-card {
     min-height: 16.5rem;
-    background: linear-gradient(165deg, rgba(239, 250, 255, 0.99), rgba(255, 253, 232, 0.98) 52%, rgba(236, 252, 239, 0.98));
+    background: linear-gradient(165deg, rgba(214, 243, 255, 0.99), rgba(255, 239, 170, 0.98) 52%, rgba(211, 247, 216, 0.98));
   }
 
   .learning-menu-card:hover {
@@ -464,7 +478,7 @@
   @media (max-width: 640px) {
     .learning-menu-hero {
       background-image:
-        linear-gradient(150deg, rgba(255,255,255,0.96), rgba(246,253,255,0.91) 58%, rgba(240,253,244,0.92)),
+        linear-gradient(150deg, rgba(200, 238, 255, 0.95), rgba(255, 238, 162, 0.92) 58%, rgba(201, 241, 210, 0.94)),
         var(--app-bg-mobile);
     }
 
