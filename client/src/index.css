@@ -203,8 +203,8 @@
 
   .learning-theme::after {
     background:
-      linear-gradient(180deg, rgba(224, 246, 255, 0.08), rgba(245, 255, 224, 0.18)),
-      radial-gradient(circle at 50% 18%, rgba(255, 248, 190, 0.13), transparent 34rem);
+      linear-gradient(180deg, rgba(199, 237, 255, 0.13), rgba(232, 255, 203, 0.26)),
+      radial-gradient(circle at 50% 16%, rgba(255, 234, 129, 0.22), transparent 34rem);
   }
 
   .sunset-theme::after {
@@ -232,8 +232,8 @@
   }
 
   .soft-panel {
-    background: linear-gradient(135deg, rgba(239, 250, 255, 0.94), rgba(255, 252, 228, 0.94) 54%, rgba(235, 255, 238, 0.94));
-    border: 3px solid rgba(218, 244, 255, 0.96);
+    background: linear-gradient(135deg, rgba(221, 245, 255, 0.95), rgba(255, 247, 204, 0.95) 54%, rgba(220, 248, 225, 0.95));
+    border: 3px solid rgba(174, 228, 249, 0.98);
     box-shadow: 0 9px 0 rgba(59, 130, 246, 0.14), 0 16px 34px rgba(18, 65, 88, 0.12);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -241,9 +241,9 @@
 
   .lesson-panel {
     background:
-      linear-gradient(145deg, rgba(239, 250, 255, 0.96), rgba(255, 253, 234, 0.95) 49%, rgba(234, 252, 235, 0.95)),
-      radial-gradient(circle at top left, rgba(254, 240, 138, 0.34), transparent 18rem);
-    border: 3px solid rgba(213, 243, 255, 0.94);
+      linear-gradient(145deg, rgba(220, 244, 255, 0.96), rgba(255, 246, 202, 0.95) 49%, rgba(217, 247, 223, 0.95)),
+      radial-gradient(circle at top left, rgba(254, 240, 138, 0.42), transparent 18rem);
+    border: 3px solid rgba(169, 226, 248, 0.97);
     box-shadow: 0 10px 0 rgba(57, 121, 78, 0.16), 0 20px 42px rgba(23, 78, 100, 0.14);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -399,7 +399,7 @@
 
   @media (max-width: 1024px) {
     .learning-theme::after {
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.17));
+      background: linear-gradient(180deg, rgba(207, 240, 255, 0.11), rgba(235, 255, 207, 0.24));
     }
 
     .sunset-theme::after {
@@ -409,7 +409,7 @@
 
   @media (max-width: 640px) {
     .learning-theme::after {
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.13));
+      background: linear-gradient(180deg, rgba(210, 241, 255, 0.1), rgba(238, 255, 211, 0.2));
     }
 
     .sunset-theme::after {

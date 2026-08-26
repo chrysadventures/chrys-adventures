@@ -7,6 +7,8 @@ import {
   BookOpen,
   Boxes,
   Check,
+  CircleAlert,
+  CloudCheck,
   Compass,
   Eraser,
   Flag,
@@ -14,6 +16,7 @@ import {
   KeyRound,
   Layers3,
   ListOrdered,
+  LoaderCircle,
   Map as MapIcon,
   Minus,
   Plus,
@@ -2016,13 +2019,32 @@ function App() {
                     : "menu",
           )}
         />
-        <div className="mb-2 flex justify-end px-1 text-xs font-black" aria-live="polite">
-          <span className={saveStatus === "error" ? "text-red-600" : screen.startsWith("advanced") ? "text-amber-50" : "text-emerald-800"}>
+        <div className="mb-3 flex justify-end px-1" aria-live="polite" aria-atomic="true">
+          <span
+            className={`inline-flex min-h-10 items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-black shadow-[0_4px_0_rgba(30,64,95,0.16)] backdrop-blur-md transition-all duration-300 ${
+              saveStatus === "error"
+                ? "border-red-300 bg-red-50/95 text-red-800"
+                : saveStatus === "saving"
+                  ? screen.startsWith("advanced")
+                    ? "border-amber-300/80 bg-[#513641]/95 text-amber-50"
+                    : "border-sky-300 bg-sky-50/95 text-blue-900"
+                  : screen.startsWith("advanced")
+                    ? "border-emerald-300/80 bg-[#3c343c]/95 text-emerald-100"
+                    : "border-emerald-300 bg-gradient-to-r from-sky-50 via-emerald-50 to-yellow-50 text-emerald-900"
+            }`}
+          >
+            {saveStatus === "saving" ? (
+              <LoaderCircle aria-hidden="true" className="h-5 w-5 shrink-0 animate-spin" strokeWidth={3} />
+            ) : saveStatus === "error" ? (
+              <CircleAlert aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={3} />
+            ) : (
+              <CloudCheck aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={3} />
+            )}
             {saveStatus === "saving"
-              ? (lang === "en" ? "Saving..." : "Menyimpan...")
+              ? (lang === "en" ? "Saving progress..." : "Menyimpan kemajuan...")
               : saveStatus === "error"
                 ? (lang === "en" ? "Progress could not be saved. Check your internet." : "Kemajuan tidak dapat disimpan. Semak internet.")
-                : (lang === "en" ? "Progress saved" : "Kemajuan disimpan")}
+                : (lang === "en" ? "Saved to your game" : "Disimpan dalam permainan")}
           </span>
         </div>
         <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} />
@@ -2479,13 +2501,13 @@ function GameFileScreen({
   };
 
   return (
-    <div className="page-bg min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
+    <div className="page-bg learning-theme min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
       <div className="app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <header className="flex items-center justify-between gap-3">
-          <button type="button" onClick={onChangePin} className="rounded-2xl border-2 border-white/90 bg-white/90 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(0,0,0,.15)]">
+          <button type="button" onClick={onChangePin} className="rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(14,116,144,.18)]">
             <ArrowLeft className="mr-1 inline h-4 w-4" aria-hidden="true" /> {copy.changePin}
           </button>
-          <button type="button" onClick={onToggleLang} className="rounded-2xl border-2 border-white/90 bg-white/90 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(0,0,0,.15)]">
+          <button type="button" onClick={onToggleLang} className="rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(14,116,144,.18)]">
             {copy.language}
           </button>
         </header>
@@ -2502,7 +2524,7 @@ function GameFileScreen({
                 type="button"
                 onClick={() => void refreshSaves()}
                 disabled={refreshing || Boolean(busySaveId)}
-                className="mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-sky-300 bg-white px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_#7dd3fc] disabled:cursor-not-allowed disabled:opacity-60 enabled:active:translate-y-1"
+                className="mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-emerald-50 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_#7dd3fc] disabled:cursor-not-allowed disabled:opacity-60 enabled:active:translate-y-1"
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
                 {refreshing ? copy.refreshing : copy.refresh}
@@ -2515,7 +2537,7 @@ function GameFileScreen({
               <>
                 <div className="mt-7 grid gap-4 sm:grid-cols-2">
                   {saves.map((save) => (
-                    <article key={save.id} className="rounded-3xl border-3 border-sky-200 bg-white p-5 shadow-[0_5px_0_#7dd3fc]">
+                    <article key={save.id} className="rounded-3xl border-3 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 p-5 shadow-[0_5px_0_#7dd3fc]">
                       <h2 className="truncate text-2xl font-black text-blue-950">{save.fileName}</h2>
                       <p className="mt-1 text-lg font-black text-emerald-800">{save.playerName}</p>
                       <p className="mt-2 text-sm font-bold text-slate-500">⭐ {save.stars} {copy.stars}</p>
@@ -2534,7 +2556,7 @@ function GameFileScreen({
             )}
 
             {createStep > 0 && (
-              <div className="mx-auto mt-7 max-w-lg rounded-3xl border-3 border-sky-200 bg-white p-5 shadow-[0_6px_0_#7dd3fc] sm:p-7">
+              <div className="mx-auto mt-7 max-w-lg rounded-3xl border-3 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 p-5 shadow-[0_6px_0_#7dd3fc] sm:p-7">
                 {createStep === 1 ? (
                   <label className="block">
                     <span className="block text-lg font-black text-blue-950">{copy.fileLabel}</span>
