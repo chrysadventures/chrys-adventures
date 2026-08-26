@@ -8,7 +8,8 @@
     "build": "vite build --config vite.config.ts",
     "preview": "vite preview --config vite.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "audit:questions": "node scripts/audit-questions.mjs"
+    "audit:questions": "node scripts/audit-questions.mjs",
+    "audit:assets": "node scripts/audit-assets.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

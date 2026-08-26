@@ -568,6 +568,7 @@ const OBJECT_SPRITES: Record<string, string> = {
   "✏": `${SPRITE_BASE}pencil.png`,
   "📘": `${SPRITE_BASE}book.png`,
   "🥚": `${SPRITE_BASE}egg.png`,
+  "🥤": `${SPRITE_BASE}cup.png`,
   "🍪": `${SPRITE_BASE}cookie.png`,
   "🎈": `${SPRITE_BASE}balloon.png`,
   "🚗": `${SPRITE_BASE}toycar.png`,
@@ -3839,12 +3840,12 @@ function balancedIndexRows(count: number, maxPerRow: number) {
 function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false, isCounting = false, label, splitOnDesktop = false, compact = false, emoji = BANANA, largeObjects = false, spacious = false, rowPattern, visibleThrough = count, hiddenIndex = null }: { count: number; countedThrough?: number; showCountLabels?: boolean; isCounting?: boolean; label?: string; splitOnDesktop?: boolean; compact?: boolean; emoji?: string; largeObjects?: boolean; spacious?: boolean; rowPattern?: number[]; visibleThrough?: number; hiddenIndex?: number | null }) {
   const isCookie = emoji === String.fromCodePoint(0x1f36a);
   const useSafeObjectSpacing = spacious || isCookie;
-  const tileSizeClass = largeObjects ? "h-11 w-10 sm:h-16 sm:w-14 sm:rounded-2xl" : "h-10 w-9 sm:h-14 sm:w-12 sm:rounded-2xl";
+  const tileSizeClass = largeObjects ? "h-11 w-9 sm:h-16 sm:w-14 sm:rounded-2xl" : "h-10 w-9 sm:h-14 sm:w-12 sm:rounded-2xl";
   const objectSizeClass = isCookie
-    ? largeObjects ? "h-10 w-10 sm:h-14 sm:w-14" : "h-9 w-9 sm:h-12 sm:w-12"
+    ? largeObjects ? "h-9 w-9 sm:h-14 sm:w-14" : "h-9 w-9 sm:h-12 sm:w-12"
     : largeObjects ? "h-9 w-9 sm:h-12 sm:w-12" : "h-8 w-8 sm:h-11 sm:w-11";
   const countLabelTextClass = isCookie ? "text-xs sm:text-sm" : "text-[10px] sm:text-xs";
-  const compactGridGap = isCookie ? "gap-3" : useSafeObjectSpacing ? "gap-2.5 sm:gap-3" : "gap-1 sm:gap-1.5";
+  const compactGridGap = isCookie ? "gap-2 sm:gap-3" : useSafeObjectSpacing ? "gap-2.5 sm:gap-3" : "gap-1 sm:gap-1.5";
   const compactRowGap = isCookie ? "gap-3" : useSafeObjectSpacing ? "gap-4" : "gap-2";
   const renderBananas = (start: number, amount: number) => (
     <div className={`flex items-center justify-center ${showCountLabels && spacious ? "pt-4 sm:pt-5" : ""} ${spacious ? "gap-4 sm:gap-5" : compactGridGap}`}>
@@ -3885,7 +3886,8 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
   // tests, and worked solutions. Larger sets become balanced centred rows
   // instead of shrinking, clipping, or touching the card border.
   const maxObjectsPerRow = 5;
-  const mobileRows = count > maxObjectsPerRow ? balancedRows(maxObjectsPerRow) : [renderBananas(0, count)];
+  const mobileMaxObjectsPerRow = largeObjects ? 4 : maxObjectsPerRow;
+  const mobileRows = count > mobileMaxObjectsPerRow ? balancedRows(mobileMaxObjectsPerRow) : [renderBananas(0, count)];
   const desktopRows = count > maxObjectsPerRow ? balancedRows(maxObjectsPerRow) : [renderBananas(0, count)];
   const splitRows = balancedRows(5);
   const customRows = rowPattern?.reduce<{ rows: React.ReactNode[]; start: number }>((result, amount, rowIndex) => {
@@ -3900,7 +3902,7 @@ function AdvancedBananaRow({ count, countedThrough = 0, showCountLabels = false,
         {customRows ?? (splitOnDesktop ? splitRows : desktopRows)}
       </div>
       <div className={`flex min-h-14 flex-col items-center justify-center sm:hidden ${spacious ? "gap-7" : compactRowGap}`}>
-        {customRows ?? (splitOnDesktop ? splitRows : mobileRows)}
+        {rowPattern?.every((amount) => amount <= mobileMaxObjectsPerRow) ? customRows : mobileRows}
       </div>
     </div>
   );

@@ -88,6 +88,9 @@ function expectedAnswer(question) {
     case "layoutValue":
       return "Yes";
     case "groupTwo":
+      return `${visual.a}, ${visual.b}`;
+    case "groupBuildMany":
+      return visual.counts.join(",");
     case "groupCombine":
       return visual.a + visual.b;
     case "groupCompare":
@@ -151,12 +154,14 @@ const buildMethod = new Function(
   "countForwardSteps",
   "WORDS",
   "teenNumberMethod",
+  "numberWordFor",
   `${compiledBuildMethod}\nreturn buildMethod;`,
 )(
   (_emoji, count, lang) => lang === "ms" ? (count === 1 ? "objek" : "objek") : (count === 1 ? "object" : "objects"),
   (start, count) => Array.from({ length: count }, (_, index) => start + index + 1).join(", "),
   { en: numberWords, ms: numberWords },
   (value) => ({ en: [`Answer: ${value}.`], ms: [`Jawapan: ${value}.`] }),
+  (value) => numberWords[value] ?? String(value),
 );
 
 function generatedMethod(question) {
