@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowLeft,
@@ -3633,11 +3634,11 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
         <path d="M8 6 H92 M8 6 V13 M92 6 V13 M50 6 V23" fill="none" stroke={colour === "cyan" ? "#67e8f9" : "#fde047"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M44 18 L50 25 L56 18" fill="none" stroke={colour === "cyan" ? "#67e8f9" : "#fde047"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      <div className={`flex min-h-16 items-center justify-center gap-1 rounded-2xl border-2 px-2 py-3 ${colour === "cyan" ? "border-cyan-300 bg-cyan-950/80" : "border-yellow-300 bg-slate-950"}`}>
+      <div className={`flex min-h-16 items-center justify-center rounded-2xl border-2 px-2 py-3 ${colour === "cyan" ? "gap-2 border-cyan-300 bg-cyan-950/80" : "gap-1 border-yellow-300 bg-slate-950"}`}>
         {values.map((value, index) => (
           <React.Fragment key={`${value}-${index}`}>
             {index > 0 && <span data-math-cue="plus" className="text-lg font-black text-white">+</span>}
-            <span className={`grid h-9 min-w-6 place-items-center rounded-lg border-2 px-0.5 text-lg font-black ${colour === "cyan" ? "border-cyan-300 text-cyan-100" : "border-yellow-300 text-yellow-100"}`}>{value}</span>
+            <span className={`grid h-9 place-items-center rounded-lg border-2 font-black ${value >= 10 ? "min-w-10 px-1.5 text-base" : "min-w-6 px-0.5 text-lg"} ${colour === "cyan" ? "border-cyan-300 text-cyan-100" : "border-yellow-300 text-yellow-100"}`}>{value}</span>
           </React.Fragment>
         ))}
       </div>
@@ -3677,16 +3678,22 @@ function AdvancedPlaceValueMeaningCard({ lang }: { lang: Lang }) {
   );
 }
 
-type SeventeenPlaceValueStage = "ready" | "countingTen" | "groupingTen" | "basket" | "movingTens" | "tensPlaced" | "countingOnes" | "complete";
+type SeventeenPlaceValueStage = "ready" | "countingTen" | "groupingTen" | "basket" | "movingTens" | "tensPlaced" | "countingOnes" | "movingOnes" | "complete";
 
 function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onComplete: () => void }) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [stage, setStage] = useState<SeventeenPlaceValueStage>("ready");
   const [countedToTen, setCountedToTen] = useState(0);
   const [countedOnes, setCountedOnes] = useState(0);
+  const [basketFlight, setBasketFlight] = useState<{ left: number; top: number; width: number; height: number; x: number; y: number; scale: number } | null>(null);
+  const [onesFlights, setOnesFlights] = useState<Array<{ left: number; top: number; width: number; height: number; x: number; y: number; scale: number }>>([]);
   const runIdRef = useRef(0);
   const completionReportedRef = useRef(false);
-  const tensPlaced = stage === "tensPlaced" || stage === "countingOnes" || stage === "complete";
+  const basketSourceRef = useRef<HTMLDivElement>(null);
+  const basketTargetRef = useRef<HTMLDivElement>(null);
+  const onesSourceRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const onesTargetRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const tensPlaced = stage === "tensPlaced" || stage === "countingOnes" || stage === "movingOnes" || stage === "complete";
   const basketVisible = stage === "basket" || stage === "movingTens";
   const firstTenVisible = stage === "ready" || stage === "countingTen" || stage === "groupingTen";
 
@@ -3719,10 +3726,32 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
   const moveToTens = async () => {
     if (stage !== "basket") return;
     const runId = ++runIdRef.current;
+    if (prefersReducedMotion) {
+      setStage("tensPlaced");
+      return;
+    }
+    const sourceRect = basketSourceRef.current?.getBoundingClientRect();
+    const targetRect = basketTargetRef.current?.getBoundingClientRect();
+    if (!sourceRect || !targetRect) {
+      setStage("tensPlaced");
+      return;
+    }
+    setBasketFlight({
+      left: sourceRect.left,
+      top: sourceRect.top,
+      width: sourceRect.width,
+      height: sourceRect.height,
+      x: targetRect.left - sourceRect.left,
+      y: targetRect.top - sourceRect.top,
+      scale: targetRect.width / sourceRect.width,
+    });
     setStage("movingTens");
-    await wait(prefersReducedMotion ? 100 : 1100);
+    await wait(1250);
     if (runIdRef.current !== runId) return;
     setStage("tensPlaced");
+    await wait(80);
+    if (runIdRef.current !== runId) return;
+    setBasketFlight(null);
   };
 
   const countRemaining = async () => {
@@ -3740,7 +3769,32 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
     if (!progressed) setCountedOnes(7);
     await wait(500);
     if (runIdRef.current !== runId) return;
+    if (!prefersReducedMotion) {
+      const flights = Array.from({ length: 7 }, (_, index) => {
+        const sourceRect = onesSourceRefs.current[index]?.getBoundingClientRect();
+        const targetRect = onesTargetRefs.current[index]?.getBoundingClientRect();
+        if (!sourceRect || !targetRect) return null;
+        return {
+          left: sourceRect.left,
+          top: sourceRect.top,
+          width: sourceRect.width,
+          height: sourceRect.height,
+          x: targetRect.left - sourceRect.left,
+          y: targetRect.top - sourceRect.top,
+          scale: targetRect.width / sourceRect.width,
+        };
+      }).filter((flight): flight is NonNullable<typeof flight> => flight !== null);
+      if (flights.length === 7) {
+        setOnesFlights(flights);
+        setStage("movingOnes");
+        await wait(1150);
+        if (runIdRef.current !== runId) return;
+      }
+    }
     setStage("complete");
+    await wait(80);
+    if (runIdRef.current !== runId) return;
+    setOnesFlights([]);
     if (!completionReportedRef.current) {
       completionReportedRef.current = true;
       onComplete();
@@ -3752,6 +3806,8 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
     stopNumberAudio();
     setCountedToTen(0);
     setCountedOnes(0);
+    setBasketFlight(null);
+    setOnesFlights([]);
     setStage("ready");
   };
 
@@ -3764,13 +3820,54 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
 
   return (
     <section className="space-y-5 rounded-[2rem] border-2 border-cyan-300 bg-gradient-to-br from-slate-950 to-emerald-950 p-4 shadow-[0_6px_0_#164e63] sm:p-6">
-      <style>{`@keyframes tenBasketToTensColumn{0%{transform:translate3d(0,0,0) scale(1);opacity:1}70%{transform:translate3d(-48%,-13rem,0) scale(.48);opacity:1}100%{transform:translate3d(-55%,-16rem,0) scale(.36);opacity:0}}@keyframes tensDigitIncrease{0%{transform:scale(.35);filter:brightness(1)}52%{transform:scale(1.32);filter:brightness(1.55)}76%{transform:scale(.92);filter:brightness(1.2)}100%{transform:scale(1);filter:brightness(1)}}@keyframes plusOnePop{0%{transform:translateY(-50%) scale(.3) rotate(-10deg);opacity:0}58%{transform:translateY(-50%) scale(1.2) rotate(4deg);opacity:1}100%{transform:translateY(-50%) scale(1) rotate(0);opacity:1}}.ten-basket-to-tens-column{animation:tenBasketToTensColumn 1100ms cubic-bezier(.22,.72,.2,1) both;transform-origin:center;will-change:transform,opacity}.tens-digit-increase{animation:tensDigitIncrease 850ms cubic-bezier(.2,.82,.25,1.18) both}.tens-plus-one-pop{animation:plusOnePop 700ms cubic-bezier(.18,.85,.3,1.2) both}@media(prefers-reduced-motion:reduce){.ten-basket-to-tens-column,.tens-digit-increase,.tens-plus-one-pop{animation:none}}`}</style>
+      <style>{`@keyframes tenBasketToTensColumn{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(var(--basket-flight-x),var(--basket-flight-y),0) scale(var(--basket-flight-scale))}}@keyframes sevenBananasToOnesColumn{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(var(--ones-flight-x),var(--ones-flight-y),0) scale(var(--ones-flight-scale))}}@keyframes tensDigitIncrease{0%{transform:scale(.35);filter:brightness(1)}52%{transform:scale(1.32);filter:brightness(1.55)}76%{transform:scale(.92);filter:brightness(1.2)}100%{transform:scale(1);filter:brightness(1)}}@keyframes plusOnePop{0%{transform:translateY(-50%) scale(.3) rotate(-10deg);opacity:0}58%{transform:translateY(-50%) scale(1.2) rotate(4deg);opacity:1}100%{transform:translateY(-50%) scale(1) rotate(0);opacity:1}}.ten-basket-to-tens-column{animation:tenBasketToTensColumn 1250ms cubic-bezier(.22,1,.36,1) both;transform-origin:top left;will-change:transform}.ones-banana-to-column{animation:sevenBananasToOnesColumn 1150ms cubic-bezier(.22,1,.36,1) both;transform-origin:top left;will-change:transform}.tens-digit-increase{animation:tensDigitIncrease 850ms cubic-bezier(.2,.82,.25,1.18) both}.tens-plus-one-pop{animation:plusOnePop 700ms cubic-bezier(.18,.85,.3,1.2) both}@media(prefers-reduced-motion:reduce){.ten-basket-to-tens-column,.ones-banana-to-column,.tens-digit-increase,.tens-plus-one-pop{animation:none}}`}</style>
+      {basketFlight && typeof document !== "undefined" && createPortal(
+        <div
+          className="ten-basket-to-tens-column pointer-events-none fixed z-[100]"
+          style={{
+            left: basketFlight.left,
+            top: basketFlight.top,
+            width: basketFlight.width,
+            height: basketFlight.height,
+            "--basket-flight-x": `${basketFlight.x}px`,
+            "--basket-flight-y": `${basketFlight.y}px`,
+            "--basket-flight-scale": basketFlight.scale,
+          } as React.CSSProperties}
+          aria-hidden="true"
+        >
+          <TenBananaBundle lang={lang} compact />
+        </div>,
+        document.body,
+      )}
+      {onesFlights.length === 7 && typeof document !== "undefined" && createPortal(
+        <>
+          {onesFlights.map((flight, index) => (
+            <div
+              key={`ones-flight-${index}`}
+              className="ones-banana-to-column pointer-events-none fixed z-[100]"
+              style={{
+                left: flight.left,
+                top: flight.top,
+                width: flight.width,
+                height: flight.height,
+                "--ones-flight-x": `${flight.x}px`,
+                "--ones-flight-y": `${flight.y}px`,
+                "--ones-flight-scale": flight.scale,
+              } as React.CSSProperties}
+              aria-hidden="true"
+            >
+              {renderBanana(index + 1, true, false, `moving-one-${index}`)}
+            </div>
+          ))}
+        </>,
+        document.body,
+      )}
       <div className="rounded-3xl border-2 border-cyan-400 bg-cyan-950/70 p-4 text-center">
         <h4 className="text-3xl font-black text-yellow-200">17 = 10 + 7</h4>
         <p className="mt-2 text-lg font-black text-cyan-50">{lang === "en" ? "Make one group of 10. Then count the 7 bananas left." : "Buat satu kumpulan 10. Kemudian kira 7 pisang yang tinggal."}</p>
       </div>
 
-      <div className="mx-auto grid max-w-xl grid-cols-2 items-start gap-4 rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/90 p-4 text-center shadow-[0_5px_0_#164e63]">
+      <div className="mx-auto grid max-w-3xl grid-cols-2 items-start gap-8 rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/90 p-5 text-center shadow-[0_5px_0_#164e63] sm:p-6">
         <div>
           <p className="rounded-full border border-cyan-400 bg-cyan-950 py-2 text-sm font-black uppercase tracking-wider text-cyan-200">{lang === "en" ? "Tens digit" : "Digit puluh"}</p>
           <span className={`relative mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${tensPlaced ? "tens-digit-increase scale-100 border-cyan-300 bg-cyan-950 text-cyan-100 shadow-[0_0_32px_rgba(34,211,238,.75),0_0_0_6px_rgba(250,204,21,.22)]" : "scale-90 border-cyan-900 bg-slate-900 text-slate-700"}`}>
@@ -3778,15 +3875,30 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
             {stage === "tensPlaced" && <span className="tens-plus-one-pop absolute -right-14 top-1/2 -translate-y-1/2 rounded-xl border-2 border-yellow-200 bg-yellow-400 px-2 py-1 text-2xl font-black leading-none text-slate-950 shadow-[0_4px_0_#a16207]">+1</span>}
           </span>
           <p className={`mt-3 font-black transition-opacity duration-300 ${tensPlaced ? "text-cyan-100 opacity-100" : "opacity-0"}`}>{lang === "en" ? "1 means 10" : "1 bermaksud 10"}</p>
-          <div className={`mx-auto mt-2 grid min-h-36 place-items-center transition-all duration-500 ${tensPlaced ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-75 opacity-0"}`} aria-hidden={!tensPlaced}>
-            <div className="relative h-36 w-36">
-              <div className="absolute left-1/2 top-1/2 w-60 -translate-x-1/2 -translate-y-1/2 scale-[.52]">
+          <div className={`mx-auto mt-2 grid min-h-52 place-items-center ${tensPlaced ? "opacity-100" : "pointer-events-none opacity-0"}`} aria-hidden={!tensPlaced}>
+            <div className="relative h-52 w-52">
+              <div ref={basketTargetRef} className="absolute left-1/2 top-1/2 w-60 -translate-x-1/2 -translate-y-1/2 scale-[.72]">
                 <TenBananaBundle lang={lang} compact />
               </div>
             </div>
           </div>
         </div>
-        <div><p className="rounded-full border border-yellow-400 bg-slate-950 py-2 text-sm font-black uppercase tracking-wider text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p><span className={`mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${stage === "complete" ? "scale-100 border-yellow-300 bg-slate-950 text-yellow-100 shadow-[0_0_24px_rgba(250,204,21,.45)]" : "scale-90 border-yellow-900 bg-slate-900 text-slate-700"}`}>{stage === "complete" ? "7" : "?"}</span>{stage === "complete" && <p className="mt-3 font-black text-yellow-100">{lang === "en" ? "7 single ones" : "7 sa"}</p>}</div>
+        <div>
+          <p className="rounded-full border border-yellow-400 bg-slate-950 py-2 text-sm font-black uppercase tracking-wider text-yellow-200">{lang === "en" ? "Ones digit" : "Digit sa"}</p>
+          <span className={`mx-auto mt-4 grid h-24 w-20 place-items-center rounded-2xl border-4 text-6xl font-black transition-all duration-500 ${stage === "complete" ? "scale-100 border-yellow-300 bg-slate-950 text-yellow-100 shadow-[0_0_24px_rgba(250,204,21,.45)]" : "scale-90 border-yellow-900 bg-slate-900 text-slate-700"}`}>{stage === "complete" ? "7" : "?"}</span>
+          <p className={`mt-3 font-black text-yellow-100 transition-opacity duration-200 ${stage === "complete" ? "opacity-100" : "opacity-0"}`}>{lang === "en" ? "7 single ones" : "7 sa"}</p>
+          <div className={`mx-auto mt-5 flex min-h-40 w-fit flex-col items-center justify-center gap-6 px-5 py-4 ${stage === "complete" ? "opacity-100" : "pointer-events-none opacity-0"}`} aria-hidden={stage !== "complete"}>
+            {[[0, 1, 2, 3], [4, 5, 6]].map((row, rowIndex) => (
+              <div key={`ones-target-row-${rowIndex}`} className="flex items-center justify-center gap-5">
+                {row.map((index) => (
+                  <div key={`target-one-${index}`} ref={(node) => { onesTargetRefs.current[index] = node; }}>
+                    {renderBanana(index + 1, true, false, `placed-one-${index}`)}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border-2 border-cyan-400 bg-slate-950/85 p-4 sm:p-6">
@@ -3794,20 +3906,20 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
 
         <div className="relative mx-auto min-h-40 max-w-xl">
           {firstTenVisible && <div className={`mx-auto grid w-fit grid-cols-5 gap-x-4 gap-y-5 px-4 py-2 transition-all ease-in-out ${stage === "groupingTen" ? "translate-y-8 scale-50 opacity-0 duration-[900ms]" : "translate-y-0 scale-100 opacity-100 duration-300"}`}>{Array.from({ length: 10 }, (_, index) => renderBanana(index + 1, index < countedToTen, stage === "countingTen" && index === countedToTen - 1, `ten-${index}`))}</div>}
-          {basketVisible && <div className={`mx-auto w-fit max-w-full transition-all ease-in-out ${stage === "movingTens" ? "ten-basket-to-tens-column" : "translate-y-0 scale-100 opacity-100 duration-500"}`}><TenBananaBundle lang={lang} compact /></div>}
+          {basketVisible && <div ref={basketSourceRef} className={`mx-auto w-fit max-w-full transition-opacity duration-100 ${stage === "movingTens" ? "opacity-0" : "opacity-100"}`}><TenBananaBundle lang={lang} compact /></div>}
         </div>
 
         {basketVisible && <p className="mx-auto mt-4 max-w-2xl rounded-2xl border-2 border-emerald-300 bg-emerald-950/75 px-5 py-4 text-center text-xl font-black text-emerald-100">{lang === "en" ? "This basket has 10 bananas. It represents 1 in the tens digit column." : "Bakul ini ada 10 pisang. Ia mewakili 1 dalam lajur digit puluh."}</p>}
 
-        <div className="mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-4 px-4 py-2">
+        <div className={`mx-auto mt-7 flex max-w-2xl flex-wrap items-center justify-center gap-4 px-4 py-2 transition-opacity duration-100 ${stage === "movingOnes" || stage === "complete" ? "opacity-0" : "opacity-100"}`}>
           {Array.from({ length: 7 }, (_, index) => {
             const relabelled = !firstTenVisible;
-            const counted = stage === "countingOnes" || stage === "complete" ? index < countedOnes : false;
+            const counted = stage === "countingOnes" || stage === "movingOnes" || stage === "complete" ? index < countedOnes : false;
             const active = stage === "countingOnes" && index === countedOnes - 1;
-            return renderBanana(relabelled ? index + 1 : index + 11, counted, active, `one-${index}`);
+            return <div key={`one-source-${index}`} ref={(node) => { onesSourceRefs.current[index] = node; }}>{renderBanana(relabelled ? index + 1 : index + 11, counted, active, `one-${index}`)}</div>;
           })}
         </div>
-        {!firstTenVisible && <p className="mt-4 text-center text-lg font-black text-yellow-100">{lang === "en" ? "7 bananas are left. These belong in the ones digit." : "7 pisang tinggal. Pisang ini berada dalam digit sa."}</p>}
+        {!firstTenVisible && stage !== "complete" && <p className="mt-4 text-center text-lg font-black text-yellow-100">{lang === "en" ? "7 bananas are left. These belong in the ones digit." : "7 pisang tinggal. Pisang ini berada dalam digit sa."}</p>}
 
         <div className="mt-6 flex justify-center">
           {stage === "ready" && <button type="button" onClick={() => void countFirstTen()} className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1">{lang === "en" ? "Count 10 bananas" : "Kira 10 pisang"}</button>}
@@ -3817,6 +3929,7 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
           {stage === "movingTens" && <button type="button" disabled className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 opacity-70 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Moving to tens..." : "Bergerak ke puluh..."}</button>}
           {stage === "tensPlaced" && <button type="button" onClick={() => void countRemaining()} className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#a16207] active:translate-y-1">{lang === "en" ? "Count the remaining 7" : "Kira baki 7 pisang"}</button>}
           {stage === "countingOnes" && <button type="button" disabled className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 opacity-70 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Counting the 7 ones..." : "Mengira 7 sa..."}</button>}
+          {stage === "movingOnes" && <button type="button" disabled className="rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-8 py-4 text-lg font-black text-slate-950 opacity-70 shadow-[0_6px_0_#a16207]">{lang === "en" ? "Moving 7 to the ones digit..." : "Memindahkan 7 ke digit sa..."}</button>}
           {stage === "complete" && <button type="button" onClick={resetCounting} className="rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-8 py-4 text-lg font-black text-slate-950 shadow-[0_6px_0_#155e75] active:translate-y-1">{lang === "en" ? "Count again" : "Kira semula"}</button>}
         </div>
       </div>
@@ -6338,7 +6451,7 @@ function AdvancedPart2CompactTen({ lang, count = 1 }: { lang: Lang; count?: 1 | 
   );
 }
 
-function AdvancedPart2PanelAForm({ beat, complete, combined, tenInColumn, remainderCounted, tensCounted, tensCounting, lang }: { beat: AdvancedPart2BeatIndex; complete: boolean; combined: boolean; tenInColumn: boolean; remainderCounted: number; tensCounted: number; tensCounting: boolean; lang: Lang }) {
+function AdvancedPart2PanelAForm({ beat, complete, combined, tenInColumn, remainderCounted, tensCounted, tensCounting, columnStep, lang }: { beat: AdvancedPart2BeatIndex; complete: boolean; combined: boolean; tenInColumn: boolean; remainderCounted: number; tensCounted: number; tensCounting: boolean; columnStep: "none" | "ones" | "tens" | "done"; lang: Lang }) {
   const problem = getAdvancedPart2Beat(beat);
   const aDigits = String(problem.a).padStart(2, "0").split("");
   const bDigits = String(problem.b).padStart(2, "0").split("");
@@ -6350,15 +6463,32 @@ function AdvancedPart2PanelAForm({ beat, complete, combined, tenInColumn, remain
         <span className="rounded-full border border-cyan-400 bg-cyan-950 px-3 py-2">{lang === "en" ? "Tens" : "Puluh"}</span>
         <span className="rounded-full border border-cyan-400 bg-cyan-950 px-3 py-2">{lang === "en" ? "Ones" : "Sa"}</span>
       </div>
-      {tenInColumn && beat === 0 && <div className="mb-3 grid grid-cols-2 items-center"><div className="relative h-28"><div className="absolute left-1/2 top-1/2 w-[15rem] -translate-x-1/2 -translate-y-1/2 scale-[.45]"><AdvancedPart2CompactTen lang={lang} /><span className="absolute -right-12 top-1/2 text-6xl font-black text-yellow-200">1</span></div></div><span /></div>}
+      {tenInColumn && beat === 0 && (
+        <div className="mb-3 grid grid-cols-2 items-center">
+          <div className="relative h-32">
+            <span className={`absolute left-[34%] top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl px-3 text-7xl font-black text-yellow-200 transition-all duration-500 ${columnStep === "tens" ? "scale-110 bg-yellow-300/15 ring-4 ring-yellow-300 shadow-[0_0_24px_rgba(250,204,21,.65)]" : "drop-shadow-[0_0_12px_rgba(250,204,21,.45)]"}`} style={getNumberTextStyle(1)}>1</span>
+            <div className="absolute left-[68%] top-1/2 w-[15rem] -translate-x-1/2 -translate-y-1/2 scale-[.45]">
+              <AdvancedPart2CompactTen lang={lang} />
+            </div>
+          </div>
+          <span />
+        </div>
+      )}
       {beat === 2 && combined && <div className="slide-in-up mb-4 grid grid-cols-2 gap-3"><div className="overflow-hidden rounded-2xl border-2 border-cyan-400 bg-cyan-950/60 p-2"><p className="mb-1 text-center text-xs font-black uppercase text-cyan-200">{lang === "en" ? "Tens column" : "Lajur puluh"}</p><div className="relative h-28"><div className="absolute left-1/2 top-1/2 flex w-[31rem] -translate-x-1/2 -translate-y-1/2 scale-[.30] items-center justify-center gap-4 sm:scale-[.38]">{([0, 1] as const).map((index) => <div key={index} className={`rounded-[1.75rem] transition-all ${tensCounting && tensCounted === index + 1 ? "scale-110 ring-8 ring-yellow-300 shadow-[0_0_30px_rgba(250,204,21,.7)]" : ""}`}><TenBananaBundle lang={lang} compact /></div>)}</div></div></div><div className="grid place-items-center rounded-2xl border-2 border-cyan-900 bg-slate-900/60 text-4xl font-black text-cyan-800">0</div></div>}
       <div className="relative grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] text-center text-5xl font-black text-yellow-200" style={getNumberTextStyle(problem.total)}>
-        <span aria-hidden="true" /><span>{aDigits[0]}</span><span>{aDigits[1]}</span>
-        <span data-math-cue="plus" className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span>{bDigits[0]}</span><span>{bDigits[1]}</span>
+        <span aria-hidden="true" /><span className={`rounded-xl transition-all duration-500 ${columnStep === "tens" ? "bg-yellow-300/15 ring-4 ring-yellow-300" : ""}`}>{aDigits[0]}</span><span className={`rounded-xl transition-all duration-500 ${columnStep === "ones" ? "bg-yellow-300/15 ring-4 ring-yellow-300" : ""}`}>{aDigits[1]}</span>
+        <span data-math-cue="plus" className="grid place-items-center text-cyan-300" aria-hidden="true">+</span><span className={`rounded-xl transition-all duration-500 ${columnStep === "tens" ? "bg-yellow-300/15 ring-4 ring-yellow-300" : ""}`}>{bDigits[0]}</span><span className={`rounded-xl transition-all duration-500 ${columnStep === "ones" ? "bg-yellow-300/15 ring-4 ring-yellow-300" : ""}`}>{bDigits[1]}</span>
         <span className="col-span-3 my-3 border-t-4 border-cyan-300" />
-        <span aria-hidden="true" /><span className={`transition-all duration-500 ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{complete ? answerDigits[0] : "0"}</span>
-        <span className={`transition-all duration-500 ${complete ? "scale-100 opacity-100" : "scale-75 opacity-0"}`}>{complete ? answerDigits[1] : beat === 0 && remainderCounted === 3 ? "3" : beat === 2 && tensCounted === 2 ? "0" : "0"}</span>
+        <span aria-hidden="true" /><span className={`rounded-xl transition-all duration-500 ${complete || columnStep === "tens" || columnStep === "done" ? "scale-100 opacity-100" : "scale-75 opacity-0"} ${columnStep === "tens" ? "bg-yellow-300/15 ring-4 ring-yellow-300" : ""}`}>{complete || columnStep === "tens" || columnStep === "done" ? answerDigits[0] : "0"}</span>
+        <span className={`rounded-xl transition-all duration-500 ${complete || (beat === 0 && remainderCounted === 3) ? "scale-100 opacity-100" : "scale-75 opacity-0"} ${columnStep === "ones" ? "bg-yellow-300/15 ring-4 ring-yellow-300" : ""}`}>{complete ? answerDigits[1] : beat === 0 && remainderCounted === 3 ? "3" : beat === 2 && tensCounted === 2 ? "0" : "0"}</span>
       </div>
+      {beat === 0 && columnStep !== "none" && (
+        <div className="slide-in-up mx-auto mt-5 max-w-lg rounded-2xl border-2 border-yellow-300 bg-yellow-300/10 px-5 py-4 text-center text-xl font-black text-yellow-100" aria-live="polite">
+          {columnStep === "ones" && (lang === "en" ? "8 + 5 = 13. Put 3 in the ONES column." : "8 + 5 = 13. Letak 3 dalam lajur SA.")}
+          {columnStep === "tens" && (lang === "en" ? "1 + 0 + 0 = 1. Put 1 in the TENS column." : "1 + 0 + 0 = 1. Letak 1 dalam lajur PULUH.")}
+          {columnStep === "done" && (lang === "en" ? "8 + 5 = 13" : "8 + 5 = 13")}
+        </div>
+      )}
     </section>
   );
 }
@@ -6409,27 +6539,80 @@ function AdvancedPart2MethodPanel({ beat, lang, onComplete }: { beat: AdvancedPa
   const completionRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
   const finalStep = lines.length - 1;
+  const stepAudioTokens = useMemo<Array<number | MathCue>>(() => {
+    if (beat === 0) {
+      const audioSteps: Array<Array<number | MathCue>> = [
+        [8, "plus", 5],
+        [8, "plus", 5],
+        [8, "plus", 5, "equals", 13],
+        [1],
+        [3],
+        [1, "plus", 0, "plus", 0],
+        [1, 13],
+        [8, "plus", 5, "equals", 13],
+      ];
+      return audioSteps[step] ?? [];
+    }
+    if (beat === 1) {
+      const audioSteps: Array<Array<number | MathCue>> = [
+        [12, "plus", 2],
+        [2, "plus", 2],
+        [2, "plus", 2, "equals", 4],
+        [1, "plus", 0],
+        [1, 14],
+        [12, "plus", 2, "equals", 14],
+      ];
+      return audioSteps[step] ?? [];
+    }
+    const audioSteps: Array<Array<number | MathCue>> = [
+      [10, "plus", 10],
+      [0, "plus", 0],
+      [0, "plus", 0, "equals", 0],
+      [1, "plus", 1],
+      [1, "plus", 1, "equals", 2],
+      [10, "plus", 10, "equals", 20],
+    ];
+    return audioSteps[step] ?? [];
+  }, [beat, step]);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
   useEffect(() => {
+    let cancelled = false;
+    let advanceTimer: number | null = null;
     setShowNextStep(false);
-    speakText(lines[step], lang, { allowWhenWordAudioDisabled: true });
-    const revealTimer = step < finalStep ? window.setTimeout(() => setShowNextStep(true), 1500) : null;
-    const advanceTimer = window.setTimeout(() => {
-      if (step < finalStep) setStep((value) => value + 1);
-      else if (!completionRef.current) {
-        completionRef.current = true;
-        onCompleteRef.current();
+
+    const playStep = async () => {
+      stopNumberAudio();
+      for (let tokenIndex = 0; tokenIndex < stepAudioTokens.length; tokenIndex += 1) {
+        if (cancelled) return;
+        const token = stepAudioTokens[tokenIndex];
+        const startMode: AudioStartMode = tokenIndex === 0 ? "clear" : "joined";
+        if (typeof token === "number") await speakNumber(token, lang, undefined, undefined, startMode);
+        else await speakMathCue(token, lang, startMode);
+        if (tokenIndex < stepAudioTokens.length - 1) await wait(AUDIO_PHRASE_JOIN_GAP_MS);
       }
-    }, step === 0 ? 1500 : step === finalStep ? 1000 : 2500);
-    return () => {
-      if (revealTimer) window.clearTimeout(revealTimer);
-      window.clearTimeout(advanceTimer);
+      if (cancelled) return;
+      if (step < finalStep) setShowNextStep(true);
+      advanceTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        if (step < finalStep) setStep((value) => value + 1);
+        else if (!completionRef.current) {
+          completionRef.current = true;
+          onCompleteRef.current();
+        }
+      }, step === finalStep ? 1200 : 2400);
     };
-  }, [finalStep, lang, lines, step]);
+
+    void playStep();
+    return () => {
+      cancelled = true;
+      if (advanceTimer !== null) window.clearTimeout(advanceTimer);
+      stopNumberAudio();
+    };
+  }, [finalStep, lang, step, stepAudioTokens]);
 
   const aDigits = String(problem.a).padStart(2, "0").split("");
   const bDigits = String(problem.b).padStart(2, "0").split("");
@@ -6462,6 +6645,7 @@ function AdvancedPart2MethodPanel({ beat, lang, onComplete }: { beat: AdvancedPa
       </div>
       <p className={`mx-auto mt-5 min-h-20 max-w-3xl rounded-2xl border-2 px-5 py-4 text-center text-xl font-black transition-all ${finalGlow ? "border-yellow-300 bg-yellow-300/15 text-yellow-100 shadow-[0_0_24px_rgba(250,204,21,.35)]" : "border-cyan-700 bg-slate-950/70 text-cyan-50"}`} aria-live="polite">{lines[step]}</p>
       {showNextStep && step < finalStep && <button type="button" onClick={() => setStep((value) => Math.min(finalStep, value + 1))} className="mx-auto mt-4 flex rounded-2xl border-2 border-yellow-200 bg-yellow-400 px-6 py-3 font-black text-slate-950 shadow-[0_5px_0_#a16207] active:translate-y-1">{lang === "en" ? "Next step" : "Langkah seterusnya"}</button>}
+      {step === finalStep && <button type="button" onClick={() => setStep(0)} className="mx-auto mt-5 flex rounded-2xl border-2 border-cyan-200 bg-cyan-500 px-7 py-3 text-lg font-black text-slate-950 shadow-[0_5px_0_#155e75] transition hover:-translate-y-0.5 hover:bg-cyan-400 active:translate-y-1">{lang === "en" ? "Count again" : "Kira semula"}</button>}
     </section>
   );
 }
@@ -6473,6 +6657,7 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
   const [panelLeaving, setPanelLeaving] = useState(false);
   const [topCounted, setTopCounted] = useState(0);
   const [bottomCounted, setBottomCounted] = useState(0);
+  const [operandTotalsVisible, setOperandTotalsVisible] = useState({ top: false, bottom: false });
   const [countingGroup, setCountingGroup] = useState<"top" | "bottom" | "result" | "rest" | "tens" | null>(null);
   const [combining, setCombining] = useState(false);
   const [combined, setCombined] = useState(false);
@@ -6484,8 +6669,9 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
   const [tenInColumn, setTenInColumn] = useState(false);
   const [remainderCounted, setRemainderCounted] = useState(0);
   const [tensCounted, setTensCounted] = useState(0);
+  const [columnStep, setColumnStep] = useState<"none" | "ones" | "tens" | "done">("none");
   const [panelAComplete, setPanelAComplete] = useState(false);
-  const busy = countingGroup !== null || combining || carrying || movingTen;
+  const busy = countingGroup !== null || combining || carrying || movingTen || columnStep === "ones" || columnStep === "tens";
 
   useEffect(() => () => stopNumberAudio(), []);
 
@@ -6499,12 +6685,16 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
       update(value);
     });
     if (!progressed) update(count);
+    await wait(500);
     setCountingGroup(null);
   };
 
   const countOperand = async (side: "top" | "bottom") => {
     const count = side === "top" ? problem.a : problem.b;
+    setOperandTotalsVisible((current) => ({ ...current, [side]: false }));
     await countSequence(count, side === "top" ? setTopCounted : setBottomCounted, side);
+    setOperandTotalsVisible((current) => ({ ...current, [side]: true }));
+    await speakRecordedBananaTotal(count, lang, BANANA);
   };
 
   const combineGroups = async () => {
@@ -6546,6 +6736,7 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
     setMovingTen(false);
     setTenInColumn(false);
     setRemainderCounted(0);
+    setColumnStep("none");
     setPanelAComplete(false);
   };
 
@@ -6563,6 +6754,23 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
 
   const countRest = async () => {
     await countSequence(3, setRemainderCounted, "rest");
+    setColumnStep("ones");
+    await speakNumber(8, lang);
+    await speakMathCue("plus", lang);
+    await speakNumber(5, lang);
+    await speakMathCue("equals", lang);
+    await speakNumber(13, lang);
+    await wait(prefersReducedMotion ? 100 : 800);
+    setColumnStep("tens");
+    await speakNumber(1, lang);
+    await speakMathCue("plus", lang);
+    await speakNumber(0, lang);
+    await speakMathCue("plus", lang);
+    await speakNumber(0, lang);
+    await speakMathCue("equals", lang);
+    await speakNumber(1, lang);
+    await wait(prefersReducedMotion ? 100 : 800);
+    setColumnStep("done");
     setPanelAComplete(true);
   };
 
@@ -6582,7 +6790,7 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
         <p className="text-3xl font-black text-yellow-200" style={getNumberTextStyle(problem.total)}>{problem.a} + {problem.b}</p>
       </div>
 
-      <AdvancedPart2PanelAForm beat={beat} complete={panelAComplete} combined={combined} tenInColumn={tenInColumn} remainderCounted={remainderCounted} tensCounted={tensCounted} tensCounting={countingGroup === "tens"} lang={lang} />
+      <AdvancedPart2PanelAForm beat={beat} complete={panelAComplete} combined={combined} tenInColumn={tenInColumn} remainderCounted={remainderCounted} tensCounted={tensCounted} tensCounting={countingGroup === "tens"} columnStep={columnStep} lang={lang} />
 
       {!combined && (
         <div className="grid gap-5 md:grid-cols-2">
@@ -6592,9 +6800,14 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
             const done = counted === value;
             return (
               <div key={side} className={`rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/85 p-4 shadow-[0_5px_0_#164e63] transition-all duration-700 ease-in-out ${combining ? side === "top" ? "translate-y-8 scale-90 opacity-0 md:translate-x-[45%] md:translate-y-12" : "-translate-y-8 scale-90 opacity-0 md:-translate-x-[45%] md:translate-y-12" : "translate-x-0 translate-y-0 scale-100 opacity-100"}`}>
-                <div className="mb-4 flex items-center justify-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-xl bg-yellow-400 text-2xl font-black text-slate-950">{value}</span><span className="text-3xl font-black text-cyan-200">{side === "bottom" ? "+" : ""}</span></div>
+                <div className="mb-4 flex items-center justify-center gap-3">
+                  {side === "bottom" && <span className="text-3xl font-black text-cyan-200" aria-hidden="true">+</span>}
+                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-yellow-400 text-2xl font-black text-slate-950">{value}</span>
+                </div>
                 <AdvancedPart2OperandGroup value={value} countedThrough={counted} counting={countingGroup === side} lang={lang} />
-                <button type="button" disabled={busy || done} onClick={() => void countOperand(side)} className={`mx-auto mt-4 flex min-h-12 items-center rounded-2xl border-2 px-5 py-2 font-black shadow-[0_4px_0_#164e63] active:translate-y-1 disabled:opacity-70 ${done ? "border-emerald-300 bg-emerald-900 text-emerald-100" : "border-cyan-300 bg-cyan-950 text-cyan-100"}`}>{done ? (lang === "en" ? "Counted ✓" : "Sudah dikira ✓") : countingGroup === side ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count" : "Kira")}</button>
+                {operandTotalsVisible[side]
+                  ? <p className="mx-auto mt-4 w-fit min-w-48 rounded-2xl border-2 border-emerald-300 bg-emerald-950/85 px-6 py-3 text-center text-lg font-black text-emerald-100 shadow-[0_4px_0_#065f46]" role="status" aria-live="polite">{lang === "en" ? `Total: ${value} bananas` : `Jumlah: ${value} pisang`}</p>
+                  : <button type="button" disabled={busy || done} onClick={() => void countOperand(side)} className="mx-auto mt-4 flex min-h-12 items-center rounded-2xl border-2 border-cyan-300 bg-cyan-950 px-5 py-2 font-black text-cyan-100 shadow-[0_4px_0_#164e63] active:translate-y-1 disabled:opacity-70">{countingGroup === side ? (lang === "en" ? "Counting..." : "Mengira...") : (lang === "en" ? "Count" : "Kira")}</button>}
               </div>
             );
           })}
