@@ -3938,7 +3938,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
   const [busy, setBusy] = useState(false);
   const [countedThrough, setCountedThrough] = useState(0);
   const completionReportedRef = useRef(false);
-  const [flyingBanana, setFlyingBanana] = useState<{ left: number; top: number; x: number; y: number; curve: Array<{ x: number; y: number }>; size: number; sourceIndex: number } | null>(null);
+  const [flyingBanana, setFlyingBanana] = useState<{ left: number; top: number; x: number; y: number; curve: Array<{ x: number; y: number }>; width: number; height: number; sourceIndex: number } | null>(null);
   const destinationRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<HTMLDivElement>(null);
   const combinedRef = useRef<HTMLDivElement>(null);
@@ -3984,11 +3984,12 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
       const sourceBounds = getObjectBounds(sourceRef.current, sourceIndex);
       const destinationBounds = getObjectBounds(destinationRef.current, destinationIndex);
       if (sourceBounds && destinationBounds && !prefersReducedMotion) {
-        const size = Math.min(sourceBounds.width, sourceBounds.height);
-        const left = sourceBounds.left + (sourceBounds.width / 2) - (size / 2);
-        const top = sourceBounds.top + (sourceBounds.height / 2) - (size / 2);
-        const x = (destinationBounds.left + (destinationBounds.width / 2) - (size / 2)) - left;
-        const y = (destinationBounds.top + (destinationBounds.height / 2) - (size / 2)) - top;
+        const width = sourceBounds.width;
+        const height = sourceBounds.height;
+        const left = sourceBounds.left;
+        const top = sourceBounds.top;
+        const x = (destinationBounds.left + (destinationBounds.width / 2) - (width / 2)) - left;
+        const y = (destinationBounds.top + (destinationBounds.height / 2) - (height / 2)) - top;
         const controlX = x * 0.52;
         const controlY = Math.min(0, y) - Math.max(100, Math.min(180, Math.abs(x) * 0.22));
         const curve = Array.from({ length: 7 }, (_, curveIndex) => {
@@ -4005,7 +4006,8 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
           x,
           y,
           curve,
-          size,
+          width,
+          height,
           sourceIndex,
         });
         await wait(1200);
@@ -4077,12 +4079,12 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
       <style>{`@keyframes advancedObjectCurveFlight{0%{transform:translate3d(0,0,0) scale(1);opacity:1}12.5%{transform:translate3d(var(--flight-x-1),var(--flight-y-1),0) scale(1.02)}25%{transform:translate3d(var(--flight-x-2),var(--flight-y-2),0) scale(1.04)}37.5%{transform:translate3d(var(--flight-x-3),var(--flight-y-3),0) scale(1.055)}50%{transform:translate3d(var(--flight-x-4),var(--flight-y-4),0) scale(1.06)}62.5%{transform:translate3d(var(--flight-x-5),var(--flight-y-5),0) scale(1.055)}75%{transform:translate3d(var(--flight-x-6),var(--flight-y-6),0) scale(1.04)}87.5%{transform:translate3d(var(--flight-x-7),var(--flight-y-7),0) scale(1.02)}100%{transform:translate3d(var(--flight-x),var(--flight-y),0) scale(1);opacity:1}}@media(prefers-reduced-motion:reduce){.advanced-object-slot-flight{animation:none!important}}`}</style>
       {flyingBanana && (
         <span
-          className="advanced-object-slot-flight pointer-events-none fixed z-[80] grid place-items-center rounded-xl border-2 border-yellow-300 bg-amber-950 shadow-[0_0_20px_rgba(250,204,21,.65)]"
+          className="advanced-object-slot-flight pointer-events-none fixed z-[80] grid place-items-center rounded-2xl border border-cyan-400 bg-cyan-950/65 shadow-[0_0_20px_rgba(34,211,238,.45)]"
           style={{
             left: flyingBanana.left,
             top: flyingBanana.top,
-            width: flyingBanana.size,
-            height: flyingBanana.size,
+            width: flyingBanana.width,
+            height: flyingBanana.height,
             "--flight-x": `${flyingBanana.x}px`,
             "--flight-y": `${flyingBanana.y}px`,
             "--flight-x-1": `${flyingBanana.curve[0].x}px`,
@@ -4107,24 +4109,26 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
         </span>
       )}
 
-      <p className="mx-auto mb-4 max-w-3xl text-center text-xl font-black text-cyan-50" role="status">
-        {stage === "moving"
-          ? movingText
-          : stage === "merging"
-            ? source === "branch"
-              ? (lang === "en" ? "All the bananas are now in Chrys's basket..." : "Semua pisang kini berada di dalam bakul Chrys...")
-              : (lang === "en" ? "The two groups are joining..." : "Dua kumpulan sedang bergabung...")
-            : (lang === "en" ? "Count all the bananas together." : "Kira semua pisang sekali.")}
-      </p>
+      {(stage !== "moving" || source !== "branch") && (
+        <p className="mx-auto mb-4 max-w-3xl text-center text-xl font-black text-cyan-50" role="status">
+          {stage === "moving"
+            ? movingText
+            : stage === "merging"
+              ? source === "branch"
+                ? (lang === "en" ? "All the bananas are now in Chrys's basket..." : "Semua pisang kini berada di dalam bakul Chrys...")
+                : (lang === "en" ? "The two groups are joining..." : "Dua kumpulan sedang bergabung...")
+              : (lang === "en" ? "Count all the bananas together." : "Kira semua pisang sekali.")}
+        </p>
+      )}
 
-      <CyberCounter value={stage === "moving" || stage === "merging" ? currentTotal : total} label={lang === "en" ? "Banana count" : "Kiraan pisang"} celebrate={currentTotal === total} />
+      {source !== "branch" && <CyberCounter value={stage === "moving" || stage === "merging" ? currentTotal : total} label={lang === "en" ? "Banana count" : "Kiraan pisang"} celebrate={currentTotal === total} />}
 
       {(stage === "moving" || stage === "merging") && (
         <div className={`mt-6 grid items-stretch gap-4 transition-all duration-700 min-[850px]:grid-cols-[minmax(0,1.15fr)_auto_minmax(0,.85fr)] min-[850px]:items-center ${stage === "merging" ? "scale-95 opacity-0" : "scale-100 opacity-100"}`}>
           <div ref={destinationRef} className="flex min-h-48 min-w-0 flex-col justify-center rounded-[1.75rem] border-2 border-cyan-400 bg-slate-950/75 p-5 shadow-[inset_0_0_24px_rgba(34,211,238,.10)]">
             <p className="mb-3 text-center text-base font-black uppercase tracking-wide text-cyan-200">{source === "branch" ? (lang === "en" ? `Chrys's basket: ${currentTotal}` : `Bakul Chrys: ${currentTotal}`) : (lang === "en" ? `Chrys: ${currentTotal} bananas` : `Chrys: ${currentTotal} pisang`)}</p>
             {source === "branch" ? (
-              <div className="relative mx-auto aspect-square w-full max-w-[22rem]">
+              <div className="relative mx-auto aspect-square w-full max-w-[24rem]">
                 <img src={BASKET_SPRITE} alt={lang === "en" ? "Chrys's basket" : "Bakul Chrys"} className="absolute inset-0 h-full w-full object-contain drop-shadow-[0_12px_12px_rgba(0,0,0,.38)]" />
                 <div className="absolute inset-x-[10%] inset-y-[18%] grid place-items-center overflow-hidden py-3">
                   <AdvancedBananaRow count={total} visibleThrough={currentTotal} countedThrough={currentTotal} showCountLabels splitOnDesktop label={lang === "en" ? `${currentTotal} bananas in Chrys's basket` : `${currentTotal} pisang di dalam bakul Chrys`} />
@@ -4143,7 +4147,7 @@ function AdvancedAdditionRowScenario({ base, extra, lang, source, onSolved }: { 
                 : (lang === "en" ? `Forest floor: ${remaining} bananas left` : `Lantai hutan: ${remaining} pisang tinggal`)}
             </p>
             <div className="relative z-10 rounded-3xl bg-slate-950/25 py-4">
-              {remaining > 0 ? <AdvancedBananaRow count={remaining} countedThrough={remaining} showCountLabels hiddenIndex={flyingBanana?.sourceIndex ?? null} splitOnDesktop label={lang === "en" ? `${remaining} bananas on the forest floor` : `${remaining} pisang di lantai hutan`} /> : <div className="grid min-h-14 place-items-center text-3xl font-black text-white">0</div>}
+              {remaining > 0 ? <AdvancedBananaRow count={remaining} countedThrough={remaining} showCountLabels hiddenIndex={flyingBanana?.sourceIndex ?? null} splitOnDesktop spacious label={lang === "en" ? `${remaining} bananas on the forest floor` : `${remaining} pisang di lantai hutan`} /> : <div className="grid min-h-14 place-items-center text-3xl font-black text-white">0</div>}
             </div>
           </div>
         </div>
@@ -6160,7 +6164,9 @@ function AdvancedCookieTrayCountingIntro({ lang, onComplete }: { lang: Lang; onC
       )}
       <div className="mx-auto grid max-w-[78rem] items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         {tray({ side: "left", initialCount: 5, displayCount: chrysCookieCount, countedThrough: leftCount, name: lang === "en" ? "Chrys's tray" : "Dulang Chrys", character: chrysThinking, borderClass: "border-cyan-400", textClass: "text-cyan-100", trayRef: chrysTrayRef, objectAreaRef: chrysCookieAreaRef, slotCount: 5 })}
-        <span data-math-cue={readyToTransfer ? undefined : "plus"} className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">{readyToTransfer ? "→" : "+"}</span>
+        <span data-math-cue={readyToTransfer ? undefined : "plus"} className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border-2 border-yellow-300 bg-yellow-300 text-4xl font-black text-slate-950 shadow-[0_5px_0_#a16207]" aria-hidden="true">
+          {readyToTransfer ? <ArrowRight className="h-9 w-9" strokeWidth={4} /> : "+"}
+        </span>
         {tray({ side: "right", initialCount: 8, displayCount: alyseCookieCount, countedThrough: rightCount, name: lang === "en" ? "Alyse's tray" : "Dulang Alyse", character: alyseGuide, borderClass: "border-emerald-300", textClass: "text-emerald-100", trayRef: alyseTrayRef, objectAreaRef: alyseCookieAreaRef, rowPattern: alyseRowPattern, slotCount: 13 })}
       </div>
       {readyToTransfer && !transferComplete && (
@@ -6200,7 +6206,7 @@ function AdvancedAdditionPart1Lesson({ lang, t, onDone }: { lang: Lang; t: UIStr
   const texts = [
     lang === "en" ? "Alyse has 8 cookies. Chrys gives her 5 more." : "Alyse ada 8 biskut. Chrys memberinya 5 lagi.",
     lang === "en" ? "Count 8. Count 5. Join both groups to make 13." : "Kira 8. Kira 5. Gabungkan kedua-dua kumpulan menjadi 13.",
-    lang === "en" ? "Move 8 bananas into Chrys's basket. Count from 7 to 15." : "Pindahkan 8 pisang ke dalam bakul Chrys. Kira dari 7 hingga 15.",
+    lang === "en" ? "Move 8 bananas into Chrys's basket." : "Pindahkan 8 pisang ke dalam bakul Chrys.",
     lang === "en" ? "Join the rows. Count all the bananas." : "Gabungkan baris. Kira semua pisang.",
   ];
   return (
@@ -12389,6 +12395,10 @@ function AdditionBananaEquation({
                     ? cyber
                       ? "border-yellow-300 bg-yellow-300 text-slate-950 ring-4 ring-yellow-300/20 shadow-[0_4px_0_#a16207]"
                       : "border-yellow-500 bg-yellow-300 text-blue-950 ring-4 ring-yellow-100 shadow-[0_4px_0_#d97706]"
+                    : index === 2
+                      ? cyber
+                        ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_4px_0_#a16207]"
+                        : "border-yellow-400 bg-yellow-200 text-blue-950 shadow-[0_4px_0_#d97706]"
                     : completedSigns >= index
                       ? cyber
                         ? "border-yellow-300 bg-yellow-300 text-slate-950 shadow-[0_4px_0_#a16207]"
