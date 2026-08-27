@@ -2501,8 +2501,8 @@ function GameFileScreen({
   };
 
   return (
-    <div className="page-bg learning-theme min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
-      <div className="app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
+    <div className="game-file-screen page-bg learning-theme min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
+      <div className="game-file-stage app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <header className="flex items-center justify-between gap-3">
           <button type="button" onClick={onChangePin} className="rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(14,116,144,.18)]">
             <ArrowLeft className="mr-1 inline h-4 w-4" aria-hidden="true" /> {copy.changePin}
@@ -2513,18 +2513,18 @@ function GameFileScreen({
         </header>
 
         <main className="mx-auto w-full max-w-4xl flex-1 py-6">
-          <section className="lesson-panel rounded-[2.25rem] p-5 shadow-2xl md:p-8">
-            <div className="text-center">
-              <img src={chrysHappy} alt="Chrys" className="mx-auto h-24 w-24 object-contain drop-shadow-xl" />
+          <section className="game-file-shell rounded-[2.25rem] p-5 md:p-8">
+            <div className="game-file-hero text-center">
+              <img src={chrysHappy} alt="Chrys" className="game-file-mascot mx-auto h-24 w-24 object-contain drop-shadow-xl" />
               <p className="mt-2 text-sm font-black uppercase tracking-[0.18em] text-emerald-700">{copy.eyebrow}</p>
               <h1 className="mt-2 text-3xl font-black text-blue-950 sm:text-4xl">{copy.title}</h1>
               <p className="mt-2 text-base font-bold text-slate-600 sm:text-lg">{copy.help}</p>
-              <p className="mx-auto mt-3 max-w-2xl rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800">{copy.cloudHelp}</p>
+              <p className="game-file-cloud-note mx-auto mt-3 max-w-2xl rounded-2xl px-4 py-3 text-sm font-black text-emerald-900">{copy.cloudHelp}</p>
               <button
                 type="button"
                 onClick={() => void refreshSaves()}
                 disabled={refreshing || Boolean(busySaveId)}
-                className="mt-3 inline-flex items-center gap-2 rounded-2xl border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-emerald-50 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_#7dd3fc] disabled:cursor-not-allowed disabled:opacity-60 enabled:active:translate-y-1"
+                className="game-file-refresh mt-3 inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-black text-blue-950 disabled:cursor-not-allowed disabled:opacity-60 enabled:active:translate-y-1"
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
                 {refreshing ? copy.refreshing : copy.refresh}
@@ -2535,9 +2535,9 @@ function GameFileScreen({
 
             {createStep === 0 && (
               <>
-                <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                <div className="game-file-grid mt-7 grid gap-5 sm:grid-cols-2">
                   {saves.map((save) => (
-                    <article key={save.id} className="rounded-3xl border-3 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 p-5 shadow-[0_5px_0_#7dd3fc]">
+                    <article key={save.id} className="game-file-card rounded-3xl p-5">
                       <h2 className="truncate text-2xl font-black text-blue-950">{save.fileName}</h2>
                       <p className="mt-1 text-lg font-black text-emerald-800">{save.playerName}</p>
                       <p className="mt-2 text-sm font-bold text-slate-500">⭐ {save.stars} {copy.stars}</p>
@@ -2549,14 +2549,14 @@ function GameFileScreen({
                   ))}
                 </div>
                 {saves.length === 0 && <p className="mt-7 rounded-3xl border-2 border-dashed border-sky-300 bg-sky-50 p-6 text-center font-black text-slate-600">{copy.empty}</p>}
-                <button type="button" onClick={() => { setCreateStep(1); setError(""); }} className="mx-auto mt-7 block rounded-3xl border-2 border-yellow-500 bg-yellow-400 px-7 py-4 text-xl font-black text-yellow-950 shadow-[0_7px_0_#a86000] active:translate-y-1">
+                <button type="button" onClick={() => { setCreateStep(1); setError(""); }} className="game-file-new-button mx-auto mt-7 block rounded-3xl px-7 py-4 text-xl font-black text-yellow-950 active:translate-y-1">
                   <Plus className="mr-2 inline h-5 w-5" aria-hidden="true" /> {copy.newGame}
                 </button>
               </>
             )}
 
             {createStep > 0 && (
-              <div className="mx-auto mt-7 max-w-lg rounded-3xl border-3 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 p-5 shadow-[0_6px_0_#7dd3fc] sm:p-7">
+              <div className="game-file-create-card mx-auto mt-7 max-w-lg rounded-3xl p-5 sm:p-7">
                 {createStep === 1 ? (
                   <label className="block">
                     <span className="block text-lg font-black text-blue-950">{copy.fileLabel}</span>
@@ -2918,7 +2918,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
           <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
             <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] p-2 shadow-inner">
-              <img src={chrysRunning} alt="" className="max-h-full max-w-full object-contain object-center" />
+              <img src={chrysRunning} alt="" className="h-[4.5rem] w-[4.5rem] translate-x-0.5 -translate-y-1 object-contain object-center" />
             </span>
             <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
             <span className="mt-2 block text-lg font-bold text-orange-50">{t.advancedAdventureShort}</span>
