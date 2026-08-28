@@ -2048,7 +2048,7 @@ function App() {
                 : (lang === "en" ? "Saved to your game" : "Disimpan dalam permainan")}
           </span>
         </div>
-        <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} />
+        <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} sunset={isCyberBackground} />
 
         {screen === "home" && (
           <HomeScreen lang={lang} t={t} player={player} setPlayer={setPlayer} go={go} />
@@ -2659,7 +2659,7 @@ function Header({ lang, onToggleLang, title, stars, cyber = false, t, soundEnabl
   );
 }
 
-function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolean; onOpenChange: (open: boolean) => void }) {
+function GlossaryDialog({ lang, open, onOpenChange, sunset = false }: { lang: Lang; open: boolean; onOpenChange: (open: boolean) => void; sunset?: boolean }) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase(lang === "ms" ? "ms-MY" : "en-US");
   const filteredEntries = GLOSSARY_ENTRIES.filter((entry) => {
@@ -2674,11 +2674,11 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-blue-950/45 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[min(94vw,52rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-[0_12px_0_rgba(15,23,42,.22)] focus:outline-none">
-          <div className="border-b-2 border-emerald-100 bg-emerald-50 px-5 py-4 pr-16 sm:px-6">
-            <Dialog.Title className="flex items-center gap-3 text-2xl font-black text-blue-950 sm:text-3xl">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+        <Dialog.Overlay className={`fixed inset-0 z-40 backdrop-blur-sm ${sunset ? "bg-[#241427]/70" : "bg-blue-950/45"}`} />
+        <Dialog.Content className={`fixed left-1/2 top-1/2 z-50 flex max-h-[90dvh] w-[min(94vw,52rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[2rem] border-4 focus:outline-none ${sunset ? "border-[#f0ad5e] bg-[#2f1c2f] shadow-[0_12px_0_#173b43,0_22px_48px_rgba(30,15,29,.42)]" : "border-white bg-white shadow-[0_12px_0_rgba(15,23,42,.22)]"}`}>
+          <div className={`border-b-2 px-5 py-4 pr-16 sm:px-6 ${sunset ? "border-[#d98c55]/70 bg-gradient-to-r from-[#4b293b] via-[#70483f] to-[#4b5134]" : "border-emerald-100 bg-emerald-50"}`}>
+            <Dialog.Title className={`flex items-center gap-3 text-2xl font-black sm:text-3xl ${sunset ? "text-orange-50" : "text-blue-950"}`}>
+              <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl shadow-sm ${sunset ? "border-2 border-emerald-300/60 bg-[#533044] text-emerald-100" : "bg-white text-emerald-700"}`}>
                 <BookOpen className="h-6 w-6" aria-hidden="true" />
               </span>
               {lang === "en" ? "Math Glossary" : "Glosari Matematik"}
@@ -2690,40 +2690,40 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
               <button
                 type="button"
                 aria-label={lang === "en" ? "Close glossary" : "Tutup glosari"}
-                className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-2xl border-2 border-slate-200 bg-white text-slate-600 shadow-[0_4px_0_rgba(0,0,0,.10)] active:translate-y-1"
+                className={`absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-2xl border-2 shadow-[0_4px_0_rgba(0,0,0,.16)] active:translate-y-1 ${sunset ? "border-orange-200/70 bg-[#3b2336] text-orange-50" : "border-slate-200 bg-white text-slate-600"}`}
               >
                 <X className="h-6 w-6" aria-hidden="true" />
               </button>
             </Dialog.Close>
             <label className="relative mt-4 block">
               <span className="sr-only">{lang === "en" ? "Find a word" : "Cari perkataan"}</span>
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+              <Search className={`pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${sunset ? "text-orange-200" : "text-slate-400"}`} aria-hidden="true" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={lang === "en" ? "Find a word" : "Cari perkataan"}
-                className="w-full rounded-2xl border-2 border-emerald-200 bg-white py-3 pl-12 pr-4 text-base font-bold text-blue-950 outline-none focus:border-blue-400"
+                className={`w-full rounded-2xl border-2 py-3 pl-12 pr-4 text-base font-bold outline-none ${sunset ? "border-emerald-300/70 bg-[#2c1c2d] text-orange-50 placeholder:text-orange-100/55 focus:border-yellow-300" : "border-emerald-200 bg-white text-blue-950 focus:border-blue-400"}`}
               />
             </label>
           </div>
 
-          <div className="overflow-y-auto px-5 py-4 sm:px-6">
+          <div className={`overflow-y-auto px-5 py-4 sm:px-6 ${sunset ? "cyber-scrollbar bg-gradient-to-b from-[#2f1c2f] to-[#332737]" : ""}`}>
             {([1, 2, 3, 4] as const).map((tier) => {
               const entries = filteredEntries.filter((entry) => entry.tier === tier);
               if (entries.length === 0) return null;
               return (
                 <section key={tier} className="mb-6 last:mb-0" aria-labelledby={`glossary-tier-${tier}`}>
-                  <h2 id={`glossary-tier-${tier}`} className="mb-2 text-lg font-black text-emerald-800">{tierLabels[tier]}</h2>
-                  <div className="divide-y-2 divide-slate-100 rounded-2xl border-2 border-slate-100 bg-white">
+                  <h2 id={`glossary-tier-${tier}`} className={`mb-2 text-lg font-black ${sunset ? "text-yellow-200" : "text-emerald-800"}`}>{tierLabels[tier]}</h2>
+                  <div className={`divide-y-2 rounded-2xl border-2 ${sunset ? "divide-orange-200/15 border-orange-200/35 bg-[#3a2437]" : "divide-slate-100 border-slate-100 bg-white"}`}>
                     {entries.map((entry) => (
                       <article key={entry.term.en} className="flex items-start gap-3 p-4">
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-xl font-black text-blue-950">{entry.term[lang]}</h3>
-                          <p className="mt-1 font-bold leading-snug text-slate-700">
-                            <span className="text-emerald-700">{lang === "en" ? "Easy meaning:" : "Maksud mudah:"}</span> {entry.child[lang]}
+                          <h3 className={`text-xl font-black ${sunset ? "text-orange-50" : "text-blue-950"}`}>{entry.term[lang]}</h3>
+                          <p className={`mt-1 font-bold leading-snug ${sunset ? "text-orange-50/90" : "text-slate-700"}`}>
+                            <span className={sunset ? "text-emerald-200" : "text-emerald-700"}>{lang === "en" ? "Easy meaning:" : "Maksud mudah:"}</span> {entry.child[lang]}
                           </p>
-                          <p className="mt-1 text-sm font-bold leading-snug text-slate-500">
-                            <span className="text-blue-700">{lang === "en" ? "Math note:" : "Nota matematik:"}</span> {entry.note[lang]}
+                          <p className={`mt-1 text-sm font-bold leading-snug ${sunset ? "text-orange-100/70" : "text-slate-500"}`}>
+                            <span className={sunset ? "text-cyan-200" : "text-blue-700"}>{lang === "en" ? "Math note:" : "Nota matematik:"}</span> {entry.note[lang]}
                           </p>
                         </div>
                         {WORD_AUDIO_ENABLED && (
@@ -2731,7 +2731,7 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
                             type="button"
                             onClick={() => speakText(`${entry.term[lang]}. ${entry.child[lang]} ${entry.note[lang]}`, lang)}
                             aria-label={lang === "en" ? `Hear ${entry.term.en}` : `Dengar ${entry.term.ms}`}
-                            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 shadow-[0_4px_0_rgba(30,64,175,.14)] active:translate-y-1"
+                            className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-2 shadow-[0_4px_0_rgba(0,0,0,.18)] active:translate-y-1 ${sunset ? "border-cyan-300/70 bg-[#173b47] text-cyan-100" : "border-blue-200 bg-blue-50 text-blue-700"}`}
                           >
                             <SpeakerIcon />
                           </button>
@@ -2743,7 +2743,7 @@ function GlossaryDialog({ lang, open, onOpenChange }: { lang: Lang; open: boolea
               );
             })}
             {filteredEntries.length === 0 && (
-              <p className="rounded-2xl bg-slate-50 p-6 text-center text-lg font-black text-slate-500">
+              <p className={`rounded-2xl p-6 text-center text-lg font-black ${sunset ? "border-2 border-orange-200/30 bg-[#3a2437] text-orange-100/70" : "bg-slate-50 text-slate-500"}`}>
                 {lang === "en" ? "No matching word yet." : "Tiada perkataan yang sama."}
               </p>
             )}
@@ -2877,9 +2877,9 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
           aria-label={lang === "en" ? "Open Learning Mode" : "Buka Mod Belajar"}
           className="learning-mode-card group relative h-full overflow-hidden rounded-[2rem] border-[3px] border-sky-300 p-6 text-left shadow-[0_6px_0_#60a5fa,0_14px_30px_rgba(14,116,144,0.12)] transition hover:-translate-y-0.5 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-400 active:translate-y-0.5 md:p-8"
         >
-          <span className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(14,165,233,.18),transparent_68%)]" aria-hidden="true" />
+          <span className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.26),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
-            <span className="grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-sky-300 bg-gradient-to-br from-sky-100 to-emerald-100 shadow-inner">
+            <span className="learning-mode-character grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-sky-300 shadow-inner">
               <img src={chrysThinking} alt="" className="h-20 w-20 object-contain" />
             </span>
             <span className="mt-6 block text-3xl font-black text-blue-950">
@@ -2898,7 +2898,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
             </span>
             <span className="mt-3 flex flex-wrap gap-2">
               {learningTopics.map((topic) => (
-                <span key={topic} className="rounded-full border-2 border-sky-200 bg-white/85 px-3 py-1.5 text-sm font-black text-blue-900 shadow-sm">
+                <span key={topic} className="learning-mode-topic rounded-full border-2 border-sky-200 px-3 py-1.5 text-sm font-black text-blue-900 shadow-sm">
                   {topic}
                 </span>
               ))}
@@ -2918,8 +2918,8 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
         >
           <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
-            <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] p-2 shadow-inner">
-              <img src={chrysRunning} alt="" className="h-[4.5rem] w-[4.5rem] translate-x-0.5 -translate-y-1 object-contain object-center" />
+            <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] p-1.5 shadow-inner">
+              <img src={chrysRunning} alt="" className="h-20 w-20 translate-x-0.5 -translate-y-1 object-contain object-center" />
             </span>
             <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
             <span className="mt-2 block text-lg font-bold text-orange-50">{t.advancedAdventureShort}</span>

@@ -226,14 +226,39 @@
   }
 
   .learning-mode-card {
-    background: linear-gradient(
-      145deg,
-      rgba(241, 250, 255, 0.985) 0%,
-      rgba(255, 253, 231, 0.985) 52%,
-      rgba(224, 249, 230, 0.985) 100%
-    );
+    background:
+      linear-gradient(122deg, rgba(198, 237, 255, 0.97), rgba(255, 237, 155, 0.965) 54%, rgba(196, 240, 207, 0.97)),
+      var(--app-bg-desktop);
+    background-position: center;
+    background-size: cover;
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
+  }
+
+  .learning-mode-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 84% 18%, rgba(250, 204, 21, 0.3), transparent 12rem),
+      radial-gradient(circle at 8% 84%, rgba(56, 189, 248, 0.2), transparent 11rem);
+  }
+
+  .learning-mode-character {
+    background: linear-gradient(145deg, rgba(224, 246, 255, 0.98), rgba(255, 243, 178, 0.96) 56%, rgba(209, 247, 217, 0.98));
+  }
+
+  .learning-mode-topic {
+    background: linear-gradient(135deg, rgba(239, 249, 255, 0.98), rgba(255, 252, 222, 0.98));
+  }
+
+  @media (max-width: 640px) {
+    .learning-mode-card {
+      background-image:
+        linear-gradient(150deg, rgba(200, 238, 255, 0.97), rgba(255, 238, 162, 0.965) 58%, rgba(201, 241, 210, 0.97)),
+        var(--app-bg-mobile);
+    }
   }
 
   .sunset-theme::after {
