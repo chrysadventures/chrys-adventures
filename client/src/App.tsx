@@ -2918,8 +2918,8 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
         >
           <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
-            <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] p-1.5 shadow-inner">
-              <img src={chrysRunning} alt="" className="h-20 w-20 translate-x-0.5 -translate-y-1 object-contain object-center" />
+            <span className="grid h-24 w-24 place-items-center overflow-hidden rounded-[1.6rem] border-2 border-yellow-200/80 bg-[#563247] shadow-inner">
+              <img src={chrysRunning} alt="" className="h-24 w-24 translate-x-0.5 -translate-y-1 object-contain object-center" />
             </span>
             <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
             <span className="mt-2 block text-lg font-bold text-orange-50">{t.advancedAdventureShort}</span>
