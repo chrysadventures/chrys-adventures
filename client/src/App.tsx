@@ -2875,7 +2875,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
           type="button"
           onClick={() => go("menu")}
           aria-label={lang === "en" ? "Open Learning Mode" : "Buka Mod Belajar"}
-          className="group relative h-full overflow-hidden rounded-[2rem] border-[3px] border-sky-300 bg-gradient-to-br from-white via-sky-50 to-emerald-100 p-6 text-left shadow-[0_6px_0_#60a5fa,0_14px_30px_rgba(14,116,144,0.12)] transition hover:-translate-y-0.5 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-400 active:translate-y-0.5 md:p-8"
+          className="learning-mode-card group relative h-full overflow-hidden rounded-[2rem] border-[3px] border-sky-300 p-6 text-left shadow-[0_6px_0_#60a5fa,0_14px_30px_rgba(14,116,144,0.12)] transition hover:-translate-y-0.5 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-400 active:translate-y-0.5 md:p-8"
         >
           <span className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(14,165,233,.18),transparent_68%)]" aria-hidden="true" />
           <span className="relative z-10 flex h-full flex-col">
