@@ -1,0 +1,63 @@
+/* Storybook UI. Never animate teaching objects through these shared rules. */
+:root {
+  --adventure-ink: #214d40;
+  --adventure-paper: #fffdf4;
+  --adventure-leaf: #27845a;
+  --adventure-edge: #c6dfcb;
+}
+.adventure-ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.adventure-ambient ~ * { position: relative; }
+.ambient-cloud { position: absolute; width: 110px; height: 28px; border-radius: 50%; background: #ffffff65; animation: adventure-drift 28s ease-in-out infinite alternate; }
+.ambient-cloud-one { top: 8%; left: 3%; }
+.ambient-cloud-two { top: 38%; right: 2%; animation-delay: -13s; }
+.ambient-spark { position: absolute; width: 18px; color: #b38525; opacity: .35; animation: adventure-glimmer 7s ease-in-out infinite; }
+.ambient-spark-one { top: 23%; left: 2%; }
+.ambient-spark-two { top: 60%; right: 2%; animation-delay: -3s; }
+.adventure-progress { margin-block: 1rem; color: var(--adventure-ink); }
+.adventure-progress-label { display: flex; justify-content: space-between; gap: 1rem; font-size: .875rem; font-weight: 800; margin-bottom: .5rem; }
+.adventure-progress-track { height: 12px; overflow: hidden; border-radius: 999px; background: #e2eddf; box-shadow: inset 0 2px 3px #214d4015; }
+.adventure-progress-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #27845a, #6bbd80); transition: width 500ms ease-out; }
+.adventure-progress-cyber { color: #a5f3fc; }
+.adventure-progress-cyber .adventure-progress-track { background: #164e63; }
+.adventure-progress-cyber .adventure-progress-track > span { background: linear-gradient(90deg, #0891b2, #34d399); }
+.adventure-reward { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid #eacb69; border-radius: 999px; padding: .35rem .7rem; background: #fff4c4; color: #714909; font-size: .875rem; font-weight: 800; }
+.adventure-save-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; color: var(--adventure-leaf); }
+.game-file-screen, .learning-menu-stage { position: relative; }
+.game-file-card.adventure-save-card { border: 2px solid var(--adventure-edge); background: var(--adventure-paper); box-shadow: 0 5px 0 #d4e2c9, 0 12px 25px #214d400c; }
+.game-file-card.adventure-save-card::before { background: #68b887; height: 5px; }
+.game-file-hero { box-shadow: none; border-color: transparent; background: transparent; }
+.game-file-cloud-note { border: 0; background: #ffffff70; box-shadow: none; font-size: .875rem; }
+.learning-menu-hero { border-width: 2px; border-color: var(--adventure-edge); background: linear-gradient(120deg, #f0faf1, #fff7d6); box-shadow: 0 5px 0 #d4e2c9; }
+.learning-menu-hero::after { opacity: .2; }
+.learning-trail-strip { padding: .75rem; border: 2px solid var(--adventure-edge); background: var(--adventure-paper); box-shadow: 0 4px 0 #d4e2c9; }
+@media (max-width: 767px) {
+  .learning-menu-hero > div { gap: .75rem; }
+  .learning-menu-hero > div > div:first-child { width: 64px; height: 64px; }
+  .learning-menu-hero > div > div:first-child img { width: 64px; height: 64px; }
+  .learning-menu-hero h2 { font-size: 1.5rem; }
+}
+.adventure-mission-card { transition: transform 180ms ease-out, box-shadow 180ms ease-out; }
+.adventure-mission-card[data-complete="true"] { border-color: #78b69a; }
+.adventure-trail-grid { min-width: 0; }
+.learning-trail-strip { overflow-x: visible; }
+.adventure-explanation { max-width: 760px; margin-inline: auto; }
+.adventure-explanation-note { background: var(--adventure-paper); border-color: var(--adventure-edge); border-left: 6px solid #6bbd80; box-shadow: 0 5px 0 #dce8d5; line-height: 1.65; }
+.adventure-explanation-note > svg { color: var(--adventure-leaf); margin-bottom: .5rem; }
+.learning-theme .mobile-quiz-card { background: var(--adventure-paper); }
+.mobile-quiz-card button { transition: transform 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out; }
+.mobile-feedback-card { animation: adventure-reveal 280ms ease-out both; }
+.learning-theme .lesson-next-hint { animation-iteration-count: 2; }
+:is(.game-file-screen, .adventure-mission-card, .mobile-quiz-card, .adventure-explanation) button:focus-visible,
+button.adventure-mission-card:focus-visible { outline: 3px solid #0369a1; outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .adventure-mission-card:hover:not(:disabled), .game-file-card.adventure-save-card:hover { transform: translateY(-3px); box-shadow: 0 8px 0 #c8ddca, 0 15px 28px #214d4012; }
+  .mobile-quiz-card button:hover:not(:disabled) { transform: translateY(-2px); }
+}
+.adventure-mission-card:active:not(:disabled), .mobile-quiz-card button:active:not(:disabled) { transform: translateY(2px) scale(.985); }
+@keyframes adventure-drift { to { transform: translateX(30px); } }
+@keyframes adventure-glimmer { 50% { opacity: .12; } }
+@keyframes adventure-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .adventure-ambient *, .mobile-feedback-card { animation: none; }
+  .adventure-progress-track > span, .adventure-mission-card, .mobile-quiz-card button { transition: none; }
+}

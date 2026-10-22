@@ -35,6 +35,7 @@ import alyseGuide from "@assets/alyse_guide_new_user_nobg.png";
 import trayPhoto from "@assets/tray_photo.png";
 import trayImage from "@assets/generated_images/Tray.png";
 import forestFloor from "@assets/generated_images/Forestfloor.png";
+import { AmbientWorld, AdventureProgress } from "./components/AdventureUI";
 import {
   createGameSave,
   GameSaveApiError,
@@ -2364,6 +2365,7 @@ function GameFileScreen({
   onToggleLang,
   onOpen,
   onChangePin,
+  api = { listGameSaves, loadGameSave, createGameSave },
 }: {
   lang: Lang;
   pin: string;
@@ -2372,6 +2374,7 @@ function GameFileScreen({
   onToggleLang: () => void;
   onOpen: (save: GameSave) => void;
   onChangePin: () => void;
+  api?: { listGameSaves: typeof listGameSaves; loadGameSave: typeof loadGameSave; createGameSave: typeof createGameSave };
 }) {
   const [saves, setSaves] = useState(initialSaves);
   const [createStep, setCreateStep] = useState<0 | 1 | 2>(0);
@@ -2386,14 +2389,14 @@ function GameFileScreen({
   const refreshSaves = useCallback(async (showSpinner = true) => {
     if (showSpinner) setRefreshing(true);
     try {
-      setSaves(await listGameSaves(pin));
+      setSaves(await api.listGameSaves(pin));
       setError("");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not refresh the game files.");
     } finally {
       if (showSpinner) setRefreshing(false);
     }
-  }, [pin]);
+  }, [pin, api.listGameSaves]);
 
   useEffect(() => {
     void refreshSaves(false);
@@ -2470,7 +2473,7 @@ function GameFileScreen({
     setBusySaveId(saveId);
     setError("");
     try {
-      onOpen(await loadGameSave(pin, saveId));
+      onOpen(await api.loadGameSave(pin, saveId));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load the game file.");
     } finally {
@@ -2485,7 +2488,7 @@ function GameFileScreen({
     setBusySaveId("new");
     setError("");
     try {
-      const save = await createGameSave(pin, cleanFileName, cleanPlayerName, lang, soundEnabled);
+      const save = await api.createGameSave(pin, cleanFileName, cleanPlayerName, lang, soundEnabled);
       setSaves((current) => [{
         id: save.id,
         fileName: save.fileName,
@@ -2503,6 +2506,7 @@ function GameFileScreen({
 
   return (
     <div className="game-file-screen page-bg learning-theme min-h-[100dvh] overflow-x-hidden font-sans text-slate-800" style={DEFAULT_BACKGROUND_STYLE}>
+      <AmbientWorld />
       <div className="game-file-stage app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-4 md:px-8">
         <header className="flex items-center justify-between gap-3">
           <button type="button" onClick={onChangePin} className="rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-yellow-50 to-emerald-50 px-4 py-2 text-sm font-black text-blue-900 shadow-[0_4px_0_rgba(14,116,144,.18)]">
@@ -2538,13 +2542,13 @@ function GameFileScreen({
               <>
                 <div className="game-file-grid mt-7 grid gap-5 sm:grid-cols-2">
                   {saves.map((save) => (
-                    <article key={save.id} className="game-file-card rounded-3xl p-5">
+                    <article key={save.id} className="game-file-card adventure-save-card rounded-3xl p-5" aria-busy={busySaveId === save.id}>
+                      <div className="adventure-save-heading"><BookOpen aria-hidden="true" /><span className="adventure-reward"><Star size={18} aria-hidden="true" /> {save.stars} {copy.stars}</span></div>
                       <h2 className="truncate text-2xl font-black text-blue-950">{save.fileName}</h2>
                       <p className="mt-1 text-lg font-black text-emerald-800">{save.playerName}</p>
-                      <p className="mt-2 text-sm font-bold text-slate-500">⭐ {save.stars} {copy.stars}</p>
                       <p className="mt-1 text-xs font-bold text-slate-500">{copy.lastPlayed}: {formatLastPlayed(save.updatedAt)}</p>
                       <button type="button" disabled={Boolean(busySaveId)} onClick={() => void openExisting(save.id)} className="mt-4 w-full rounded-2xl border-2 border-emerald-500 bg-emerald-400 px-4 py-3 text-base font-black text-emerald-950 shadow-[0_5px_0_#047857] disabled:opacity-60 enabled:active:translate-y-1">
-                        {busySaveId === save.id ? "..." : copy.continue}
+                        {busySaveId === save.id ? <><LoaderCircle className="inline h-5 w-5 animate-spin" aria-hidden="true" /> {lang === "en" ? "Opening..." : "Membuka..."}</> : <>{copy.continue} <ArrowRight className="ml-2 inline h-5 w-5" aria-hidden="true" /></>}
                       </button>
                     </article>
                   ))}
@@ -2558,6 +2562,7 @@ function GameFileScreen({
 
             {createStep > 0 && (
               <div className="game-file-create-card mx-auto mt-7 max-w-lg rounded-3xl p-5 sm:p-7">
+                <AdventureProgress value={createStep} total={2} label={lang === "en" ? "Your new adventure" : "Pengembaraan baharu kamu"} />
                 {createStep === 1 ? (
                   <label className="block">
                     <span className="block text-lg font-black text-blue-950">{copy.fileLabel}</span>
@@ -3113,6 +3118,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 
   return (
     <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
+      <AmbientWorld />
       <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-300 p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
         <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
           <div className="mx-auto grid h-32 w-32 place-items-center md:h-36 md:w-36">
@@ -3142,7 +3148,8 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
       </section>
 
       <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning journey with 8 destinations" : "Perjalanan pembelajaran dengan 8 destinasi"}>
-        <div className="grid min-w-[52rem] grid-cols-8 gap-3 px-4 py-5">
+        <AdventureProgress value={trailDestinations.filter((item) => item.complete).length} total={trailDestinations.length} label={lang === "en" ? "Your journey" : "Perjalanan kamu"} />
+        <div className="adventure-trail-grid grid grid-cols-4 gap-3 px-4 py-5 md:grid-cols-8">
           {trailDestinations.map((destination, index) => (
             <div
               key={destination.label}
@@ -3194,7 +3201,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
                   step={destinationNumber}
                   complete={section.complete}
                   lang={lang}
-                  actionLabel={lang === "en" ? "Start" : "Mula"}
+                  actionLabel={lang === "en" ? "Let's explore" : "Mari teroka"}
                   onClick={section.onClick}
                 />
               );
@@ -8385,7 +8392,8 @@ function MenuCard({
       type="button"
       onClick={onClick}
       aria-label={`${title}. ${subtitle}. ${complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}
-      className={`menu-card group relative min-h-48 overflow-hidden rounded-[2rem] border-4 p-5 text-left transition active:translate-y-1 md:p-6 ${complete ? "border-emerald-500 ring-4 ring-emerald-200 shadow-[0_9px_0_#047857,0_0_28px_rgba(16,185,129,.35)]" : theme.border} ${step ? "learning-menu-card" : ""}`}
+      data-complete={complete}
+      className={`menu-card adventure-mission-card group relative min-h-48 overflow-hidden rounded-[2rem] border-4 p-5 text-left transition active:translate-y-1 md:p-6 ${complete ? "border-emerald-500 ring-4 ring-emerald-200 shadow-[0_9px_0_#047857,0_0_28px_rgba(16,185,129,.35)]" : theme.border} ${step ? "learning-menu-card" : ""}`}
     >
       <span className={`absolute inset-x-0 top-0 h-3 ${complete ? "bg-emerald-500" : theme.accent}`} aria-hidden="true" />
       {complete && (
@@ -10457,9 +10465,10 @@ function AdditionIntroStep({ title, text, onPrevious, onNext, onSkip, t, lang }:
   lang: Lang;
 }) {
   return (
-    <div className="space-y-5 text-center">
+    <div className="adventure-explanation space-y-5 text-center">
       <img src={chrysHappy} alt="Chrys happy" className="mx-auto h-36 w-36 object-contain" />
-      <div className="relative rounded-3xl border-2 border-emerald-100 bg-white p-5 text-left">
+      <div className="adventure-explanation-note relative rounded-3xl border-2 border-emerald-100 bg-white p-5 text-left">
+        <BookOpen className="mb-3 h-8 w-8 text-emerald-700" aria-hidden="true" />
         <p className="text-sm font-black text-blue-700">{title}</p>
         <h3 className="mt-3 text-2xl font-black leading-snug text-blue-950 md:text-3xl">
           <span className="box-decoration-clone rounded-xl bg-yellow-200 px-3 py-1 text-yellow-950">{text}</span>
@@ -13979,11 +13988,10 @@ function Quiz({ lang, t, title, questions, onFinish, extraAction, randomize = tr
 
   return (
     <main className={`mx-auto w-full pb-8 ${cyber ? "max-w-5xl" : usesWideSequenceQuestion ? "max-w-7xl" : "max-w-3xl"}`}>
-      <LessonShell lang={lang} title={title} helper={`${t.score}: ${correct}/${randomizedQuestions.length} - ${index + 1}/${randomizedQuestions.length}`} variant={variant}>
+      <LessonShell lang={lang} title={title} helper={lang === "en" ? `Question ${index + 1} of ${randomizedQuestions.length}` : `Soalan ${index + 1} daripada ${randomizedQuestions.length}`} variant={variant}>
         <div className={`mobile-quiz-card rounded-[2rem] border-4 p-4 ${cyber ? "border-cyan-400 bg-slate-950/90 shadow-[0_8px_0_#164e63]" : "border-white bg-white shadow-[0_8px_0_rgba(0,0,0,.16)]"}`}>
-          <div className={`mb-3 h-3 overflow-hidden rounded-full ${cyber ? "border border-cyan-700 bg-slate-800" : "bg-slate-100"}`}>
-            <div className={`h-full rounded-full ${cyber ? "bg-gradient-to-r from-cyan-400 to-yellow-300 shadow-[0_0_12px_rgba(34,211,238,.45)]" : "bg-blue-500"}`} style={{ width: `${(answeredCount / randomizedQuestions.length) * 100}%` }} />
-          </div>
+          <AdventureProgress value={answeredCount} total={randomizedQuestions.length} label={lang === "en" ? "Questions answered" : "Soalan dijawab"} cyber={cyber} />
+          <p className={`mb-4 text-right text-sm font-bold ${cyber ? "text-cyan-100" : "text-slate-600"}`}>{t.score}: {correct}/{randomizedQuestions.length}</p>
           {(index > 0 || onBackToLearning || extraAction) && (
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-3">
@@ -18211,3 +18219,5 @@ function Decor() {
 }
 
 export default App;
+// Used by the development-only design gallery; the normal entry remains App.
+export { GameFileScreen, MenuScreen, AdditionOnlyLesson, Quiz, UI, recognitionPracticeQuestions, DEFAULT_BACKGROUND_STYLE };
