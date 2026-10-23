@@ -2,6 +2,10 @@
 
 Review date: 21 October 2026 (Malaysia time).
 
+Update, 23 October 2026: see `BUGFIX_REVIEW.md` for the verified incremental fixes,
+regression evidence and unresolved findings. The original findings below are kept
+as historical audit context, not a claim that every defect remains unchanged.
+
 Scope: source review of the entry flow, both adventure menus, every routed basic and advanced lesson, both test menus, shared quizzes/solutions, counting/audio, transfers, drawing, feedback, and responsive styling. This is not a completed visual test of every screen/device. Layout risks below are explicitly distinguished from defects established by code. No app behavior was changed by this review.
 
 References use current `client/src/App.tsx` line numbers unless another file is named.

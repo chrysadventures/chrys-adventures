@@ -1,3 +1,5 @@
+import { acknowledgeProgress, pendingProgress, serializeProgress, stageProgress } from "./pendingProgress";
+
 export type GameSavePlayer = {
   name: string;
   stars: number;
@@ -22,15 +24,6 @@ export type GameSave = GameSaveSummary & {
 const SUPABASE_URL = "https://qxhqdefxjnrbhiblrftd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_eujRRLz7-f8OoaOZuPA0JA_DfTMb9kC";
 const GAME_SAVES_ENDPOINT = `${SUPABASE_URL}/functions/v1/game-saves`;
-const APPROVED_OFFLINE_PINS = new Set([
-  "000000",
-  "687596",
-  "171259",
-  "385079",
-  "259511",
-  "822704",
-  "050616",
-]);
 const LOCAL_SAVE_PREFIX = "chrys-offline-saves:";
 
 const localSaveKey = (pin: string) => `${LOCAL_SAVE_PREFIX}${pin}`;
@@ -53,7 +46,7 @@ const writeLocalSaves = (pin: string, saves: GameSave[]) => {
 };
 
 const isOfflineFallbackAllowed = (pin: string, error: unknown) =>
-  APPROVED_OFFLINE_PINS.has(pin) && error instanceof GameSaveApiError && error.status === 0;
+  readLocalSaves(pin).length > 0 && error instanceof GameSaveApiError && error.status === 0;
 
 const cacheLocalSave = (pin: string, save: GameSave) => {
   const saves = readLocalSaves(pin);
@@ -216,13 +209,16 @@ export async function createGameSave(
 export async function loadGameSave(pin: string, saveId: string): Promise<GameSave> {
   try {
     const result = await requestGameSaveApi<{ save: GameSave }>({ action: "load", pin, saveId });
-    cacheLocalSave(pin, result.save);
-    return result.save;
+    const pending = pendingProgress(saveId);
+    const save = pending ? { ...result.save, ...pending, playerName: pending.player.name, stars: pending.player.stars } : result.save;
+    cacheLocalSave(pin, save);
+    return save;
   } catch (error) {
     if (!isOfflineFallbackAllowed(pin, error)) throw error;
     const save = readLocalSaves(pin).find((item) => item.id === saveId);
     if (!save) throw new GameSaveApiError("This game file is not available offline yet.", 404);
-    return save;
+    const pending = pendingProgress(saveId);
+    return pending ? { ...save, ...pending, playerName: pending.player.name, stars: pending.player.stars } : save;
   }
 }
 
@@ -233,6 +229,9 @@ export async function saveGameProgress(
   lang: "en" | "ms",
   soundEnabled: boolean,
 ): Promise<GameSave> {
+  const snapshot = { player, lang, soundEnabled };
+  try { stageProgress(saveId, snapshot); } catch { /* Cloud saving can still succeed when browser storage is full. */ }
+  return serializeProgress(saveId, async () => {
   try {
     const result = await requestGameSaveApi<{ save: GameSave }>({
       action: "save",
@@ -243,6 +242,7 @@ export async function saveGameProgress(
       soundEnabled,
     });
     cacheLocalSave(pin, result.save);
+    acknowledgeProgress(saveId, snapshot);
     return result.save;
   } catch (error) {
     if (!isOfflineFallbackAllowed(pin, error)) throw error;
@@ -258,6 +258,8 @@ export async function saveGameProgress(
       updatedAt: new Date().toISOString(),
     };
     cacheLocalSave(pin, save);
-    return save;
+    // Keep the journal and report the failure; an offline cache is not a cloud ack.
+    throw error;
   }
+  });
 }

@@ -36,6 +36,7 @@ import trayPhoto from "@assets/tray_photo.png";
 import trayImage from "@assets/generated_images/Tray.png";
 import forestFloor from "@assets/generated_images/Forestfloor.png";
 import { AmbientWorld, AdventureProgress } from "./components/AdventureUI";
+import { stageProgress } from "./lib/pendingProgress";
 import {
   createGameSave,
   GameSaveApiError,
@@ -615,8 +616,10 @@ function markAudioInteraction() {
 
 function setGlobalAudioMuted(muted: boolean) {
   audioMuted = muted;
+  if (activeNumberAudio) activeNumberAudio.muted = muted;
   if (muted) {
-    stopNumberAudio();
+    // Finish the current counting beat silently; do not skip the remaining objects.
+    if (activeCountingRunId === null) stopNumberAudio();
     stopCelebrationAudio();
     if (audioOutputContext?.state === "running") void audioOutputContext.suspend();
   } else {
@@ -1830,14 +1833,25 @@ function App() {
   const [lastScore, setLastScore] = useState<{ correct: number; total: number; mastered: boolean } | null>(null);
   const [lastAdvancedTestScore, setLastAdvancedTestScore] = useState<AdvancedTestScore | null>(null);
   const [completedLesson, setCompletedLesson] = useState<LearningSectionKey | null>(null);
+  const saveRevision = useRef(0);
+  const [saveRetry, setSaveRetry] = useState(0);
+
+  React.useLayoutEffect(() => {
+    saveRevision.current++;
+    if (!activeSaveId || !player) return;
+    try { stageProgress(activeSaveId, { player, lang, soundEnabled }); }
+    catch { setSaveStatus("error"); }
+  }, [activeSaveId, player, lang, soundEnabled]);
 
   useEffect(() => saveState(lang, soundEnabled), [lang, soundEnabled]);
   useEffect(() => {
     if (!accessPin || !activeSaveId || !player) return;
+    const revision = saveRevision.current;
     setSaveStatus("saving");
     const timeout = window.setTimeout(() => {
       void saveGameProgress(accessPin, activeSaveId, player, lang, soundEnabled)
         .then((saved) => {
+          if (revision !== saveRevision.current) return;
           setAvailableSaves((current) => current.map((item) => item.id === saved.id ? {
             id: saved.id,
             fileName: saved.fileName,
@@ -1847,11 +1861,12 @@ function App() {
           } : item));
           setSaveStatus("saved");
         })
-        .catch(() => setSaveStatus("error"));
+        .catch(() => { if (revision === saveRevision.current) setSaveStatus("error"); });
     }, 700);
     return () => window.clearTimeout(timeout);
-  }, [accessPin, activeSaveId, player, lang, soundEnabled]);
+  }, [accessPin, activeSaveId, player, lang, soundEnabled, saveRetry]);
   useEffect(() => setGlobalAudioMuted(!soundEnabled), [soundEnabled]);
+  useEffect(() => () => { stopNumberAudio(); stopCelebrationAudio(); }, [screen, lang, activeSaveId]);
   useEffect(() => {
     if (NUMBER_AUDIO_ENABLED) preloadNumberAudioFiles();
   }, []);
@@ -1964,9 +1979,11 @@ function App() {
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
-  const leaveCurrentGame = () => {
+  const leaveCurrentGame = async () => {
     if (accessPin && activeSaveId && player) {
-      void saveGameProgress(accessPin, activeSaveId, player, lang, soundEnabled)
+      setSaveStatus("saving");
+      const revision = saveRevision.current;
+      const savedSuccessfully = await saveGameProgress(accessPin, activeSaveId, player, lang, soundEnabled)
         .then((saved) => {
           setAvailableSaves((current) => current.map((item) => item.id === saved.id ? {
             id: saved.id,
@@ -1975,8 +1992,10 @@ function App() {
             stars: saved.stars,
             updatedAt: saved.updatedAt,
           } : item));
+          return true;
         })
-        .catch(() => undefined);
+        .catch(() => { setSaveStatus("error"); return false; });
+      if (!savedSuccessfully || revision !== saveRevision.current) return;
     }
     setLastScore(null);
     setLastAdvancedTestScore(null);
@@ -2048,6 +2067,7 @@ function App() {
                 ? (lang === "en" ? "Progress could not be saved. Check your internet." : "Kemajuan tidak dapat disimpan. Semak internet.")
                 : (lang === "en" ? "Saved to your game" : "Disimpan dalam permainan")}
           </span>
+          {saveStatus === "error" && <button type="button" className="ml-2 rounded-xl border-2 border-current px-3 py-2 font-bold" onClick={() => setSaveRetry(value => value + 1)}>{lang === "en" ? "Retry save" : "Cuba simpan lagi"}</button>}
         </div>
         <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} sunset={isCyberBackground} />
 
@@ -3501,6 +3521,9 @@ const FLOWER_CARRY_OBJECT: CarryObject = {
 };
 
 function CarryInteraction({ a, b, lang, onSolved, teaching = false, object = BANANA_CARRY_OBJECT }: { a: number; b: number; lang: Lang; onSolved: () => void; teaching?: boolean; object?: CarryObject }) {
+  const sequenceEpoch = useRef(0);
+  useEffect(() => () => { sequenceEpoch.current++; stopNumberAudio(); }, [lang]);
+
   const need = 10 - a;
   const remainder = b - need;
   const total = a + b;
@@ -3511,27 +3534,32 @@ function CarryInteraction({ a, b, lang, onSolved, teaching = false, object = BAN
   const [onesWritten, setOnesWritten] = useState(false);
   const [tensWritten, setTensWritten] = useState(false);
   const [busy, setBusy] = useState(false);
+  useEffect(() => { setBusy(false); setLiftStarted(lifted); }, [lang]);
   const completionReportedRef = useRef(false);
   const soundEnabled = React.useContext(AudioEnabledContext);
   const frameFull = filledMoves === need;
   const counter = frameFull ? 10 + placedLoose : a + filledMoves;
 
   const countOne = async (nextValue: number, update: () => void) => {
+    const epoch = sequenceEpoch.current;
     setBusy(true);
     if (soundEnabled) {
       let ticked = false;
       await speakCountingSequence(nextValue, lang, COUNTING_STEP_MS, (value) => {
         if (value === nextValue) { ticked = true; update(); }
       }, undefined, nextValue);
+    if (epoch !== sequenceEpoch.current) return;
       if (!ticked) update();
     } else update();
     setBusy(false);
   };
 
   const liftTen = async () => {
+    const epoch = sequenceEpoch.current;
     if (!frameFull || liftStarted) return;
     setLiftStarted(true);
     await wait(1900);
+    if (epoch !== sequenceEpoch.current) return;
     setLifted(true);
   };
 
@@ -3722,8 +3750,6 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
     });
     if (runIdRef.current !== runId) return;
     if (!progressed) setCountedToTen(10);
-    await wait(500);
-    if (runIdRef.current !== runId) return;
     setStage("groupingTen");
     await wait(prefersReducedMotion ? 100 : 900);
     if (runIdRef.current !== runId) return;
@@ -3774,8 +3800,6 @@ function AdvancedSeventeenPlaceValueDemo({ lang, onComplete }: { lang: Lang; onC
     });
     if (runIdRef.current !== runId) return;
     if (!progressed) setCountedOnes(7);
-    await wait(500);
-    if (runIdRef.current !== runId) return;
     if (!prefersReducedMotion) {
       const flights = Array.from({ length: 7 }, (_, index) => {
         const sourceRect = onesSourceRefs.current[index]?.getBoundingClientRect();
@@ -5396,8 +5420,8 @@ function AdvancedComparePractice({ lang, t, onBack, onDone }: { lang: Lang; t: U
       ? isVisual ? `Both piles have ${question.a} ${objectWord(question.a)}. They are the same. So ${question.a} = ${question.b}.` : `${question.a} and ${question.b} are the same. So ${question.a} = ${question.b}.`
       : isVisual ? `Dua-dua kumpulan ada ${question.a} ${objectWord(question.a)}. Dua-dua sama. Jadi ${question.a} = ${question.b}.` : `${question.a} dan ${question.b} sama. Jadi ${question.a} = ${question.b}.`)
     : (lang === "en"
-      ? isVisual ? `The wide side faces the bigger pile. The ${largerSide} pile has ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. The ${smallerSide} pile has ${Math.min(question.a, question.b)}. So ${Math.max(question.a, question.b)} ${comparisonSymbol} ${Math.min(question.a, question.b)}.` : `${Math.max(question.a, question.b)} is bigger than ${Math.min(question.a, question.b)}. So ${question.a} ${comparisonSymbol} ${question.b}.`
-      : isVisual ? `Bahagian luas tanda ini menghadap kumpulan yang lebih banyak. Kumpulan ${largerSide === "left" ? "kiri" : "kanan"} ada ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. Kumpulan ${smallerSide === "left" ? "kiri" : "kanan"} ada ${Math.min(question.a, question.b)}. Jadi ${Math.max(question.a, question.b)} ${comparisonSymbol} ${Math.min(question.a, question.b)}.` : `${Math.max(question.a, question.b)} lebih besar daripada ${Math.min(question.a, question.b)}. Jadi ${question.a} ${comparisonSymbol} ${question.b}.`);
+      ? isVisual ? `The wide side faces the bigger pile. The ${largerSide} pile has ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. The ${smallerSide} pile has ${Math.min(question.a, question.b)}. So ${question.a} ${comparisonSymbol} ${question.b}.` : `${Math.max(question.a, question.b)} is bigger than ${Math.min(question.a, question.b)}. So ${question.a} ${comparisonSymbol} ${question.b}.`
+      : isVisual ? `Bahagian luas tanda ini menghadap kumpulan yang lebih banyak. Kumpulan ${largerSide === "left" ? "kiri" : "kanan"} ada ${Math.max(question.a, question.b)} ${objectWord(Math.max(question.a, question.b))}. Kumpulan ${smallerSide === "left" ? "kiri" : "kanan"} ada ${Math.min(question.a, question.b)}. Jadi ${question.a} ${comparisonSymbol} ${question.b}.` : `${Math.max(question.a, question.b)} lebih besar daripada ${Math.min(question.a, question.b)}. Jadi ${question.a} ${comparisonSymbol} ${question.b}.`);
 
   useEffect(() => {
     spokenFeedbackRef.current = null;
@@ -6658,6 +6682,9 @@ function AdvancedPart2MethodPanel({ beat, lang, onComplete }: { beat: AdvancedPa
 }
 
 function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: AdvancedPart2BeatIndex; lang: Lang; onWalkthroughComplete: () => void }) {
+  const sequenceEpoch = useRef(0);
+  useEffect(() => () => { sequenceEpoch.current++; stopNumberAudio(); }, [lang]);
+
   const problem = getAdvancedPart2Beat(beat);
   const prefersReducedMotion = usePrefersReducedMotion();
   const [panel, setPanel] = useState<"A" | "B">("A");
@@ -6679,10 +6706,15 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
   const [columnStep, setColumnStep] = useState<"none" | "ones" | "tens" | "done">("none");
   const [panelAComplete, setPanelAComplete] = useState(false);
   const busy = countingGroup !== null || combining || carrying || movingTen || columnStep === "ones" || columnStep === "tens";
+  useEffect(() => {
+    setCountingGroup(null); setCombining(false); setCarrying(false); setMovingTen(false);
+    setColumnStep("none"); setPanelLeaving(false);
+  }, [lang]);
 
   useEffect(() => () => stopNumberAudio(), []);
 
   const countSequence = async (count: number, update: (value: number) => void, group: "top" | "bottom" | "result" | "rest" | "tens") => {
+    const epoch = sequenceEpoch.current;
     if (busy) return;
     setCountingGroup(group);
     update(0);
@@ -6691,50 +6723,62 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
       progressed = true;
       update(value);
     });
+    if (epoch !== sequenceEpoch.current) return;
     if (!progressed) update(count);
-    await wait(500);
     setCountingGroup(null);
   };
 
   const countOperand = async (side: "top" | "bottom") => {
+    const epoch = sequenceEpoch.current;
     const count = side === "top" ? problem.a : problem.b;
     setOperandTotalsVisible((current) => ({ ...current, [side]: false }));
     await countSequence(count, side === "top" ? setTopCounted : setBottomCounted, side);
+    if (epoch !== sequenceEpoch.current) return;
     setOperandTotalsVisible((current) => ({ ...current, [side]: true }));
     await speakRecordedBananaTotal(count, lang, BANANA);
+    if (epoch !== sequenceEpoch.current) return;
   };
 
   const combineGroups = async () => {
+    const epoch = sequenceEpoch.current;
     if (busy || topCounted !== problem.a || bottomCounted !== problem.b) return;
     setCombining(true);
     await wait(prefersReducedMotion ? 80 : 650);
+    if (epoch !== sequenceEpoch.current) return;
     setCombined(true);
     setCombining(false);
   };
 
   const countTogether = async () => {
+    const epoch = sequenceEpoch.current;
     if (beat === 0) {
       setCarried(false);
       setShowUnderstand(false);
       await countSequence(10, setResultCounted, "result");
+    if (epoch !== sequenceEpoch.current) return;
       setCarrying(true);
       await wait(prefersReducedMotion ? 100 : 900);
+    if (epoch !== sequenceEpoch.current) return;
       setCarried(true);
       setCarrying(false);
       setShowUnderstand(true);
       return;
     }
     await countSequence(4, setResultCounted, "result");
+    if (epoch !== sequenceEpoch.current) return;
     setShowUnderstand(true);
   };
 
   const countTens = async () => {
+    const epoch = sequenceEpoch.current;
     await countSequence(2, setTensCounted, "tens");
+    if (epoch !== sequenceEpoch.current) return;
     speakText(lang === "en" ? "One ten. Two tens. Twenty!" : "Satu puluh. Dua puluh. Dua puluh!", lang, { allowWhenWordAudioDisabled: true });
     setPanelAComplete(true);
   };
 
   const repeatTogether = () => {
+    sequenceEpoch.current++;
     stopNumberAudio();
     setResultCounted(0);
     setCarried(false);
@@ -6748,6 +6792,7 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
   };
 
   const understand = async () => {
+    const epoch = sequenceEpoch.current;
     setShowUnderstand(false);
     if (beat === 1) {
       setPanelAComplete(true);
@@ -6755,36 +6800,55 @@ function AdvancedPart2WorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: 
     }
     setMovingTen(true);
     await wait(prefersReducedMotion ? 100 : 750);
+    if (epoch !== sequenceEpoch.current) return;
     setTenInColumn(true);
     setMovingTen(false);
   };
 
   const countRest = async () => {
+    const epoch = sequenceEpoch.current;
     await countSequence(3, setRemainderCounted, "rest");
+    if (epoch !== sequenceEpoch.current) return;
     setColumnStep("ones");
     await speakNumber(8, lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakMathCue("plus", lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakNumber(5, lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakMathCue("equals", lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakNumber(13, lang);
+    if (epoch !== sequenceEpoch.current) return;
     await wait(prefersReducedMotion ? 100 : 800);
+    if (epoch !== sequenceEpoch.current) return;
     setColumnStep("tens");
     await speakNumber(1, lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakMathCue("plus", lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakNumber(0, lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakMathCue("plus", lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakNumber(0, lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakMathCue("equals", lang);
+    if (epoch !== sequenceEpoch.current) return;
     await speakNumber(1, lang);
+    if (epoch !== sequenceEpoch.current) return;
     await wait(prefersReducedMotion ? 100 : 800);
+    if (epoch !== sequenceEpoch.current) return;
     setColumnStep("done");
     setPanelAComplete(true);
   };
 
   const openMethod = async () => {
+    const epoch = sequenceEpoch.current;
     if (panelLeaving) return;
     setPanelLeaving(true);
     await wait(prefersReducedMotion ? 40 : 300);
+    if (epoch !== sequenceEpoch.current) return;
     setPanel("B");
   };
 
@@ -7191,6 +7255,9 @@ function advancedSubtractionSummary(beat: AdvancedSubtractionBeatIndex, lang: La
 }
 
 function AdvancedSubtractionWorkedBeat({ beat, lang, onWalkthroughComplete }: { beat: AdvancedSubtractionBeatIndex; lang: Lang; onWalkthroughComplete: () => void }) {
+  const sequenceEpoch = useRef(0);
+  useEffect(() => () => { sequenceEpoch.current++; stopNumberAudio(); }, [lang]);
+
   const problem = getAdvancedSubtractionBeat(beat);
   const prefersReducedMotion = usePrefersReducedMotion();
   const [panel, setPanel] = useState<"A" | "B">("A");
@@ -7208,20 +7275,24 @@ function AdvancedSubtractionWorkedBeat({ beat, lang, onWalkthroughComplete }: { 
   const [showUnderstand, setShowUnderstand] = useState(false);
   const [panelAComplete, setPanelAComplete] = useState(false);
   const busy = countingGroup !== null || opening;
+  useEffect(() => { setCountingGroup(null); setOpening(false); setPanelLeaving(false); }, [lang]);
 
   useEffect(() => () => stopNumberAudio(), []);
 
   const countSequence = async (count: number, update: (value: number) => void, group: "top" | "bottom" | "remove" | "remaining") => {
+    const epoch = sequenceEpoch.current;
     if (busy) return;
     setCountingGroup(group);
     update(0);
     let progressed = false;
     await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => { progressed = true; update(value); });
+    if (epoch !== sequenceEpoch.current) return;
     if (!progressed) update(count);
     setCountingGroup(null);
   };
 
   const countOperand = async (side: "top" | "bottom") => {
+    const epoch = sequenceEpoch.current;
     const value = side === "top" ? problem.a : problem.b;
     const update = side === "top" ? setTopCounted : setBottomCounted;
     if (beat === 2) {
@@ -7229,28 +7300,35 @@ function AdvancedSubtractionWorkedBeat({ beat, lang, onWalkthroughComplete }: { 
       setCountingGroup(side);
       let progressed = false;
       await speakCountingSequence(value / 10, lang, COUNTING_STEP_MS, (tens) => { progressed = true; update(tens * 10); });
+    if (epoch !== sequenceEpoch.current) return;
       if (!progressed) update(value);
       setCountingGroup(null);
       await speakNumber(value, lang);
+    if (epoch !== sequenceEpoch.current) return;
       return;
     }
     await countSequence(value, update, side);
+    if (epoch !== sequenceEpoch.current) return;
   };
 
   const tryTakeAway = async () => {
+    const epoch = sequenceEpoch.current;
     if (busy || topCounted !== problem.a || bottomCounted !== problem.b) return;
     if (beat === 0 && !opened) { setInsufficient(true); return; }
     setInsufficient(false);
     setCountingGroup("remove");
     await speakMathCue("minus", lang);
+    if (epoch !== sequenceEpoch.current) return;
     if (beat > 0) {
       setRemovedTens(1);
       await wait(prefersReducedMotion ? 80 : 700);
+    if (epoch !== sequenceEpoch.current) return;
     }
     const looseToRemove = beat === 0 ? 5 : beat === 1 ? 5 : 0;
     if (looseToRemove > 0) {
       let progressed = false;
       await speakCountingSequence(looseToRemove, lang, COUNTING_STEP_MS, (value) => { progressed = true; setRemovedLoose(value); });
+    if (epoch !== sequenceEpoch.current) return;
       if (!progressed) setRemovedLoose(looseToRemove);
     }
     setCountingGroup(null);
@@ -7258,31 +7336,38 @@ function AdvancedSubtractionWorkedBeat({ beat, lang, onWalkthroughComplete }: { 
   };
 
   const openTen = async () => {
+    const epoch = sequenceEpoch.current;
     if (busy || opened) return;
     setOpening(true);
     await wait(prefersReducedMotion ? 100 : 900);
+    if (epoch !== sequenceEpoch.current) return;
     setOpened(true);
     setOpening(false);
     setInsufficient(false);
   };
 
   const countRemaining = async () => {
+    const epoch = sequenceEpoch.current;
     if (beat === 2) {
       if (busy) return;
       setCountingGroup("remaining");
       let progressed = false;
       await speakCountingSequence(1, lang, COUNTING_STEP_MS, () => { progressed = true; setRemainingCounted(10); });
+    if (epoch !== sequenceEpoch.current) return;
       if (!progressed) setRemainingCounted(10);
       setCountingGroup(null);
       await speakNumber(10, lang);
+    if (epoch !== sequenceEpoch.current) return;
       setPanelAComplete(true);
       return;
     }
     await countSequence(problem.answer, setRemainingCounted, "remaining");
+    if (epoch !== sequenceEpoch.current) return;
     setShowUnderstand(true);
   };
 
   const resetPanelA = () => {
+    sequenceEpoch.current++;
     stopNumberAudio();
     setTopCounted(0); setBottomCounted(0); setCountingGroup(null); setInsufficient(false);
     setOpening(false); setOpened(false); setRemovedLoose(0); setRemovedTens(0); setRemovalDone(false);
@@ -7290,9 +7375,11 @@ function AdvancedSubtractionWorkedBeat({ beat, lang, onWalkthroughComplete }: { 
   };
 
   const openMethod = async () => {
+    const epoch = sequenceEpoch.current;
     if (panelLeaving) return;
     setPanelLeaving(true);
     await wait(prefersReducedMotion ? 40 : 300);
+    if (epoch !== sequenceEpoch.current) return;
     setPanel("B");
   };
 
@@ -15398,7 +15485,7 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
   }, [count, emoji, lang]);
 
   const countWholeGroup = async () => {
-    if (busy || visibleCount >= count) return;
+    if (busy) return;
     const runId = countRunRef.current + 1;
     countRunRef.current = runId;
     setBusy(true);
@@ -15408,22 +15495,13 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
       await playRecordedVoiceFile(COUNT_PROMPT_AUDIO_FILES[lang]);
       await wait(120);
     }
+    if (countRunRef.current !== runId) return;
     const reveal = (value: number) => {
       if (countRunRef.current !== runId) return;
       setVisibleCount(value);
-      onProgress?.(value);
+      if (value < count) onProgress?.(value);
     };
-    if (NUMBER_AUDIO_ENABLED && !audioMuted) {
-      await speakCountingSequence(count, lang, COUNTING_STEP_MS, reveal);
-    } else {
-      for (let value = 1; value <= count; value += 1) {
-        if (countRunRef.current !== runId) return;
-        reveal(value);
-        if (value < count) await wait(prefersReducedMotion ? 80 : COUNTING_STEP_MS);
-      }
-      lastCountingFinishedAt = performance.now();
-      await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
-    }
+    await speakCountingSequence(count, lang, COUNTING_STEP_MS, reveal);
     if (countRunRef.current !== runId) return;
     setVisibleCount(count);
     onProgress?.(count);
@@ -15446,7 +15524,7 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
         lang={lang}
         highlightActiveCount={busy}
       />
-      {visibleCount < count && (
+      {count > 0 && (
         <button
           type="button"
           onClick={() => void countWholeGroup()}
@@ -15455,7 +15533,7 @@ function ManualCountedObjectRow({ count, emoji, lang, onProgress, onComplete, an
         >
           {busy
             ? (lang === "en" ? "Counting..." : "Mengira...")
-            : lang === "en"
+            : visibleCount >= count ? (lang === "en" ? "Count again" : "Kira lagi") : lang === "en"
               ? `Count the number of ${objectName(emoji, 2, lang)}`
               : `Kira bilangan ${objectName(emoji, 2, lang)}`}
           {!busy && <span className="pointer-events-none absolute -right-3 -top-3 grid h-9 w-9 place-items-center rounded-full border-2 border-yellow-400 bg-yellow-100"><PointerIcon /></span>}
@@ -17773,7 +17851,6 @@ async function speakCountingSequence(
   onCountComplete?: (value: number) => void,
   startValue = 1,
 ) {
-  if (!NUMBER_AUDIO_ENABLED || audioMuted) return;
   if (count <= 0) return;
   if (activeCountingRunId !== null) return;
   stopNumberAudio();
@@ -17782,7 +17859,6 @@ async function speakCountingSequence(
   const targetStepMs = Math.max(COUNTING_INTER_NUMBER_GAP_MS, intervalMs);
   const finalValue = Math.min(count, 20);
   const firstValue = Math.max(1, startValue);
-  let completed = false;
   try {
     for (let value = firstValue; value <= finalValue; value += 1) {
       if (runId !== audioRunId) return;
@@ -17794,7 +17870,7 @@ async function speakCountingSequence(
         audibleStartedAt = performance.now();
         onCount?.(value);
       };
-      const played = await playNumberFile(
+      const played = NUMBER_AUDIO_ENABLED && !audioMuted && await playNumberFile(
         value,
         lang,
         runId,
@@ -17804,15 +17880,20 @@ async function speakCountingSequence(
       );
       if (runId !== audioRunId) return;
       if (!played) advanceVisual();
+      // A missing or muted recording still gets a full visual counting beat.
+      if (!played) await wait(targetStepMs);
+      if (runId !== audioRunId) return;
       onCountComplete?.(value);
       if (value < finalValue) {
         const elapsedMs = performance.now() - audibleStartedAt;
-        await wait(Math.max(COUNTING_INTER_NUMBER_GAP_MS, targetStepMs - elapsedMs));
+        await wait(played ? Math.max(COUNTING_INTER_NUMBER_GAP_MS, targetStepMs - elapsedMs) : 0);
       }
     }
-    completed = true;
+    lastCountingFinishedAt = performance.now();
+    await wait(COUNT_TOTAL_REVEAL_DELAY_MS);
+    if (runId !== audioRunId) return;
   } finally {
-    if (completed && runId === audioRunId) lastCountingFinishedAt = performance.now();
+    // Timestamp is the end of the final beat, not the end of the reveal delay.
     if (activeCountingRunId === runId) {
       activeCountingRunId = null;
       const queuedAudio = queuedAudioAfterCounting;
@@ -18030,6 +18111,7 @@ function playNumberFile(
   return new Promise<boolean>((resolve) => {
     activeNumberAudio?.pause();
     const audio = getNumberAudio(value, lang);
+    audio.muted = audioMuted;
     let settled = false;
     let timeoutId: number | null = null;
     let tailTrimTimeoutId: number | null = null;

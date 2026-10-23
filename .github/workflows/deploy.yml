@@ -32,7 +32,12 @@ jobs:
 
       - name: Build frontend
         working-directory: client
-        run: npm run build
+        run: |
+          npm run typecheck
+          npm run audit:assets
+          npm run audit:questions
+          npm run test:regression
+          npm run build
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

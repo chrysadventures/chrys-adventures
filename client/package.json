@@ -8,6 +8,7 @@
     "build": "vite build --config vite.config.ts",
     "preview": "vite preview --config vite.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:regression": "node --test scripts/regression.test.mjs",
     "audit:questions": "node scripts/audit-questions.mjs",
     "audit:assets": "node scripts/audit-assets.mjs"
   },
