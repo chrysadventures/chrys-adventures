@@ -175,3 +175,45 @@ test('client no longer ships a list of valid offline PINs', () => {
   const saves = readFileSync(new URL('../src/lib/gameSaves.ts', import.meta.url), 'utf8');
   assert.doesNotMatch(saves, /APPROVED_OFFLINE_PINS|"\d{6}"/);
 });
+
+function gameSaveHarness(fetchImpl) {
+  const values = new Map();
+  let acknowledged = false;
+  const pending = {
+    stageProgress() {}, pendingProgress: () => null,
+    serializeProgress: (_id, write) => write(),
+    acknowledgeProgress: () => { acknowledged = true; },
+  };
+  const context = {
+    exports: {}, fetch: fetchImpl, crypto: { randomUUID: () => '00000000-0000-4000-8000-000000000000' },
+    localStorage: { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) },
+    require: id => id === './pendingProgress' ? pending : assert.fail(`Unexpected import: ${id}`),
+  };
+  const code = readFileSync(new URL('../src/lib/gameSaves.ts', import.meta.url), 'utf8');
+  vm.runInNewContext(ts.transpile(code, { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS }), context);
+  return { api: context.exports, values, acknowledged: () => acknowledged };
+}
+
+test('network failure saves existing progress locally without claiming cloud sync', async () => {
+  const h = gameSaveHarness(async () => { throw new TypeError('DNS unavailable'); });
+  const existing = { id: '11111111-1111-4111-8111-111111111111', fileName: 'Adventure', playerName: 'Explorer',
+    stars: 1, updatedAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z',
+    player: { name: 'Explorer', stars: 1, progress: {} }, lang: 'en', soundEnabled: true };
+  h.values.set('chrys-offline-saves:123456', JSON.stringify([existing]));
+  const result = await h.api.saveGameProgress('123456', existing.id,
+    { name: 'Explorer', stars: 2, progress: { addition: 1 } }, 'en', true);
+  assert.equal(result.synced, false);
+  assert.equal(result.save.stars, 2);
+  assert.equal(JSON.parse(h.values.get('chrys-offline-saves:123456'))[0].stars, 2);
+  assert.equal(h.acknowledged(), false);
+});
+
+test('successful request reports cloud sync and acknowledges the pending snapshot', async () => {
+  const cloudSave = { id: '11111111-1111-4111-8111-111111111111', fileName: 'Adventure', playerName: 'Explorer',
+    stars: 2, updatedAt: '2026-01-02T00:00:00Z', createdAt: '2026-01-01T00:00:00Z',
+    player: { name: 'Explorer', stars: 2, progress: { addition: 1 } }, lang: 'en', soundEnabled: true };
+  const h = gameSaveHarness(async () => ({ ok: true, json: async () => ({ save: cloudSave }) }));
+  const result = await h.api.saveGameProgress('123456', cloudSave.id, cloudSave.player, 'en', true);
+  assert.equal(result.synced, true);
+  assert.equal(h.acknowledged(), true);
+});

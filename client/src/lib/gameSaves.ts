@@ -21,6 +21,11 @@ export type GameSave = GameSaveSummary & {
   createdAt: string;
 };
 
+export type GameSaveResult = {
+  save: GameSave;
+  synced: boolean;
+};
+
 const SUPABASE_URL = "https://qxhqdefxjnrbhiblrftd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_eujRRLz7-f8OoaOZuPA0JA_DfTMb9kC";
 const GAME_SAVES_ENDPOINT = `${SUPABASE_URL}/functions/v1/game-saves`;
@@ -228,7 +233,7 @@ export async function saveGameProgress(
   player: GameSavePlayer,
   lang: "en" | "ms",
   soundEnabled: boolean,
-): Promise<GameSave> {
+): Promise<GameSaveResult> {
   const snapshot = { player, lang, soundEnabled };
   try { stageProgress(saveId, snapshot); } catch { /* Cloud saving can still succeed when browser storage is full. */ }
   return serializeProgress(saveId, async () => {
@@ -243,7 +248,7 @@ export async function saveGameProgress(
     });
     cacheLocalSave(pin, result.save);
     acknowledgeProgress(saveId, snapshot);
-    return result.save;
+    return { save: result.save, synced: true };
   } catch (error) {
     if (!isOfflineFallbackAllowed(pin, error)) throw error;
     const existing = readLocalSaves(pin).find((item) => item.id === saveId);
@@ -258,8 +263,9 @@ export async function saveGameProgress(
       updatedAt: new Date().toISOString(),
     };
     cacheLocalSave(pin, save);
-    // Keep the journal and report the failure; an offline cache is not a cloud ack.
-    throw error;
+    // Keep the journal so a later retry can sync the same snapshot. Local recovery
+    // is a successful device save, but it must never be described as cloud-synced.
+    return { save, synced: false };
   }
   });
 }

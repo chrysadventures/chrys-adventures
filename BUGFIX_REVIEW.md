@@ -1,5 +1,16 @@
 # Bug-fix review — 23 October 2026
 
+## Save-service outage clarification
+
+The configured host `qxhqdefxjnrbhiblrftd.supabase.co` returned DNS `NXDOMAIN`
+on 23 October 2026. This is a missing/unavailable cloud project endpoint, not proof
+of an unstable user connection. Existing cached games now return an explicit local
+save result: the UI says the work is saved on this device and cloud sync is
+unavailable, retains the pending journal, and offers cloud-sync retry. Genuine
+failures no longer automatically blame the internet. Restoring cross-device cloud
+sync still requires the project owner to restore this project or supply the new
+project URL/key and deploy the existing schema/function. No database was changed.
+
 This is an incremental, local-only change set. Nothing was pushed, deployed, or
 changed in the hosted database. Educational activities, question data, both
 languages, artwork and saved-game schema are retained.

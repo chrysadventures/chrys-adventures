@@ -41,6 +41,7 @@ import {
   createGameSave,
   GameSaveApiError,
   type GameSave,
+  type GameSaveResult,
   type GameSaveSummary,
   listGameSaves,
   loadGameSave,
@@ -1824,7 +1825,7 @@ function App() {
   const [accessPin, setAccessPin] = useState<string | null>(null);
   const [availableSaves, setAvailableSaves] = useState<GameSaveSummary[]>([]);
   const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "local" | "saving" | "error">("saved");
   const [lang, setLang] = useState<Lang>(initial.lang);
   const [player, setPlayer] = useState<Player | null>(null);
   const [screen, setScreen] = useState<Screen>("modeSelect");
@@ -1850,7 +1851,7 @@ function App() {
     setSaveStatus("saving");
     const timeout = window.setTimeout(() => {
       void saveGameProgress(accessPin, activeSaveId, player, lang, soundEnabled)
-        .then((saved) => {
+        .then(({ save: saved, synced }: GameSaveResult) => {
           if (revision !== saveRevision.current) return;
           setAvailableSaves((current) => current.map((item) => item.id === saved.id ? {
             id: saved.id,
@@ -1859,7 +1860,7 @@ function App() {
             stars: saved.stars,
             updatedAt: saved.updatedAt,
           } : item));
-          setSaveStatus("saved");
+          setSaveStatus(synced ? "saved" : "local");
         })
         .catch(() => { if (revision === saveRevision.current) setSaveStatus("error"); });
     }, 700);
@@ -1984,7 +1985,7 @@ function App() {
       setSaveStatus("saving");
       const revision = saveRevision.current;
       const savedSuccessfully = await saveGameProgress(accessPin, activeSaveId, player, lang, soundEnabled)
-        .then((saved) => {
+        .then(({ save: saved, synced }: GameSaveResult) => {
           setAvailableSaves((current) => current.map((item) => item.id === saved.id ? {
             id: saved.id,
             fileName: saved.fileName,
@@ -1992,6 +1993,7 @@ function App() {
             stars: saved.stars,
             updatedAt: saved.updatedAt,
           } : item));
+          setSaveStatus(synced ? "saved" : "local");
           return true;
         })
         .catch(() => { setSaveStatus("error"); return false; });
@@ -2045,6 +2047,10 @@ function App() {
             className={`inline-flex min-h-10 items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-black shadow-[0_4px_0_rgba(30,64,95,0.16)] backdrop-blur-md transition-all duration-300 ${
               saveStatus === "error"
                 ? "border-red-300 bg-red-50/95 text-red-800"
+                : saveStatus === "local"
+                  ? screen.startsWith("advanced")
+                    ? "border-amber-300/80 bg-[#513641]/95 text-amber-50"
+                    : "border-amber-400 bg-amber-50/95 text-amber-950"
                 : saveStatus === "saving"
                   ? screen.startsWith("advanced")
                     ? "border-amber-300/80 bg-[#513641]/95 text-amber-50"
@@ -2056,18 +2062,20 @@ function App() {
           >
             {saveStatus === "saving" ? (
               <LoaderCircle aria-hidden="true" className="h-5 w-5 shrink-0 animate-spin" strokeWidth={3} />
-            ) : saveStatus === "error" ? (
+            ) : saveStatus === "error" || saveStatus === "local" ? (
               <CircleAlert aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={3} />
             ) : (
               <CloudCheck aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={3} />
             )}
             {saveStatus === "saving"
               ? (lang === "en" ? "Saving progress..." : "Menyimpan kemajuan...")
-              : saveStatus === "error"
-                ? (lang === "en" ? "Progress could not be saved. Check your internet." : "Kemajuan tidak dapat disimpan. Semak internet.")
+              : saveStatus === "local"
+                ? (lang === "en" ? "Saved on this device. Cloud sync is unavailable." : "Disimpan pada peranti ini. Penyegerakan awan tidak tersedia.")
+                : saveStatus === "error"
+                  ? (lang === "en" ? "Progress could not be saved." : "Kemajuan tidak dapat disimpan.")
                 : (lang === "en" ? "Saved to your game" : "Disimpan dalam permainan")}
           </span>
-          {saveStatus === "error" && <button type="button" className="ml-2 rounded-xl border-2 border-current px-3 py-2 font-bold" onClick={() => setSaveRetry(value => value + 1)}>{lang === "en" ? "Retry save" : "Cuba simpan lagi"}</button>}
+          {(saveStatus === "error" || saveStatus === "local") && <button type="button" className="ml-2 rounded-xl border-2 border-current px-3 py-2 font-bold" onClick={() => setSaveRetry(value => value + 1)}>{saveStatus === "local" ? (lang === "en" ? "Retry cloud sync" : "Cuba segerak awan") : (lang === "en" ? "Retry save" : "Cuba simpan lagi")}</button>}
         </div>
         <GlossaryDialog lang={lang} open={glossaryOpen} onOpenChange={setGlossaryOpen} sunset={isCyberBackground} />
 
@@ -2879,15 +2887,11 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
   ].filter(Boolean).length;
   const advancedCompleted = ["advancedTeenNumbers", "advancedCompareBigger", "advancedSequencing", "advancedAdditionPart1", "advancedAdditionPart2", "advancedSubtraction"]
     .filter((key) => (player.progress[key] ?? 0) > 0).length;
-  const learningTopics = lang === "en"
-    ? ["Recognize numbers", "Number values", "Number order", "Grouping", "Addition", "Subtraction", "Real-world maths", "Practice tests"]
-    : ["Kenal nombor", "Nilai nombor", "Susunan nombor", "Kumpulan nombor", "Tambah", "Tolak", "Aplikasi konsep", "Soalan latihan"];
-  const advancedTopics = lang === "en"
-    ? ["Recognizing and identifying numbers", "Greater than (>) and less than (<)", "Number sequence", "Addition", "Subtraction", "Test mode"]
-    : ["Mengenal dan mengenal pasti nombor", "Lebih besar (>) dan lebih kecil (<)", "Urutan nombor", "Tambah", "Tolak", "Mod ujian"];
+  const learningProgress = `${(learningCompleted / 8) * 100}%`;
+  const advancedProgress = `${(advancedCompleted / 6) * 100}%`;
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-6">
+    <main className="mode-select-screen mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-6">
       <section className="text-center">
         <img src={chrysExcited} alt="Chrys" className="mx-auto h-36 w-36 object-contain drop-shadow-xl" />
         <h2 className="text-4xl font-black text-blue-950">
@@ -2895,80 +2899,86 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
         </h2>
       </section>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => go("menu")}
-          aria-label={lang === "en" ? "Open Learning Mode" : "Buka Mod Belajar"}
-          className="learning-mode-card group relative h-full overflow-hidden rounded-[2rem] border-[3px] border-sky-300 p-6 text-left shadow-[0_6px_0_#60a5fa,0_14px_30px_rgba(14,116,144,0.12)] transition hover:-translate-y-0.5 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-400 active:translate-y-0.5 md:p-8"
-        >
-          <span className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.26),transparent_68%)]" aria-hidden="true" />
-          <span className="relative z-10 flex h-full flex-col">
-            <span className="learning-mode-character grid h-24 w-24 place-items-center rounded-[1.6rem] border-2 border-sky-300 shadow-inner">
-              <img src={chrysThinking} alt="" className="h-20 w-20 object-contain" />
-            </span>
-            <span className="mt-6 block text-3xl font-black text-blue-950">
+      <div className="grid items-stretch gap-6 md:grid-cols-2">
+        <article className="mode-destination-card mode-destination-learning group" style={DEFAULT_BACKGROUND_STYLE}>
+          <div className="mode-destination-scene" aria-hidden="true">
+            <img src={chrysThinking} alt="" className="mode-destination-character h-24 w-24 object-contain" />
+          </div>
+          <div className="mode-destination-content">
+            <h3 className="block text-3xl font-black text-blue-950">
               {lang === "en" ? "Learning Mode" : "Mod Belajar"}
-            </span>
-            <span className="mt-2 block text-lg font-bold text-slate-600">
+            </h3>
+            <p className="mt-1.5 text-lg font-bold text-slate-600">
               {lang === "en" ? "Learn numbers 0-9 with Chrys" : "Belajar nombor 0-9 bersama Chrys"}
-            </span>
-            <span className="mt-4 inline-flex items-center gap-2 rounded-full border-2 border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-800 shadow-sm">
-              {learningCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
-              {lang === "en" ? `${learningCompleted} of 8 adventures complete` : `${learningCompleted} daripada 8 pengembaraan selesai`}
-            </span>
-            <span className="mt-5 flex items-center gap-2 text-sm font-black uppercase text-blue-800">
-              <BookOpen className="h-5 w-5" aria-hidden="true" />
-              {lang === "en" ? "Topics you will explore" : "Topik yang akan diteroka"}
-            </span>
-            <span className="mt-3 flex flex-wrap gap-2">
-              {learningTopics.map((topic) => (
-                <span key={topic} className="learning-mode-topic rounded-full border-2 border-sky-200 px-3 py-1.5 text-sm font-black text-blue-900 shadow-sm">
-                  {topic}
+            </p>
+            <div className="mt-5">
+              <div className="mb-2 flex items-center justify-between gap-3 text-sm font-black text-emerald-900">
+                <span className="flex items-center gap-2">
+                  {learningCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
+                  {lang === "en" ? `${learningCompleted} of 8 adventures complete` : `${learningCompleted} daripada 8 pengembaraan selesai`}
                 </span>
-              ))}
-            </span>
-            <span className="mt-auto flex items-center justify-end gap-2 pt-6 font-black text-blue-700">
+                <span aria-hidden="true">{learningCompleted}/8</span>
+              </div>
+              <div
+                className="mode-progress-track"
+                role="progressbar"
+                aria-label={lang === "en" ? "Learning Mode completion" : "Kemajuan Mod Belajar"}
+                aria-valuemin={0}
+                aria-valuemax={8}
+                aria-valuenow={learningCompleted}
+              >
+                <span className="mode-progress-fill mode-progress-learning" style={{ width: learningProgress }} />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => go("menu")}
+              aria-label={lang === "en" ? "Open Learning Mode" : "Buka Mod Belajar"}
+              className="mode-destination-action mode-destination-action-learning mt-auto"
+            >
               {lang === "en" ? "Start learning" : "Mula belajar"}
-              <ArrowRight className="h-7 w-7 transition group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
-            </span>
-          </span>
-        </button>
+              <ArrowRight className="h-6 w-6 transition-transform duration-200 group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+            </button>
+          </div>
+        </article>
 
-        <button
-          type="button"
-          onClick={() => go("advancedMenu")}
-          aria-label={lang === "en" ? "Open Advanced Adventure" : "Buka Pengembaraan Lanjutan"}
-          className="group relative h-full overflow-hidden rounded-[2rem] border-4 border-orange-200 bg-gradient-to-br from-[#47283f] via-[#785044] to-[#465833] p-6 text-left text-white shadow-[0_9px_0_#7c493c] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-yellow-300 active:translate-y-1 md:p-8"
-        >
-          <div className="absolute inset-y-0 right-0 w-2/5 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.24),transparent_68%)]" aria-hidden="true" />
-          <span className="relative z-10 flex h-full flex-col">
-            <span className="grid h-28 w-28 place-items-center overflow-hidden rounded-[1.75rem] border-2 border-amber-200 bg-[#3b2638]/80 shadow-[0_6px_0_#7c493c,0_0_22px_rgba(255,194,111,.16)]">
-              <img src={chrysRunning} alt="" className="h-24 w-24 object-contain object-center" />
-            </span>
-            <span className="mt-6 block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</span>
-            <span className="mt-2 block text-lg font-bold text-orange-50">{t.advancedAdventureShort}</span>
-            <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-[#523344]/90 px-4 py-2 text-sm font-black text-orange-50 shadow-sm">
-              {advancedCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
-              {lang === "en" ? `${advancedCompleted} of 6 missions complete` : `${advancedCompleted} daripada 6 misi selesai`}
-            </span>
-            <span className="mt-5 flex items-center gap-2 text-sm font-black uppercase text-yellow-200">
-              <BookOpen className="h-5 w-5" aria-hidden="true" />
-              {lang === "en" ? "Topics you will explore" : "Topik yang akan diteroka"}
-            </span>
-            <span className="mt-3 flex flex-wrap gap-2">
-              {advancedTopics.map((topic) => (
-                <span key={topic} className="max-w-full rounded-full border border-orange-200/70 bg-[#604039]/80 px-3 py-1.5 text-sm font-black leading-snug text-orange-50 shadow-sm">
-                  {topic}
+        <article className="mode-destination-card mode-destination-advanced group" style={CYBER_BACKGROUND_STYLE}>
+          <div className="mode-destination-scene" aria-hidden="true">
+            <img src={chrysRunning} alt="" className="mode-destination-character h-28 w-28 object-contain object-center" />
+          </div>
+          <div className="mode-destination-content text-orange-50">
+            <h3 className="block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</h3>
+            <p className="mt-1.5 text-lg font-bold text-orange-50">{t.advancedAdventureShort}</p>
+            <div className="mt-5">
+              <div className="mb-2 flex items-center justify-between gap-3 text-sm font-black text-orange-50">
+                <span className="flex items-center gap-2">
+                  {advancedCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
+                  {lang === "en" ? `${advancedCompleted} of 6 missions complete` : `${advancedCompleted} daripada 6 misi selesai`}
                 </span>
-              ))}
-            </span>
-            <span className="mt-auto flex items-center justify-end gap-2 pt-6 font-black text-yellow-200">
+                <span aria-hidden="true">{advancedCompleted}/6</span>
+              </div>
+              <div
+                className="mode-progress-track mode-progress-track-advanced"
+                role="progressbar"
+                aria-label={lang === "en" ? "Advanced Adventure completion" : "Kemajuan Pengembaraan Lanjutan"}
+                aria-valuemin={0}
+                aria-valuemax={6}
+                aria-valuenow={advancedCompleted}
+              >
+                <span className="mode-progress-fill mode-progress-advanced" style={{ width: advancedProgress }} />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => go("advancedMenu")}
+              aria-label={lang === "en" ? "Open Advanced Adventure" : "Buka Pengembaraan Lanjutan"}
+              className="mode-destination-action mode-destination-action-advanced mt-auto"
+            >
               {lang === "en" ? "Start expedition" : "Mula ekspedisi"}
-              <ArrowRight className="h-7 w-7 transition group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
-            </span>
-          </span>
-        </button>
+              <ArrowRight className="h-6 w-6 transition-transform duration-200 group-hover:translate-x-1" strokeWidth={3} aria-hidden="true" />
+            </button>
+          </div>
+        </article>
       </div>
     </main>
   );
