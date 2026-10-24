@@ -26,8 +26,8 @@ export type GameSaveResult = {
   synced: boolean;
 };
 
-const SUPABASE_URL = "https://qxhqdefxjnrbhiblrftd.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_eujRRLz7-f8OoaOZuPA0JA_DfTMb9kC";
+const SUPABASE_URL = "https://nhcdtakiodvcvpuuxvha.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Ty6rOtPl9d43akW6H5jiCw_ThzA5v2D";
 const GAME_SAVES_ENDPOINT = `${SUPABASE_URL}/functions/v1/game-saves`;
 const LOCAL_SAVE_PREFIX = "chrys-offline-saves:";
 
