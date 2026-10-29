@@ -2901,9 +2901,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
 
       <div className="grid items-stretch gap-6 md:grid-cols-2">
         <article className="mode-destination-card mode-destination-learning group" style={DEFAULT_BACKGROUND_STYLE}>
-          <div className="mode-destination-scene" aria-hidden="true">
-            <img src={chrysThinking} alt="" className="mode-destination-character h-24 w-24 object-contain" />
-          </div>
+          <div className="mode-destination-scene" aria-hidden="true" />
           <div className="mode-destination-content">
             <h3 className="block text-3xl font-black text-blue-950">
               {lang === "en" ? "Learning Mode" : "Mod Belajar"}
@@ -2917,7 +2915,6 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
                   {learningCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
                   {lang === "en" ? `${learningCompleted} of 8 adventures complete` : `${learningCompleted} daripada 8 pengembaraan selesai`}
                 </span>
-                <span aria-hidden="true">{learningCompleted}/8</span>
               </div>
               <div
                 className="mode-progress-track"
@@ -2943,9 +2940,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
         </article>
 
         <article className="mode-destination-card mode-destination-advanced group" style={CYBER_BACKGROUND_STYLE}>
-          <div className="mode-destination-scene" aria-hidden="true">
-            <img src={chrysRunning} alt="" className="mode-destination-character h-28 w-28 object-contain object-center" />
-          </div>
+          <div className="mode-destination-scene" aria-hidden="true" />
           <div className="mode-destination-content text-orange-50">
             <h3 className="block text-3xl font-black leading-tight text-yellow-100">{t.advancedAdventure}</h3>
             <p className="mt-1.5 text-lg font-bold text-orange-50">{t.advancedAdventureShort}</p>
@@ -2955,7 +2950,6 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
                   {advancedCompleted > 0 && <Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />}
                   {lang === "en" ? `${advancedCompleted} of 6 missions complete` : `${advancedCompleted} daripada 6 misi selesai`}
                 </span>
-                <span aria-hidden="true">{advancedCompleted}/6</span>
               </div>
               <div
                 className="mode-progress-track mode-progress-track-advanced"
@@ -3144,11 +3138,12 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
     },
   ];
 
+  const journeyActions = stages.flatMap((stage) => stage.sections.map((section) => section.onClick));
+  const currentDestination = trailDestinations.findIndex((destination) => !destination.complete);
   let destinationNumber = 0;
 
   return (
     <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
-      <AmbientWorld />
       <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-300 p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
         <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
           <div className="mx-auto grid h-32 w-32 place-items-center md:h-36 md:w-36">
@@ -3181,9 +3176,13 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
         <AdventureProgress value={trailDestinations.filter((item) => item.complete).length} total={trailDestinations.length} label={lang === "en" ? "Your journey" : "Perjalanan kamu"} />
         <div className="adventure-trail-grid grid grid-cols-4 gap-3 px-4 py-5 md:grid-cols-8">
           {trailDestinations.map((destination, index) => (
-            <div
+            <button
+              type="button"
+              onClick={journeyActions[index]}
+              aria-current={index === currentDestination ? "step" : undefined}
+              data-state={destination.complete ? "complete" : index === currentDestination ? "current" : "upcoming"}
               key={destination.label}
-              className="flex min-w-0 flex-col items-center gap-2 text-center"
+              className="journey-milestone flex min-w-0 flex-col items-center gap-2 text-center"
               aria-label={`${index + 1}. ${destination.label}. ${destination.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}
             >
               <span
@@ -3199,41 +3198,31 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
               <span className={`w-full truncate text-base font-black ${destination.complete ? "text-emerald-800" : "text-blue-950"}`}>
                 {destination.label}
               </span>
-            </div>
+              <span className="journey-state">{destination.complete ? (lang === "en" ? "Completed" : "Selesai") : index === currentDestination ? (lang === "en" ? "Next adventure" : "Pengembaraan seterusnya") : (lang === "en" ? "Explore" : "Teroka")}</span>
+            </button>
           ))}
         </div>
       </section>
 
       {stages.map((stage) => (
         <section key={stage.number} className={`learning-stage-band learning-stage-${stage.accent}`}>
-          <div className="mb-4 flex items-start gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-blue-950 text-2xl font-black text-white shadow-[0_5px_0_#0c4a6e]">
-              {stage.number}
-            </span>
-            <div>
-              <p className="text-sm font-black uppercase text-emerald-700">
-                {lang === "en" ? `Stage ${stage.number}` : `Peringkat ${stage.number}`}
-              </p>
-              <h3 className="text-2xl font-black leading-tight text-blue-950 sm:text-3xl">{stage.title}</h3>
-              <p className="mt-1 font-bold text-slate-600">{stage.help}</p>
-            </div>
-          </div>
+          <header className="meadow-stage-heading">
+            <span className="meadow-stage-label">{lang === "en" ? `Stage ${stage.number}` : `Peringkat ${stage.number}`}</span>
+            <h3>{stage.title}</h3>
+            <p>{stage.help}</p>
+          </header>
           <div className={`grid gap-4 ${stage.sections.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
             {stage.sections.map((section) => {
               destinationNumber += 1;
               return (
-                <MenuCard
-                  key={section.title}
-                  title={section.title}
-                  subtitle={section.subtitle}
-                  icon={section.icon}
-                  color={section.color}
-                  step={destinationNumber}
-                  complete={section.complete}
-                  lang={lang}
-                  actionLabel={lang === "en" ? "Let's explore" : "Mari teroka"}
-                  onClick={section.onClick}
-                />
+                <button key={section.title} type="button" onClick={section.onClick}
+                  className={`meadow-lesson meadow-lesson-${section.color}`} data-complete={section.complete}
+                  aria-label={`${section.title}. ${section.subtitle}. ${section.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}>
+                  <span className="meadow-lesson-icon" aria-hidden="true">{section.icon}</span>
+                  <span className="meadow-lesson-copy"><span className="meadow-lesson-title">{section.title}</span><span className="meadow-lesson-description">{section.subtitle}</span></span>
+                  <span className="meadow-lesson-number" aria-hidden="true">{destinationNumber}</span>
+                  <span className="meadow-lesson-action">{section.complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : (lang === "en" ? "Let's explore" : "Mari teroka")}{section.complete ? <Check aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}</span>
+                </button>
               );
             })}
           </div>
@@ -3253,7 +3242,7 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
   const missionStates = [teenComplete, compareComplete, sequencingComplete, part1Complete, part2Complete, subtractionComplete];
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
+    <main className="expedition-menu mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
       <section className="advanced-sunset-surface relative overflow-hidden rounded-[2rem] border-4 p-6 text-white sm:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(255,205,123,.18),transparent_38%)]" aria-hidden="true" />
         <div className="relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
@@ -3285,7 +3274,7 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
         <div className="flex items-center gap-2 sm:gap-4">
           {missionStates.map((complete, index) => (
             <React.Fragment key={index}>
-              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : !testingMode && index > 0 && !missionStates[index - 1] ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
+              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : !testingMode && index >= 4 && !missionStates[index - 1] ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
                 {index + 1}
                 {complete && <Check className="absolute -right-2 -top-2 h-7 w-7 rounded-full border-2 border-white bg-emerald-500 p-1" strokeWidth={4} aria-hidden="true" />}
               </span>
@@ -3295,37 +3284,33 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
         </div>
       </section>
 
-      <AdvancedMissionTile mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} icon="10-20" complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
-      <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} icon="< >" complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
-      <AdvancedMissionTile mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} icon="+1 −1" complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
-      <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} icon="10+" complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
-      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} icon="↟1" complete={part2Complete} locked={!testingMode && !part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
-      <AdvancedMissionTile mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} icon="10−" complete={subtractionComplete} locked={!testingMode && !part2Complete} onClick={() => go("advancedSubtraction")} lang={lang} />
+      <AdvancedMissionTile mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
+      <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
+      <AdvancedMissionTile mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
+      <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
+      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} complete={part2Complete} locked={!testingMode && !part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
+      <AdvancedMissionTile mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} complete={subtractionComplete} locked={!testingMode && !part2Complete} onClick={() => go("advancedSubtraction")} lang={lang} />
       <button
         type="button"
         onClick={() => go("advancedTestMenu")}
-        className="advanced-sunset-surface group relative overflow-hidden rounded-[2rem] border-4 border-yellow-300 p-5 text-left transition hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-200 active:translate-y-1 sm:p-6"
+        className="expedition-mission expedition-test"
       >
-        <span className="relative flex items-center gap-4">
-          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border-2 border-yellow-200 bg-yellow-400 text-slate-950 shadow-[0_5px_0_#a16207]">
-            <Flag className="h-8 w-8" strokeWidth={3} aria-hidden="true" />
-          </span>
-          <span>
-            <span className="block text-2xl font-black text-yellow-200 sm:text-3xl">{t.advancedTestMode}</span>
-            <span className="mt-1 block font-bold text-amber-50">{t.advancedTestHelp}</span>
-          </span>
-          <ArrowRight className="ml-auto hidden h-9 w-9 text-yellow-200 transition-transform group-hover:translate-x-1 sm:block" strokeWidth={3} aria-hidden="true" />
+        <span className="expedition-number" aria-hidden="true"><Flag /></span>
+        <span className="expedition-copy">
+          <span className="expedition-eyebrow">{lang === "en" ? "Put your skills to work" : "Gunakan kemahiran kamu"}</span>
+          <span className="expedition-title">{t.advancedTestMode}</span>
+          <span className="expedition-description">{t.advancedTestHelp}</span>
         </span>
+        <ArrowRight className="expedition-arrow" aria-hidden="true" />
       </button>
     </main>
   );
 }
 
-function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false, locked = false, comingSoon = false, onClick, lang }: {
+function AdvancedMissionTile({ mission, title, subtitle, complete = false, locked = false, comingSoon = false, onClick, lang }: {
   mission: number;
   title: string;
   subtitle: string;
-  icon: string;
   complete?: boolean;
   locked?: boolean;
   comingSoon?: boolean;
@@ -3333,31 +3318,16 @@ function AdvancedMissionTile({ mission, title, subtitle, icon, complete = false,
   lang: Lang;
 }) {
   return (
-    <section className={`advanced-sunset-card relative overflow-hidden rounded-[2rem] border-2 p-5 sm:p-7 ${locked ? "opacity-75" : complete ? "ring-2 ring-amber-200/50" : ""}`}>
-      {complete && <span className="pointer-events-none absolute -right-12 top-8 rotate-45 border-y border-emerald-200 bg-emerald-500 px-14 py-2 text-xs font-black uppercase tracking-wider text-slate-950" aria-hidden="true">{lang === "en" ? "Complete" : "Selesai"}</span>}
-      <div className="mb-5 flex items-start gap-4">
-        <span className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-2xl border-2 text-2xl font-black shadow-[0_5px_0_#0f172a] ${locked ? "border-slate-500 bg-slate-800 text-slate-400" : complete ? "border-emerald-200 bg-emerald-500 text-slate-950 ring-4 ring-emerald-300/30" : "border-yellow-300 bg-yellow-300 text-slate-950"}`}>
-          {complete ? <Check className="h-8 w-8" strokeWidth={5} aria-hidden="true" /> : mission}
-          {complete && <span className="absolute -bottom-2 -left-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-slate-950 text-[.65rem] text-white">{mission}</span>}
-        </span>
-        <div>
-          <p className={`text-sm font-black uppercase ${locked ? "text-stone-300" : "text-orange-200"}`}>{lang === "en" ? `Adventure mission ${mission}` : `Misi pengembaraan ${mission}`}</p>
-          <h3 className={`text-2xl font-black sm:text-3xl ${locked ? "text-slate-300" : "text-white"}`}>{title}</h3>
-          <p className={`mt-1 font-bold ${locked ? "text-slate-400" : "text-cyan-100"}`}>{subtitle}</p>
-        </div>
-      </div>
-      <button type="button" disabled={locked} onClick={onClick} className={`group w-full rounded-[2rem] border-4 p-5 text-left shadow-[0_8px_0_#064e3b] transition focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-cyan-300 sm:p-7 ${locked ? "cursor-not-allowed border-slate-600 bg-slate-900 text-slate-500" : complete ? "border-emerald-300 bg-gradient-to-r from-emerald-900 to-cyan-950 text-white hover:-translate-y-1 active:translate-y-1" : "border-yellow-300 bg-gradient-to-r from-emerald-900 to-cyan-950 text-white hover:-translate-y-1 active:translate-y-1"}`}>
-        <span className="grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-          <span className={`grid h-24 w-24 place-items-center rounded-[1.6rem] border-4 bg-slate-950 text-3xl font-black shadow-[inset_0_0_18px_rgba(34,211,238,.35)] ${locked ? "border-slate-600 text-slate-500" : "border-yellow-300 text-yellow-200"}`} style={getNumberTextStyle(icon)}>{icon}</span>
-          <span>
-            <span className={`block text-3xl font-black leading-tight ${locked ? "text-slate-300" : "text-yellow-200"}`}>{title}</span>
-            <span className={`mt-2 block text-lg font-bold ${locked ? "text-slate-400" : "text-cyan-100"}`}>{subtitle}</span>
-            {(locked || complete) && <span className={`mt-4 inline-flex rounded-full border px-4 py-2 text-sm font-black ${complete ? "border-emerald-300 bg-emerald-950 text-emerald-200" : "border-slate-500 bg-slate-950 text-slate-300"}`}>{complete ? (lang === "en" ? "Mission complete" : "Misi selesai") : comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? `Complete Mission ${mission - 1} to unlock` : `Selesaikan Misi ${mission - 1} untuk buka`)}</span>}
-          </span>
-          {locked ? <span className="text-4xl" aria-hidden="true">🔒</span> : <ArrowRight className="hidden h-12 w-12 text-yellow-300 transition group-hover:translate-x-1 sm:block" strokeWidth={3} />}
-        </span>
-      </button>
-    </section>
+    <button type="button" disabled={locked} onClick={onClick} className="expedition-mission" data-complete={complete}>
+      <span className="expedition-number" aria-hidden="true">{mission}</span>
+      <span className="expedition-copy">
+        <span className="expedition-eyebrow">{lang === "en" ? `Adventure mission ${mission}` : `Misi pengembaraan ${mission}`}</span>
+        <span className="expedition-title">{title}</span>
+        <span className="expedition-description">{subtitle}</span>
+        {(locked || complete) && <span className="expedition-state">{complete && <Check aria-hidden="true" />}{complete ? (lang === "en" ? "Mission complete" : "Misi selesai") : comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? `Complete Mission ${mission - 1} to unlock` : `Selesaikan Misi ${mission - 1} untuk buka`)}</span>}
+      </span>
+      <ArrowRight className="expedition-arrow" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -18312,4 +18282,4 @@ function Decor() {
 
 export default App;
 // Used by the development-only design gallery; the normal entry remains App.
-export { GameFileScreen, MenuScreen, AdditionOnlyLesson, Quiz, UI, recognitionPracticeQuestions, DEFAULT_BACKGROUND_STYLE };
+export { GameFileScreen, ModeSelectScreen, MenuScreen, AdvancedMenuScreen, AdditionOnlyLesson, Quiz, UI, recognitionPracticeQuestions, DEFAULT_BACKGROUND_STYLE, CYBER_BACKGROUND_STYLE };

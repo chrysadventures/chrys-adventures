@@ -115,3 +115,24 @@ exhaustive claim that every lesson, audio sequence, or advanced screen is bug-fr
 Follow-up QA: desktop/tablet layouts, OS reduced-motion mode, keyboard-only journey,
 full quiz completion, and all counting/transfer interactions in both languages.
 Existing functional findings in APP_REVIEW.md remain a separate workstream.
+# Menu refinement — October 2026
+
+The mode selector, Learning journey and Advanced mission menu reuse the existing fonts, Chrys illustrations and meadow/sunset backgrounds. Reference games inform only spacing and atmosphere; no reference artwork is shipped.
+
+- Mode cards remain equal desktop columns, stacking on small screens. Keep one foreground Chrys above the greeting; scenic card backgrounds retain their original artwork. Use one progress sentence, a slim bar and a clear full-width action.
+- Learning uses lighter cream surfaces, smaller icons and step markers, and three stage groupings. Completion keeps both a tick and a text label. Journey labels wrap instead of truncating.
+- Advanced uses single warm plum mission rows with gold accents, one title/description, and explicit completed or locked text. Preserve mission routes and unlock rules. Trail dimming must match actual mission availability.
+- Menu hover lift is at most 3px; mode scale is 1.005. Keep visible keyboard focus and suppress transforms under reduced motion. No ambient motion is applied to mathematical objects.
+- Menu styles are scoped in `client/src/adventure-ui.css`; lesson and practice components are outside this refinement.
+- The development-only design preview provides fixed sample progress for review without reading or writing live player saves.
+
+
+## Final navigation refinement — 29 October 2026
+
+Learning navigation now uses dedicated `meadow-lesson` buttons instead of the shared oversized MenuCard structure. Stage headings sit outside the card grids; the first two stages retain three columns and the last retains two. The eight original colored milestones are buttons connected by a subtle line. The first unfinished destination is identified as the next adventure, without locking any lesson or changing saved-completion predicates. On small screens the journey wraps into two connected groups of four.
+
+Advanced missions each render one button with a numbered badge, one title/description, completion or unlock text, and a navigation arrow. Advanced Test Mode uses a separate row with a flag and dashed border. Locked rows remain disabled. Existing sunset artwork and Chrys placement remain intact.
+
+Mode-card proportions and imagery remain unchanged. Keyboard focus now gives the card the same restrained lift and shadow as hover. Characters baked into the landscape are retained to avoid damaging existing artwork. No image files were changed.
+
+Verification: typecheck, 17 regression tests, 232-question audit, 234-asset audit and production build passed. New tests exercise all eight milestone/card callbacks and completion states in both languages, plus single-button mission rendering. Browser checks covered 1280px desktop, 768px tablet and 390px mobile, Malay wrapping, no horizontal overflow, loaded images, keyboard focus and activation. Screenshots use isolated sample progress; no live player data was read or changed. The existing large-bundle build warning remains. No push or deployment was performed.

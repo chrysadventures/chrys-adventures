@@ -217,3 +217,52 @@ test('successful request reports cloud sync and acknowledges the pending snapsho
   assert.equal(result.synced, true);
   assert.equal(h.acknowledged(), true);
 });
+
+// Exercise the real navigation components with saved progress and inspect their element trees.
+function navigationHarness(name, props) {
+  const React = { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }), Fragment: 'fragment' };
+  const context = { React, chrysHappy: 'chrys', chrysRunning: 'chrys', BANANA: 'banana',
+    LEARNING_SECTION_MARKERS: Object.fromEntries(['sky','emerald','violet','amber','teal','rose','orange','navy'].map(c => [c,c])),
+    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','ArrowRight','AdventureProgress'].map(c => [c,c])) };
+  const node = ast.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === name);
+  vm.createContext(context);
+  vm.runInContext(ts.transpile(node.getText(ast), { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React }), context);
+  return context[name](props);
+}
+function elements(tree) {
+  if (Array.isArray(tree)) return tree.flatMap(elements);
+  if (!tree || typeof tree !== 'object') return [];
+  return [tree, ...tree.children.flatMap(elements)];
+}
+test('all eight journey milestones use the existing lesson routes and saved completion in both languages', () => {
+  const routes = ['learnRecognize','learnValues','learnSequencing','groupingMode','learnAddition','learnSubtraction','learnReal','testMenu'];
+  for (const lang of ['en','ms']) for (const progress of [{}, {recognizeNumbers:1, numberValues:1}]) {
+    const visited = [];
+    const tree = navigationHarness('MenuScreen', {lang, t: new Proxy({}, {get: (_,key) => String(key)}), player:{name:'Test',progress}, go: route => visited.push(route)});
+    const nodes = elements(tree);
+    const milestones = nodes.filter(n => n.type === 'button' && n.props.className?.includes('journey-milestone'));
+    const cards = nodes.filter(n => n.type === 'button' && n.props.className?.startsWith('meadow-lesson '));
+    assert.equal(milestones.length, 8); assert.equal(cards.length, 8);
+    milestones.forEach(n => n.props.onClick()); assert.deepEqual(visited, routes);
+    visited.length = 0; cards.forEach(n => n.props.onClick()); assert.deepEqual(visited, routes);
+    const completed = Object.keys(progress).length;
+    assert.equal(milestones.filter(n => n.props['data-state'] === 'complete').length, completed);
+    assert.equal(cards.filter(n => n.props['data-complete']).length, completed);
+    assert.equal(milestones[completed].props['aria-current'], 'step');
+  }
+});
+test('mission renders exactly one button, title and description while preserving disabled and completed states', () => {
+  for (const lang of ['en','ms']) for (const locked of [false,true]) for (const complete of [false,true]) {
+    let opened = false;
+    const tree = navigationHarness('AdvancedMissionTile', {mission:5,title:'Unique mission title',subtitle:'Unique description',lang,locked,complete,onClick:()=>{opened=true;}});
+    const nodes = elements(tree);
+    assert.equal(nodes.filter(n=>n.type === 'button').length,1);
+    assert.equal(tree.props.disabled,locked);
+    assert.equal(tree.props['data-complete'],complete);
+    const text = nodes.flatMap(n=>n.children).filter(c=>typeof c === 'string');
+    assert.equal(text.filter(t=>t === 'Unique mission title').length,1);
+    assert.equal(text.filter(t=>t === 'Unique description').length,1);
+    assert.ok(nodes.some(n=>n.props.className === 'expedition-number' && n.children.includes(5)));
+    if (!locked) {tree.props.onClick(); assert.equal(opened,true);}
+  }
+});

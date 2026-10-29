@@ -1,4 +1,71 @@
 /* Storybook UI. Never animate teaching objects through these shared rules. */
+.mode-select-screen .mode-destination-card { border-width: 2px; border-radius: 1.75rem; box-shadow: 0 5px 0 #214d4025, 0 12px 24px #214d4014; }
+.mode-select-screen .mode-destination-advanced { box-shadow: 0 5px 0 #43263365, 0 12px 24px #43263325; }
+.mode-select-screen .mode-destination-scene { min-height: 12rem; border-bottom-width: 1px; }
+.mode-select-screen .mode-destination-content { padding: 1.5rem 1.75rem 1.75rem; }
+.mode-select-screen .mode-destination-content > p { min-height: 3.5rem; }
+.mode-select-screen .mode-destination-action { margin-top: 1.5rem; }
+.mode-select-screen .mode-progress-track { border-width: 1px; height: .65rem; }
+@media (hover: hover) and (pointer: fine) {
+  .mode-select-screen .mode-destination-card:hover { transform: translateY(-3px) scale(1.005); box-shadow: 0 7px 0 #214d4025, 0 16px 28px #214d4020; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mode-select-screen .mode-destination-card:hover { transform: none; }
+}
+/* Menu-only refinements: lesson and exercise surfaces retain their existing styles. */
+.learning-menu-stage .learning-menu-hero { border: 0; background: #fffdf4e8; box-shadow: none; padding: 1.25rem; }
+.learning-menu-stage .learning-menu-hero::after { display: none; }
+.learning-menu-stage .learning-menu-hero > div > div:last-child > span { border-width: 1px; box-shadow: none; padding: .5rem .75rem; }
+.learning-menu-stage .learning-trail-strip { border-width: 1px; border-radius: 1.5rem; box-shadow: 0 3px 12px #214d4010; padding: 1rem 1.25rem; }
+.learning-menu-stage .adventure-progress { margin: 0 0 .75rem; }
+.learning-menu-stage .adventure-trail-grid { padding: .5rem 0; gap: 1rem .5rem; }
+.learning-menu-stage .adventure-trail-grid > div { position: relative; }
+.learning-menu-stage .adventure-trail-grid > div > span:first-child { width: 2.75rem; height: 2.75rem; border-width: 2px; box-shadow: none; }
+.learning-menu-stage .adventure-trail-grid > div > span:last-child { white-space: normal; overflow: visible; font-size: .875rem; line-height: 1.3; }
+.learning-menu-stage .learning-stage-band { border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: .5rem 0; }
+.learning-menu-stage .learning-stage-band > div:first-child { background: #fffdf4ed; border-radius: 1rem; padding: 1rem; gap: .75rem; }
+.learning-menu-stage .learning-stage-band > div:first-child > span { width: 2.5rem; height: 2.5rem; border-radius: 50%; box-shadow: none; font-size: 1.125rem; }
+.learning-menu-stage .learning-menu-card { display: flex; flex-direction: column; border-width: 2px; border-radius: 1.5rem; padding: 1.25rem; background: #fffdf4; box-shadow: 0 4px 0 #214d401b; }
+.learning-menu-stage .learning-menu-card[data-complete="true"] { background: #f1faef; box-shadow: 0 4px 0 #214d401b; }
+.learning-menu-stage .learning-menu-card > span:first-child { height: 4px; }
+.learning-menu-stage .learning-menu-card > span[aria-hidden="true"]:not(:first-child) { display: none; }
+.learning-menu-stage .learning-menu-card > span.relative { width: 100%; }
+.learning-menu-stage .learning-menu-card > span.relative > span:first-child { width: 3.5rem; height: 3.5rem; border: 0; border-radius: 1rem; box-shadow: none; }
+.learning-menu-stage .learning-menu-card > span.relative > span:first-child > :is(img,svg) { max-width: 2.5rem; max-height: 2.5rem; }
+.learning-menu-stage .learning-menu-card > span.relative > span:last-child:not(:first-child) { margin-top: 0; width: 2.25rem; height: 2.25rem; border-width: 2px; box-shadow: none; }
+.learning-menu-stage .learning-menu-card h3 { margin-top: 1rem; font-size: 1.4rem; }
+.learning-menu-stage .learning-menu-card > span:last-child { margin-top: auto; padding-top: 1rem; justify-content: space-between; font-size: .875rem; }
+.learning-menu-stage .learning-menu-card p { padding-bottom: .75rem; }
+@media (prefers-reduced-motion: reduce) { .learning-menu-stage .learning-menu-card:hover { transform: none; } }
+.expedition-menu { max-width: 64rem; }
+.expedition-menu > .advanced-sunset-surface { border: 1px solid #edc28a80; background: #432d3be8; box-shadow: 0 4px 12px #30213220; }
+.expedition-menu > section:first-child > div.relative > span { background: transparent; border: 0; box-shadow: none; }
+.expedition-menu > section:first-child > div.relative > div:last-child > span { border-width: 1px; box-shadow: none; padding: .5rem .75rem; }
+.expedition-menu > section:nth-child(2) { border-width: 1px; padding: 1rem; background: #432d3be8; box-shadow: none; }
+.expedition-menu > section:nth-child(2) > div { gap: .375rem; }
+.expedition-menu > section:nth-child(2) > div > span.rounded-full { border-width: 2px; box-shadow: none; }
+.expedition-menu .expedition-mission { display: flex; align-items: center; gap: 1.5rem; width: 100%; min-height: 150px; padding: 1.5rem; border: 1px solid #be9476; border-radius: 1.5rem; background: #49323eef; color: #fff2d8; text-align: left; box-shadow: 0 4px 0 #35223145; transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.expedition-menu .expedition-mission[data-complete="true"] { border-color: #a7c59b; }
+.expedition-emblem { display: grid; place-items: center; flex-shrink: 0; width: 5rem; height: 5rem; border-radius: 1.25rem; background: #342637; color: #f7ce8f; font-size: 1.6rem; font-weight: 900; }
+.expedition-copy { display: block; min-width: 0; }
+.expedition-eyebrow { display: block; color: #e5bc98; font-size: .8rem; font-weight: 800; margin-bottom: .3rem; }
+.expedition-title { display: block; font-size: 1.6rem; font-weight: 900; line-height: 1.2; }
+.expedition-description { display: block; margin-top: .4rem; color: #f3dfcd; font-size: 1rem; }
+.expedition-state { display: block; margin-top: .65rem; color: #f7ce8f; font-size: .875rem; }
+.expedition-mission[data-complete="true"] .expedition-state { color: #c4e9b6; }
+.expedition-arrow { width: 1.75rem; height: 1.75rem; flex-shrink: 0; margin-left: auto; color: #f7ce8f; }
+.expedition-menu .expedition-mission:disabled { background: #40333de8; border-color: #8d7771; cursor: not-allowed; }
+.expedition-mission:focus-visible { outline: 3px solid #ffe0a2; outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) { .expedition-mission:hover:not(:disabled) { transform: translateY(-3px); border-color: #ffe0a2; box-shadow: 0 7px 16px #30213240; } }
+.expedition-mission:active:not(:disabled) { transform: translateY(1px); }
+@media (max-width: 639px) {
+  .expedition-menu .expedition-mission { padding: 1.1rem; gap: .85rem; }
+  .expedition-emblem { width: 3.25rem; height: 3.25rem; font-size: 1.1rem; }
+  .expedition-title { font-size: 1.25rem; }
+  .expedition-arrow { display: none; }
+  .expedition-menu > section:nth-child(2) > div > span.shrink-0 { width: 2.25rem; height: 2.25rem; }
+}
+@media (prefers-reduced-motion: reduce) { .expedition-menu .expedition-mission { transition: none; transform: none; } }
 :root {
   --adventure-ink: #214d40;
   --adventure-paper: #fffdf4;
@@ -60,4 +127,80 @@ button.adventure-mission-card:focus-visible { outline: 3px solid #0369a1; outlin
 @media (prefers-reduced-motion: reduce) {
   .adventure-ambient *, .mobile-feedback-card { animation: none; }
   .adventure-progress-track > span, .adventure-mission-card, .mobile-quiz-card button { transition: none; }
+}
+
+/* Final navigation structure: dedicated components, independent of exercise cards. */
+.mode-select-screen .mode-destination-card:has(button:focus-visible) { transform: translateY(-3px) scale(1.005); outline: 3px solid #e7b653; outline-offset: 4px; box-shadow: 0 7px 0 #214d4025, 0 16px 28px #214d4020; }
+.learning-menu-stage { gap: 1.5rem; }
+.learning-menu-stage .learning-menu-hero { padding: .75rem 1.25rem; border-radius: 1.5rem 1.5rem .5rem .5rem; }
+.learning-menu-stage .learning-menu-hero > div > div:first-child { width: 6rem; height: 6rem; }
+.learning-menu-stage .learning-menu-hero img { width: 6rem; height: 6rem; }
+.learning-menu-stage .learning-trail-strip { margin-top: -1rem; border: 0; border-radius: .5rem .5rem 1.5rem 1.5rem; }
+.learning-menu-stage .adventure-trail-grid { gap: 1rem 0; }
+.journey-milestone { position: relative; isolation: isolate; min-height: 100px; padding: .5rem .25rem; border-radius: .75rem; transition: transform 200ms ease, background-color 200ms ease; }
+.journey-milestone:not(:last-child)::after { content: ""; position: absolute; z-index: -1; top: 2rem; left: 50%; width: 100%; height: 2px; background: #cad8b8; }
+.journey-milestone[data-state="complete"]::after { background: #68a98c; }
+.journey-milestone > span:first-child { width: 3rem; height: 3rem; border-width: 2px; box-shadow: 0 0 0 5px #fffdf4; }
+.journey-milestone[aria-current="step"] > span:first-child { outline: 2px solid #234e49; outline-offset: 5px; }
+.journey-milestone > span:nth-child(2) { white-space: normal; font-size: .875rem; line-height: 1.2; overflow: visible; }
+.journey-state { font-size: .65rem; font-weight: 700; line-height: 1.25; color: #486452; }
+.journey-milestone[aria-current="step"] .journey-state { color: #163e35; font-weight: 900; }
+.journey-milestone:focus-visible, .meadow-lesson:focus-visible { outline: 3px solid #0369a1; outline-offset: 4px; }
+.learning-menu-stage .learning-stage-band { padding: .25rem 0; }
+.learning-menu-stage .learning-stage-band::before, .learning-menu-stage .learning-stage-band::after { display: none; }
+.meadow-stage-heading { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: .75rem; margin: 0 0 .8rem; padding: .5rem .75rem; color: #172f4e; text-shadow: 0 1px 3px #fffdf4; background: #fffdf4cf; border-radius: .5rem; }
+.meadow-stage-label { font-size: .8rem; color: #21634b; font-weight: 800; }
+.meadow-stage-heading h3 { font-size: 1.6rem; font-weight: 900; }
+.meadow-stage-heading p { grid-column: 2; font-size: .9rem; color: #435749; }
+.meadow-lesson { --lesson-accent: #0284c7; display: grid; grid-template-columns: 3rem 1fr auto; grid-template-rows: 1fr auto; align-items: start; gap: .85rem; padding: 1.15rem; min-height: 180px; border: 1px solid #bdcdb7; border-top: 3px solid var(--lesson-accent); border-radius: 1.1rem; background: #fffdf4f5; text-align: left; box-shadow: 0 3px 0 #214d4015; transition: transform 200ms ease, box-shadow 200ms ease; }
+.meadow-lesson-emerald { --lesson-accent: #059669; }
+.meadow-lesson-violet { --lesson-accent: #9333ea; }
+.meadow-lesson-amber { --lesson-accent: #eab308; }
+.meadow-lesson-teal { --lesson-accent: #06b6d4; }
+.meadow-lesson-rose { --lesson-accent: #db2777; }
+.meadow-lesson-orange { --lesson-accent: #ea580c; }
+.meadow-lesson-navy { --lesson-accent: #0f172a; }
+.meadow-lesson-icon { color: var(--lesson-accent); display: grid; place-items: center; width: 3rem; height: 3rem; }
+.meadow-lesson-icon > * { max-width: 2.5rem; max-height: 2.5rem; }
+.meadow-lesson-copy { min-width: 0; }
+.meadow-lesson-title { display: block; font-size: 1.2rem; font-weight: 900; line-height: 1.25; color: #172f4e; }
+.meadow-lesson-description { display: block; margin-top: .5rem; font-size: .9rem; line-height: 1.45; color: #4c5e55; }
+.meadow-lesson-number { font-size: .8rem; font-weight: 900; color: #53675b; }
+.meadow-lesson-action { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: .6rem; border-top: 1px solid #dce5d5; font-size: .85rem; color: #275747; font-weight: 800; }
+.meadow-lesson-action svg { width: 1.15rem; height: 1.15rem; }
+.meadow-lesson[data-complete="true"] { background: #f1f7ecf5; }
+.expedition-menu { gap: .85rem; }
+.expedition-menu > section:first-child { padding: 1.25rem; }
+.expedition-menu > section:nth-child(2) { margin-bottom: .4rem; padding: .75rem 1rem; }
+.expedition-menu .expedition-mission { min-height: 136px; gap: 1.25rem; padding: 1.35rem 1.5rem; background: #432d3bed; border-color: #c599685e; border-radius: 1.25rem; }
+.expedition-number { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; flex-shrink: 0; border: 1px solid #d8af7875; border-radius: 50%; background: #69453885; color: #ffe1a0; font-size: 1.4rem; font-weight: 900; }
+.expedition-menu .expedition-eyebrow { font-size: .75rem; }
+.expedition-menu .expedition-title { font-size: 1.45rem; }
+.expedition-menu .expedition-state { display: flex; align-items: center; gap: .35rem; margin-top: .5rem; }
+.expedition-state svg { width: 1rem; height: 1rem; }
+.expedition-menu .expedition-test { margin-top: .5rem; background: #594031ed; border-style: dashed; }
+.expedition-mission:focus-visible { transform: translateY(-3px); border-color: #ffe0a2; }
+.expedition-mission:disabled .expedition-arrow { opacity: .35; }
+@media (hover: hover) and (pointer: fine) {
+ .meadow-lesson:hover { transform: translateY(-3px); box-shadow: 0 6px 15px #214d4025; }
+ .journey-milestone:hover { transform: translateY(-3px); background: #e8f0df80; }
+}
+@media (max-width: 767px) {
+ .journey-milestone:nth-child(4)::after { display: none; }
+ .meadow-stage-heading h3 { font-size: 1.35rem; }
+ .learning-menu-stage .learning-menu-hero > div { grid-template-columns: 4rem 1fr; text-align: left; gap: .75rem; }
+ .learning-menu-stage .learning-menu-hero > div > div:first-child, .learning-menu-stage .learning-menu-hero img { width: 4rem; height: 4rem; }
+ .learning-menu-stage .learning-menu-hero > div > div:nth-child(2) { text-align: left; }
+ .learning-menu-stage .learning-menu-hero > div > div:last-child { grid-column: 1 / -1; margin: 0; }
+ .learning-menu-stage .learning-menu-hero h2 { font-size: 1.3rem; }
+ .learning-menu-stage .learning-menu-hero > div > div:nth-child(2) > span { font-size: .65rem; padding: .25rem 0; background: transparent; border: 0; }
+ .meadow-lesson { min-height: 150px; }
+ .expedition-menu .expedition-mission { gap: .8rem; padding: 1.1rem; }
+ .expedition-menu .expedition-title { font-size: 1.2rem; }
+ .expedition-number { width: 2.5rem; height: 2.5rem; font-size: 1.1rem; }
+ .expedition-menu .expedition-arrow { display: block; width: 1rem; height: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .mode-select-screen .mode-destination-card:has(button:focus-visible), .journey-milestone, .meadow-lesson, .expedition-menu .expedition-mission { transition: none; transform: none; }
+ .journey-milestone:hover, .meadow-lesson:hover { transform: none; }
 }
