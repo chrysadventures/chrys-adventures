@@ -18,6 +18,7 @@ import {
   Layers3,
   ListOrdered,
   LoaderCircle,
+  Lock,
   Map as MapIcon,
   Minus,
   Plus,
@@ -2343,7 +2344,7 @@ function LessonCompletionScreen({ lang, sectionName, onContinue, cyber = false }
   cyber?: boolean;
 }) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center pb-8" aria-live="polite">
+    <main className="adventure-finale mx-auto flex w-full max-w-3xl flex-1 items-center justify-center pb-8" aria-live="polite">
       <section className={`relative w-full overflow-hidden rounded-[2.5rem] border-4 p-6 text-center sm:p-10 ${cyber ? "border-yellow-300 bg-gradient-to-br from-slate-950 via-emerald-950 to-cyan-950 shadow-[0_12px_0_#083344,0_0_42px_rgba(250,204,21,.28)]" : "border-yellow-300 bg-gradient-to-br from-yellow-50 via-white to-emerald-50 shadow-[0_12px_0_rgba(161,98,7,.25),0_0_40px_rgba(250,204,21,.3)]"}`}>
         <CorrectCelebration playSound={false} />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(250,204,21,.3),transparent_38%)]" aria-hidden="true" />
@@ -2874,6 +2875,22 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
   );
 }
 
+function AdventureWeather({ lang, night = false }: { lang: Lang; night?: boolean }) {
+  const [paused, setPaused] = useState(false);
+  const [burst, setBurst] = useState(0);
+  return <div className={`world-weather ${night ? "world-weather-night" : ""}`} data-paused={paused}>
+    <div className="world-weather-art" aria-hidden="true">
+      <i className="world-cloud world-cloud-a" /><i className="world-cloud world-cloud-b" />
+      {Array.from({ length: 7 }, (_, i) => <i key={i} className="world-mote" style={{ left: `${8 + i * 14}%`, top: `${12 + (i % 3) * 28}%`, animationDelay: `${-i * 1.7}s` }} />)}
+    </div>
+    <div className="world-tools">
+      <button type="button" aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? (lang === "en" ? "Resume scenery" : "Gerakkan pemandangan") : (lang === "en" ? "Pause scenery" : "Hentikan pemandangan")}</button>
+      <button type="button" onClick={() => setBurst(burst + 1)}>{night ? (lang === "en" ? "Wake the fireflies" : "Bangunkan kelip-kelip") : (lang === "en" ? "Send a little magic" : "Hantar sedikit magis")} <span aria-hidden="true">✦</span></button>
+    </div>
+    {burst > 0 && <div key={burst} className="world-magic" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <span key={i} style={{ left: `${10 + i * 10}%`, animationDelay: `${i * 65}ms` }}>✦</span>)}</div>}
+  </div>;
+}
+
 function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
   const learningCompleted = [
     (player.progress.recognizeNumbers ?? 0) > 0 || (player.progress.learnRecognize ?? 0) > 0,
@@ -2892,9 +2909,10 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
 
   return (
     <main className="mode-select-screen mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-6 py-6">
+      <AdventureWeather lang={lang} />
       <section className="text-center">
-        <img src={chrysExcited} alt="Chrys" className="mx-auto h-36 w-36 object-contain drop-shadow-xl" />
-        <h2 className="text-4xl font-black text-blue-950">
+        <img src={chrysExcited} alt="Chrys" className="mode-select-chrys mx-auto h-36 w-36 object-contain drop-shadow-xl" />
+        <h2 className="mode-select-greeting text-4xl font-black text-blue-950">
           {lang === "en" ? `Hi, ${player.name}! Choose your adventure.` : `Hai, ${player.name}! Pilih pengembaraan kamu.`}
         </h2>
       </section>
@@ -3144,6 +3162,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 
   return (
     <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
+      <AdventureWeather lang={lang} />
       <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-300 p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
         <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
           <div className="mx-auto grid h-32 w-32 place-items-center md:h-36 md:w-36">
@@ -3159,7 +3178,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
             </h2>
             <p className="mt-2 max-w-2xl text-base font-bold text-slate-600 sm:text-lg">{t.menuTitle}</p>
           </div>
-          <div className="mx-auto flex gap-2 md:flex-col">
+          <div className="learning-hero-badges mx-auto flex gap-2 md:flex-col">
             <span className="flex items-center gap-2 rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-4 py-3 font-black text-blue-950 shadow-[0_5px_0_#ca8a04]">
               <Flag className="h-5 w-5" fill="currentColor" aria-hidden="true" />
               {lang === "en" ? "8 adventures" : "8 pengembaraan"}
@@ -3174,6 +3193,9 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
 
       <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning journey with 8 destinations" : "Perjalanan pembelajaran dengan 8 destinasi"}>
         <AdventureProgress value={trailDestinations.filter((item) => item.complete).length} total={trailDestinations.length} label={lang === "en" ? "Your journey" : "Perjalanan kamu"} />
+        {currentDestination >= 0 && <button type="button" className="journey-continue" onClick={journeyActions[currentDestination]}>
+          <span><small>{lang === "en" ? "YOUR NEXT ADVENTURE" : "PENGEMBARAAN SETERUSNYA"}</small><strong>{trailDestinations[currentDestination].label}</strong></span><ArrowRight aria-hidden="true" />
+        </button>}
         <div className="adventure-trail-grid grid grid-cols-4 gap-3 px-4 py-5 md:grid-cols-8">
           {trailDestinations.map((destination, index) => (
             <button
@@ -3240,13 +3262,18 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
   const part2Complete = Boolean(player.progress.advancedAdditionPart2);
   const subtractionComplete = Boolean(player.progress.advancedSubtraction);
   const missionStates = [teenComplete, compareComplete, sequencingComplete, part1Complete, part2Complete, subtractionComplete];
+  // Same unlock predicates as the mission rows below, so the summary never dims an open mission.
+  const missionLocked = [false, false, false, false, !testingMode && !part1Complete, !testingMode && !part2Complete];
+  const missionsCompleted = missionStates.filter(Boolean).length;
+  const summaryLabel = lang === "en" ? "Missions complete" : "Misi selesai";
 
   return (
     <main className="expedition-menu mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
+      <AdventureWeather lang={lang} night />
       <section className="advanced-sunset-surface relative overflow-hidden rounded-[2rem] border-4 p-6 text-white sm:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(255,205,123,.18),transparent_38%)]" aria-hidden="true" />
-        <div className="relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-            <span className="grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-amber-200 bg-[#3b2638]/80 shadow-[0_6px_0_#7c493c,0_0_22px_rgba(255,194,111,.16)]">
+        <div className="expedition-hero relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
+            <span className="expedition-hero-chrys grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-amber-200 bg-[#3b2638]/80 shadow-[0_6px_0_#7c493c,0_0_22px_rgba(255,194,111,.16)]">
             <img src={chrysRunning} alt="Chrys ready for an expedition" className="h-24 w-24 object-contain" />
           </span>
           <div>
@@ -3256,10 +3283,10 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
             </p>
             <h2 className="mt-3 text-4xl font-black text-yellow-200">{t.advancedMenuTitle}</h2>
             <p className="mt-2 text-lg font-bold text-amber-50">
-              {player.name}, {t.advancedMenuHelp}
+              {lang === "en" ? `Hi, ${player.name}! ` : `Hai, ${player.name}! `}{t.advancedMenuHelp}
             </p>
           </div>
-          <div className="flex gap-3 sm:flex-col">
+          <div className="expedition-hero-badges flex gap-3 sm:flex-col">
             <span className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-4 py-3 text-center font-black text-slate-950 shadow-[0_5px_0_#a16207]">
               {lang === "en" ? "6 missions" : "6 misi"}
             </span>
@@ -3270,16 +3297,11 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
         </div>
       </section>
 
-      <section className="advanced-sunset-card rounded-[1.75rem] border-2 p-4" aria-label={lang === "en" ? "Advanced learning trail" : "Laluan pembelajaran lanjutan"}>
-        <div className="flex items-center gap-2 sm:gap-4">
+      <section className="expedition-summary" aria-label={lang === "en" ? "Advanced learning trail" : "Laluan pembelajaran lanjutan"}>
+        <div className="expedition-summary-label"><span>{summaryLabel}</span><span>{missionsCompleted} / {missionStates.length}</span></div>
+        <div className="expedition-summary-track" role="progressbar" aria-label={summaryLabel} aria-valuemin={0} aria-valuemax={missionStates.length} aria-valuenow={missionsCompleted}>
           {missionStates.map((complete, index) => (
-            <React.Fragment key={index}>
-              <span className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 text-lg font-black text-white shadow-[0_4px_0_#164e63] sm:h-14 sm:w-14 ${complete ? "border-emerald-300 bg-emerald-600 ring-4 ring-emerald-300/20" : !testingMode && index >= 4 && !missionStates[index - 1] ? "border-slate-500 bg-slate-800 text-slate-400" : "border-cyan-200 bg-cyan-600"}`}>
-                {index + 1}
-                {complete && <Check className="absolute -right-2 -top-2 h-7 w-7 rounded-full border-2 border-white bg-emerald-500 p-1" strokeWidth={4} aria-hidden="true" />}
-              </span>
-              {index < missionStates.length - 1 && <span className={`h-2 flex-1 rounded-full ${missionStates[index] ? "bg-emerald-400" : "bg-slate-700"}`} />}
-            </React.Fragment>
+            <span key={index} data-state={complete ? "complete" : missionLocked[index] ? "locked" : "open"} />
           ))}
         </div>
       </section>
@@ -3288,21 +3310,23 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
       <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
       <AdvancedMissionTile mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
       <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
-      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} complete={part2Complete} locked={!testingMode && !part1Complete} onClick={() => go("advancedAdditionPart2")} lang={lang} />
-      <AdvancedMissionTile mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} complete={subtractionComplete} locked={!testingMode && !part2Complete} onClick={() => go("advancedSubtraction")} lang={lang} />
-      <button
-        type="button"
-        onClick={() => go("advancedTestMenu")}
-        className="expedition-mission expedition-test"
-      >
-        <span className="expedition-number" aria-hidden="true"><Flag /></span>
-        <span className="expedition-copy">
-          <span className="expedition-eyebrow">{lang === "en" ? "Put your skills to work" : "Gunakan kemahiran kamu"}</span>
-          <span className="expedition-title">{t.advancedTestMode}</span>
-          <span className="expedition-description">{t.advancedTestHelp}</span>
-        </span>
-        <ArrowRight className="expedition-arrow" aria-hidden="true" />
-      </button>
+      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} complete={part2Complete} locked={missionLocked[4]} onClick={() => go("advancedAdditionPart2")} lang={lang} />
+      <AdvancedMissionTile mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} complete={subtractionComplete} locked={missionLocked[5]} onClick={() => go("advancedSubtraction")} lang={lang} />
+      <section className="expedition-test-section" aria-label={t.advancedTestMode}>
+        <button
+          type="button"
+          onClick={() => go("advancedTestMenu")}
+          className="expedition-mission expedition-test"
+        >
+          <span className="expedition-number" aria-hidden="true"><Flag /></span>
+          <span className="expedition-copy">
+            <span className="expedition-eyebrow">{lang === "en" ? "Put your skills to work" : "Gunakan kemahiran kamu"}</span>
+            <span className="expedition-title">{t.advancedTestMode}</span>
+            <span className="expedition-description">{t.advancedTestHelp}</span>
+          </span>
+          <ArrowRight className="expedition-arrow" aria-hidden="true" />
+        </button>
+      </section>
     </main>
   );
 }
@@ -3317,14 +3341,17 @@ function AdvancedMissionTile({ mission, title, subtitle, complete = false, locke
   onClick?: () => void;
   lang: Lang;
 }) {
+  const state = complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula")
+    : locked ? (comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? `Complete Mission ${mission - 1} to unlock` : `Selesaikan Misi ${mission - 1} untuk buka`))
+    : (lang === "en" ? "Start mission" : "Mula misi");
   return (
-    <button type="button" disabled={locked} onClick={onClick} className="expedition-mission" data-complete={complete}>
+    <button type="button" disabled={locked} onClick={onClick} className="expedition-mission" data-complete={complete}
+      aria-label={`${lang === "en" ? "Mission" : "Misi"} ${mission}: ${title}. ${subtitle}. ${state}`}>
       <span className="expedition-number" aria-hidden="true">{mission}</span>
       <span className="expedition-copy">
-        <span className="expedition-eyebrow">{lang === "en" ? `Adventure mission ${mission}` : `Misi pengembaraan ${mission}`}</span>
         <span className="expedition-title">{title}</span>
         <span className="expedition-description">{subtitle}</span>
-        {(locked || complete) && <span className="expedition-state">{complete && <Check aria-hidden="true" />}{complete ? (lang === "en" ? "Mission complete" : "Misi selesai") : comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? `Complete Mission ${mission - 1} to unlock` : `Selesaikan Misi ${mission - 1} untuk buka`)}</span>}
+        <span className="expedition-state">{complete ? <Check aria-hidden="true" /> : locked ? <Lock aria-hidden="true" /> : null}{state}</span>
       </span>
       <ArrowRight className="expedition-arrow" aria-hidden="true" />
     </button>
@@ -7665,13 +7692,13 @@ function TeenValueObjects({
   value,
   lang,
   visibleCount,
-  counting,
+  activeGroup,
   resultStage,
 }: {
   value: number;
   lang: Lang;
   visibleCount: number;
-  counting: boolean;
+  activeGroup: 0 | 1 | null;
   resultStage: 0 | 1 | 2;
 }) {
   const bananaLabel = lang === "en"
@@ -7683,7 +7710,6 @@ function TeenValueObjects({
   const secondObjectLabel = lang === "en"
     ? `Total: ${value} ${secondObjectName}`
     : `Jumlah: ${value} ${secondObjectName}`;
-  const activelyCounting = counting && resultStage === 0;
   // Keep every teen object large enough to identify. A maximum of five per
   // row avoids the former 7-10-column squeeze inside side-by-side panels.
   const balancedColumns = Math.min(5, Math.ceil(value / 2));
@@ -7695,7 +7721,7 @@ function TeenValueObjects({
         : "border-cyan-400 bg-slate-950/80 shadow-[inset_0_0_28px_rgba(34,211,238,.12)]"
     }`}>
       <p className="mb-4 text-center text-xl font-black text-cyan-100">
-        {lang === "en" ? "Count both kinds of objects together." : "Kira kedua-dua jenis objek bersama-sama."}
+        {lang === "en" ? "Count one group, then the other." : "Kira satu kumpulan, kemudian kumpulan lain."}
       </p>
       <div className="grid items-stretch gap-5 md:grid-cols-2">
         <section>
@@ -7707,10 +7733,10 @@ function TeenValueObjects({
             count={value}
             emoji={BANANA}
             counted
-            visibleCount={visibleCount}
-            showLabel={resultStage >= 1}
+            visibleCount={Math.min(value, visibleCount)}
+            showLabel={resultStage >= 1} delayTotalLabel={false}
             slowLabelReveal
-            active={activelyCounting}
+            active={activeGroup === 0}
             cyber
             fixedColumns={balancedColumns}
             largeTiles
@@ -7726,10 +7752,10 @@ function TeenValueObjects({
             count={value}
             emoji={secondObject}
             counted
-            visibleCount={visibleCount}
-            showLabel={resultStage >= 2}
+            visibleCount={Math.max(0, visibleCount - value)}
+            showLabel={resultStage >= 2} delayTotalLabel={false}
             slowLabelReveal
-            active={activelyCounting}
+            active={activeGroup === 1}
             cyber
             fixedColumns={balancedColumns}
             largeTiles
@@ -8037,12 +8063,30 @@ function DigitIntroductionVisual({ step, lang }: { step: DigitIntroStep; lang: L
   );
 }
 
+async function countTeenObjectGroups(
+  count: number, lang: Lang, isCurrent: () => boolean,
+  onCount: (group: 0 | 1, value: number) => void,
+  onGroupComplete: (group: 0 | 1) => Promise<void>,
+) {
+  for (const group of [0, 1] as const) {
+    if (!isCurrent()) return false;
+    await speakCountingSequence(count, lang, COUNTING_STEP_MS, (value) => {
+      if (isCurrent()) onCount(group, value);
+    });
+    if (!isCurrent()) return false;
+    await onGroupComplete(group);
+    if (!isCurrent()) return false;
+  }
+  return true;
+}
+
 function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: () => void }) {
   const [introStep, setIntroStep] = useState<DigitIntroStep | null>(0);
   const [number, setNumber] = useState(10);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [showPractice, setShowPractice] = useState(false);
   const [visibleCount, setVisibleCount] = useState(0);
+  const [activeGroup, setActiveGroup] = useState<0 | 1 | null>(null);
   const [counting, setCounting] = useState(false);
   const [countComplete, setCountComplete] = useState(false);
   const [resultStage, setResultStage] = useState<0 | 1 | 2>(0);
@@ -8058,10 +8102,11 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     countRunRef.current += 1;
     stopNumberAudio();
     setVisibleCount(0);
+    setActiveGroup(null);
     setCounting(false);
     setCountComplete(false);
     setResultStage(0);
-  }, [introStep, number, step, lang]);
+  }, [introStep, number, step, lang, showPractice]);
 
   useEffect(() => () => {
     countRunRef.current += 1;
@@ -8081,43 +8126,19 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     const runId = ++countRunRef.current;
     stopNumberAudio();
     setVisibleCount(0);
+    setActiveGroup(null);
     setCountComplete(false);
     setResultStage(0);
     setCounting(true);
-    const values = Array.from({ length: number }, (_, index) => index + 1);
-
-    if (soundEnabled) {
-      await speakNumberValuesSequence(values, lang, 1300, (value) => {
-        if (countRunRef.current === runId) setVisibleCount(value);
+    const finished = await countTeenObjectGroups(number, lang,
+      () => countRunRef.current === runId,
+      (group, value) => { setActiveGroup(group); setVisibleCount(group * number + value); },
+      async (group) => {
+        setActiveGroup(null);
+        setResultStage((group + 1) as 1 | 2);
+        if (soundEnabled) await speakRecordedBananaTotal(number, lang, group === 0 ? BANANA : teenValueSecondObject(number));
       });
-    } else {
-      for (const value of values) {
-        if (countRunRef.current !== runId) return;
-        setVisibleCount(value);
-        await wait(500);
-      }
-    }
-
-    if (countRunRef.current !== runId) return;
-    await wait(1000);
-    if (countRunRef.current !== runId) return;
-    setResultStage(1);
-    // Reveal and announce the banana total before introducing the matching
-    // second object group. This shared sequence covers every teen value from
-    // 10 through 20 in lesson mode.
-    await wait(250);
-    if (countRunRef.current !== runId) return;
-    if (soundEnabled) await speakRecordedBananaTotal(number, lang, BANANA);
-    if (countRunRef.current !== runId) return;
-    await wait(500);
-    if (countRunRef.current !== runId) return;
-    setResultStage(2);
-    await wait(250);
-    if (countRunRef.current !== runId) return;
-    if (soundEnabled) await speakRecordedBananaTotal(number, lang, teenValueSecondObject(number));
-    if (countRunRef.current !== runId) return;
-    await wait(900);
-    if (countRunRef.current !== runId) return;
+    if (!finished) return;
     setCounting(false);
     setCountComplete(true);
   };
@@ -8207,8 +8228,8 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
     : step === 1 ? {
           title: lang === "en" ? `See the value of ${number}` : `Lihat nilai ${number}`,
           text: lang === "en"
-            ? `${number} means ${number} objects. Count the bananas and ${objectName(teenValueSecondObject(number), number, lang)} together.`
-            : `${number} bermaksud ${number} objek. Kira pisang dan ${objectName(teenValueSecondObject(number), number, lang)} bersama-sama.`,
+            ? `${number} means ${number} objects. Count each group separately.`
+            : `${number} bermaksud ${number} objek. Kira setiap kumpulan secara berasingan.`,
       } : {
           title: lang === "en" ? `Trace ${number}` : `Ikut garisan ${number}`,
           text: lang === "en" ? `Follow the number ${number} with your pencil or finger.` : `Ikut nombor ${number} dengan pensel atau jari kamu.`,
@@ -8302,7 +8323,7 @@ function TeenNumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDo
                 value={number}
                 lang={lang}
                 visibleCount={visibleCount}
-                counting={counting}
+                activeGroup={activeGroup}
                 resultStage={resultStage}
               />
             </div>
@@ -8600,7 +8621,7 @@ function NumbersLesson({ lang, t, onDone }: { lang: Lang; t: UIStrings; onDone: 
           </div>
         )}
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-          <button disabled={number === 0 && step === 0} onClick={previous} className="rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">
+          <button disabled={number === 0 && step === 0} onClick={previous} className="lesson-control rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 font-black text-slate-500 disabled:opacity-40">
             {t.previous}
           </button>
           <div className="flex flex-1 flex-wrap justify-end gap-3">
@@ -9107,7 +9128,7 @@ function LabeledValueGroup({ label, count, emoji, counted, speakCount = false, v
 
   return (
     <div className={`rounded-3xl border-4 p-4 text-center transition-[border-color,background-color,box-shadow] duration-300 ${
-      active
+      active && !counted
         ? cyber
           ? "border-cyan-400 bg-cyan-950 shadow-[0_6px_0_#164e63]"
           : "border-blue-400 bg-blue-50 shadow-[0_6px_0_rgba(37,99,235,.18)]"
@@ -13033,7 +13054,7 @@ function LessonActionRow({ previousLabel, onPrevious, primaryLabel, onPrimary, a
   actions?: LessonAction[];
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="lesson-action-row flex flex-wrap items-center justify-between gap-3">
       <PreviousLessonButton label={previousLabel} onClick={onPrevious} />
       <div className="flex flex-wrap justify-end gap-3">
         {actions.map((action) => (
@@ -13056,7 +13077,7 @@ function LessonNextButton({ label, onClick, disabled = false, className = "" }: 
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`relative rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+      className={`lesson-control relative rounded-2xl border-2 border-yellow-500 bg-yellow-400 px-8 py-3 font-black text-yellow-950 shadow-[0_6px_0_#a86000] active:translate-y-1 disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
     >
       {label}
       {!disabled && (
@@ -13090,7 +13111,7 @@ function SecondaryLessonButton({ label, onClick, variant = "plain" }: LessonActi
     : "border-blue-200 bg-white/80 text-blue-700 shadow-[0_3px_0_rgba(30,64,175,.14)]";
 
   return (
-    <button onClick={onClick} className={`rounded-xl border-2 px-4 py-2 text-sm font-black active:translate-y-1 ${styles}`}>
+    <button onClick={onClick} className={`lesson-control rounded-xl border-2 px-4 py-2 text-sm font-black active:translate-y-1 ${styles}`}>
       {label}
     </button>
   );
@@ -13846,7 +13867,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore, testingMode = false 
               onClick={() => go(test.screen)}
               className={`group rounded-[1.75rem] border-2 p-5 text-left shadow-[0_7px_0_#083344] transition sm:p-6 ${test.unlocked ? "border-cyan-300 bg-slate-950/95 hover:-translate-y-1 hover:border-yellow-300" : "cursor-not-allowed border-slate-600 bg-slate-950/80 opacity-65"}`}
             >
-              <span className="flex items-center gap-4">
+              <span className="advanced-test-entry grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:flex">
                 <span className={`grid h-16 min-w-16 shrink-0 place-items-center rounded-2xl border-2 px-2 text-lg font-black shadow-[0_4px_0_#164e63] ${test.unlocked ? "border-cyan-200 bg-cyan-950 text-yellow-200" : "border-slate-600 bg-slate-900 text-slate-500"}`} style={NUMBER_TEXT_STYLE}>
                   {test.unlocked ? test.icon : <KeyRound className="h-8 w-8" strokeWidth={3} aria-hidden="true" />}
                 </span>
@@ -13855,7 +13876,7 @@ function AdvancedTestMenu({ lang, t, player, go, lastScore, testingMode = false 
                   <span className={`mt-1 block font-bold ${test.unlocked ? "text-cyan-100" : "text-slate-500"}`}>{test.subtitle}</span>
                   {!test.unlocked && <span className="mt-2 block text-sm font-black text-orange-300">{lang === "en" ? "Complete the matching mission to unlock." : "Selesaikan misi yang sepadan untuk membuka."}</span>}
                 </span>
-                <span className="shrink-0 text-right">
+                <span className="col-start-2 shrink-0 text-left sm:ml-auto sm:text-right">
                   {mastered ? (
                     <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-900 px-3 py-2 text-sm font-black text-emerald-100"><Check className="h-5 w-5" strokeWidth={4} aria-hidden="true" />{lang === "en" ? "Mastered" : "Dikuasai"}</span>
                   ) : hasScore ? (
@@ -16451,9 +16472,39 @@ function DrawingToolPanel({ lang, color, tool, onColorChange, onToolChange, cybe
   );
 }
 
+function resizeDrawingCanvas(canvas: HTMLCanvasElement, scale = window.devicePixelRatio || 1) {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const width = Math.round(rect.width * scale), height = Math.round(rect.height * scale);
+  if (canvas.width === width && canvas.height === height) return false;
+  const snapshot = document.createElement("canvas");
+  snapshot.width = canvas.width; snapshot.height = canvas.height;
+  snapshot.getContext("2d")?.drawImage(canvas, 0, 0);
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return false;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.drawImage(snapshot, 0, 0, snapshot.width, snapshot.height, 0, 0, rect.width, rect.height);
+  return true;
+}
+
+function useDrawingCanvasResize(canvasRef: React.RefObject<HTMLCanvasElement | null>, drawing: React.RefObject<boolean>) {
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const resize = () => { if (resizeDrawingCanvas(canvas)) drawing.current = false; };
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    window.addEventListener("resize", resize);
+    return () => { observer.disconnect(); window.removeEventListener("resize", resize); };
+  }, [canvasRef, drawing]);
+}
+
 function TracePad({ value, t, lang, onComplete, cyber = false }: { value: number; t: UIStrings; lang: Lang; onComplete: () => void; cyber?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
+  useDrawingCanvasResize(canvasRef, drawing);
   const [confirmed, setConfirmed] = useState(false);
   const [penColor, setPenColor] = useState<string>(DRAWING_COLORS[0].value);
   const [tool, setTool] = useState<DrawingTool>("pen");
@@ -16481,6 +16532,7 @@ function TracePad({ value, t, lang, onComplete, cyber = false }: { value: number
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   };
   const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
     drawing.current = true;
     setConfirmed(false);
     const ctx = canvasRef.current?.getContext("2d");
@@ -16539,7 +16591,8 @@ function TracePad({ value, t, lang, onComplete, cyber = false }: { value: number
             onPointerDown={start}
             onPointerMove={move}
             onPointerUp={stop}
-            onPointerLeave={stop}
+            onPointerCancel={stop}
+            onLostPointerCapture={stop}
             className="relative h-full w-full touch-none rounded-3xl"
           />
         </div>
@@ -16608,6 +16661,7 @@ function WriteNumberPad({
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
+  useDrawingCanvasResize(canvasRef, drawing);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [showModel, setShowModel] = useState(false);
   const [matched, setMatched] = useState(false);
@@ -16633,8 +16687,12 @@ function WriteNumberPad({
     ctx.lineWidth = 12;
     if (initialDrawing) {
       const image = new Image();
-      image.onload = () => ctx.drawImage(image, 0, 0, rect.width, rect.height);
+      image.onload = () => {
+        const current = canvas.getBoundingClientRect();
+        ctx.drawImage(image, 0, 0, current.width, current.height);
+      };
       image.src = initialDrawing;
+      return () => { image.onload = null; };
     }
   }, [initialDrawing, initialShowModel, value]);
 
@@ -16650,6 +16708,7 @@ function WriteNumberPad({
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   };
   const start = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
     drawing.current = true;
     if (tool === "pen") setHasDrawn(true);
     setMatched(false);
@@ -16716,7 +16775,8 @@ function WriteNumberPad({
               onPointerDown={start}
               onPointerMove={move}
               onPointerUp={stop}
-              onPointerLeave={stop}
+              onPointerCancel={stop}
+            onLostPointerCapture={stop}
               className="relative h-full w-full touch-none rounded-3xl"
             />
           </div>
@@ -18283,3 +18343,20 @@ function Decor() {
 export default App;
 // Used by the development-only design gallery; the normal entry remains App.
 export { GameFileScreen, ModeSelectScreen, MenuScreen, AdvancedMenuScreen, AdditionOnlyLesson, Quiz, UI, recognitionPracticeQuestions, DEFAULT_BACKGROUND_STYLE, CYBER_BACKGROUND_STYLE };
+
+// Development gallery registry: these are the actual production lesson components.
+export const REVIEW_LESSONS = {
+  learnRecognize: RecognizeNumbersLesson, learnValues: NumberValuesLesson,
+  learnSequencing: SequencingLesson, groupingMode: GroupingMode,
+  learnAddition: AdditionOnlyLesson, learnSubtraction: SubtractionOnlyLesson, learnReal: RealWorldLesson,
+  advancedTeenNumbers: TeenNumbersLesson, advancedCompareBigger: AdvancedCompareBiggerLesson,
+  advancedSequencing: AdvancedSequencingLesson, advancedAdditionPart1: AdvancedAdditionPart1Lesson,
+  advancedAdditionPart2: AdvancedAdditionPart2Lesson, advancedSubtraction: AdvancedSubtractionLesson,
+};
+export const REVIEW_TESTS = {
+  testNumbers: numberQuestions, testOperations: operationQuestions, testReal: realTestQuestions,
+  advancedTestTeenNumbers: advancedTestTeenNumberQuestions, advancedTestCompareBigger: advancedTestCompareBiggerQuestions,
+  advancedTestSequencing: advancedTestSequencingQuestions, advancedTestAddition: advancedTestAdditionQuestions,
+  advancedTestSubtraction: advancedTestSubtractionQuestions,
+};
+export { TestMenu, AdvancedTestMenu, LessonCompletionScreen, AudioEnabledContext, setGlobalAudioMuted, stopNumberAudio };

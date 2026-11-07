@@ -1,0 +1,102 @@
+/* UI motion only. Counting cadence, transfer coordinates and audio remain in JS. */
+:root {
+  --motion-control: 180ms;
+  --motion-reveal: 280ms;
+  --motion-feedback: 360ms;
+  --motion-ease: cubic-bezier(.2,.7,.3,1);
+}
+.lesson-control, .game-btn, .answer-btn, .advanced-test-entry {
+  transition: transform var(--motion-control) var(--motion-ease),
+    background-color var(--motion-control) ease, border-color var(--motion-control) ease,
+    box-shadow var(--motion-control) ease;
+}
+.lesson-control { min-height: 44px; }
+:is(.mobile-lesson-panel,.mobile-quiz-card,.cyber-lesson-panel) button:focus-visible {
+  outline: 3px solid #075985; outline-offset: 4px;
+}
+.sunset-theme :is(.mobile-lesson-panel,.mobile-quiz-card,.cyber-lesson-panel) button:focus-visible {
+  outline-color: #ffe0a2;
+}
+.lesson-control:disabled { cursor: not-allowed; transform: none; }
+.lesson-action-row { border-top: 1px solid #b8cbb580; padding-top: 1rem; margin-top: 1rem; }
+.mobile-lesson-panel > div:first-child h2 { text-wrap: balance; }
+.mobile-lesson-panel > div:first-child p { line-height: 1.5; }
+.mobile-feedback-card { animation-duration: var(--motion-reveal); }
+.pop-in, .slide-in-up { animation: calm-content-reveal var(--motion-reveal) var(--motion-ease) both; }
+.comparison-result-reveal, .comparison-explanation-bar-reveal, .comparison-symbol-pop {
+  animation: calm-content-reveal var(--motion-feedback) var(--motion-ease) both;
+}
+.lesson-next-hint { animation-iteration-count: 2; }
+.pulse-soft { animation-iteration-count: 2; }
+@keyframes calm-content-reveal {
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .lesson-control:hover:not(:disabled) { transform: translateY(-2px); }
+}
+.lesson-control:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+@media (max-width: 639px) {
+  .lesson-action-row { align-items: stretch; }
+  .lesson-action-row > div { width: 100%; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .lesson-action-row > div > .lesson-control:last-child { grid-column: 1 / -1; }
+  .lesson-control { padding-inline: 1rem; }
+  .advanced-test-entry > span { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lesson-control, .game-btn, .answer-btn { transition: none; }
+  .lesson-control:hover:not(:disabled), .lesson-control:active:not(:disabled) { transform: none; }
+  .pop-in, .slide-in-up, .comparison-result-reveal, .comparison-explanation-bar-reveal,
+  .comparison-symbol-pop, .lesson-next-hint, .pulse-soft, .mobile-feedback-card { animation: none; }
+}
+/* Adventure stage: lively navigation, quiet teaching space. */
+:is(.mode-select-screen,.learning-menu-stage,.expedition-menu) { position:relative; isolation:isolate; }
+.world-weather { min-height:38px; }
+.world-weather-art { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:-1; }
+.world-tools { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+.world-tools button { min-height:38px; padding:7px 13px; border:1px solid #47775b70; border-radius:999px; background:#fffbedeb; color:#244d3b; font-size:12px; font-weight:800; }
+.world-tools button:focus-visible { outline:3px solid #e7a51a; outline-offset:3px; }
+.world-weather-night .world-tools button { background:#342637; border-color:#bb936c; color:#ffe4aa; }
+.world-cloud { position:absolute; width:190px; height:48px; border-radius:50%; background:#fff9; filter:blur(7px); animation:world-breeze 18s ease-in-out infinite alternate; }
+.world-cloud-a { top:14%; left:-5%; }.world-cloud-b { top:56%; right:-7%; animation-delay:-8s; }
+.world-mote { position:absolute; width:7px; height:7px; border-radius:50%; background:#fff5b0; box-shadow:0 0 14px 4px #fff5b078; animation:world-float 9s ease-in-out infinite; }
+.world-weather[data-paused="true"] .world-weather-art * { animation-play-state:paused; }
+.world-magic { position:absolute; inset:0; pointer-events:none; z-index:5; overflow:hidden; }
+.world-magic span { position:absolute; top:25%; color:#ffe173; font-size:28px; text-shadow:0 2px 3px #795720; animation:world-magic-flight 1.3s ease-out both; }
+.mode-select-screen .mode-destination-card { border-radius:32px; border:3px solid #f8edbd; box-shadow:0 9px 0 #315b493d,0 18px 40px #183b4426; overflow:hidden; transition:transform 240ms,box-shadow 240ms; }
+.mode-select-screen .mode-destination-scene { min-height:15rem; position:relative; }
+.mode-destination-scene::after { content:'✦'; position:absolute; right:22px; bottom:18px; display:grid; place-items:center; width:48px; height:48px; border-radius:50%; color:#fff4bd; background:#244e3b; border:3px solid #ffe1a0; font-size:30px; box-shadow:0 4px 0 #14332966; }
+.mode-destination-advanced .mode-destination-scene::after { background:#442b41; }
+.mode-select-screen .mode-destination-content { padding:1.6rem 2rem 2rem; }
+.mode-select-screen .mode-destination-action { width:100%; min-height:58px; justify-content:center; border-radius:18px; box-shadow:0 6px 0 #1e483c80; font-size:1.15rem; }
+.mode-select-screen .mode-progress-track { height:14px; border:2px solid #eee4bd; }
+.mode-progress-fill,.adventure-progress-track>span,.expedition-summary-track>span { position:relative; overflow:hidden; }
+.mode-progress-fill::after,.adventure-progress-track>span::after { content:''; position:absolute; inset:0; background:repeating-linear-gradient(115deg,transparent 0 12px,#ffffff35 12px 22px); }
+.learning-menu-stage .learning-menu-card { border-radius:26px; border-width:2px; box-shadow:0 7px 0 #aacaaa,0 13px 20px #244d3b16; padding:1.6rem; transition:transform 220ms,box-shadow 220ms; }
+.learning-menu-stage .learning-menu-card > span.relative > span:first-child { width:4.5rem; height:4.5rem; border:2px solid #dfedc5; border-radius:22px; box-shadow:0 4px 0 #cee0ba; transform:rotate(-5deg); }
+.learning-menu-stage .learning-menu-card[data-complete="true"] { border-color:#4c9266; background:#edf7e8; }
+.learning-menu-stage .learning-trail-strip { border:2px solid #c2d7ad; border-radius:26px; box-shadow:0 6px 0 #bed2ad; }
+.journey-continue { display:flex; align-items:center; justify-content:space-between; gap:16px; width:100%; border:2px solid #236445; border-radius:18px; padding:16px 22px; background:#245e45; color:#fff6d2; text-align:left; box-shadow:0 5px 0 #163e30; }
+.journey-continue small { display:block; font-size:11px; letter-spacing:.12em; color:#dbedb8; }.journey-continue strong { display:block; font-size:1.4rem; }
+.journey-milestone > span:first-child { box-shadow:0 5px 0 #325b4430!important; transition:transform 200ms; }
+.journey-milestone[data-state="current"] > span:first-child { outline:3px dashed #bc8229; outline-offset:5px; }
+.expedition-menu .expedition-mission { border-width:2px; border-radius:25px; min-height:165px; box-shadow:0 7px 0 #291e2d80,0 15px 25px #21182625; }
+.expedition-emblem { border:2px solid #c69b67; box-shadow:0 5px 0 #21182d; transform:rotate(-4deg); }
+.expedition-menu .expedition-mission[data-complete="true"] { border-color:#a7c59b; box-shadow:inset 5px 0 #a7c59b,0 7px 0 #291e2d80; }
+.adventure-finale > section { animation:reward-arrive 650ms cubic-bezier(.2,.8,.25,1.15) both; }
+.adventure-finale h2 { text-shadow:0 3px 0 #cca93940; }
+.answer-btn { box-shadow:0 5px 0 #183b4326; }
+@media(hover:hover) and (pointer:fine) {
+.mode-select-screen .mode-destination-card:hover { transform:translateY(-7px); box-shadow:0 13px 0 #315b493d,0 24px 40px #183b4433; }
+.learning-menu-stage .learning-menu-card:hover,.expedition-menu .expedition-mission:hover:not(:disabled) { transform:translateY(-5px); }
+.journey-milestone:hover > span:first-child { transform:translateY(-4px) rotate(-5deg); }
+.journey-continue:hover svg,.expedition-mission:hover:not(:disabled) .expedition-arrow { transform:translateX(5px); transition:transform 200ms; }
+.answer-btn:hover:not(:disabled) { transform:translateY(-3px); }
+}
+.journey-continue:active,.answer-btn:active:not(:disabled),.world-tools button:active { transform:translateY(2px) scale(.98); }
+@keyframes world-breeze { to { transform:translateX(95px); } }
+@keyframes world-float { 0%,100% { opacity:.2; transform:translateY(8px); } 50% { opacity:.8; transform:translateY(-18px); } }
+@keyframes world-magic-flight { 0% { opacity:0; transform:translateY(50px) scale(.3); } 20% { opacity:1; } 100% { opacity:0; transform:translateY(-130px) rotate(80deg) scale(1.1); } }
+@keyframes reward-arrive { from { opacity:0; transform:translateY(25px) scale(.92); } to { opacity:1; transform:none; } }
+@media(max-width:639px) { .mode-select-screen .mode-destination-scene { min-height:11rem; }.mode-select-screen .mode-destination-content { padding:1.3rem; }.world-tools { justify-content:center; }.expedition-menu .expedition-mission { min-height:145px; } }
+@media(prefers-reduced-motion:reduce) { .world-weather-art *,.world-magic span,.adventure-finale>section { animation:none; }.world-magic { display:none; } .mode-select-screen .mode-destination-card:hover,.learning-menu-stage .learning-menu-card:hover,.expedition-menu .expedition-mission:hover:not(:disabled),.journey-milestone:hover>span:first-child,.answer-btn:hover:not(:disabled) { transform:none; } }

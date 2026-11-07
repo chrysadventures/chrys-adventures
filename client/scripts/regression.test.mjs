@@ -219,14 +219,16 @@ test('successful request reports cloud sync and acknowledges the pending snapsho
 });
 
 // Exercise the real navigation components with saved progress and inspect their element trees.
-function navigationHarness(name, props) {
+function navigationHarness(name, props, helpers = []) {
   const React = { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }), Fragment: 'fragment' };
   const context = { React, chrysHappy: 'chrys', chrysRunning: 'chrys', BANANA: 'banana',
     LEARNING_SECTION_MARKERS: Object.fromEntries(['sky','emerald','violet','amber','teal','rose','orange','navy'].map(c => [c,c])),
-    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','ArrowRight','AdventureProgress'].map(c => [c,c])) };
-  const node = ast.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === name);
+    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','Lock','ArrowRight','AdventureProgress','AdventureWeather'].map(c => [c,c])) };
   vm.createContext(context);
-  vm.runInContext(ts.transpile(node.getText(ast), { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React }), context);
+  for (const fn of [name, ...helpers]) {
+    const node = ast.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === fn);
+    vm.runInContext(ts.transpile(node.getText(ast), { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React }), context);
+  }
   return context[name](props);
 }
 function elements(tree) {
@@ -265,4 +267,63 @@ test('mission renders exactly one button, title and description while preserving
     assert.ok(nodes.some(n=>n.props.className === 'expedition-number' && n.children.includes(5)));
     if (!locked) {tree.props.onClick(); assert.equal(opened,true);}
   }
+});
+test('advanced menu: one row per mission, summary dimming matches unlock rules, test mode stays separate', () => {
+  const routes = ['advancedTeenNumbers','advancedCompareBigger','advancedSequencing','advancedAdditionPart1','advancedAdditionPart2','advancedSubtraction'];
+  const progresses = [{}, {advancedTeenNumbers:1, advancedAdditionPart1:1}, Object.fromEntries(routes.map(r => [r,1]))];
+  for (const lang of ['en','ms']) for (const progress of progresses) for (const testingMode of [false,true]) {
+    const visited = [];
+    const t = new Proxy({}, {get: (_,key) => String(key)});
+    const tree = navigationHarness('AdvancedMenuScreen', {lang, t, player:{name:'Test',progress}, go: r => visited.push(r), testingMode}, ['AdvancedMissionTile']);
+    const nodes = elements(tree);
+    const tiles = nodes.filter(n => typeof n.type === 'function' && n.type.name === 'AdvancedMissionTile');
+    assert.equal(tiles.length, 6);
+    assert.equal(nodes.filter(n => n.type === 'button').length, 1, 'only the separate test row is a direct button');
+    tiles.forEach(n => n.props.onClick()); assert.deepEqual(visited, routes);
+    const segments = nodes.find(n => n.props.role === 'progressbar').children.flat();
+    assert.equal(segments.length, 6);
+    tiles.forEach((tile, i) => {
+      assert.equal(segments[i].props['data-state'], tile.props.complete ? 'complete' : tile.props.locked ? 'locked' : 'open');
+      assert.equal(Boolean(tile.props.complete), Boolean(progress[routes[i]]));
+    });
+    assert.equal(Boolean(tiles[4].props.locked), !testingMode && !progress.advancedAdditionPart1);
+    assert.equal(Boolean(tiles[5].props.locked), !testingMode && !progress.advancedAdditionPart2);
+    const testRow = nodes.find(n => n.props.className === 'expedition-test-section');
+    assert.ok(testRow); testRow.children.flat()[0].props.onClick(); assert.equal(visited.at(-1), 'advancedTestMenu');
+  }
+});
+
+for (const lang of ['en', 'ms']) test(`teen groups count serially and cancel safely (${lang})`, async () => {
+  const events = [];
+  let current = true;
+  const context = { COUNTING_STEP_MS: 600, speakCountingSequence: async (n, language, delay, onCount) => {
+    assert.equal(language, lang);
+    for (let i = 1; i <= n; i++) onCount(i);
+  }};
+  vm.createContext(context);
+  vm.runInContext(functionSource('countTeenObjectGroups'), context);
+  const run = () => context.countTeenObjectGroups(2, lang, () => current,
+    (group, value) => events.push(`${group}:${value}`),
+    async group => { events.push(`done:${group}`); });
+  assert.equal(await run(), true);
+  assert.deepEqual(events, ['0:1', '0:2', 'done:0', '1:1', '1:2', 'done:1']);
+  events.length = 0;
+  await context.countTeenObjectGroups(2, lang, () => current,
+    (group, value) => events.push(`${group}:${value}`), async () => { current = false; });
+  assert.deepEqual(events, ['0:1', '0:2']);
+});
+
+test('canvas resize preserves ink and restores logical coordinates', () => {
+  const calls = [];
+  const context2d = { drawImage: (...args) => calls.push(['draw', ...args]), setTransform: (...args) => calls.push(['transform', ...args]) };
+  const canvas = { width: 300, height: 150, getBoundingClientRect: () => ({ width: 400, height: 200 }), getContext: () => context2d };
+  const context = { document: { createElement: () => ({ width: 0, height: 0, getContext: () => context2d }) } };
+  vm.createContext(context);
+  vm.runInContext(functionSource('resizeDrawingCanvas'), context);
+  assert.equal(context.resizeDrawingCanvas(canvas, 2), true);
+  assert.equal(canvas.width, 800);
+  assert.equal(canvas.height, 400);
+  assert.deepEqual(calls[1], ['transform', 2, 0, 0, 2, 0, 0]);
+  assert.deepEqual(calls[2].slice(-4), [0, 0, 400, 200]);
+  assert.equal(context.resizeDrawingCanvas(canvas, 2), false);
 });

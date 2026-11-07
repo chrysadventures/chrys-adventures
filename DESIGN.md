@@ -136,3 +136,26 @@ Advanced missions each render one button with a numbered badge, one title/descri
 Mode-card proportions and imagery remain unchanged. Keyboard focus now gives the card the same restrained lift and shadow as hover. Characters baked into the landscape are retained to avoid damaging existing artwork. No image files were changed.
 
 Verification: typecheck, 17 regression tests, 232-question audit, 234-asset audit and production build passed. New tests exercise all eight milestone/card callbacks and completion states in both languages, plus single-button mission rendering. Browser checks covered 1280px desktop, 768px tablet and 390px mobile, Malay wrapping, no horizontal overflow, loaded images, keyboard focus and activation. Screenshots use isolated sample progress; no live player data was read or changed. The existing large-bundle build warning remains. No push or deployment was performed.
+
+
+## Navigation calm-down — 31 October 2026
+
+Builds on the 29 October structure; no artwork, routes, unlock rules, completion predicates or saved-progress handling changed.
+
+- Mode selection: smaller Chrys and greeting on phones; card scenes use the wide meadow/sunset art so Chrys and the landscape stay visible instead of empty sky; removed the fixed card heights that left blank space.
+- Learning: stage headings are compact labels sized to their text (no more edge-to-edge bands on phones); lesson cards drop their minimum height and tighten spacing; the decorative hero badges are hidden on phones so the journey appears sooner.
+- Advanced: the six non-clickable number circles are replaced by a labelled six-segment progress bar whose segments use the same lock predicates as the rows. Each mission is one button with its number, title, description and a single state line (Completed — play again / Start mission / lock + unlock hint); the repeated "Adventure mission N" eyebrow is gone and the number is in the accessible name. The greeting now reads "Hi, Name! …" instead of "Name, Explore …". Advanced Test Mode sits in its own section below a dashed divider.
+- Design preview accepts `?design-preview&screen=modes|menu|advancedMenu&lang=en|ms&nav=0` for reproducible screenshots (dev only).
+
+Verification: typecheck; 18 regression tests (new one checks the six mission rows, summary/unlock agreement with and without testing mode, and the separate test row; mutation-checked); 232-question audit; 234-asset audit; production build (existing large-bundle warning). Screenshots at 1280/768/390px in English and Malay are in `screenshots/menu-refinement-2026-10-31/{before,after}` — no horizontal overflow and no broken images. Keyboard: Tab reaches every enabled milestone/card/mission, skips locked missions, shows a visible outline, and Enter opens the mission. Reduced motion (emulated) removes hover/focus transforms and transitions. Not covered: the real signed-in app shell (preview uses fixtures), physical touch devices and screen readers.
+
+## Shared lesson motion (November 2026)
+- Control transitions: 180 ms; content reveals: 280 ms; feedback: 360 ms.
+- Use gentle 2 px hover lift and a small press response. Keyboard focus stays visible.
+- Attention pulses run twice rather than indefinitely. Respect reduced-motion preferences.
+- Keep teaching/audio timing independent of decorative CSS animation duration.
+- During object counting only the current object changes to yellow; containers remain stable.
+- Keep mobile lesson navigation predictable: secondary controls together, primary Next below.
+
+## Expressive navigation pass
+Navigation now uses deeper illustrated destination cards, tactile mission emblems, striped progress fills, a prominent next-adventure action, and a stamped completion entrance. Ambient clouds and motes belong only on navigation screens. Children can pause scenery or trigger a short optional sparkle interaction; these effects never change stars, completion, counting, or saves. Reduced-motion disables decorative movement. Preserve the current font, scenery, and character assets.
