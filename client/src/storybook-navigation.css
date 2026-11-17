@@ -1,0 +1,158 @@
+/* Navigation only: illustrated places and readable signposts on the existing world. */
+.storybook-menu,.sunset-expedition { --path-color:#e7cf95; --land:#6b9858; gap:20px; }
+.storybook-menu > *, .sunset-expedition > * { position:relative; }
+.world-weather { display:flex; justify-content:flex-end; min-height:44px; }
+.magic-trigger { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:8px 16px; border:1px solid #688662; border-radius:50% 12px 12px 50% / 14px; color:#274c38; background:#fff9e9; font-size:14px; font-weight:800; }
+.magic-trigger svg { width:20px; height:20px; }.magic-trigger:disabled { opacity:.65; cursor:wait; }
+.world-weather-night .magic-trigger { color:#ffe7b3; border-color:#b28b65; background:#3a2935; }
+.storybook-air { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:-1; }
+.storybook-air i { position:absolute; width:5px; height:5px; background:#f9e6a9; border-radius:50%; left:8%; top:30%; animation:storybook-air 9s ease-in-out infinite; }
+.storybook-air i+i { left:91%; top:60%; animation-delay:-4s; }
+.environment-magic { position:absolute; inset:44px 0 auto; height:150px; overflow:hidden; pointer-events:none; z-index:4; }
+.magic-particle { position:absolute; left:var(--x); top:var(--y); animation:meadow-flight 2200ms var(--delay) ease-in-out both; }
+.magic-particle img { width:32px; height:32px; object-fit:contain; }.effect-butterflies .magic-particle img { animation:butterfly-wing 500ms ease-in-out infinite alternate; }
+.magic-particle i { display:block; width:6px; height:6px; border-radius:50%; background:#ffe998; box-shadow:0 0 12px #ffd16a; }
+.effect-shimmer .magic-particle i { width:35px; height:3px; border-radius:50%; }
+.magic-rainbow { display:block; width:230px; height:115px; margin:10px auto; border-radius:140px 140px 0 0; border:8px solid #f6b980; border-bottom:0; box-shadow:inset 0 7px #efda93,inset 0 14px #afd29b,inset 0 21px #8dbdbb; animation:sky-reveal 2400ms ease both; opacity:.8; }
+.magic-meteor { position:absolute; width:110px; height:3px; right:20%; top:20%; background:linear-gradient(90deg,transparent,#ffeabb); transform:rotate(-20deg); animation:meteor-crossing 2200ms ease-out both; }
+.magic-companion { position:absolute; right:3%; bottom:0; width:95px; height:115px; object-fit:contain; animation:companion-greeting 2400ms ease both; }
+.magic-still { display:flex; width:fit-content; max-width:90%; margin:12px auto; align-items:center; gap:8px; padding:12px; border-radius:12px; background:#fff4d5; color:#473b2a; font-weight:800; }.magic-still svg{width:22px;flex-shrink:0;}
+/* Compact companion greeting; no enclosing dashboard panel. */
+.storybook-menu .learning-menu-hero,.sunset-expedition > .expedition-greeting { background:none; border:0; box-shadow:none; padding:6px 12px 16px; overflow:visible; }
+.storybook-menu .learning-menu-hero > div { grid-template-columns:120px minmax(0,1fr); gap:22px; max-width:860px; margin:auto; }
+.storybook-menu .learning-menu-hero > div > div:first-child { width:120px; height:140px; align-self:end; }
+.storybook-menu .learning-menu-hero img { width:140px; height:140px; max-width:none; object-fit:contain; animation:trail-greeting 650ms ease-out both; }
+.storybook-menu .learning-menu-hero h2 { font-size:clamp(25px,3vw,37px); color:#23472e; text-shadow:0 2px #fff5dc; }
+.storybook-menu .learning-menu-hero p { color:#274c38; }
+.storybook-menu .learning-menu-hero > div > div:nth-child(2) { background:#fffbebed; border-radius:30% 12px 20px 8px / 14px; padding:18px 24px; }
+.storybook-menu .learning-hero-badges { display:none; }
+.storybook-menu .learning-menu-hero > div > div:nth-child(2) > p:first-child { background:none;border:0;padding:0;font-size:12px;letter-spacing:.1em; }
+.storybook-menu .learning-trail-strip { max-width:960px;width:100%;margin:auto; border:0; border-radius:5px 22px 5px 22px; background:#fffae8; box-shadow:0 3px 0 #c1b791; padding:16px 24px; }
+.storybook-menu .adventure-progress { margin:0; }.storybook-menu .adventure-progress-track{height:7px;}.storybook-menu .adventure-progress-track>span::after{display:none;}
+.storybook-menu .journey-continue { background:transparent; border:0;border-bottom:1px solid #cfceaf; border-radius:0;box-shadow:none;color:#26563b;padding:12px 0; }
+.storybook-menu .journey-continue small{color:#536d49;font-size:11px;}.storybook-menu .journey-continue strong{font-size:20px;}
+.storybook-menu .adventure-trail-grid { padding:12px 0 0;gap:6px; }
+.storybook-menu .journey-milestone { min-height:44px;gap:3px; }
+.storybook-menu .journey-milestone > span:first-child { width:26px;height:26px;border:0;font-size:13px;box-shadow:none!important; }
+.storybook-menu .journey-milestone > span:first-child > span { width:15px;height:15px;right:-4px;top:-4px; }.storybook-menu .journey-milestone > span:first-child svg{width:10px;height:10px;}
+.storybook-menu .journey-milestone > span:nth-child(2) { font-size:12px; }.storybook-menu .journey-state{display:none;}
+/* Three connected places: the grove, the workshop clearing, and the picnic lookout. */
+.storybook-menu .learning-stage-band { position:relative; border:0; border-radius:0; padding:22px 22px 20px; background:none;box-shadow:none; }
+.storybook-menu .learning-stage-band::before { content:'';position:absolute;inset:90px 0 0;background:#e4ebbcdb; border-radius:48% 28% 42% 20% / 30px 55px 25px 40px;z-index:-1; }
+.storybook-menu .learning-stage-band[data-location="2"]::before { background:#bfd7a3e8;border-radius:20% 40% 15% 38% / 35px 25px 50px 40px; }
+.storybook-menu .learning-stage-band[data-location="3"]::before { background:#efdda8e8; }
+.storybook-menu .meadow-stage-heading { margin:0 0 6px 12px;padding:0;background:none;display:block;max-width:650px; }
+.storybook-menu .meadow-stage-label { color:#466237;font-size:12px;letter-spacing:.12em;text-transform:uppercase; }
+.storybook-menu .meadow-stage-heading h3 { font-size:clamp(24px,3vw,32px);line-height:1.2;color:#23452f; margin:5px 0; }
+.storybook-menu .meadow-stage-heading p { font-size:15px;color:#345334; }
+.storybook-destinations { position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr)); gap:26px; padding:10px 0 20px; }
+.storybook-destinations::before { content:''; position:absolute;top:100px;left:8%;right:8%;height:80px;border:16px solid var(--path-color);border-top:0;border-radius:0 0 50% 45%;opacity:.9; }
+.storybook-destinations-2 { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:820px;margin:auto; }
+.storybook-menu .meadow-lesson { position:relative;display:flex;flex-direction:column;align-items:stretch;gap:0;padding:0 8px 12px;min-height:0;background:none;border:0;border-radius:0;box-shadow:none;color:#263f2c;text-align:left;overflow:visible;transition:transform 180ms; }
+.storybook-menu .meadow-lesson::before,.storybook-menu .meadow-lesson::after { display:none; }
+.storybook-menu .meadow-lesson:nth-child(2) { margin-top:24px; }
+.destination-art { position:relative; display:block;width:100%;height:120px;flex:none;color:var(--land,#69845c); }
+.landmark-ground { position:absolute;inset:auto 0 0;width:100%;height:100px; }
+.landmark-object { position:absolute;width:90px;height:90px;object-fit:contain;left:50%;bottom:18px;transform:translateX(-50%);filter:drop-shadow(0 4px 1px #263f2c25); }
+.landmark-flora { position:absolute;width:35px;height:35px;object-fit:contain;left:16%;bottom:6px; }
+.landmark-steps { position:absolute;bottom:10px;right:12%;display:flex;gap:3px;align-items:end; }.landmark-steps i{width:18px;height:10px;border-radius:50%;background:#9b9575;}.landmark-steps i:nth-child(2){height:16px;}.landmark-steps i:nth-child(3){height:22px;}
+.storybook-menu .meadow-lesson-copy { display:block;padding:16px 18px 12px;background:#fff9e4;border-bottom:3px solid #b9b087;border-radius:4px 16px 4px 9px; flex:1; }
+.storybook-menu .meadow-lesson-title { font-size:21px;line-height:1.2; }
+.storybook-menu .meadow-lesson-description { font-size:14px;line-height:1.5;margin-top:7px;color:#4c6046; }
+.storybook-menu .meadow-lesson-icon { display:none; }
+.storybook-menu .meadow-lesson-number { position:absolute;left:10px;right:auto;top:88px;width:30px;height:34px;border-radius:4px 4px 40% 40%;background:#315b3f;color:#fff7cf;display:grid;place-items:center;font-size:16px; }
+.storybook-menu .meadow-lesson-action { margin:9px 10px 0;padding:0;border:0;font-size:13px;color:#315b3f;display:flex;gap:8px;justify-content:space-between; }
+.storybook-menu .meadow-lesson-action svg { width:18px;height:18px; }
+.storybook-menu .meadow-lesson[data-complete="true"] { background:none;border:0;box-shadow:none; }
+.storybook-menu .meadow-lesson[data-complete="true"] .meadow-lesson-number { background:#417b4c; }
+.storybook-menu .meadow-lesson[data-complete="true"] .meadow-lesson-copy { border-bottom-color:#53905c; }
+.destination-next { position:absolute;top:10px;right:4px;background:#ffedb5;color:#594122;padding:5px 10px;border-radius:2px 12px 2px 12px;font-size:12px;font-weight:900; }
+.storybook-menu .meadow-lesson[data-current="true"] .meadow-lesson-copy { outline:2px solid #9a752b;outline-offset:3px; }
+/* Sunset ridgeline: six landmarks, not six full-width panels. */
+.sunset-expedition { --land:#826441;--path-color:#bb915e; }
+.sunset-expedition .expedition-hero { grid-template-columns:120px minmax(0,1fr);max-width:850px;margin:auto;gap:20px; }
+.sunset-expedition .expedition-hero-chrys { width:120px;height:140px;background:none;border:0;box-shadow:none; }.sunset-expedition .expedition-hero-chrys img{width:120px;height:140px;animation:trail-greeting 650ms ease-out both;}
+.sunset-expedition .expedition-hero > div:nth-child(2){padding:18px 22px;background:#352734ed;border-radius:8px 28px 8px 16px;}
+.sunset-expedition .expedition-hero h2 { font-size:clamp(26px,3vw,38px);margin-top:6px;color:#ffe2a0; }
+.sunset-expedition .expedition-hero p {font-size:15px;line-height:1.5;}.sunset-expedition .expedition-hero p:first-child{border:0;padding:0;background:none;font-size:11px;letter-spacing:.1em;}
+.sunset-expedition .expedition-hero-badges {display:none;}
+.sunset-expedition > .expedition-summary {max-width:800px;width:100%;margin:auto;padding:12px 18px;background:#352734ed;border:0;border-radius:8px;}
+.sunset-expedition .expedition-destinations { position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px 40px;padding:10px 24px 24px; }
+.expedition-destinations::before { content:'';position:absolute;inset:85px 12% 110px;border:14px solid #b68e58aa;border-left-width:10px;border-radius:35% 15% 40% 12%;z-index:-1; }
+.sunset-expedition .expedition-destinations .expedition-mission { position:relative;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;min-height:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible; }
+.sunset-expedition .expedition-destinations .expedition-mission:nth-child(3n+2){transform:translateY(20px);}
+.sunset-expedition .expedition-destinations .expedition-copy {flex:1;background:#392b38; border-bottom:3px solid #a27a53;border-radius:3px 16px 3px 12px;padding:16px;}
+.sunset-expedition .expedition-title {font-size:21px;color:#ffedc3;line-height:1.25;}
+.sunset-expedition .expedition-description {font-size:14px;line-height:1.5;color:#e0d0bd;}
+.sunset-expedition .expedition-state {font-size:12px;line-height:1.5;margin-top:12px;color:#e5bf7b;}
+.sunset-expedition .expedition-destinations .expedition-number {position:absolute;top:88px;left:5px;width:32px;height:34px;min-width:0;border:0;border-radius:4px 4px 40% 40%;background:#e3b769;color:#392b38;font-size:16px;}
+.sunset-expedition .expedition-destinations .expedition-arrow {display:none;}
+.sunset-expedition .expedition-destinations .expedition-mission:disabled {cursor:not-allowed;opacity:1;}
+.sunset-expedition .expedition-mission:disabled .destination-art {filter:saturate(.35);opacity:.65;}.sunset-expedition .expedition-mission:disabled .expedition-copy {background:#3c343c;border-bottom-color:#76665c;}
+.sunset-expedition .expedition-mission[data-current="true"] .expedition-copy {outline:2px solid #f0c47a;outline-offset:3px;}
+.sunset-expedition .expedition-mission[data-complete="true"] .expedition-copy {border-bottom-color:#b5cd98;}
+.sunset-expedition .expedition-mission[data-complete="true"] .expedition-number {background:#b5cd98;}
+.sunset-expedition .expedition-test-section {max-width:740px;width:100%;margin:10px auto 0;border:0;padding:0;}
+.sunset-expedition .expedition-test {min-height:0;padding:20px 24px;border:2px dashed #bda17a;border-radius:4px 24px;background:#302531;box-shadow:none;gap:20px;}
+.sunset-expedition .expedition-test .expedition-number {background:none;border:0;color:#f1cd8e;}.sunset-expedition .expedition-test .expedition-number svg{width:38px;height:38px;}
+:is(.storybook-menu,.sunset-expedition) button:focus-visible,.magic-trigger:focus-visible {outline:3px solid #077e97;outline-offset:5px;}.sunset-expedition button:focus-visible{outline-color:#ffe0a2;}
+@media(hover:hover) and (pointer:fine) {
+.storybook-menu .meadow-lesson:hover,.sunset-expedition .expedition-destinations .expedition-mission:hover:not(:disabled) {transform:translateY(-4px);box-shadow:none;background:none;}
+.storybook-menu .meadow-lesson:hover .landmark-object,.sunset-expedition .expedition-mission:hover:not(:disabled) .landmark-object {transform:translateX(-50%) rotate(-5deg);transition:transform 200ms;}
+}
+.storybook-menu .meadow-lesson:active,.sunset-expedition .expedition-mission:active:not(:disabled){transform:translateY(2px);}
+@keyframes storybook-air {0%,100%{opacity:.2;transform:translateY(0);}50%{opacity:.7;transform:translateY(-12px);}}
+@keyframes meadow-flight {0%{opacity:0;transform:translate(-20px,30px) rotate(0);}20%,65%{opacity:1;}100%{opacity:0;transform:translate(var(--drift),-45px) rotate(var(--turn));}}
+@keyframes butterfly-wing {to{transform:scaleX(.6) rotate(8deg);}}
+@keyframes sky-reveal {0%,100%{opacity:0;transform:translateY(8px);}25%,75%{opacity:.8;transform:none;}}
+@keyframes meteor-crossing {0%{opacity:0;transform:translate(80px,-20px) rotate(-20deg);}20%{opacity:1;}90%,100%{opacity:0;transform:translate(-280px,80px) rotate(-20deg);}}
+@keyframes companion-greeting {0%,100%{opacity:0;transform:translateY(40px) rotate(-8deg);}20%,80%{opacity:1;transform:translateY(0) rotate(0);}45%{transform:rotate(5deg);}}
+@keyframes trail-greeting {from{opacity:0;transform:translateY(10px) rotate(-4deg);}to{opacity:1;transform:none;}}
+@media(max-width:900px) {
+.storybook-destinations,.sunset-expedition .expedition-destinations{gap:18px;}.storybook-menu .meadow-lesson-copy,.sunset-expedition .expedition-destinations .expedition-copy{padding:14px;}.storybook-menu .meadow-lesson-title,.sunset-expedition .expedition-title{font-size:18px;}
+}
+@media(max-width:639px) {
+.storybook-menu,.sunset-expedition{gap:14px;}.storybook-menu .learning-menu-hero,.sunset-expedition>.expedition-greeting{padding:0;}
+.storybook-menu .learning-menu-hero>div,.sunset-expedition .expedition-hero {grid-template-columns:65px minmax(0,1fr);gap:8px;}
+.storybook-menu .learning-menu-hero>div>div:first-child,.sunset-expedition .expedition-hero-chrys {width:65px;height:95px;}.storybook-menu .learning-menu-hero img,.sunset-expedition .expedition-hero-chrys img{width:75px;height:100px;}
+.storybook-menu .learning-menu-hero>div>div:nth-child(2),.sunset-expedition .expedition-hero>div:nth-child(2){padding:14px;}
+.storybook-menu .learning-menu-hero h2,.sunset-expedition .expedition-hero h2{font-size:23px;}.storybook-menu .learning-menu-hero p,.sunset-expedition .expedition-hero p{font-size:13px;}
+.storybook-menu .learning-trail-strip{padding:14px;}.storybook-menu .journey-continue strong{font-size:18px;}
+.storybook-menu .learning-stage-band{padding:14px 8px;}.storybook-menu .meadow-stage-heading{margin:0 8px 12px;}.storybook-menu .meadow-stage-heading h3{font-size:24px;}
+.storybook-destinations,.storybook-destinations-2,.sunset-expedition .expedition-destinations{grid-template-columns:1fr;gap:16px;padding:0 6px;}
+.storybook-destinations::before,.expedition-destinations::before{top:30px;left:42px;right:auto;bottom:30px;width:10px;height:auto;border:0;border-radius:50%;background:var(--path-color);}
+.storybook-menu .meadow-lesson,.sunset-expedition .expedition-destinations .expedition-mission{display:grid;grid-template-columns:82px minmax(0,1fr);padding:0;gap:0 8px;align-items:center;}
+.storybook-menu .meadow-lesson:nth-child(2){margin:0;}.sunset-expedition .expedition-destinations .expedition-mission:nth-child(3n+2){transform:none;}
+.destination-art{height:96px;width:82px;grid-row:1 / 4;}.landmark-ground{height:55px;}.landmark-object{width:65px;height:65px;bottom:22px;}.landmark-flora{width:22px;height:22px;left:0;bottom:17px;}.landmark-steps{display:none;}
+.storybook-menu .meadow-lesson-copy,.sunset-expedition .expedition-destinations .expedition-copy{grid-column:2;grid-row:2;padding:13px;}
+.storybook-menu .meadow-lesson-number,.sunset-expedition .expedition-destinations .expedition-number{top:auto;bottom:16px;left:26px;width:25px;height:27px;font-size:13px;}
+.storybook-menu .meadow-lesson-action{grid-column:2;font-size:12px;margin:7px 4px;}.destination-next{position:static;grid-column:2;grid-row:1;width:fit-content;margin-bottom:6px;font-size:11px;}
+.storybook-menu .meadow-lesson-title,.sunset-expedition .expedition-title{font-size:18px;}.storybook-menu .meadow-lesson-description,.sunset-expedition .expedition-description{font-size:13px;}
+.sunset-expedition .expedition-test {padding:16px;gap:12px;}.sunset-expedition .expedition-test .expedition-number{width:32px;min-width:32px;}.sunset-expedition .expedition-test .expedition-number svg{width:28px;}
+}
+@media(prefers-reduced-motion:reduce) {
+.storybook-air *, .environment-magic *, .storybook-menu img,.sunset-expedition img{animation:none!important;}
+.storybook-menu *, .sunset-expedition *, .magic-trigger{transition:none!important;scroll-behavior:auto!important;}
+.storybook-menu .meadow-lesson:hover,.sunset-expedition .expedition-destinations .expedition-mission:hover:not(:disabled),.storybook-menu .meadow-lesson:active,.sunset-expedition .expedition-mission:active:not(:disabled){transform:none;}
+.storybook-menu .meadow-lesson:hover .landmark-object,.sunset-expedition .expedition-mission:hover:not(:disabled) .landmark-object{transform:translateX(-50%);}
+}
+/* Visual review refinements: restore the illustrated clearings hidden by legacy menu CSS. */
+.storybook-menu .learning-stage-band {isolation:isolate;}
+.storybook-menu .learning-stage-band::before {display:block;}
+.storybook-menu .meadow-stage-heading {background:#f4f4d8ed;border-radius:3px 20px 3px 12px;padding:10px 16px;width:fit-content;}
+.storybook-menu .learning-stage-band[data-location="2"] .meadow-stage-heading{background:#e0edc9;}
+.storybook-menu .learning-stage-band[data-location="3"] .meadow-stage-heading{background:#f6e8bc;}
+.sunset-theme .sunset-expedition > .expedition-greeting {background:transparent!important;border:0!important;box-shadow:none!important;}
+.storybook-menu .meadow-lesson-icon {display:grid;position:absolute;top:49px;right:20%;width:30px;height:30px;padding:5px;border:0;background:#fff6d9;border-radius:50%;color:#345638;box-shadow:none;}
+.storybook-menu .meadow-lesson-icon :is(svg,img){width:20px;height:20px;}
+.storybook-menu .learning-stage-band[data-location="2"]{--land:#4e8158;}
+.storybook-menu .learning-stage-band[data-location="3"]{--land:#a29956;}
+@media(max-width:639px){.storybook-menu .meadow-lesson-icon{top:22px;left:60px;right:auto;width:22px;height:22px;padding:3px;}.storybook-menu .meadow-lesson-icon :is(svg,img){width:16px;height:16px;}}
+.storybook-menu .learning-stage-band::before{width:auto;height:auto;}
+@media(max-width:639px){.storybook-menu .meadow-lesson-action{grid-row:3;}.storybook-menu .learning-stage-band::before{inset:90px 0 0;}}
+/* Magic stays in the sky beside its trigger, away from destination labels. */
+.environment-magic{inset:-16px 175px auto 0;height:95px;}
+.magic-rainbow{width:150px;height:75px;margin:15px auto;}
+.magic-companion{width:65px;height:90px;}
+.magic-still{font-size:12px;padding:8px;margin:18px auto;}
+@media(max-width:639px){.environment-magic{right:165px;height:90px;}.magic-rainbow{width:115px;height:65px;}.magic-particle img{width:22px;height:22px;}.magic-still{font-size:11px;}.magic-still svg{display:none;}}

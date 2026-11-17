@@ -51,18 +51,6 @@
 }
 /* Adventure stage: lively navigation, quiet teaching space. */
 :is(.mode-select-screen,.learning-menu-stage,.expedition-menu) { position:relative; isolation:isolate; }
-.world-weather { min-height:38px; }
-.world-weather-art { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:-1; }
-.world-tools { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
-.world-tools button { min-height:38px; padding:7px 13px; border:1px solid #47775b70; border-radius:999px; background:#fffbedeb; color:#244d3b; font-size:12px; font-weight:800; }
-.world-tools button:focus-visible { outline:3px solid #e7a51a; outline-offset:3px; }
-.world-weather-night .world-tools button { background:#342637; border-color:#bb936c; color:#ffe4aa; }
-.world-cloud { position:absolute; width:190px; height:48px; border-radius:50%; background:#fff9; filter:blur(7px); animation:world-breeze 18s ease-in-out infinite alternate; }
-.world-cloud-a { top:14%; left:-5%; }.world-cloud-b { top:56%; right:-7%; animation-delay:-8s; }
-.world-mote { position:absolute; width:7px; height:7px; border-radius:50%; background:#fff5b0; box-shadow:0 0 14px 4px #fff5b078; animation:world-float 9s ease-in-out infinite; }
-.world-weather[data-paused="true"] .world-weather-art * { animation-play-state:paused; }
-.world-magic { position:absolute; inset:0; pointer-events:none; z-index:5; overflow:hidden; }
-.world-magic span { position:absolute; top:25%; color:#ffe173; font-size:28px; text-shadow:0 2px 3px #795720; animation:world-magic-flight 1.3s ease-out both; }
 .mode-select-screen .mode-destination-card { border-radius:32px; border:3px solid #f8edbd; box-shadow:0 9px 0 #315b493d,0 18px 40px #183b4426; overflow:hidden; transition:transform 240ms,box-shadow 240ms; }
 .mode-select-screen .mode-destination-scene { min-height:15rem; position:relative; }
 .mode-destination-scene::after { content:'✦'; position:absolute; right:22px; bottom:18px; display:grid; place-items:center; width:48px; height:48px; border-radius:50%; color:#fff4bd; background:#244e3b; border:3px solid #ffe1a0; font-size:30px; box-shadow:0 4px 0 #14332966; }
@@ -93,10 +81,7 @@
 .journey-continue:hover svg,.expedition-mission:hover:not(:disabled) .expedition-arrow { transform:translateX(5px); transition:transform 200ms; }
 .answer-btn:hover:not(:disabled) { transform:translateY(-3px); }
 }
-.journey-continue:active,.answer-btn:active:not(:disabled),.world-tools button:active { transform:translateY(2px) scale(.98); }
-@keyframes world-breeze { to { transform:translateX(95px); } }
-@keyframes world-float { 0%,100% { opacity:.2; transform:translateY(8px); } 50% { opacity:.8; transform:translateY(-18px); } }
-@keyframes world-magic-flight { 0% { opacity:0; transform:translateY(50px) scale(.3); } 20% { opacity:1; } 100% { opacity:0; transform:translateY(-130px) rotate(80deg) scale(1.1); } }
+.journey-continue:active,.answer-btn:active:not(:disabled) { transform:translateY(2px) scale(.98); }
 @keyframes reward-arrive { from { opacity:0; transform:translateY(25px) scale(.92); } to { opacity:1; transform:none; } }
-@media(max-width:639px) { .mode-select-screen .mode-destination-scene { min-height:11rem; }.mode-select-screen .mode-destination-content { padding:1.3rem; }.world-tools { justify-content:center; }.expedition-menu .expedition-mission { min-height:145px; } }
-@media(prefers-reduced-motion:reduce) { .world-weather-art *,.world-magic span,.adventure-finale>section { animation:none; }.world-magic { display:none; } .mode-select-screen .mode-destination-card:hover,.learning-menu-stage .learning-menu-card:hover,.expedition-menu .expedition-mission:hover:not(:disabled),.journey-milestone:hover>span:first-child,.answer-btn:hover:not(:disabled) { transform:none; } }
+@media(max-width:639px) { .mode-select-screen .mode-destination-scene { min-height:11rem; }.mode-select-screen .mode-destination-content { padding:1.3rem; }.expedition-menu .expedition-mission { min-height:145px; } }
+@media(prefers-reduced-motion:reduce) { .adventure-finale>section { animation:none; } .mode-select-screen .mode-destination-card:hover,.learning-menu-stage .learning-menu-card:hover,.expedition-menu .expedition-mission:hover:not(:disabled),.journey-milestone:hover>span:first-child,.answer-btn:hover:not(:disabled) { transform:none; } }

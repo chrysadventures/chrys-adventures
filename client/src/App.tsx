@@ -36,6 +36,7 @@ import alyseGuide from "@assets/alyse_guide_new_user_nobg.png";
 import trayPhoto from "@assets/tray_photo.png";
 import trayImage from "@assets/generated_images/Tray.png";
 import forestFloor from "@assets/generated_images/Forestfloor.png";
+import { WorldMagic, DestinationArt } from "./components/StorybookNavigation";
 import { AmbientWorld, AdventureProgress } from "./components/AdventureUI";
 import { stageProgress } from "./lib/pendingProgress";
 import {
@@ -2876,19 +2877,7 @@ function HomeScreen({ lang, t, player, setPlayer, go }: {
 }
 
 function AdventureWeather({ lang, night = false }: { lang: Lang; night?: boolean }) {
-  const [paused, setPaused] = useState(false);
-  const [burst, setBurst] = useState(0);
-  return <div className={`world-weather ${night ? "world-weather-night" : ""}`} data-paused={paused}>
-    <div className="world-weather-art" aria-hidden="true">
-      <i className="world-cloud world-cloud-a" /><i className="world-cloud world-cloud-b" />
-      {Array.from({ length: 7 }, (_, i) => <i key={i} className="world-mote" style={{ left: `${8 + i * 14}%`, top: `${12 + (i % 3) * 28}%`, animationDelay: `${-i * 1.7}s` }} />)}
-    </div>
-    <div className="world-tools">
-      <button type="button" aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? (lang === "en" ? "Resume scenery" : "Gerakkan pemandangan") : (lang === "en" ? "Pause scenery" : "Hentikan pemandangan")}</button>
-      <button type="button" onClick={() => setBurst(burst + 1)}>{night ? (lang === "en" ? "Wake the fireflies" : "Bangunkan kelip-kelip") : (lang === "en" ? "Send a little magic" : "Hantar sedikit magis")} <span aria-hidden="true">✦</span></button>
-    </div>
-    {burst > 0 && <div key={burst} className="world-magic" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <span key={i} style={{ left: `${10 + i * 10}%`, animationDelay: `${i * 65}ms` }}>✦</span>)}</div>}
-  </div>;
+  return <WorldMagic lang={lang} night={night} companion={chrysExcited} />;
 }
 
 function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
@@ -3161,7 +3150,7 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
   let destinationNumber = 0;
 
   return (
-    <main className="learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
+    <main className="storybook-menu learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
       <AdventureWeather lang={lang} />
       <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-300 p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
         <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
@@ -3227,22 +3216,24 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
       </section>
 
       {stages.map((stage) => (
-        <section key={stage.number} className={`learning-stage-band learning-stage-${stage.accent}`}>
+        <section key={stage.number} className={`learning-stage-band learning-stage-${stage.accent}`} data-location={stage.number}>
           <header className="meadow-stage-heading">
             <span className="meadow-stage-label">{lang === "en" ? `Stage ${stage.number}` : `Peringkat ${stage.number}`}</span>
             <h3>{stage.title}</h3>
             <p>{stage.help}</p>
           </header>
-          <div className={`grid gap-4 ${stage.sections.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+          <div className={`storybook-destinations storybook-destinations-${stage.sections.length}`}>
             {stage.sections.map((section) => {
               destinationNumber += 1;
               return (
                 <button key={section.title} type="button" onClick={section.onClick}
-                  className={`meadow-lesson meadow-lesson-${section.color}`} data-complete={section.complete}
+                  className={`meadow-lesson meadow-lesson-${section.color}`} data-complete={section.complete} data-current={destinationNumber === currentDestination + 1} aria-current={destinationNumber === currentDestination + 1 ? "step" : undefined}
                   aria-label={`${section.title}. ${section.subtitle}. ${section.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}>
+                  <DestinationArt index={destinationNumber} />
                   <span className="meadow-lesson-icon" aria-hidden="true">{section.icon}</span>
                   <span className="meadow-lesson-copy"><span className="meadow-lesson-title">{section.title}</span><span className="meadow-lesson-description">{section.subtitle}</span></span>
                   <span className="meadow-lesson-number" aria-hidden="true">{destinationNumber}</span>
+                  {destinationNumber === currentDestination + 1 && <span className="destination-next">{lang === "en" ? "Next adventure" : "Pengembaraan seterusnya"}</span>}
                   <span className="meadow-lesson-action">{section.complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : (lang === "en" ? "Let's explore" : "Mari teroka")}{section.complete ? <Check aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}</span>
                 </button>
               );
@@ -3265,12 +3256,13 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
   // Same unlock predicates as the mission rows below, so the summary never dims an open mission.
   const missionLocked = [false, false, false, false, !testingMode && !part1Complete, !testingMode && !part2Complete];
   const missionsCompleted = missionStates.filter(Boolean).length;
+  const currentMission = missionStates.findIndex((complete, index) => !complete && !missionLocked[index]) + 1;
   const summaryLabel = lang === "en" ? "Missions complete" : "Misi selesai";
 
   return (
-    <main className="expedition-menu mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
+    <main className="sunset-expedition expedition-menu mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
       <AdventureWeather lang={lang} night />
-      <section className="advanced-sunset-surface relative overflow-hidden rounded-[2rem] border-4 p-6 text-white sm:p-8">
+      <section className="expedition-greeting relative overflow-hidden rounded-[2rem] border-4 p-6 text-white sm:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(255,205,123,.18),transparent_38%)]" aria-hidden="true" />
         <div className="expedition-hero relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
             <span className="expedition-hero-chrys grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-amber-200 bg-[#3b2638]/80 shadow-[0_6px_0_#7c493c,0_0_22px_rgba(255,194,111,.16)]">
@@ -3306,12 +3298,14 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
         </div>
       </section>
 
-      <AdvancedMissionTile mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
-      <AdvancedMissionTile mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
-      <AdvancedMissionTile mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
-      <AdvancedMissionTile mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
-      <AdvancedMissionTile mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} complete={part2Complete} locked={missionLocked[4]} onClick={() => go("advancedAdditionPart2")} lang={lang} />
-      <AdvancedMissionTile mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} complete={subtractionComplete} locked={missionLocked[5]} onClick={() => go("advancedSubtraction")} lang={lang} />
+      <div className="expedition-destinations">
+      <AdvancedMissionTile current={currentMission === 1} mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
+      <AdvancedMissionTile current={currentMission === 2} mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
+      <AdvancedMissionTile current={currentMission === 3} mission={3} title={t.advancedSequencing} subtitle={t.advancedSequencingShort} complete={sequencingComplete} onClick={() => go("advancedSequencing")} lang={lang} />
+      <AdvancedMissionTile current={currentMission === 4} mission={4} title={t.advancedAdditionPart1} subtitle={lang === "en" ? "Join banana rows and count totals up to 20" : "Gabungkan baris pisang dan kira jumlah hingga 20"} complete={part1Complete} onClick={() => go("advancedAdditionPart1")} lang={lang} />
+      <AdvancedMissionTile current={currentMission === 5} mission={5} title={t.advancedAdditionPart2} subtitle={lang === "en" ? "Use tens, ones, and carrying" : "Guna puluh, sa, dan mengumpul semula"} complete={part2Complete} locked={missionLocked[4]} onClick={() => go("advancedAdditionPart2")} lang={lang} />
+      <AdvancedMissionTile current={currentMission === 6} mission={6} title={t.advancedSubtraction} subtitle={lang === "en" ? "Take away tens and ones with borrowing" : "Tolak puluh dan sa dengan meminjam"} complete={subtractionComplete} locked={missionLocked[5]} onClick={() => go("advancedSubtraction")} lang={lang} />
+      </div>
       <section className="expedition-test-section" aria-label={t.advancedTestMode}>
         <button
           type="button"
@@ -3331,8 +3325,9 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
   );
 }
 
-function AdvancedMissionTile({ mission, title, subtitle, complete = false, locked = false, comingSoon = false, onClick, lang }: {
+function AdvancedMissionTile({ mission, title, subtitle, complete = false, locked = false, comingSoon = false, current = false, onClick, lang }: {
   mission: number;
+  current?: boolean;
   title: string;
   subtitle: string;
   complete?: boolean;
@@ -3345,8 +3340,10 @@ function AdvancedMissionTile({ mission, title, subtitle, complete = false, locke
     : locked ? (comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? `Complete Mission ${mission - 1} to unlock` : `Selesaikan Misi ${mission - 1} untuk buka`))
     : (lang === "en" ? "Start mission" : "Mula misi");
   return (
-    <button type="button" disabled={locked} onClick={onClick} className="expedition-mission" data-complete={complete}
+    <button type="button" disabled={locked} onClick={onClick} className="expedition-mission" data-complete={complete} data-current={current} aria-current={current ? "step" : undefined}
       aria-label={`${lang === "en" ? "Mission" : "Misi"} ${mission}: ${title}. ${subtitle}. ${state}`}>
+      <DestinationArt index={mission} night />
+      {current && <span className="destination-next">{lang === "en" ? "Next mission" : "Misi seterusnya"}</span>}
       <span className="expedition-number" aria-hidden="true">{mission}</span>
       <span className="expedition-copy">
         <span className="expedition-title">{title}</span>

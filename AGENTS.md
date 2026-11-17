@@ -41,6 +41,10 @@ git push
 - Live app: https://jaredtehyh-cell.github.io/chrys-adventures/
 - GitHub repository: https://github.com/jaredtehyh-cell/chrys-adventures
 
+## Permanent visual standard
+
+Read and follow [HUMAN_DESIGN_GUIDELINES.md](HUMAN_DESIGN_GUIDELINES.md) for every UI, animation, character, and visual-asset change. Preserve educational and functional requirements; review actual bilingual desktop/mobile screenshots. The current sunset navigation direction supersedes older cyber-menu notes below.
+
 ## Architecture
 
 ### Monorepo structure

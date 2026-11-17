@@ -10,3 +10,4 @@ if (import.meta.env.DEV && new URLSearchParams(window.location.search).has("desi
 } else {
   root.render(<App />);
 }
+import "./storybook-navigation.css";

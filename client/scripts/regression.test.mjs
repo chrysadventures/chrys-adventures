@@ -223,7 +223,7 @@ function navigationHarness(name, props, helpers = []) {
   const React = { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }), Fragment: 'fragment' };
   const context = { React, chrysHappy: 'chrys', chrysRunning: 'chrys', BANANA: 'banana',
     LEARNING_SECTION_MARKERS: Object.fromEntries(['sky','emerald','violet','amber','teal','rose','orange','navy'].map(c => [c,c])),
-    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','Lock','ArrowRight','AdventureProgress','AdventureWeather'].map(c => [c,c])) };
+    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','Lock','ArrowRight','AdventureProgress','AdventureWeather','DestinationArt'].map(c => [c,c])) };
   vm.createContext(context);
   for (const fn of [name, ...helpers]) {
     const node = ast.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === fn);
@@ -326,4 +326,58 @@ test('canvas resize preserves ink and restores logical coordinates', () => {
   assert.deepEqual(calls[1], ['transform', 2, 0, 0, 2, 0, 0]);
   assert.deepEqual(calls[2].slice(-4), [0, 0, 400, 200]);
   assert.equal(context.resizeDrawingCanvas(canvas, 2), false);
+});
+
+test('magic effects stay mode-specific, bounded and never immediately repeat', () => {
+  const text = readFileSync(new URL('../src/lib/navigationMagic.ts', import.meta.url), 'utf8');
+  const context = { exports: {} };
+  vm.createContext(context);
+  vm.runInContext(ts.transpile(text, {module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}), context);
+  for (const night of [false,true]) {
+    const expected = night ? ['fireflies','meteor','shimmer','greeting'] : ['butterflies','leaves','rainbow','greeting'];
+    const seen = new Set();
+    for (const previous of [null,...expected]) for (const value of [0,.2,.5,.8,.999]) {
+      const effect = context.exports.selectMagicEffect(night,previous,()=>value);
+      assert.ok(expected.includes(effect)); assert.notEqual(effect,previous); seen.add(effect);
+      const normal=context.exports.magicPresentation(effect,false);
+      assert.ok(normal.duration>=1500 && normal.duration<=3000);
+      assert.ok(normal.particles<=7);
+      const reduced=context.exports.magicPresentation(effect,true);
+      assert.equal(reduced.effect,'still');assert.equal(reduced.particles,0);
+    }
+    assert.deepEqual([...seen].sort(),expected.sort());
+  }
+});
+
+test('next recommended mission respects existing locks and saved completion', () => {
+  const routes=['advancedTeenNumbers','advancedCompareBigger','advancedSequencing','advancedAdditionPart1','advancedAdditionPart2','advancedSubtraction'];
+  for(let mask=0;mask<64;mask++) for(const testingMode of [false,true]) {
+    const progress=Object.fromEntries(routes.filter((_,i)=>mask&(1<<i)).map(r=>[r,1]));
+    const tree=navigationHarness('AdvancedMenuScreen',{lang:'en',t:new Proxy({},{get:(_,key)=>String(key)}),player:{name:'Test',progress},go:()=>{},testingMode},['AdvancedMissionTile']);
+    const tiles=elements(tree).filter(n=>typeof n.type==='function'&&n.type.name==='AdvancedMissionTile');
+    const first=tiles.findIndex(n=>!n.props.complete&&!n.props.locked);
+    assert.equal(tiles.filter(n=>n.props.current).length,first<0?0:1);
+    if(first>=0)assert.equal(tiles[first].props.current,true);
+  }
+});
+
+test('decorative magic releases timers and listeners, blocks overlap and cleans up on navigation', () => {
+  const text=readFileSync(new URL('../src/components/StorybookNavigation.tsx',import.meta.url),'utf8');
+  const magicAst=ts.createSourceFile('magic.tsx',text,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+  const fn=magicAst.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='WorldMagic');
+  let states=[],refs=[],effects=[],stateIndex=0,refIndex=0;
+  const timers=new Map(),listeners=new Set();let nextId=0;
+  const context={React:{createElement:(type,props,...children)=>({type,props:props??{},children})},Sparkles:'sparkles',
+    useState:init=>{const i=stateIndex++;if(!(i in states))states[i]=typeof init==='function'?init():init;return[states[i],v=>{states[i]=v}];},
+    useRef:init=>{const i=refIndex++;return refs[i]??(refs[i]={current:init});},useEffect:(fn,deps)=>effects.push({fn,deps}),
+    selectMagicEffect:()=> 'fireflies',magicPresentation:()=>({effect:'fireflies',duration:2600,particles:7}),
+    window:{matchMedia:()=>({matches:false,addEventListener:(_,f)=>listeners.add(f),removeEventListener:(_,f)=>listeners.delete(f)}),setTimeout:f=>{const id=++nextId;timers.set(id,f);return id;},clearTimeout:id=>timers.delete(id)}};
+  vm.createContext(context);vm.runInContext(ts.transpile(fn.getText(magicAst).replace(/^export /, ""),{target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}),context);
+  const render=()=>{stateIndex=refIndex=0;effects=[];return context.WorldMagic({lang:'en',night:true,companion:'chrys'});};
+  let tree=render();const cleanup=effects.map(e=>e.fn());
+  const button=elements(tree).find(n=>n.type==='button');button.props.onClick();const active=states[1];button.props.onClick();assert.equal(states[1],active,'second rapid tap must not replace active effect');
+  tree=render();assert.equal(elements(tree).find(n=>n.type==='button').props.disabled,true);
+  const timerCleanup=effects[2].fn();assert.equal(timers.size,1);timerCleanup();assert.equal(timers.size,0);
+  effects[1].fn();assert.equal(states[1],null,'mode/language change clears effect');
+  cleanup[0]();assert.equal(listeners.size,0);
 });

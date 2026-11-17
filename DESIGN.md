@@ -159,3 +159,14 @@ Verification: typecheck; 18 regression tests (new one checks the six mission row
 
 ## Expressive navigation pass
 Navigation now uses deeper illustrated destination cards, tactile mission emblems, striped progress fills, a prominent next-adventure action, and a stamped completion entrance. Ambient clouds and motes belong only on navigation screens. Children can pause scenery or trigger a short optional sparkle interaction; these effects never change stars, completion, counting, or saves. Reduced-motion disables decorative movement. Preserve the current font, scenery, and character assets.
+
+## Storybook navigation — 17 November 2026
+
+`HUMAN_DESIGN_GUIDELINES.md` is the permanent visual standard. This entry supersedes the older card-row and Pause Scenery guidance above.
+
+- Learning's three stages are connected illustrated clearings. Existing book, basket, log, tree, fruit, leaf, shell, pencil, and flower sprites form small landmarks above readable signposts. The next destination uses the existing first-unfinished predicate; all eight destinations remain accessible. Completion pennants, green sign edges and explicit replay text reflect saved data only.
+- Advanced is a two-row sunset trail on desktop and a vertical expedition on phones. Preserve the existing six predicates/routes, current-mission emphasis and distinct flag checkpoint for tests. The existing sunset art remains the backdrop; Chrys stands beside the greeting rather than inside an image plate.
+- Shared `WorldMagic` replaces the old nine-star burst. Daytime: butterflies, leaves, rainbow, greeting. Sunset: fireflies, shooting star, gold shimmer, greeting. Choose randomly excluding the previous effect. One activation at a time; 2.6s maximum lifecycle with timer cleanup on unmount/mode/language changes. Decorative effects stay in the sky beside the button and ignore pointer input.
+- Reduced motion replaces magic with a static 1.6s ornament/message and removes particle movement and entrance/hover transforms. Pause/Resume Scenery controls and state are removed, with no replacement animation settings.
+- Focus: 3px outline; interactive targets minimum 44px. At 320–390px, illustrations occupy a narrow left trail and labels wrap on the right. Tablet and desktop retain horizontal connected destinations.
+- Implementation: `components/StorybookNavigation.tsx`, `lib/navigationMagic.ts`, `storybook-navigation.css`; scoped menu markup in `App.tsx`. No new dependencies, character art, backend changes or educational changes.
