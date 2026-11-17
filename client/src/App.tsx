@@ -1,3 +1,4 @@
+import { AdventureMap, MapLocation } from "./components/AdventureMap";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -3145,102 +3146,44 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
     },
   ];
 
-  const journeyActions = stages.flatMap((stage) => stage.sections.map((section) => section.onClick));
   const currentDestination = trailDestinations.findIndex((destination) => !destination.complete);
   let destinationNumber = 0;
 
   return (
-    <main className="storybook-menu learning-menu-stage mx-auto flex w-full max-w-6xl flex-1 flex-col gap-7 pb-10">
+    <main className="storybook-menu connected-world mx-auto flex w-full max-w-6xl flex-1 flex-col pb-10">
       <AdventureWeather lang={lang} />
-      <section className="learning-menu-hero relative overflow-hidden rounded-[2rem] border-4 border-sky-300 p-5 text-blue-950 shadow-[0_10px_0_rgba(59,130,246,.22)] sm:p-7 md:p-8">
-        <div className="relative grid items-center gap-4 md:grid-cols-[auto_1fr_auto]">
-          <div className="mx-auto grid h-32 w-32 place-items-center md:h-36 md:w-36">
-            <img src={chrysHappy} alt="Chrys" className="h-28 w-28 object-contain drop-shadow-xl md:h-32 md:w-32" />
-          </div>
-          <div className="text-center md:text-left">
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-sky-200 bg-sky-50/90 px-4 py-2 text-sm font-black uppercase text-blue-900">
-              <Compass className="h-5 w-5" strokeWidth={3} aria-hidden="true" />
-              {lang === "en" ? "Chrys's learning journey" : "Perjalanan pembelajaran Chrys"}
-            </span>
-            <h2 className="mt-3 text-3xl font-black leading-tight text-blue-950 sm:text-4xl">
-              {lang === "en" ? `Ready to explore, ${player.name}?` : `Sedia meneroka, ${player.name}?`}
-            </h2>
-            <p className="mt-2 max-w-2xl text-base font-bold text-slate-600 sm:text-lg">{t.menuTitle}</p>
-          </div>
-          <div className="learning-hero-badges mx-auto flex gap-2 md:flex-col">
-            <span className="flex items-center gap-2 rounded-2xl border-2 border-yellow-200 bg-yellow-300 px-4 py-3 font-black text-blue-950 shadow-[0_5px_0_#ca8a04]">
-              <Flag className="h-5 w-5" fill="currentColor" aria-hidden="true" />
-              {lang === "en" ? "8 adventures" : "8 pengembaraan"}
-            </span>
-            <span className="flex items-center gap-2 rounded-2xl border-2 border-emerald-100 bg-emerald-700/90 px-4 py-3 font-black text-white shadow-[0_5px_0_#065f46]">
-              <Sparkles className="h-5 w-5" aria-hidden="true" />
-              {lang === "en" ? "Numbers 0-9" : "Nombor 0-9"}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section className="learning-trail-strip" aria-label={lang === "en" ? "Learning journey with 8 destinations" : "Perjalanan pembelajaran dengan 8 destinasi"}>
+      <header className="map-introduction">
+        <span className="map-kicker">{lang === "en" ? "MEADOW JOURNEY" : "PENGEMBARAAN PADANG RUMPUT"}</span>
+        <h2>{lang === "en" ? `Let's explore, ${player.name}!` : `Mari meneroka, ${player.name}!`}</h2>
+        <p>{t.menuTitle}</p>
         <AdventureProgress value={trailDestinations.filter((item) => item.complete).length} total={trailDestinations.length} label={lang === "en" ? "Your journey" : "Perjalanan kamu"} />
-        {currentDestination >= 0 && <button type="button" className="journey-continue" onClick={journeyActions[currentDestination]}>
-          <span><small>{lang === "en" ? "YOUR NEXT ADVENTURE" : "PENGEMBARAAN SETERUSNYA"}</small><strong>{trailDestinations[currentDestination].label}</strong></span><ArrowRight aria-hidden="true" />
-        </button>}
-        <div className="adventure-trail-grid grid grid-cols-4 gap-3 px-4 py-5 md:grid-cols-8">
-          {trailDestinations.map((destination, index) => (
-            <button
-              type="button"
-              onClick={journeyActions[index]}
-              aria-current={index === currentDestination ? "step" : undefined}
-              data-state={destination.complete ? "complete" : index === currentDestination ? "current" : "upcoming"}
-              key={destination.label}
-              className="journey-milestone flex min-w-0 flex-col items-center gap-2 text-center"
-              aria-label={`${index + 1}. ${destination.label}. ${destination.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}
-            >
-              <span
-                className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 text-xl font-black ${destination.markerClass} ${destination.complete ? "border-emerald-700 ring-4 ring-emerald-200" : "border-white"} ${destination.markerClass.includes(" text-") ? "" : "text-white"}`}
-              >
-                {index + 1}
-                {destination.complete && (
-                  <span className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white bg-emerald-700 text-white shadow-sm" aria-hidden="true">
-                    <Check className="h-4 w-4" strokeWidth={4} />
-                  </span>
-                )}
-              </span>
-              <span className={`w-full truncate text-base font-black ${destination.complete ? "text-emerald-800" : "text-blue-950"}`}>
-                {destination.label}
-              </span>
-              <span className="journey-state">{destination.complete ? (lang === "en" ? "Completed" : "Selesai") : index === currentDestination ? (lang === "en" ? "Next adventure" : "Pengembaraan seterusnya") : (lang === "en" ? "Explore" : "Teroka")}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
+      </header>
+      <AdventureMap>
       {stages.map((stage) => (
-        <section key={stage.number} className={`learning-stage-band learning-stage-${stage.accent}`} data-location={stage.number}>
-          <header className="meadow-stage-heading">
-            <span className="meadow-stage-label">{lang === "en" ? `Stage ${stage.number}` : `Peringkat ${stage.number}`}</span>
-            <h3>{stage.title}</h3>
-            <p>{stage.help}</p>
-          </header>
-          <div className={`storybook-destinations storybook-destinations-${stage.sections.length}`}>
+        <section key={stage.number} className="map-stage" data-stage={stage.number} aria-label={stage.title}>
+          <header className="map-stage-heading"><span>{lang === "en" ? `Stage ${stage.number}` : `Peringkat ${stage.number}`}</span><h3>{stage.title}</h3></header>
+          <div className="map-destinations">
             {stage.sections.map((section) => {
               destinationNumber += 1;
-              return (
-                <button key={section.title} type="button" onClick={section.onClick}
-                  className={`meadow-lesson meadow-lesson-${section.color}`} data-complete={section.complete} data-current={destinationNumber === currentDestination + 1} aria-current={destinationNumber === currentDestination + 1 ? "step" : undefined}
-                  aria-label={`${section.title}. ${section.subtitle}. ${section.complete ? (lang === "en" ? "Completed" : "Selesai") : (lang === "en" ? "Not completed" : "Belum selesai")}`}>
-                  <DestinationArt index={destinationNumber} />
-                  <span className="meadow-lesson-icon" aria-hidden="true">{section.icon}</span>
-                  <span className="meadow-lesson-copy"><span className="meadow-lesson-title">{section.title}</span><span className="meadow-lesson-description">{section.subtitle}</span></span>
-                  <span className="meadow-lesson-number" aria-hidden="true">{destinationNumber}</span>
-                  {destinationNumber === currentDestination + 1 && <span className="destination-next">{lang === "en" ? "Next adventure" : "Pengembaraan seterusnya"}</span>}
-                  <span className="meadow-lesson-action">{section.complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : (lang === "en" ? "Let's explore" : "Mari teroka")}{section.complete ? <Check aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}</span>
-                </button>
-              );
+              const current = destinationNumber === (currentDestination < 0 ? 8 : currentDestination + 1);
+              return <button key={section.title} type="button" onClick={section.onClick}
+                className={`meadow-lesson map-stop map-stop-${destinationNumber}`} data-map-stop={destinationNumber} data-complete={section.complete} data-current={current} aria-current={current ? "step" : undefined}
+                aria-label={`${destinationNumber}. ${section.title}. ${section.subtitle}. ${section.complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : (lang === "en" ? "Available" : "Tersedia")}`}>
+                <span className="map-pin" data-map-pin aria-hidden="true">{destinationNumber}{section.complete && <Check className="map-stamp" />}</span>
+                <DestinationArt index={destinationNumber} />
+                {current && <span className="map-companion"><img src={chrysHappy} alt="Chrys" /><span>{lang === "en" ? (currentDestination < 0 ? "Journey complete!" : "Let's go!") : (currentDestination < 0 ? "Perjalanan selesai!" : "Jom!")}</span></span>}
+                <span className="map-sign">
+                  <span className="map-lesson-title">{section.title}</span>
+                  <MapLocation index={destinationNumber} lang={lang} />
+                  <span className="map-description">{section.subtitle}</span>
+                  <span className="map-status">{section.complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : current ? (lang === "en" ? "Next adventure" : "Pengembaraan seterusnya") : (lang === "en" ? "Let's explore" : "Mari teroka")}<ArrowRight aria-hidden="true" /></span>
+                </span>
+              </button>;
             })}
           </div>
         </section>
       ))}
+      </AdventureMap>
     </main>
   );
 }
@@ -3260,34 +3203,13 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
   const summaryLabel = lang === "en" ? "Missions complete" : "Misi selesai";
 
   return (
-    <main className="sunset-expedition expedition-menu mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
+    <main className="sunset-expedition connected-world expedition-menu mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 pb-8">
       <AdventureWeather lang={lang} night />
-      <section className="expedition-greeting relative overflow-hidden rounded-[2rem] border-4 p-6 text-white sm:p-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(255,205,123,.18),transparent_38%)]" aria-hidden="true" />
-        <div className="expedition-hero relative grid items-center gap-5 sm:grid-cols-[auto_1fr_auto]">
-            <span className="expedition-hero-chrys grid h-28 w-28 place-items-center rounded-[1.75rem] border-2 border-amber-200 bg-[#3b2638]/80 shadow-[0_6px_0_#7c493c,0_0_22px_rgba(255,194,111,.16)]">
-            <img src={chrysRunning} alt="Chrys ready for an expedition" className="h-24 w-24 object-contain" />
-          </span>
-          <div>
-            <p className="flex w-fit items-center gap-2 rounded-full border border-amber-200/70 bg-[#4b2d3c]/80 px-4 py-2 text-sm font-black uppercase text-amber-50">
-              <Compass className="h-5 w-5" aria-hidden="true" />
-              {lang === "en" ? "Sunset learning trail" : "Laluan belajar senja"}
-            </p>
-            <h2 className="mt-3 text-4xl font-black text-yellow-200">{t.advancedMenuTitle}</h2>
-            <p className="mt-2 text-lg font-bold text-amber-50">
-              {lang === "en" ? `Hi, ${player.name}! ` : `Hai, ${player.name}! `}{t.advancedMenuHelp}
-            </p>
-          </div>
-          <div className="expedition-hero-badges flex gap-3 sm:flex-col">
-            <span className="rounded-2xl border-2 border-yellow-300 bg-yellow-300 px-4 py-3 text-center font-black text-slate-950 shadow-[0_5px_0_#a16207]">
-              {lang === "en" ? "6 missions" : "6 misi"}
-            </span>
-            <span className="rounded-2xl border-2 border-orange-200 bg-[#4b2d3c]/80 px-4 py-3 text-center font-black text-orange-50 shadow-[0_5px_0_#7c493c]">
-              {lang === "en" ? "Numbers 10-20" : "Nombor 10-20"}
-            </span>
-          </div>
-        </div>
-      </section>
+      <header className="map-introduction">
+        <span className="map-kicker">{lang === "en" ? "SUNSET EXPEDITION" : "EKSPEDISI SENJA"}</span>
+        <h2>{t.advancedMenuTitle}</h2>
+        <p>{lang === "en" ? `Hi, ${player.name}! ` : `Hai, ${player.name}! `}{t.advancedMenuHelp}</p>
+      </header>
 
       <section className="expedition-summary" aria-label={lang === "en" ? "Advanced learning trail" : "Laluan pembelajaran lanjutan"}>
         <div className="expedition-summary-label"><span>{summaryLabel}</span><span>{missionsCompleted} / {missionStates.length}</span></div>
@@ -3298,6 +3220,7 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
         </div>
       </section>
 
+      <AdventureMap>
       <div className="expedition-destinations">
       <AdvancedMissionTile current={currentMission === 1} mission={1} title={t.advancedTeenNumbers} subtitle={t.advancedTeenNumbersShort} complete={teenComplete} onClick={() => go("advancedTeenNumbers")} lang={lang} />
       <AdvancedMissionTile current={currentMission === 2} mission={2} title={t.advancedCompareBigger} subtitle={t.advancedCompareBiggerShort} complete={compareComplete} onClick={() => go("advancedCompareBigger")} lang={lang} />
@@ -3310,17 +3233,19 @@ function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang
         <button
           type="button"
           onClick={() => go("advancedTestMenu")}
-          className="expedition-mission expedition-test"
+          className="expedition-mission expedition-test map-stop" data-map-stop="7"
         >
-          <span className="expedition-number" aria-hidden="true"><Flag /></span>
+          <span className="map-pin" data-map-pin aria-hidden="true"><Flag /></span>
+          <DestinationArt index={8} night />
           <span className="expedition-copy">
-            <span className="expedition-eyebrow">{lang === "en" ? "Put your skills to work" : "Gunakan kemahiran kamu"}</span>
+            <span className="expedition-eyebrow">{lang === "en" ? "Expedition Challenge Camp" : "Kem Cabaran Ekspedisi"}</span>
             <span className="expedition-title">{t.advancedTestMode}</span>
             <span className="expedition-description">{t.advancedTestHelp}</span>
           </span>
           <ArrowRight className="expedition-arrow" aria-hidden="true" />
         </button>
       </section>
+      </AdventureMap>
     </main>
   );
 }
@@ -3340,13 +3265,14 @@ function AdvancedMissionTile({ mission, title, subtitle, complete = false, locke
     : locked ? (comingSoon ? (lang === "en" ? "Coming soon" : "Akan datang") : (lang === "en" ? `Complete Mission ${mission - 1} to unlock` : `Selesaikan Misi ${mission - 1} untuk buka`))
     : (lang === "en" ? "Start mission" : "Mula misi");
   return (
-    <button type="button" disabled={locked} onClick={onClick} className="expedition-mission" data-complete={complete} data-current={current} aria-current={current ? "step" : undefined}
+    <button type="button" disabled={locked} onClick={onClick} className="expedition-mission map-stop" data-map-stop={mission} data-complete={complete} data-current={current} aria-current={current ? "step" : undefined}
       aria-label={`${lang === "en" ? "Mission" : "Misi"} ${mission}: ${title}. ${subtitle}. ${state}`}>
       <DestinationArt index={mission} night />
-      {current && <span className="destination-next">{lang === "en" ? "Next mission" : "Misi seterusnya"}</span>}
-      <span className="expedition-number" aria-hidden="true">{mission}</span>
+      {current && <span className="map-companion"><img src={chrysRunning} alt="Chrys" /><span>{lang === "en" ? "Next mission" : "Misi seterusnya"}</span></span>}
+      <span className="expedition-number map-pin" data-map-pin aria-hidden="true">{mission}{complete && <Check className="map-stamp" />}</span>
       <span className="expedition-copy">
         <span className="expedition-title">{title}</span>
+        <MapLocation index={mission} lang={lang} night />
         <span className="expedition-description">{subtitle}</span>
         <span className="expedition-state">{complete ? <Check aria-hidden="true" /> : locked ? <Lock aria-hidden="true" /> : null}{state}</span>
       </span>

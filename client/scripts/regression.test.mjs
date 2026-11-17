@@ -223,7 +223,7 @@ function navigationHarness(name, props, helpers = []) {
   const React = { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }), Fragment: 'fragment' };
   const context = { React, chrysHappy: 'chrys', chrysRunning: 'chrys', BANANA: 'banana',
     LEARNING_SECTION_MARKERS: Object.fromEntries(['sky','emerald','violet','amber','teal','rose','orange','navy'].map(c => [c,c])),
-    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','Lock','ArrowRight','AdventureProgress','AdventureWeather','DestinationArt'].map(c => [c,c])) };
+    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','Lock','ArrowRight','AdventureProgress','AdventureWeather','DestinationArt','AdventureMap','MapLocation'].map(c => [c,c])) };
   vm.createContext(context);
   for (const fn of [name, ...helpers]) {
     const node = ast.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === fn);
@@ -236,7 +236,7 @@ function elements(tree) {
   if (!tree || typeof tree !== 'object') return [];
   return [tree, ...tree.children.flatMap(elements)];
 }
-test('all eight journey milestones use the existing lesson routes and saved completion in both languages', () => {
+test('all eight map destinations preserve lesson routes and completion without a duplicate tracker', () => {
   const routes = ['learnRecognize','learnValues','learnSequencing','groupingMode','learnAddition','learnSubtraction','learnReal','testMenu'];
   for (const lang of ['en','ms']) for (const progress of [{}, {recognizeNumbers:1, numberValues:1}]) {
     const visited = [];
@@ -244,13 +244,12 @@ test('all eight journey milestones use the existing lesson routes and saved comp
     const nodes = elements(tree);
     const milestones = nodes.filter(n => n.type === 'button' && n.props.className?.includes('journey-milestone'));
     const cards = nodes.filter(n => n.type === 'button' && n.props.className?.startsWith('meadow-lesson '));
-    assert.equal(milestones.length, 8); assert.equal(cards.length, 8);
-    milestones.forEach(n => n.props.onClick()); assert.deepEqual(visited, routes);
+    assert.equal(milestones.length, 0); assert.equal(cards.length, 8);
     visited.length = 0; cards.forEach(n => n.props.onClick()); assert.deepEqual(visited, routes);
     const completed = Object.keys(progress).length;
-    assert.equal(milestones.filter(n => n.props['data-state'] === 'complete').length, completed);
     assert.equal(cards.filter(n => n.props['data-complete']).length, completed);
-    assert.equal(milestones[completed].props['aria-current'], 'step');
+    assert.equal(cards[completed].props['aria-current'], 'step');
+    assert.deepEqual(cards.map(n=>n.props['data-map-stop']), [1,2,3,4,5,6,7,8]);
   }
 });
 test('mission renders exactly one button, title and description while preserving disabled and completed states', () => {
@@ -264,7 +263,7 @@ test('mission renders exactly one button, title and description while preserving
     const text = nodes.flatMap(n=>n.children).filter(c=>typeof c === 'string');
     assert.equal(text.filter(t=>t === 'Unique mission title').length,1);
     assert.equal(text.filter(t=>t === 'Unique description').length,1);
-    assert.ok(nodes.some(n=>n.props.className === 'expedition-number' && n.children.includes(5)));
+    assert.ok(nodes.some(n=>n.props.className?.includes('expedition-number') && n.children.includes(5)));
     if (!locked) {tree.props.onClick(); assert.equal(opened,true);}
   }
 });
@@ -380,4 +379,23 @@ test('decorative magic releases timers and listeners, blocks overlap and cleans 
   const timerCleanup=effects[2].fn();assert.equal(timers.size,1);timerCleanup();assert.equal(timers.size,0);
   effects[1].fn();assert.equal(states[1],null,'mode/language change clears effect');
   cleanup[0]();assert.equal(listeners.size,0);
+});
+
+test('map route connects every destination in order across row turns and mobile reflow', () => {
+  const text = readFileSync(new URL('../src/lib/adventureRoute.ts', import.meta.url), 'utf8');
+  const context = { exports: {} };
+  vm.runInNewContext(ts.transpile(text, {module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}), context);
+  const connect = context.exports.adventureRoute;
+  assert.equal(connect([], 1000, false), '');
+  const stops = [{x:150,y:60},{x:500,y:80},{x:850,y:60},{x:850,y:400},{x:500,y:400},{x:150,y:400},{x:150,y:740},{x:850,y:740}];
+  const path = connect(stops,1000,false);
+  assert.equal((path.match(/M /g)||[]).length,1,'one continuous path, no detached subpaths');
+  let cursor=0;
+  for(const point of stops){const next=path.indexOf(`${point.x} ${point.y}`,cursor);assert.ok(next>=cursor);cursor=next+String(`${point.x} ${point.y}`).length;}
+  assert.ok(path.includes('982 '),'right turn uses outside verge');
+  assert.ok(path.includes('18 '),'left turn uses outside verge');
+  const mobile = connect(stops.map((p,i)=>({x:27,y:50+i*280})),320,true);
+  assert.equal((mobile.match(/ C /g)||[]).length,7);
+  assert.ok(mobile.endsWith('27 2010'));
+  assert.ok(!mobile.includes('NaN'));
 });

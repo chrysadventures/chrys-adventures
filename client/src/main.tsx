@@ -11,3 +11,4 @@ if (import.meta.env.DEV && new URLSearchParams(window.location.search).has("desi
   root.render(<App />);
 }
 import "./storybook-navigation.css";
+import "./adventure-map.css";

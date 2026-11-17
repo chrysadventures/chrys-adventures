@@ -27,15 +27,15 @@
 .storybook-menu .learning-menu-hero > div > div:nth-child(2) { background:#fffbebed; border-radius:30% 12px 20px 8px / 14px; padding:18px 24px; }
 .storybook-menu .learning-hero-badges { display:none; }
 .storybook-menu .learning-menu-hero > div > div:nth-child(2) > p:first-child { background:none;border:0;padding:0;font-size:12px;letter-spacing:.1em; }
-.storybook-menu .learning-trail-strip { max-width:960px;width:100%;margin:auto; border:0; border-radius:5px 22px 5px 22px; background:#fffae8; box-shadow:0 3px 0 #c1b791; padding:16px 24px; }
-.storybook-menu .adventure-progress { margin:0; }.storybook-menu .adventure-progress-track{height:7px;}.storybook-menu .adventure-progress-track>span::after{display:none;}
+.storybook-menu .learning-trail-strip { max-width:1100px;width:100%;margin:auto; border:0; border-radius:5px 22px 5px 22px; background:#fffae8; box-shadow:0 3px 0 #c1b791; padding:24px 28px; }
+.storybook-menu .adventure-progress { margin:0; }.storybook-menu .adventure-progress-track{height:12px;}.storybook-menu .adventure-progress-track>span::after{display:none;}
 .storybook-menu .journey-continue { background:transparent; border:0;border-bottom:1px solid #cfceaf; border-radius:0;box-shadow:none;color:#26563b;padding:12px 0; }
-.storybook-menu .journey-continue small{color:#536d49;font-size:11px;}.storybook-menu .journey-continue strong{font-size:20px;}
-.storybook-menu .adventure-trail-grid { padding:12px 0 0;gap:6px; }
-.storybook-menu .journey-milestone { min-height:44px;gap:3px; }
-.storybook-menu .journey-milestone > span:first-child { width:26px;height:26px;border:0;font-size:13px;box-shadow:none!important; }
-.storybook-menu .journey-milestone > span:first-child > span { width:15px;height:15px;right:-4px;top:-4px; }.storybook-menu .journey-milestone > span:first-child svg{width:10px;height:10px;}
-.storybook-menu .journey-milestone > span:nth-child(2) { font-size:12px; }.storybook-menu .journey-state{display:none;}
+.storybook-menu .journey-continue small{color:#536d49;font-size:13px;}.storybook-menu .journey-continue strong{font-size:26px;}
+.storybook-menu .adventure-trail-grid { padding:24px 0 8px;gap:12px; }
+.storybook-menu .journey-milestone { min-height:80px;gap:10px; }
+.storybook-menu .journey-milestone > span:first-child { width:48px;height:48px;border:0;font-size:22px;box-shadow:none!important; }
+.storybook-menu .journey-milestone > span:first-child > span { width:22px;height:22px;right:-4px;top:-4px; }.storybook-menu .journey-milestone > span:first-child svg{width:15px;height:15px;}
+.storybook-menu .journey-milestone > span:nth-child(2) { font-size:15px;white-space:normal;overflow:visible;line-height:1.25; }.storybook-menu .journey-state{display:none;}
 /* Three connected places: the grove, the workshop clearing, and the picnic lookout. */
 .storybook-menu .learning-stage-band { position:relative; border:0; border-radius:0; padding:22px 22px 20px; background:none;box-shadow:none; }
 .storybook-menu .learning-stage-band::before { content:'';position:absolute;inset:90px 0 0;background:#e4ebbcdb; border-radius:48% 28% 42% 20% / 30px 55px 25px 40px;z-index:-1; }
@@ -117,7 +117,7 @@
 .storybook-menu .learning-menu-hero>div>div:first-child,.sunset-expedition .expedition-hero-chrys {width:65px;height:95px;}.storybook-menu .learning-menu-hero img,.sunset-expedition .expedition-hero-chrys img{width:75px;height:100px;}
 .storybook-menu .learning-menu-hero>div>div:nth-child(2),.sunset-expedition .expedition-hero>div:nth-child(2){padding:14px;}
 .storybook-menu .learning-menu-hero h2,.sunset-expedition .expedition-hero h2{font-size:23px;}.storybook-menu .learning-menu-hero p,.sunset-expedition .expedition-hero p{font-size:13px;}
-.storybook-menu .learning-trail-strip{padding:14px;}.storybook-menu .journey-continue strong{font-size:18px;}
+.storybook-menu .learning-trail-strip{padding:14px;}.storybook-menu .journey-continue strong{font-size:23px;}
 .storybook-menu .learning-stage-band{padding:14px 8px;}.storybook-menu .meadow-stage-heading{margin:0 8px 12px;}.storybook-menu .meadow-stage-heading h3{font-size:24px;}
 .storybook-destinations,.storybook-destinations-2,.sunset-expedition .expedition-destinations{grid-template-columns:1fr;gap:16px;padding:0 6px;}
 .storybook-destinations::before,.expedition-destinations::before{top:30px;left:42px;right:auto;bottom:30px;width:10px;height:auto;border:0;border-radius:50%;background:var(--path-color);}
@@ -156,3 +156,10 @@
 .magic-companion{width:65px;height:90px;}
 .magic-still{font-size:12px;padding:8px;margin:18px auto;}
 @media(max-width:639px){.environment-magic{right:165px;height:90px;}.magic-rainbow{width:115px;height:65px;}.magic-particle img{width:22px;height:22px;}.magic-still{font-size:11px;}.magic-still svg{display:none;}}
+
+/* Keep enlarged journey stops readable without squeezing eight across a tablet. */
+.storybook-menu .adventure-progress {font-size:16px;}
+@media(max-width:1023px){.storybook-menu .adventure-trail-grid{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:20px;}}
+@media(max-width:639px){.storybook-menu .adventure-trail-grid{column-gap:8px;}.storybook-menu .journey-milestone > span:first-child{width:44px;height:44px;font-size:20px;}.storybook-menu .journey-milestone > span:nth-child(2){font-size:13px;}}
+
+@media(max-width:1023px){.storybook-menu .journey-milestone:nth-child(4)::after{display:none;}}

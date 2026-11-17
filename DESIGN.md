@@ -170,3 +170,14 @@ Navigation now uses deeper illustrated destination cards, tactile mission emblem
 - Reduced motion replaces magic with a static 1.6s ornament/message and removes particle movement and entrance/hover transforms. Pause/Resume Scenery controls and state are removed, with no replacement animation settings.
 - Focus: 3px outline; interactive targets minimum 44px. At 320–390px, illustrations occupy a narrow left trail and labels wrap on the right. Tablet and desktop retain horizontal connected destinations.
 - Implementation: `components/StorybookNavigation.tsx`, `lib/navigationMagic.ts`, `storybook-navigation.css`; scoped menu markup in `App.tsx`. No new dependencies, character art, backend changes or educational changes.
+
+## Connected adventure maps — 17 November 2026
+
+This revision supersedes the separate journey tracker and landmark-card grids above. The user's new map brief replaces the preceding request to enlarge that tracker.
+
+- One compact completion summary; eight Learning destinations follow a continuous route in curriculum order. Desktop follows 1–2–3, turns down to 4–5–6 right-to-left, then turns to 7–8. Three small stage signs replace clearing panels.
+- Six Advanced destinations follow the same winding order and end at a separate test-camp flag. Existing lock conditions and builder overrides remain authoritative.
+- At widths below 1024px the route becomes a vertical trail, maintaining DOM/tab order. The route is measured from real marker centres with ResizeObserver, so language wrapping and viewport changes cannot detach the path from its markers.
+- Roadside artwork sits beside smaller nameboards; actual curriculum titles remain primary, with bilingual thematic location names secondary. A single foreground Chrys accompanies the recommended stop. Existing characters painted into background images remain part of the artwork.
+- Existing sprites and daytime/sunset backgrounds are reused. No generated images, dependencies or service changes. Optional magic remains unchanged and reduced-motion rules apply to nameboard movement.
+- Styles are scoped to `.connected-world` in `client/src/adventure-map.css`; map geometry lives in `lib/adventureRoute.ts` and `components/AdventureMap.tsx`.

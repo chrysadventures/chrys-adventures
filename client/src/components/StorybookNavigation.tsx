@@ -14,14 +14,15 @@ const art = {
   butterfly: publicArt("/assets/sprites/butterfly.png"),
   flower: publicArt("/assets/sprites/flower.png"),
   shell: publicArt("/assets/sprites/shell.png"),
+  star: publicArt("/assets/sprites/star.png"),
 };
 // Decorative landmarks, never mathematical demonstrations or counted objects.
 export function DestinationArt({ index, night = false }: { index: number; night?: boolean }) {
   const objects = night ? ['book', 'tree', 'log', 'banana', 'pencil', 'basket'] as const
-    : ['book', 'basket', 'log', 'tree', 'banana', 'leaf', 'shell', 'pencil'] as const;
+    : ['tree', 'tree', 'log', 'tree', 'log', 'leaf', 'basket', 'star'] as const;
   return <span className={`destination-art landmark-${index}`} aria-hidden="true">
-    <svg viewBox="0 0 280 120" className="landmark-ground"><path d="M12 100 Q42 64 92 83 Q155 40 200 76 Q254 67 270 100 Q146 124 12 100" fill="currentColor" /><path d="M65 104 Q130 77 205 101" fill="none" stroke="var(--path-color)" strokeWidth="12" strokeLinecap="round" /></svg>
     <img className="landmark-object" src={art[objects[(index - 1) % objects.length]]} alt="" draggable={false} />
+    {(index === 1 || index === 2 || index === 5) && <img className="landmark-detail" src={index === 1 ? art.book : index === 2 ? art.basket : art.banana} alt="" draggable={false} />}
     <img className="landmark-flora" src={night ? art.leaf : art.flower} alt="" draggable={false} />
     {index === 3 && <span className="landmark-steps"><i /><i /><i /></span>}
   </span>;
