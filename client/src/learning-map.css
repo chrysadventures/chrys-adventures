@@ -1,25 +1,66 @@
-.learning-map-frame { max-width: 100rem; overflow-anchor: none; }
+.page-bg.learning-map-page {
+  --map-ui-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --map-ui-top: max(12px, env(safe-area-inset-top));
+  --map-ui-bottom: max(12px, env(safe-area-inset-bottom));
+  --map-toolbar-top: calc(var(--map-ui-top) + 76px);
+  position: fixed;
+  inset: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #829461;
+}
+
+.page-bg.learning-map-page::before,
+.page-bg.learning-map-page::after { content: none; }
+
+.learning-map-page > .learning-map-frame {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  padding: 0;
+  overflow-anchor: none;
+}
 
 .learning-map-frame > .app-header {
-  position: sticky;
-  top: max(8px, env(safe-area-inset-top));
+  position: absolute;
   z-index: 20;
+  inset: var(--map-ui-top) var(--map-ui-inset) auto;
+  width: min(calc(100% - 2 * var(--map-ui-inset)), 76rem);
+  margin: 0 auto;
+}
+
+.learning-map-frame > .app-save-status {
+  position: absolute;
+  right: var(--map-ui-inset);
+  bottom: var(--map-ui-bottom);
+  z-index: 15;
+  max-width: min(34rem, calc(100% - 2 * var(--map-ui-inset)));
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.learning-map-frame > .app-save-status > button {
+  pointer-events: auto;
+  flex: none;
+  max-width: 33%;
+  color: #29432b;
+  background-color: #f4f6df;
 }
 
 .learning-world-menu {
-  width: 100%;
-  margin-inline: auto;
+  position: absolute;
+  inset: 0;
 }
 
 .learning-world {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: #52782e;
-  border-radius: 20px;
+  background: #829461 url("/assets/learning-map/wc-landscape.webp") center / 100% 100% no-repeat;
 }
 
-.learning-world-foundation,
 .world-landmark-layer,
 .learning-world-road {
   position: absolute;
@@ -27,22 +68,6 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-}
-
-.learning-world-foundation img {
-  position: absolute;
-  width: 100%;
-  object-fit: fill;
-  filter: saturate(.79) brightness(.93);
-  mask-image: linear-gradient(transparent, #000 21%);
-}
-
-.learning-world-foundation img:first-child {
-  mask-image: none;
-}
-
-.learning-world-foundation img:nth-child(even) {
-  transform: scaleX(-1);
 }
 
 .learning-world-sprite,
@@ -56,7 +81,6 @@
 }
 
 .world-verge { z-index: 1; }
-.world-cascade { z-index: 2; transform: translate(-50%, -50%) rotate(76deg); }
 .world-ground { z-index: 3; }
 .learning-world-road { z-index: 4; }
 .world-landmark-layer { z-index: 5; }
@@ -68,8 +92,8 @@
   stroke-linejoin: round;
 }
 
-.world-road-verge { stroke: #9f713c; stroke-width: 36; }
-.world-road-sand { stroke: url(#learning-trail-paint); stroke-width: 31; }
+.world-road-verge { stroke: #b19a67b0; stroke-width: 34; }
+.world-road-sand { stroke: url(#learning-trail-paint); stroke-width: 29; opacity: .88; }
 
 .world-stone-number {
   position: absolute;
@@ -100,7 +124,7 @@
 
 button.world-nameboard {
   cursor: pointer;
-  scroll-margin-block: 95px 20px;
+  scroll-margin: 16px;
 }
 
 button.world-nameboard:hover,
@@ -154,51 +178,74 @@ button.world-nameboard:focus-visible {
 .world-stop-status svg { width: 11px; height: 11px; flex: none; }
 .world-nameboard[aria-current="step"] .world-stop-number { background: #3e6329; }
 
-.world-explorer-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 7px 13px 10px;
+.world-explorer-hint,
+.world-journey-progress {
+  position: absolute;
+  top: var(--map-toolbar-top);
+  z-index: 10;
+  padding: 6px 10px;
+  border-radius: 12px;
   color: #2e472b;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
-  background: #fff4d8;
-  border-radius: 14px 14px 0 0;
+  background: #f4f6dfee;
+  pointer-events: none;
 }
 
-.world-explorer-bar .adventure-progress { width: min(240px, 55%); margin: 0; }
-.world-explorer-bar .adventure-progress-label { gap: 5px; font-size: 11px; }
-.world-explorer-bar .adventure-progress-label span:last-child { white-space: nowrap; }
+.world-explorer-hint { left: var(--map-ui-inset); }
+.world-journey-progress { right: var(--map-ui-inset); width: min(165px, 44%); }
+.world-journey-progress .adventure-progress { margin: 0; }
+.world-journey-progress .adventure-progress-label { gap: 5px; font-size: 11px; }
+.world-journey-progress .adventure-progress-label span:last-child { white-space: nowrap; }
 
 .learning-world-camera {
+  position: absolute;
+  inset: 0;
   overflow: auto;
-  overscroll-behavior: contain;
-  scrollbar-color: #8d9f62 #ebedc9;
-  scrollbar-width: thin;
+  overscroll-behavior: none;
+  scrollbar-width: none;
+  overflow-anchor: none;
+  scroll-padding: calc(var(--map-toolbar-top) + 42px) 10px 86px;
   cursor: grab;
-  height: clamp(340px, calc(100dvh - 225px), 920px);
-  border: 2px solid #9baa74;
-  border-radius: 0 0 15px 15px;
   isolation: isolate;
   touch-action: pan-x pan-y;
+  user-select: none;
+}
+
+.learning-world-camera::-webkit-scrollbar { display: none; }
+
+.learning-world-track {
+  --map-min-width: 1740px;
+  --map-width: max(var(--map-min-width), calc(100vw + 160px), calc((100dvh + 100px) * var(--map-ratio)));
+  width: var(--map-width);
+}
+
+/* Reflect only the existing terrain at the edges to give the floating controls clearance. */
+.learning-world-track::before,
+.learning-world-track::after {
+  content: "";
+  display: block;
+  height: calc(var(--map-ui-top) + 64px);
+  background: url("/assets/learning-map/wc-landscape.webp") center top / 100% calc(var(--map-width) / var(--map-ratio)) no-repeat;
+  transform: scaleY(-1);
+}
+
+.learning-world-track::after {
+  height: 32px;
+  background-position: center bottom;
 }
 
 .learning-world-camera[data-dragging="true"],
 .learning-world-camera[data-dragging="true"] button { cursor: grabbing; }
-.learning-world-camera { user-select: none; }
-.learning-world { min-width: 1480px; width: 100%; border-radius: 0; }
-.learning-world-foundation img { filter: saturate(.58) brightness(1.03); }
+.learning-world { width: 100%; }
 .world-verge { filter: saturate(.88) drop-shadow(0 5px 3px #34472925); }
 .world-ground { filter: saturate(.89); }
 .world-foreground { z-index: 6; filter: saturate(.92) drop-shadow(0 5px 3px #34472938); }
 .world-structure { filter: drop-shadow(0 4px 2px #4b422334); }
-.world-monument { filter: drop-shadow(0 0 8px #ffd98788); }
 .world-stone-number { font-size: clamp(17px, 1.85vw, 25px); }
-button.world-nameboard { scroll-margin: 22px; }
 
 @media (max-width: 800px) {
-  .learning-world { min-width: 1250px; }
+  .learning-world-track { --map-min-width: 1420px; }
   .world-nameboard { width: 145px; padding: 9px 12px; }
   .world-stop-number { width: 24px; height: 24px; font-size: 13px; top: -8px; left: 3px; }
   .world-stop-name, .world-welcome h2 { font-size: 13px; }
@@ -206,6 +253,14 @@ button.world-nameboard { scroll-margin: 22px; }
 }
 
 @media (max-width: 480px) {
-  .learning-world-camera { height: max(315px, calc(100dvh - 205px)); }
-  .world-explorer-bar { font-size: 12px; padding-inline: 8px; }
+  .page-bg.learning-map-page {
+    --map-ui-inset: max(8px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --map-ui-top: max(8px, env(safe-area-inset-top));
+    --map-toolbar-top: calc(var(--map-ui-top) + 76px);
+  }
+
+  .learning-map-frame > .app-save-status > span,
+  .learning-map-frame > .app-save-status > button { font-size: 11px; padding: 5px 8px; }
+  .learning-world-camera { scroll-padding-bottom: 105px; }
+  .learning-world-track::after { height: 48px; }
 }

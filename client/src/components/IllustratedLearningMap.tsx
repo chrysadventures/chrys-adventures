@@ -4,7 +4,7 @@ import chrys from "@assets/chrys_sitting_new_user_nobg.png";
 import alyse from "@assets/alyse_normal_nobg.png";
 import { AdventureProgress } from "./AdventureUI";
 import { landmarks, spriteSize, type MapSprite, type Placement } from "../lib/learningMapArt";
-import { cascade, foreground, journey, riverStones, scenery, stops, worldSize, type LandmarkLayout, type MapPoint } from "../lib/learningMapLayout";
+import { foreground, journey, riverStones, scenery, stops, worldSize, type LandmarkLayout, type MapPoint } from "../lib/learningMapLayout";
 import { useMapCamera } from "../lib/useMapCamera";
 import "../learning-map.css";
 
@@ -13,7 +13,7 @@ const names = {
   ms: ["Kem Pengembaraan", "Rumah Pokok Nombor", "Kebun Mengira Pisang", "Lintasan Batu Sungai", "Rimbun Mengumpul Pisang", "Padang Mengumpul Pisang", "Laman Tolak", "Kampung Pasar Rimba", "Puncak Bintang Agung"],
 };
 const order = ["camp", "treehouse", "orchard", "river", "sorting", "gathering", "takeaway", "market", "summit"] as const;
-const groundSprites = new Set<MapSprite>(["forecourt", "orchard-floor", "meadow-floor", "clearing-floor", "water", "left-bank", "right-bank"]);
+const groundSprites = new Set<MapSprite>(["wc-water", "wc-left-bank", "wc-right-bank"]);
 const asset = (sprite: MapSprite | "trail-texture") => new URL(`assets/learning-map/${sprite}.webp`, document.baseURI).href;
 function position(x: number, y: number, [width, height]: MapPoint): CSSProperties {
   return { left: `${x / width * 100}%`, top: `${y / height * 100}%` };
@@ -48,116 +48,110 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
   const completed = lessons.filter(lesson => lesson.complete).length;
   const [width, height] = worldSize;
   const [campX, campY, campScale] = stops[0];
-  const tileCount = 2;
   const isEnglish = lang === "en";
 
   return <main className="learning-world-menu" aria-label={isEnglish ? "Learning Adventure" : "Pengembaraan Pembelajaran"}>
-    <div className="world-explorer-bar">
-      <p>{isEnglish ? "Drag to explore" : "Seret untuk meneroka"}</p>
+    <p className="world-explorer-hint">{isEnglish ? "Drag to explore" : "Seret untuk meneroka"}</p>
+    <div className="world-journey-progress">
       <AdventureProgress value={completed} total={lessons.length} label={isEnglish ? "Your journey" : "Perjalanan kamu"} />
     </div>
     <div className="learning-world-camera" ref={camera.viewport}
       onPointerDown={camera.start} onPointerMove={camera.move}
       onPointerUp={camera.finish} onPointerCancel={camera.finish} onLostPointerCapture={camera.finish}
-      onClickCapture={camera.filterClick}>
-      <div className="learning-world" data-learning-map style={{ aspectRatio: `${width} / ${height}`, "--map-nameboard": `url("${asset("nameboard")}")` } as CSSProperties}>
-        <div className="learning-world-foundation" aria-hidden="true">
-          {Array.from({ length: tileCount }, (_, i) => (
-            <img key={i} alt="" src={asset("jungle-floor")} decoding="async"
-              style={{ top: `${i * 100 / tileCount}%`, height: `${100 / tileCount + 7}%` }} />
+      onClickCapture={camera.filterClick} onFocusCapture={camera.revealFocus}>
+      <div className="learning-world-track" style={{ "--map-ratio": width / height } as CSSProperties}>
+        <div className="learning-world" data-learning-map style={{ aspectRatio: `${width} / ${height}`, "--map-nameboard": `url("${asset("nameboard")}")` } as CSSProperties}>
+          {scenery.map((placement, i) => (
+            <Sprite key={i} placement={placement} world={worldSize} className="world-verge" />
           ))}
-        </div>
-        {scenery.map((placement, i) => (
-          <Sprite key={i} placement={placement} world={worldSize} className="world-verge" />
-        ))}
-        <Sprite placement={cascade} world={worldSize} className="world-cascade" />
-        {order.map((kit, i) => landmarks[kit].map((placement, j) => groundSprites.has(placement[0]) && (
-          <Sprite key={`${kit}-${j}`} placement={at(placement, stops[i])} world={worldSize}
-            className="world-ground" eager={i < 2} />
-        )))}
-        <svg className="learning-world-road" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-          <defs>
-            <pattern id="learning-trail-paint" width="100" height="115" patternUnits="userSpaceOnUse">
-              <image href={asset("trail-texture")} width="100" height="115" />
-            </pattern>
-            <filter id="river-cutout">
-              <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
-            </filter>
-            <filter id="river-shore">
-              <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0" />
-            </filter>
-            <mask id="learning-dry-trail" maskUnits="userSpaceOnUse" x="0" y="0" width={width} height={height}>
-              <rect width={width} height={height} fill="white" />
-              {landmarks.river.filter(([name]) => groundSprites.has(name)).map(piece => {
-                const [name, span, x, y] = at(piece, stops[3]);
-                const [imageWidth, imageHeight] = spriteSize[name];
-                const rise = span * imageHeight / imageWidth;
-                return <image key={name} href={asset(name)} x={x - span / 2} y={y - rise / 2}
-                  width={span} height={rise} filter={name === "water" ? "url(#river-cutout)" : "url(#river-shore)"} />;
-              })}
-            </mask>
-            <filter id="learning-trail-edge" x="-5%" y="-5%" width="110%" height="110%">
-              <feTurbulence type="fractalNoise" baseFrequency=".07" numOctaves="2" seed="13" result="grain" />
-              <feDisplacementMap in="SourceGraphic" in2="grain" scale="5" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-          </defs>
-          <g mask="url(#learning-dry-trail)">
-            {journey.map((leg, i) => leg.surface === "dirt" && <g key={i} filter="url(#learning-trail-edge)">
-              <path className="world-road-verge" d={leg.path} />
-              <path className="world-road-sand" d={leg.path} />
-            </g>)}
-          </g>
-        </svg>
-        {order.map((kit, i) => {
-          const layout = stops[i];
-          const lake = kit === "river";
-          let stoneNumber = 0;
-          const pieces = lake ? [...landmarks.river, ...riverStones] : landmarks[kit];
-          return pieces.map((placement, j) => {
-            const name = placement[0];
-            if (groundSprites.has(name)) return null;
-            const adjusted = at(placement, layout);
-            const stone = lake && (name === "stone-a" || name === "stone-b");
-            if (stone) stoneNumber += 1;
-            return <div key={`${kit}-${j}`} className="world-landmark-layer"
-              data-map-sprite={name}>
-              <Sprite placement={adjusted} world={worldSize} className={name === "star-entrance" ? "world-monument" : "world-structure"} eager={i < 2} />
-              {stone && <span className="world-stone-number" data-crossing-stone={stoneNumber}
-                style={position(adjusted[2], adjusted[3] - adjusted[1] * .11, worldSize)}>{stoneNumber}</span>}
-            </div>;
-          });
-        })}
-        {foreground.map((placement, i) => (
-          <Sprite key={i} placement={placement} world={worldSize} className="world-foreground" />
-        ))}
-        <img className="world-character" src={chrys} alt="Chrys" width="232" height="243"
-          style={{ ...position(campX + 179 * campScale, campY + 270 * campScale, worldSize), width: `${80 / width * 100}%` }} />
-        <img className="world-character" src={alyse} alt="Alyse" width="207" height="305"
-          style={{ ...position(campX + 236 * campScale, campY + 278 * campScale, worldSize), width: `${55 / width * 100}%` }} />
+          {order.map((kit, i) => landmarks[kit].map((placement, j) => groundSprites.has(placement[0]) && (
+            <Sprite key={`${kit}-${j}`} placement={at(placement, stops[i])} world={worldSize}
+              className="world-ground" eager={i < 2} />
+          )))}
+          <svg className="learning-world-road" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+            <defs>
+              <pattern id="learning-trail-paint" width="100" height="115" patternUnits="userSpaceOnUse">
+                <image href={asset("trail-texture")} width="100" height="115" />
+              </pattern>
+              <filter id="river-cutout">
+                <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+              </filter>
+              <filter id="river-shore">
+                <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0" />
+              </filter>
+              <mask id="learning-dry-trail" maskUnits="userSpaceOnUse" x="0" y="0" width={width} height={height}>
+                <rect width={width} height={height} fill="white" />
+                {landmarks.river.filter(([name]) => groundSprites.has(name)).map(piece => {
+                  const [name, span, x, y, placedHeight] = at(piece, stops[3]);
+                  const [imageWidth, imageHeight] = spriteSize[name];
+                  const rise = placedHeight ?? span * imageHeight / imageWidth;
+                  return <image key={name} href={asset(name)} x={x - span / 2} y={y - rise / 2}
+                    width={span} height={rise} preserveAspectRatio="none" filter={name === "wc-water" ? "url(#river-cutout)" : "url(#river-shore)"} />;
+                })}
+              </mask>
+              <filter id="learning-trail-edge" x="-5%" y="-5%" width="110%" height="110%">
+                <feTurbulence type="fractalNoise" baseFrequency=".07" numOctaves="2" seed="13" result="grain" />
+                <feDisplacementMap in="SourceGraphic" in2="grain" scale="5" xChannelSelector="R" yChannelSelector="G" />
+              </filter>
+            </defs>
+            <g mask="url(#learning-dry-trail)">
+              {journey.map((leg, i) => leg.surface === "dirt" && <g key={i} filter="url(#learning-trail-edge)">
+                <path className="world-road-verge" d={leg.path} />
+                <path className="world-road-sand" d={leg.path} />
+              </g>)}
+            </g>
+          </svg>
+          {order.map((kit, i) => {
+            const layout = stops[i];
+            const lake = kit === "river";
+            let stoneNumber = 0;
+            const pieces = lake ? [...landmarks.river, ...riverStones] : landmarks[kit];
+            return pieces.map((placement, j) => {
+              const name = placement[0];
+              if (groundSprites.has(name)) return null;
+              const adjusted = at(placement, layout);
+              const stone = name === "wc-stone";
+              if (stone) stoneNumber += 1;
+              return <div key={`${kit}-${j}`} className="world-landmark-layer"
+                data-map-sprite={name}>
+                <Sprite placement={adjusted} world={worldSize} className="world-structure" eager={i < 2} />
+                {stone && <span className="world-stone-number" data-crossing-stone={stoneNumber}
+                  style={position(adjusted[2], adjusted[3] - adjusted[1] * .11, worldSize)}>{stoneNumber}</span>}
+              </div>;
+            });
+          })}
+          {foreground.map((placement, i) => (
+            <Sprite key={i} placement={placement} world={worldSize} className="world-foreground" />
+          ))}
+          <img className="world-character" src={chrys} alt="Chrys" width="232" height="243"
+            style={{ ...position(campX + 154 * campScale, campY + 272 * campScale, worldSize), width: `${80 / width * 100}%` }} />
+          <img className="world-character" src={alyse} alt="Alyse" width="207" height="305"
+            style={{ ...position(campX + 225 * campScale, campY + 281 * campScale, worldSize), width: `${55 / width * 100}%` }} />
 
-        <div className="world-nameboard world-welcome" data-destination="camp"
-          style={position(...stops[0][3], worldSize)}>
-          <p>{lang === "en" ? "Start" : "Mula"}</p>
-          <h2>{names[lang][0]}</h2>
+          <div className="world-nameboard world-welcome" data-destination="camp"
+            style={position(...stops[0][3], worldSize)}>
+            <p>{lang === "en" ? "Start" : "Mula"}</p>
+            <h2>{names[lang][0]}</h2>
+          </div>
+          {lessons.map((lesson, index) => {
+            const i = index + 1;
+            const [signX, signY] = stops[i][3];
+            const available = lang === "en" ? "Available" : "Tersedia";
+            const status = lesson.complete ? (lang === "en" ? "Completed" : "Selesai")
+              : current === index ? (lang === "en" ? "Next adventure" : "Pengembaraan seterusnya") : available;
+            return <button key={order[i]} type="button" className="world-nameboard world-lesson"
+              data-destination={order[i]} data-complete={lesson.complete} aria-current={current === index ? "step" : undefined}
+              onClick={lesson.onClick} style={position(signX, signY, worldSize)}
+              aria-label={`${i}. ${names[lang][i]}. ${lesson.title}. ${status}`}>
+              <span className="world-stop-number" aria-hidden="true">{i}</span>
+              <span className="world-stop-name">{names[lang][i]}</span>
+              <span className="world-stop-lesson">{lesson.title}</span>
+              <span className="world-stop-status">{status}
+                {lesson.complete ? <Check aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}
+              </span>
+            </button>;
+          })}
         </div>
-        {lessons.map((lesson, index) => {
-          const i = index + 1;
-          const [signX, signY] = stops[i][3];
-          const available = lang === "en" ? "Available" : "Tersedia";
-          const status = lesson.complete ? (lang === "en" ? "Completed" : "Selesai")
-            : current === index ? (lang === "en" ? "Next adventure" : "Pengembaraan seterusnya") : available;
-          return <button key={order[i]} type="button" className="world-nameboard world-lesson"
-            data-destination={order[i]} data-complete={lesson.complete} aria-current={current === index ? "step" : undefined}
-            onClick={lesson.onClick} style={position(signX, signY, worldSize)}
-            aria-label={`${i}. ${names[lang][i]}. ${lesson.title}. ${status}`}>
-            <span className="world-stop-number" aria-hidden="true">{i}</span>
-            <span className="world-stop-name">{names[lang][i]}</span>
-            <span className="world-stop-lesson">{lesson.title}</span>
-            <span className="world-stop-status">{status}
-              {lesson.complete ? <Check aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}
-            </span>
-          </button>;
-        })}
       </div>
     </div>
   </main>;

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type MouseEvent, type PointerEvent } from "react";
+import { useLayoutEffect, useRef, type FocusEvent, type MouseEvent, type PointerEvent } from "react";
 
 export function useMapCamera() {
   const viewport = useRef<HTMLDivElement>(null);
@@ -56,5 +56,12 @@ export function useMapCamera() {
     event.stopPropagation();
   }
 
-  return { viewport, start, move, finish, filterClick };
+  function revealFocus(event: FocusEvent<HTMLDivElement>) {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.matches("button:focus-visible")) {
+      target.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
+    }
+  }
+
+  return { viewport, start, move, finish, filterClick, revealFocus };
 }

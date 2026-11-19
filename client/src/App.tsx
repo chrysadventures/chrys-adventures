@@ -2009,13 +2009,13 @@ function App() {
   return (
     <AudioEnabledContext.Provider value={soundEnabled}>
       <div
-        className={`page-bg ${isCyberBackground ? "sunset-theme" : "learning-theme"} min-h-[100dvh] text-slate-800 font-sans ${screen === "menu" ? "overflow-x-clip" : "overflow-x-hidden"}`}
+        className={`page-bg ${isCyberBackground ? "sunset-theme" : "learning-theme"} min-h-[100dvh] text-slate-800 font-sans ${screen === "menu" ? "learning-map-page" : "overflow-x-hidden"}`}
         style={backgroundStyle}
         onPointerDownCapture={markAudioInteraction}
         onKeyDownCapture={markAudioInteraction}
       >
       <Decor />
-      <div className={`app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full flex-col px-4 py-4 md:px-8 ${screen === "menu" ? "learning-map-frame max-w-[100rem]" : screen.startsWith("advanced") ? "max-w-[90rem]" : "max-w-6xl"}`}>
+      <div className={`app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full flex-col px-4 py-4 md:px-8 ${screen === "menu" ? "learning-map-frame" : screen.startsWith("advanced") ? "max-w-[90rem]" : "max-w-6xl"}`}>
         <Header
           lang={lang}
           onToggleLang={() => setLang((current) => (current === "en" ? "ms" : "en"))}
@@ -2042,7 +2042,7 @@ function App() {
                     : "menu",
           )}
         />
-        <div className="mb-3 flex justify-end px-1" aria-live="polite" aria-atomic="true">
+        <div className="app-save-status mb-3 flex justify-end px-1" aria-live="polite" aria-atomic="true">
           <span
             className={`inline-flex min-h-10 items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-black shadow-[0_4px_0_rgba(30,64,95,0.16)] backdrop-blur-md transition-all duration-300 ${
               saveStatus === "error"
@@ -2905,7 +2905,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
       </section>
 
       <div className="grid items-stretch gap-6 md:grid-cols-2">
-        <article className="mode-destination-card mode-destination-learning group" style={{ "--app-bg-desktop": 'url("./assets/learning-map/camp-preview.webp")', "--app-bg-mobile": 'url("./assets/learning-map/camp-preview.webp")' } as React.CSSProperties}>
+        <article className="mode-destination-card mode-destination-learning group" style={{ "--app-bg-desktop": 'url("./assets/learning-map/wc-camp-preview.webp")', "--app-bg-mobile": 'url("./assets/learning-map/wc-camp-preview.webp")' } as React.CSSProperties}>
           <div className="mode-destination-scene" aria-hidden="true" />
           <div className="mode-destination-content">
             <h3 className="block text-3xl font-black text-blue-950">
