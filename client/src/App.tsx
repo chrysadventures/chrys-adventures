@@ -1919,7 +1919,7 @@ function App() {
     setLastAdvancedTestScore(null);
     setCompletedLesson(null);
     setScreen(next);
-    if (next !== "menu") window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+    window.scrollTo({ top: 0, behavior: next === "menu" ? "instant" : prefersReducedMotion ? "auto" : "smooth" });
   };
 
   const finishTest = (key: string, correct: number, total: number) => {
@@ -2905,7 +2905,7 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
       </section>
 
       <div className="grid items-stretch gap-6 md:grid-cols-2">
-        <article className="mode-destination-card mode-destination-learning group" style={DEFAULT_BACKGROUND_STYLE}>
+        <article className="mode-destination-card mode-destination-learning group" style={{ "--app-bg-desktop": 'url("./assets/learning-map/camp-preview.webp")', "--app-bg-mobile": 'url("./assets/learning-map/camp-preview.webp")' } as React.CSSProperties}>
           <div className="mode-destination-scene" aria-hidden="true" />
           <div className="mode-destination-content">
             <h3 className="block text-3xl font-black text-blue-950">

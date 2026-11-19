@@ -154,35 +154,58 @@ button.world-nameboard:focus-visible {
 .world-stop-status svg { width: 11px; height: 11px; flex: none; }
 .world-nameboard[aria-current="step"] .world-stop-number { background: #3e6329; }
 
-.world-progress {
-  position: absolute;
-  z-index: 7;
-  right: 24px;
-  bottom: 19px;
-  width: min(216px, 42%);
-  padding: 7px 12px;
-  border: 1px solid #d8b45d;
-  border-radius: 15px 11px 16px 11px;
-  background: #fff2cf;
-  color: #253d21;
+.world-explorer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 7px 13px 10px;
+  color: #2e472b;
+  font-size: 13px;
+  font-weight: 900;
+  background: #fff4d8;
+  border-radius: 14px 14px 0 0;
 }
 
-@media (min-width: 681px) and (max-width: 1000px) {
-  .world-progress { inset: 12px auto auto 12px; width: 152px; }
-  .world-progress .adventure-progress-label { font-size: 11px; }
+.world-explorer-bar .adventure-progress { width: min(240px, 55%); margin: 0; }
+.world-explorer-bar .adventure-progress-label { gap: 5px; font-size: 11px; }
+.world-explorer-bar .adventure-progress-label span:last-child { white-space: nowrap; }
+
+.learning-world-camera {
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #8d9f62 #ebedc9;
+  scrollbar-width: thin;
+  cursor: grab;
+  height: clamp(340px, calc(100dvh - 225px), 920px);
+  border: 2px solid #9baa74;
+  border-radius: 0 0 15px 15px;
+  isolation: isolate;
+  touch-action: pan-x pan-y;
 }
 
-@media (max-width: 680px) {
-  .learning-world { border-radius: 12px; }
-  .world-nameboard {
-    width: clamp(112px, 34vw, 158px);
-    padding: 10px 11px;
-  }
+.learning-world-camera[data-dragging="true"],
+.learning-world-camera[data-dragging="true"] button { cursor: grabbing; }
+.learning-world-camera { user-select: none; }
+.learning-world { min-width: 1480px; width: 100%; border-radius: 0; }
+.learning-world-foundation img { filter: saturate(.58) brightness(1.03); }
+.world-verge { filter: saturate(.88) drop-shadow(0 5px 3px #34472925); }
+.world-ground { filter: saturate(.89); }
+.world-foreground { z-index: 6; filter: saturate(.92) drop-shadow(0 5px 3px #34472938); }
+.world-structure { filter: drop-shadow(0 4px 2px #4b422334); }
+.world-monument { filter: drop-shadow(0 0 8px #ffd98788); }
+.world-stone-number { font-size: clamp(17px, 1.85vw, 25px); }
+button.world-nameboard { scroll-margin: 22px; }
+
+@media (max-width: 800px) {
+  .learning-world { min-width: 1250px; }
+  .world-nameboard { width: 145px; padding: 9px 12px; }
   .world-stop-number { width: 24px; height: 24px; font-size: 13px; top: -8px; left: 3px; }
   .world-stop-name, .world-welcome h2 { font-size: 13px; }
   .world-stop-lesson { font-size: 11px; }
-  .world-stop-status { font-size: 10px; }
-  .world-progress { left: 8px; right: auto; bottom: 4px; width: 115px; padding: 4px 7px; }
-  .world-progress .adventure-progress-label { font-size: 10px; gap: 4px; }
-  .world-progress .adventure-progress-label span:last-child { white-space: nowrap; }
+}
+
+@media (max-width: 480px) {
+  .learning-world-camera { height: max(315px, calc(100dvh - 205px)); }
+  .world-explorer-bar { font-size: 12px; padding-inline: 8px; }
 }

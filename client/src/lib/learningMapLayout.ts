@@ -3,77 +3,64 @@ import type { Placement } from "./learningMapArt";
 export type MapPoint = readonly [x: number, y: number];
 export type LandmarkLayout = readonly [x: number, y: number, scale: number, sign: MapPoint];
 
-type WorldLayout = {
-  size: MapPoint;
-  stops: LandmarkLayout[];
-  scenery: Placement[];
-  cascade: Placement;
-  road: readonly [approach: string, ascent: string];
-};
+export const worldSize = [1760, 1370] as const;
+export const stops = [
+  [16, 973, 1, [234, 1295]],
+  [430, 905, 1, [786, 1210]],
+  [1040, 903, 1.03, [1376, 1247]],
+  [943, 583, 1.22, [1357, 956]],
+  [577, 447, 1.07, [990, 831]],
+  [53, 458, 1.07, [244, 879]],
+  [8, 111, 1.03, [151, 513]],
+  [490, 101, 1.14, [822, 465]],
+  [1039, 51, 1.37, [1097, 101]],
+] as const satisfies readonly LandmarkLayout[];
 
-export const wideWorld: WorldLayout = {
-  size: [1360, 2320],
-  stops: [
-    [82, 1840, 1.1, [330, 2225]],
-    [646, 1730, 1.03, [1072, 2107]],
-    [788, 1397, 1.02, [1135, 1731]],
-    [205, 1117, 1.24, [608, 1491]],
-    [765, 792, 1.08, [1140, 1236]],
-    [103, 666, 1.15, [385, 1091]],
-    [102, 326, 1.12, [211, 693]],
-    [645, 368, 1.02, [1121, 696]],
-    [744, 21, 1.02, [1225, 292]],
-  ],
-  scenery: [
-    ["rock-shrub", 290, 319, 168], ["banana-plant", 228, 444, 112],
-    ["banana-plant", 312, 70, 337], ["banana-plant", 275, 608, 257],
-    ["rock-shrub", 193, 691, 389], ["banana-plant", 270, 1314, 435],
-    ["meadow-shrub", 235, 629, 581], ["banana-plant", 269, 20, 706],
-    ["rock-shrub", 185, 731, 793], ["meadow-shrub", 210, 1257, 856],
-    ["banana-plant", 246, 1320, 1032], ["banana-plant", 243, 40, 1060],
-    ["rock-shrub", 207, 756, 1165], ["meadow-shrub", 230, 134, 1248],
-    ["water", 92, 748, 1530], ["rock-shrub", 107, 804, 1486],
-    ["meadow-shrub", 185, 1242, 1325], ["banana-plant", 266, 1250, 1426],
-    ["rock-shrub", 222, 136, 1499], ["banana-plant", 298, 108, 1633],
-    ["meadow-shrub", 251, 689, 1718], ["banana-plant", 267, 144, 1803],
-    ["rock-shrub", 196, 559, 1907], ["banana-plant", 280, 1295, 1887],
-    ["meadow-shrub", 209, 1170, 2260], ["rock-shrub", 234, 43, 2262],
-  ],
-  cascade: ["water", 154, 761, 1459, 40],
-  road: [
-    "M 347 2202 C 506 2261 724 2255 835 2146 C 952 2090 1139 2086 1154 1945 C 1183 1794 1017 1765 918 1770 C 700 1791 525 1692 430 1580 C 370 1513 349 1400 442 1327",
-    "M 770 1333 C 839 1348 914 1399 1002 1290 C 1045 1214 935 1108 790 1134 C 630 1160 550 1120 454 1101 C 373 1052 208 1105 194 1023 C 178 953 187 867 241 799 C 284 742 311 736 375 748 C 451 762 504 738 560 748 L 560 784 C 618 824 750 836 924 767 C 1088 711 1240 755 1267 632 C 1295 529 1182 449 1030 427",
-  ],
-};
+export function mapPoint([x, y]: MapPoint, [left, top, scale]: LandmarkLayout): MapPoint {
+  return [left + x * scale, top + y * scale];
+}
 
-export const narrowWorld: WorldLayout = {
-  size: [540, 3440],
-  stops: [
-    [15, 3031, 1, [306, 3351]],
-    [125, 2655, .84, [354, 2963]],
-    [18, 2320, .91, [165, 2628]],
-    [1, 2047, .83, [278, 2326]],
-    [67, 1650, .85, [333, 2008]],
-    [12, 1285, .9, [170, 1634]],
-    [25, 905, .9, [117, 1263]],
-    [66, 524, .83, [361, 891]],
-    [40, 56, .87, [393, 436]],
-  ],
-  scenery: [
-    ["banana-plant", 215, 36, 146], ["rock-shrub", 175, 514, 210],
-    ["meadow-shrub", 158, 48, 469], ["banana-plant", 208, 514, 600],
-    ["rock-shrub", 146, 35, 866], ["banana-plant", 184, 497, 934],
-    ["meadow-shrub", 154, 483, 1280], ["banana-plant", 180, 510, 1506],
-    ["rock-shrub", 150, 44, 1713], ["meadow-shrub", 135, 520, 1817],
-    ["banana-plant", 156, 40, 1951], ["rock-shrub", 128, 503, 2073],
-    ["water", 64, 350, 2316], ["rock-shrub", 74, 383, 2276],
-    ["banana-plant", 180, 504, 2394], ["meadow-shrub", 129, 60, 2684],
-    ["meadow-shrub", 167, 515, 2866], ["banana-plant", 181, 493, 3114],
-    ["rock-shrub", 134, 44, 3380],
-  ],
-  cascade: ["water", 110, 353, 2268, 29],
-  road: [
-    "M 188 3370 C 365 3424 475 3261 452 3090 C 447 3024 410 3026 357 2993 C 294 2949 97 3001 89 2840 C 78 2763 152 2737 186 2660 C 217 2583 137 2514 119 2453 C 101 2367 93 2220 160 2188",
-    "M 379 2191 C 467 2193 500 2126 484 2050 C 464 1985 388 1971 325 1971 C 196 1970 88 1900 88 1788 C 88 1701 137 1670 245 1667 C 388 1667 490 1572 468 1471 C 450 1381 301 1408 174 1322 C 55 1244 124 1202 252 1209 C 329 1211 347 1200 393 1242 L 393 1272 C 486 1276 505 1179 495 1069 C 484 978 413 938 359 916 C 277 884 77 943 70 752 C 64 633 123 471 284 402",
-  ],
-};
+// The route is ordered in travel direction. Only dirt legs are painted as SVG.
+// The stone and stair coordinates also describe the route for future movement.
+export const riverStones = [
+  ["stone-a", 64, 429, 172],
+  ["stone-b", 65, 377, 178],
+  ["stone-a", 68, 323, 183],
+  ["stone-b", 65, 270, 175],
+  ["stone-a", 63, 218, 167],
+] as const satisfies readonly Placement[];
+
+const nearBank = mapPoint([455, 173], stops[3]);
+const farBank = mapPoint([191, 168], stops[3]);
+const stairFoot = mapPoint([280, 400], stops[8]);
+export const journey = [
+  { surface: "dirt", path: `M 278 1256 C 441 1340 538 1260 656 1254 C 782 1255 848 1297 991 1271 C 1063 1255 1110 1248 1203 1249 C 1485 1255 1623 1271 1660 1083 C 1681 976 1690 827 1613 808 C 1576 798 1536 800 ${nearBank.join(" ")}` },
+  { surface: "stones", points: [nearBank, ...riverStones.map(([, , x, y]) => mapPoint([x, y], stops[3])), farBank] },
+  { surface: "dirt", path: `M ${farBank.join(" ")} C 1130 799 1134 867 1060 877 C 975 891 899 846 802 857 C 686 872 576 909 426 884 C 216 886 110 862 94 734 C 70 597 111 517 199 491 C 283 466 368 533 477 526 C 560 517 635 550 734 532 C 855 507 927 536 1023 543 C 1090 546 1113 633 1219 639 C 1306 643 1372 643 1400 622 C 1413 614 1418 608 ${stairFoot.join(" ")}` },
+  { surface: "stairs", points: [stairFoot, mapPoint([280, 178], stops[8]), mapPoint([280, 124], stops[8])] },
+] as const;
+
+export const scenery: Placement[] = [
+  ["banana-plant", 270, 23, 136], ["meadow-shrub", 173, 375, 152],
+  ["banana-plant", 235, 445, 224], ["rock-shrub", 166, 399, 352],
+  ["banana-plant", 244, 1031, 203], ["rock-shrub", 186, 1073, 328],
+  ["banana-plant", 243, 1737, 197], ["meadow-shrub", 176, 1698, 436],
+  ["banana-plant", 170, 36, 496], ["rock-shrub", 137, 54, 666],
+  ["banana-plant", 233, 576, 541], ["meadow-shrub", 148, 549, 659],
+  ["banana-plant", 177, 1129, 570], ["rock-shrub", 155, 1220, 623],
+  ["banana-plant", 197, 1631, 633], ["meadow-shrub", 184, 1729, 754],
+  ["water", 103, 1253, 1001], ["rock-shrub", 137, 1320, 970],
+  ["banana-plant", 239, 1756, 1168], ["meadow-shrub", 181, 1512, 1331],
+  ["banana-plant", 242, 941, 971], ["rock-shrub", 175, 984, 1107],
+  ["banana-plant", 230, 437, 945], ["meadow-shrub", 162, 391, 1023],
+  ["banana-plant", 231, 32, 995], ["rock-shrub", 162, 17, 1275],
+];
+
+export const foreground: Placement[] = [
+  ["meadow-shrub", 184, 470, 425], ["rock-shrub", 105, 239, 806],
+  ["meadow-shrub", 142, 532, 841], ["rock-shrub", 134, 1045, 735],
+  ["banana-plant", 231, 18, 1369], ["meadow-shrub", 145, 740, 1367],
+  ["rock-shrub", 166, 1150, 1354], ["banana-plant", 232, 1749, 1366],
+];
+
+export const cascade: Placement = ["water", 143, 1258, 932, 41];
