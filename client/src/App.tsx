@@ -2905,8 +2905,10 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
       </section>
 
       <div className="grid items-stretch gap-6 md:grid-cols-2">
-        <article className="mode-destination-card mode-destination-learning group" style={{ "--app-bg-desktop": 'url("./assets/learning-map/wc-camp-preview.webp")', "--app-bg-mobile": 'url("./assets/learning-map/wc-camp-preview.webp")' } as React.CSSProperties}>
-          <div className="mode-destination-scene" aria-hidden="true" />
+        <article className="mode-destination-card mode-destination-learning group">
+          <div className="mode-destination-scene" aria-hidden="true">
+            <img src={new URL("assets/learning-map/wc-camp-preview.webp", document.baseURI).href} alt="" />
+          </div>
           <div className="mode-destination-content">
             <h3 className="block text-3xl font-black text-blue-950">
               {lang === "en" ? "Learning Mode" : "Mod Belajar"}

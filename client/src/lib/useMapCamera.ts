@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState, type FocusEvent, type MouseEvent, type PointerEvent } from "react";
 
-const zoomStops = [0.5, 0.75, 1, 1.25, 1.5] as const;
+const zoomStops = [0.25, 0.5, 0.75, 1, 1.25, 1.5] as const;
 const descendingZoomStops = [...zoomStops].reverse();
 const defaultZoom = 1;
+const minZoom = zoomStops[0];
 const maxZoom = zoomStops[zoomStops.length - 1];
 
 type Point = { x: number; y: number };
@@ -15,26 +16,30 @@ export function useMapCamera() {
   const viewport = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const scale = useRef(defaultZoom);
-  const minimum = useRef<number>(zoomStops[0]);
   const [zoom, setZoom] = useState(defaultZoom);
-  const [minZoom, setMinZoom] = useState<number>(zoomStops[0]);
   const pointers = useRef(new Map<number, Point>());
   const pan = useRef<Pan | null>(null);
   const pinch = useRef<Pinch | null>(null);
   const dragged = useRef(false);
 
   function worldPoint(view: HTMLDivElement, position: Point): Point {
-    return { x: (view.scrollLeft + position.x) / scale.current, y: (view.scrollTop + position.y) / scale.current };
+    return {
+      x: (view.scrollLeft + position.x - (track.current?.offsetLeft ?? 0)) / scale.current,
+      y: (view.scrollTop + position.y - (track.current?.offsetTop ?? 0)) / scale.current,
+    };
   }
 
   function applyScale(view: HTMLDivElement, requested: number, position: Point, anchor: Point) {
-    const next = Math.min(maxZoom, Math.max(minimum.current, requested));
+    const next = Math.min(maxZoom, Math.max(minZoom, requested));
     if (next !== scale.current) {
       scale.current = next;
       view.style.setProperty("--map-zoom", String(next));
       setZoom(Math.round(next * 100) / 100);
     }
-    view.scrollTo(anchor.x * next - position.x, anchor.y * next - position.y);
+    view.scrollTo(
+      anchor.x * next + (track.current?.offsetLeft ?? 0) - position.x,
+      anchor.y * next + (track.current?.offsetTop ?? 0) - position.y,
+    );
   }
 
   function zoomAtCenter(requested: number) {
@@ -46,25 +51,7 @@ export function useMapCamera() {
 
   useLayoutEffect(() => {
     const view = viewport.current;
-    const world = track.current;
-    if (!view || !world) return;
-    function updateBounds() {
-      if (!view || !world) return;
-      const width = world.offsetWidth;
-      const height = world.offsetHeight;
-      if (width === 0 || height === 0) return;
-      const fit = Math.max(zoomStops[0], view.clientWidth / width, view.clientHeight / height);
-      const nextMin = Math.ceil(fit * 100) / 100;
-      minimum.current = nextMin;
-      setMinZoom(nextMin);
-      if (scale.current < nextMin) zoomAtCenter(nextMin);
-    }
-    const observer = new ResizeObserver(updateBounds);
-    updateBounds();
-    observer.observe(view);
-    observer.observe(world);
-    view.scrollTo(0, view.scrollHeight);
-    return () => observer.disconnect();
+    view?.scrollTo(0, view.scrollHeight);
   }, []);
 
   function localPoint(event: PointerEvent<HTMLDivElement>): Point {

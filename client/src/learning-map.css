@@ -203,6 +203,7 @@ button.world-nameboard:focus-visible {
   inset: 0;
   overflow: auto;
   overscroll-behavior: none;
+  background: #829461 url("/assets/learning-map/wc-backdrop.webp") center / cover no-repeat;
   scrollbar-width: none;
   overflow-anchor: none;
   scroll-padding: calc(var(--map-toolbar-top) + 42px) 10px 132px;
@@ -219,12 +220,18 @@ button.world-nameboard:focus-visible {
   --map-bottom-clearance: 32px;
   --map-min-width: 1740px;
   --map-width: max(var(--map-min-width), calc(100vw + 160px), calc((100dvh + 100px) * var(--map-ratio)));
-  width: calc(var(--map-width) * var(--map-zoom, 1));
-  height: calc((var(--map-width) / var(--map-ratio) + var(--map-top-clearance) + var(--map-bottom-clearance)) * var(--map-zoom, 1));
+  --map-scaled-width: calc(var(--map-width) * var(--map-zoom, 1));
+  --map-scaled-height: calc((var(--map-width) / var(--map-ratio) + var(--map-top-clearance) + var(--map-bottom-clearance)) * var(--map-zoom, 1));
+  position: relative;
+  width: max(100%, var(--map-scaled-width));
+  height: max(100%, var(--map-scaled-height));
   overflow: clip;
 }
 
 .learning-world-track {
+  position: absolute;
+  top: max(0px, calc((100% - var(--map-scaled-height)) / 2));
+  left: max(0px, calc((100% - var(--map-scaled-width)) / 2));
   width: var(--map-width);
   transform: scale(var(--map-zoom, 1));
   transform-origin: top left;
@@ -326,4 +333,14 @@ button.world-nameboard::before {
     top: calc(var(--map-toolbar-top) + 55px);
     bottom: auto;
   }
+}
+
+
+.mode-destination-learning .mode-destination-scene > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 65%;
 }
