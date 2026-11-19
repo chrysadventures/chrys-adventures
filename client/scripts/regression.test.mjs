@@ -222,8 +222,7 @@ test('successful request reports cloud sync and acknowledges the pending snapsho
 function navigationHarness(name, props, helpers = []) {
   const React = { createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }), Fragment: 'fragment' };
   const context = { React, chrysHappy: 'chrys', chrysRunning: 'chrys', BANANA: 'banana',
-    LEARNING_SECTION_MARKERS: Object.fromEntries(['sky','emerald','violet','amber','teal','rose','orange','navy'].map(c => [c,c])),
-    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','Lock','ArrowRight','AdventureProgress','AdventureWeather','DestinationArt','AdventureMap','MapLocation'].map(c => [c,c])) };
+    ...Object.fromEntries(['Hash','SpriteIcon','ListOrdered','Boxes','Plus','Minus','MapIcon','Star','Compass','Flag','Sparkles','Check','Lock','ArrowRight','AdventureProgress','AdventureWeather','DestinationArt','AdventureMap','MapLocation','IllustratedLearningMap'].map(c => [c,c])) };
   vm.createContext(context);
   for (const fn of [name, ...helpers]) {
     const node = ast.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === fn);
@@ -241,15 +240,14 @@ test('all eight map destinations preserve lesson routes and completion without a
   for (const lang of ['en','ms']) for (const progress of [{}, {recognizeNumbers:1, numberValues:1}]) {
     const visited = [];
     const tree = navigationHarness('MenuScreen', {lang, t: new Proxy({}, {get: (_,key) => String(key)}), player:{name:'Test',progress}, go: route => visited.push(route)});
-    const nodes = elements(tree);
-    const milestones = nodes.filter(n => n.type === 'button' && n.props.className?.includes('journey-milestone'));
-    const cards = nodes.filter(n => n.type === 'button' && n.props.className?.startsWith('meadow-lesson '));
-    assert.equal(milestones.length, 0); assert.equal(cards.length, 8);
-    visited.length = 0; cards.forEach(n => n.props.onClick()); assert.deepEqual(visited, routes);
-    const completed = Object.keys(progress).length;
-    assert.equal(cards.filter(n => n.props['data-complete']).length, completed);
-    assert.equal(cards[completed].props['aria-current'], 'step');
-    assert.deepEqual(cards.map(n=>n.props['data-map-stop']), [1,2,3,4,5,6,7,8]);
+    assert.equal(tree.type, 'IllustratedLearningMap');
+    assert.equal(tree.props.lang, lang);
+    const lessons = tree.props.lessons;
+    assert.equal(lessons.length, routes.length);
+    lessons.forEach(lesson => lesson.onClick());
+    assert.deepEqual(visited, routes);
+    assert.equal(lessons.filter(lesson => lesson.complete).length, Object.keys(progress).length);
+    assert.equal(elements(tree).filter(node => node.type === 'button').length, 0);
   }
 });
 test('mission renders exactly one button, title and description while preserving disabled and completed states', () => {

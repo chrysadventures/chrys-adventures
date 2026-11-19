@@ -1,4 +1,5 @@
 import { AdventureMap, MapLocation } from "./components/AdventureMap";
+import { IllustratedLearningMap } from "./components/IllustratedLearningMap";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -7,20 +8,16 @@ import {
   ArrowLeftRight,
   ArrowRight,
   BookOpen,
-  Boxes,
   Check,
   CircleAlert,
   CloudCheck,
   Compass,
   Eraser,
   Flag,
-  Hash,
   KeyRound,
   Layers3,
-  ListOrdered,
   LoaderCircle,
   Lock,
-  Map as MapIcon,
   Minus,
   Plus,
   RefreshCw,
@@ -1922,7 +1919,7 @@ function App() {
     setLastAdvancedTestScore(null);
     setCompletedLesson(null);
     setScreen(next);
-    window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
+    if (next !== "menu") window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "auto" : "smooth" });
   };
 
   const finishTest = (key: string, correct: number, total: number) => {
@@ -2012,13 +2009,13 @@ function App() {
   return (
     <AudioEnabledContext.Provider value={soundEnabled}>
       <div
-        className={`page-bg ${isCyberBackground ? "sunset-theme" : "learning-theme"} min-h-[100dvh] text-slate-800 font-sans overflow-x-hidden`}
+        className={`page-bg ${isCyberBackground ? "sunset-theme" : "learning-theme"} min-h-[100dvh] text-slate-800 font-sans ${screen === "menu" ? "overflow-x-clip" : "overflow-x-hidden"}`}
         style={backgroundStyle}
         onPointerDownCapture={markAudioInteraction}
         onKeyDownCapture={markAudioInteraction}
       >
       <Decor />
-      <div className={`app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full flex-col px-4 py-4 md:px-8 ${screen.startsWith("advanced") ? "max-w-[90rem]" : "max-w-6xl"}`}>
+      <div className={`app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full flex-col px-4 py-4 md:px-8 ${screen === "menu" ? "learning-map-frame max-w-[100rem]" : screen.startsWith("advanced") ? "max-w-[90rem]" : "max-w-6xl"}`}>
         <Header
           lang={lang}
           onToggleLang={() => setLang((current) => (current === "en" ? "ms" : "en"))}
@@ -2988,17 +2985,6 @@ function ModeSelectScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; p
 
 type LearningSectionColor = "sky" | "emerald" | "violet" | "amber" | "teal" | "rose" | "orange" | "navy";
 
-const LEARNING_SECTION_MARKERS: Record<LearningSectionColor, string> = {
-  sky: "bg-sky-500 shadow-[0_4px_0_#0369a1]",
-  emerald: "bg-emerald-600 shadow-[0_4px_0_#065f46]",
-  violet: "bg-purple-600 shadow-[0_4px_0_#6b21a8]",
-  amber: "bg-yellow-400 text-yellow-950 shadow-[0_4px_0_#ca8a04]",
-  teal: "bg-cyan-500 shadow-[0_4px_0_#0e7490]",
-  rose: "bg-pink-600 shadow-[0_4px_0_#be185d]",
-  orange: "bg-orange-600 shadow-[0_4px_0_#c2410c]",
-  navy: "bg-slate-900 text-yellow-200 shadow-[0_4px_0_#020617]",
-};
-
 function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void }) {
   const completed = {
     recognize: (player.progress.recognizeNumbers ?? 0) > 0 || (player.progress.learnRecognize ?? 0) > 0,
@@ -3012,180 +2998,18 @@ function MenuScreen({ lang, t, player, go }: { lang: Lang; t: UIStrings; player:
   const testModeComplete = ["testNumbers", "testOperations", "testReal"].every((key) =>
     Object.prototype.hasOwnProperty.call(player.progress, key),
   );
-  const stages = [
-    {
-      number: 1,
-      title: lang === "en" ? "Discover numbers" : "Kenali nombor",
-      help: lang === "en" ? "Meet numbers, their values, and their order." : "Kenali nombor, nilai, dan susunannya.",
-      accent: "sky" as const,
-      sections: [
-        {
-          title: t.recognizeNumbers,
-          subtitle: lang === "en" ? "See, spell, trace, and write" : "Lihat, eja, ikut garisan, dan tulis",
-          icon: <Hash className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
-          color: "sky" as const,
-          complete: completed.recognize,
-          onClick: () => go("learnRecognize"),
-        },
-        {
-          title: t.numberValues,
-          subtitle: lang === "en" ? "Find how many objects there are" : "Cari berapa banyak objek",
-          icon: <SpriteIcon value={BANANA} className="h-12 w-12" />,
-          color: "emerald" as const,
-          complete: completed.values,
-          onClick: () => go("learnValues"),
-        },
-        {
-          title: t.sequencing,
-          subtitle: lang === "en" ? "Put numbers in the right order" : "Susun nombor dengan betul",
-          icon: <ListOrdered className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
-          color: "violet" as const,
-          complete: completed.sequencing,
-          onClick: () => go("learnSequencing"),
-        },
-      ],
-    },
-    {
-      number: 2,
-      title: lang === "en" ? "Build maths skills" : "Bina kemahiran matematik",
-      help: lang === "en" ? "Make groups, add more, and take away." : "Bina kumpulan, tambah, dan ambil.",
-      accent: "emerald" as const,
-      sections: [
-        {
-          title: t.groupingMode,
-          subtitle: t.groupingModeShort,
-          icon: <Boxes className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
-          color: "amber" as const,
-          complete: completed.grouping,
-          onClick: () => go("groupingMode"),
-        },
-        {
-          title: t.addition,
-          subtitle: lang === "en" ? "Put groups together" : "Gabungkan kumpulan",
-          icon: <Plus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
-          color: "teal" as const,
-          complete: completed.addition,
-          onClick: () => go("learnAddition"),
-        },
-        {
-          title: t.subtraction,
-          subtitle: lang === "en" ? "Take bananas away" : "Ambil pisang",
-          icon: <Minus className="h-11 w-11" strokeWidth={4} aria-hidden="true" />,
-          color: "rose" as const,
-          complete: completed.subtraction,
-          onClick: () => go("learnSubtraction"),
-        },
-      ],
-    },
-    {
-      number: 3,
-      title: lang === "en" ? "Use what you know" : "Guna apa yang dipelajari",
-      help: lang === "en" ? "Solve stories, then celebrate what you learned." : "Selesaikan cerita, kemudian raikan apa yang dipelajari.",
-      accent: "amber" as const,
-      sections: [
-        {
-          title: t.learnReal,
-          subtitle: lang === "en" ? "Solve simple everyday stories" : "Selesaikan cerita harian mudah",
-          icon: <MapIcon className="h-10 w-10" strokeWidth={3} aria-hidden="true" />,
-          color: "orange" as const,
-          complete: completed.realWorld,
-          onClick: () => go("learnReal"),
-        },
-        {
-          title: t.testMode,
-          subtitle: t.testHelp,
-          icon: <Star className="h-11 w-11" fill="currentColor" strokeWidth={2.5} aria-hidden="true" />,
-          color: "navy" as const,
-          complete: testModeComplete,
-          onClick: () => go("testMenu"),
-        },
-      ],
-    },
+  const lessons = [
+    { title: t.recognizeNumbers, complete: completed.recognize, onClick: () => go("learnRecognize") },
+    { title: t.numberValues, complete: completed.values, onClick: () => go("learnValues") },
+    { title: t.sequencing, complete: completed.sequencing, onClick: () => go("learnSequencing") },
+    { title: t.groupingMode, complete: completed.grouping, onClick: () => go("groupingMode") },
+    { title: t.addition, complete: completed.addition, onClick: () => go("learnAddition") },
+    { title: t.subtraction, complete: completed.subtraction, onClick: () => go("learnSubtraction") },
+    { title: t.learnReal, complete: completed.realWorld, onClick: () => go("learnReal") },
+    { title: t.testMode, complete: testModeComplete, onClick: () => go("testMenu") },
   ];
 
-  const trailDestinations = [
-    {
-      label: lang === "en" ? "Recognize" : "Kenal",
-      complete: completed.recognize,
-      markerClass: LEARNING_SECTION_MARKERS.sky,
-    },
-    {
-      label: lang === "en" ? "Values" : "Nilai",
-      complete: completed.values,
-      markerClass: LEARNING_SECTION_MARKERS.emerald,
-    },
-    {
-      label: lang === "en" ? "Order" : "Susunan",
-      complete: completed.sequencing,
-      markerClass: LEARNING_SECTION_MARKERS.violet,
-    },
-    {
-      label: lang === "en" ? "Groups" : "Kumpulan",
-      complete: completed.grouping,
-      markerClass: LEARNING_SECTION_MARKERS.amber,
-    },
-    {
-      label: lang === "en" ? "Addition" : "Tambah",
-      complete: completed.addition,
-      markerClass: LEARNING_SECTION_MARKERS.teal,
-    },
-    {
-      label: lang === "en" ? "Subtraction" : "Tolak",
-      complete: completed.subtraction,
-      markerClass: LEARNING_SECTION_MARKERS.rose,
-    },
-    {
-      label: lang === "en" ? "Real world" : "Aplikasi",
-      complete: completed.realWorld,
-      markerClass: LEARNING_SECTION_MARKERS.orange,
-    },
-    {
-      label: lang === "en" ? "Tests" : "Ujian",
-      complete: testModeComplete,
-      markerClass: LEARNING_SECTION_MARKERS.navy,
-    },
-  ];
-
-  const currentDestination = trailDestinations.findIndex((destination) => !destination.complete);
-  let destinationNumber = 0;
-
-  return (
-    <main className="storybook-menu connected-world mx-auto flex w-full max-w-6xl flex-1 flex-col pb-10">
-      <AdventureWeather lang={lang} />
-      <header className="map-introduction">
-        <span className="map-kicker">{lang === "en" ? "MEADOW JOURNEY" : "PENGEMBARAAN PADANG RUMPUT"}</span>
-        <h2>{lang === "en" ? `Let's explore, ${player.name}!` : `Mari meneroka, ${player.name}!`}</h2>
-        <p>{t.menuTitle}</p>
-        <AdventureProgress value={trailDestinations.filter((item) => item.complete).length} total={trailDestinations.length} label={lang === "en" ? "Your journey" : "Perjalanan kamu"} />
-      </header>
-      <AdventureMap>
-      {stages.map((stage) => (
-        <section key={stage.number} className="map-stage" data-stage={stage.number} aria-label={stage.title}>
-          <header className="map-stage-heading"><span>{lang === "en" ? `Stage ${stage.number}` : `Peringkat ${stage.number}`}</span><h3>{stage.title}</h3></header>
-          <div className="map-destinations">
-            {stage.sections.map((section) => {
-              destinationNumber += 1;
-              const current = destinationNumber === (currentDestination < 0 ? 8 : currentDestination + 1);
-              return <button key={section.title} type="button" onClick={section.onClick}
-                className={`meadow-lesson map-stop map-stop-${destinationNumber}`} data-map-stop={destinationNumber} data-complete={section.complete} data-current={current} aria-current={current ? "step" : undefined}
-                aria-label={`${destinationNumber}. ${section.title}. ${section.subtitle}. ${section.complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : (lang === "en" ? "Available" : "Tersedia")}`}>
-                <span className="map-pin" data-map-pin aria-hidden="true">{destinationNumber}{section.complete && <Check className="map-stamp" />}</span>
-                <DestinationArt index={destinationNumber} />
-                {current && <span className="map-companion"><img src={chrysHappy} alt="Chrys" /><span>{lang === "en" ? (currentDestination < 0 ? "Journey complete!" : "Let's go!") : (currentDestination < 0 ? "Perjalanan selesai!" : "Jom!")}</span></span>}
-                <span className="map-sign">
-                  <span className="map-lesson-title">{section.title}</span>
-                  <MapLocation index={destinationNumber} lang={lang} />
-                  <span className="map-description">{section.subtitle}</span>
-                  <span className="map-status">{section.complete ? (lang === "en" ? "Completed — play again" : "Selesai — main semula") : current ? (lang === "en" ? "Next adventure" : "Pengembaraan seterusnya") : (lang === "en" ? "Let's explore" : "Mari teroka")}<ArrowRight aria-hidden="true" /></span>
-                </span>
-              </button>;
-            })}
-          </div>
-        </section>
-      ))}
-      </AdventureMap>
-    </main>
-  );
+  return <IllustratedLearningMap lang={lang} lessons={lessons} />;
 }
 
 function AdvancedMenuScreen({ lang, t, player, go, testingMode = false }: { lang: Lang; t: UIStrings; player: Player; go: (screen: Screen) => void; testingMode?: boolean }) {
