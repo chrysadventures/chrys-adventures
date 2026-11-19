@@ -205,19 +205,29 @@ button.world-nameboard:focus-visible {
   overscroll-behavior: none;
   scrollbar-width: none;
   overflow-anchor: none;
-  scroll-padding: calc(var(--map-toolbar-top) + 42px) 10px 86px;
+  scroll-padding: calc(var(--map-toolbar-top) + 42px) 10px 132px;
   cursor: grab;
   isolation: isolate;
-  touch-action: pan-x pan-y;
+  touch-action: none;
   user-select: none;
 }
 
 .learning-world-camera::-webkit-scrollbar { display: none; }
 
-.learning-world-track {
+.learning-world-extent {
+  --map-top-clearance: calc(var(--map-ui-top) + 64px);
+  --map-bottom-clearance: 32px;
   --map-min-width: 1740px;
   --map-width: max(var(--map-min-width), calc(100vw + 160px), calc((100dvh + 100px) * var(--map-ratio)));
+  width: calc(var(--map-width) * var(--map-zoom, 1));
+  height: calc((var(--map-width) / var(--map-ratio) + var(--map-top-clearance) + var(--map-bottom-clearance)) * var(--map-zoom, 1));
+  overflow: clip;
+}
+
+.learning-world-track {
   width: var(--map-width);
+  transform: scale(var(--map-zoom, 1));
+  transform-origin: top left;
 }
 
 /* Reflect only the existing terrain at the edges to give the floating controls clearance. */
@@ -225,13 +235,13 @@ button.world-nameboard:focus-visible {
 .learning-world-track::after {
   content: "";
   display: block;
-  height: calc(var(--map-ui-top) + 64px);
+  height: var(--map-top-clearance);
   background: url("/assets/learning-map/wc-landscape.webp") center top / 100% calc(var(--map-width) / var(--map-ratio)) no-repeat;
   transform: scaleY(-1);
 }
 
 .learning-world-track::after {
-  height: 32px;
+  height: var(--map-bottom-clearance);
   background-position: center bottom;
 }
 
@@ -245,7 +255,7 @@ button.world-nameboard:focus-visible {
 .world-stone-number { font-size: clamp(17px, 1.85vw, 25px); }
 
 @media (max-width: 800px) {
-  .learning-world-track { --map-min-width: 1420px; }
+  .learning-world-extent { --map-min-width: 1420px; }
   .world-nameboard { width: 145px; padding: 9px 12px; }
   .world-stop-number { width: 24px; height: 24px; font-size: 13px; top: -8px; left: 3px; }
   .world-stop-name, .world-welcome h2 { font-size: 13px; }
@@ -261,6 +271,59 @@ button.world-nameboard:focus-visible {
 
   .learning-map-frame > .app-save-status > span,
   .learning-map-frame > .app-save-status > button { font-size: 11px; padding: 5px 8px; }
-  .learning-world-camera { scroll-padding-bottom: 105px; }
-  .learning-world-track::after { height: 48px; }
+  .learning-world-camera {
+    scroll-padding-top: calc(var(--map-toolbar-top) + 112px);
+    scroll-padding-bottom: 105px;
+  }
+  .learning-world-extent { --map-bottom-clearance: 48px; }
+}
+
+
+.world-zoom-controls {
+  position: absolute;
+  right: var(--map-ui-inset);
+  bottom: calc(var(--map-ui-bottom) + 66px);
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid #b1bf86;
+  border-radius: 16px;
+  background: #f4f6df;
+  color: #2e472b;
+  box-shadow: 0 2px 4px #384d323b;
+}
+
+.world-zoom-controls button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.world-zoom-controls button:enabled:hover { background: #e4ecd0; }
+.world-zoom-controls button:disabled { opacity: .45; cursor: default; }
+.world-zoom-controls button:focus-visible { outline: 2px solid #456c38; outline-offset: -3px; }
+.world-zoom-controls svg { width: 19px; height: 19px; }
+.world-zoom-controls output { min-width: 42px; text-align: center; font-size: 13px; font-weight: 900; }
+button.world-nameboard:focus-visible {
+  transform: translate(-50%, -50%) scale(max(1, calc(1 / var(--map-zoom, 1))));
+  z-index: 8;
+}
+button.world-nameboard::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: max(100%, calc(44px / var(--map-zoom, 1)));
+  transform: translateY(-50%);
+}
+
+@media (max-width: 480px) {
+  .world-zoom-controls {
+    top: calc(var(--map-toolbar-top) + 55px);
+    bottom: auto;
+  }
 }
