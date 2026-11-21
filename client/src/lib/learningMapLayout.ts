@@ -88,3 +88,22 @@ export const foreground: Placement[] = [
   ["wc-butterfly", 45, 382, 1187], ["wc-butterfly", 39, 308, 719],
   ["wc-dragonfly-clean", 76, 1535, 824], ["wc-snail-clean", 74, 497, 517],
 ];
+
+// World Overview markers: the centre of each illustrated landmark, in curriculum order (START first).
+// Read-only references to the existing stations; they do not move anything.
+export const overviewMarkers = [
+  [250, 1290], [640, 1235], [1520, 1320], [1585, 1050], [1010, 800],
+  [480, 745], [290, 385], [1560, 405], [965, 255],
+] as const satisfies readonly MapPoint[];
+
+export type EdgeFoliage = readonly [sprite: "wc-banana-clean" | "wc-rocks-clean", width: number, x: number, y: number, flip?: boolean];
+
+// Decorative forest that straddles the world's dissolved edge and continues below it on tall screens.
+// Kept clear of the route (which runs close to the right edge between y 900 and 1350) and of every station.
+export const edgeFoliage: EdgeFoliage[] = [
+  ["wc-banana-clean", 300, -70, 250], ["wc-rocks-clean", 240, -60, 900, true],
+  ["wc-banana-clean", 280, 2010, 290, true], ["wc-rocks-clean", 230, 2020, 820],
+  ["wc-banana-clean", 290, 30, 1560, true], ["wc-rocks-clean", 260, 820, 1590], ["wc-banana-clean", 270, 1900, 1560],
+  // understorey continuing below the world (only seen when the screen is taller than the world)
+  ["wc-banana-clean", 360, 420, 1810], ["wc-rocks-clean", 300, 1250, 1800, true], ["wc-banana-clean", 340, 1720, 1860, true],
+];

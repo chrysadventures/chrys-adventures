@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Overview Review</title>
+<style>
+  :root { --bg: #f3f1e4; --ink: #2e3b24; --muted: #5d6a50; --card: #fffdf4; --edge: #d8d3b8; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { margin: 0 0 4px; font-size: 28px; } h2 { margin: 40px 0 6px; font-size: 20px; }
+  p { margin: 4px 0 12px; color: var(--muted); max-width: 70ch; }
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--edge); border-radius: 12px; padding: 10px; }
+  figure img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: #e6e0c4; color: #5a4a1c; margin-right: 6px; }
+  .tag.new { background: #d6ead0; color: #2f5b2a; }
+</style>
+</head>
+<body>
+<main>
+  <h1>World Overview: design review</h1>
+  <p>Prototype screens for approval. The "Current" screens are the 21 November audit captures at today's 50% zoom. See PROPOSAL.md for the interaction model, the required artwork and the open decisions.</p>
+
+  <h2>Desktop</h2>
+  <div class="pair">
+    <figure><img src="../../screenshots/phase-3-deployment-audit/LOCAL-desktop-50.png" alt=""><figcaption><span class="tag">Current</span>1440×900 at 50%: hard rectangle over a separate backdrop.</figcaption></figure>
+    <figure><img src="screens/01-desktop-1440-overview-en.png" alt=""><figcaption><span class="tag new">Proposal</span>World Overview: feathered edge, painted surround, pins with labels.</figcaption></figure>
+    <figure><img src="screens/02-desktop-1920-overview-en.png" alt=""><figcaption><span class="tag new">Proposal</span>1920×1080.</figcaption></figure>
+    <figure><img src="screens/03-desktop-1440-overview-ms.png" alt=""><figcaption><span class="tag new">Proposal</span>Bahasa Melayu.</figcaption></figure>
+  </div>
+
+  <h2>Tablet</h2>
+  <div class="pair">
+    <figure><img src="../../screenshots/phase-3-deployment-audit/LOCAL-tablet-50.png" alt=""><figcaption><span class="tag">Current</span>768×1024 at 50%.</figcaption></figure>
+    <figure><img src="screens/04-tablet-768-overview-en.png" alt=""><figcaption><span class="tag new">Proposal</span>Portrait overview. The sky ridge and floor are stand-ins for artwork A and B.</figcaption></figure>
+    <figure><img src="screens/06-tablet-768-overview-ms.png" alt=""><figcaption><span class="tag new">Proposal</span>Portrait, Malay.</figcaption></figure>
+    <figure><img src="screens/05-tablet-1024-landscape-overview-en.png" alt=""><figcaption><span class="tag new">Proposal</span>1024×768 landscape.</figcaption></figure>
+    <figure><img src="screens/11-tablet-768-explore50-current-edge.png" alt=""><figcaption><span class="tag">Current</span>Explore at 50%: map edge over the backdrop.</figcaption></figure>
+    <figure><img src="screens/10-tablet-768-explore50-new-edge.png" alt=""><figcaption><span class="tag new">Proposal</span>Explore at 50% with the same surround and a "Whole map" button.</figcaption></figure>
+  </div>
+
+  <h2>Phone</h2>
+  <div class="pair">
+    <figure><img src="../../screenshots/phase-3-deployment-audit/LOCAL-mobile-50.png" alt=""><figcaption><span class="tag">Current</span>375×812 at 50%: not every place is visible.</figcaption></figure>
+    <figure><img src="screens/07-mobile-390-overview-en.png" alt=""><figcaption><span class="tag new">Proposal</span>All nine pins plus the Next adventure card.</figcaption></figure>
+    <figure><img src="screens/08-mobile-390-overview-ms.png" alt=""><figcaption><span class="tag new">Proposal</span>Malay.</figcaption></figure>
+    <figure><img src="screens/09-mobile-844-landscape-overview-en.png" alt=""><figcaption><span class="tag new">Proposal</span>Phone landscape: compact header, pins only.</figcaption></figure>
+  </div>
+</main>
+</body>
+</html>

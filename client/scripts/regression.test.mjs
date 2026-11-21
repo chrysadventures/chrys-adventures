@@ -397,3 +397,66 @@ test('map route connects every destination in order across row turns and mobile 
   assert.ok(mobile.endsWith('27 2010'));
   assert.ok(!mobile.includes('NaN'));
 });
+
+function loadModule(path) {
+  const text = readFileSync(new URL(path, import.meta.url), 'utf8');
+  const context = { exports: {} };
+  vm.runInNewContext(ts.transpile(text, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }), context);
+  return context.exports;
+}
+
+test('explore zoom is centralised and bounded at 50% to 150%', () => {
+  const { MAP_CAMERA, clampZoom, nextZoomStop } = loadModule('../src/lib/mapCameraConfig.ts');
+  assert.equal(MAP_CAMERA.minZoom, 0.5);
+  assert.equal(MAP_CAMERA.maxZoom, 1.5);
+  assert.equal(MAP_CAMERA.zoomStops[0], MAP_CAMERA.minZoom);
+  assert.equal(MAP_CAMERA.zoomStops.at(-1), MAP_CAMERA.maxZoom);
+  assert.equal(clampZoom(0.25), 0.5, 'pinch cannot go below 50%');
+  assert.equal(clampZoom(3), 1.5);
+  assert.equal(nextZoomStop(0.5, -1), 0.5, 'minus stops at 50%');
+  assert.equal(nextZoomStop(0.62, -1), 0.5, 'a pinched scale snaps to the next stop down');
+  assert.equal(nextZoomStop(1, 1), 1.25);
+  assert.equal(nextZoomStop(1.5, 1), 1.5);
+  const camera = readFileSync(new URL('../src/lib/useMapCamera.ts', import.meta.url), 'utf8');
+  assert.ok(!/0\.25|zoomStops\s*=/.test(camera), 'the camera hook reads limits from MAP_CAMERA only');
+});
+
+test('world overview fits the whole world, keeps its proportions and avoids floating controls', () => {
+  const { fitWorld } = loadModule('../src/lib/mapCameraConfig.ts');
+  const world = { width: 1740, height: 1740 / (1940 / 1520) };
+  const cases = [
+    { name: 'desktop', vw: 1440, vh: 900, hud: [[12, 12, 1428, 84], [12, 96, 150, 126], [1263, 96, 1428, 140], [1090, 770, 1428, 822], [1200, 836, 1428, 888]] },
+    { name: 'tablet', vw: 768, vh: 1024, hud: [[12, 12, 756, 84], [12, 96, 150, 126], [591, 96, 756, 140], [420, 894, 756, 946], [520, 960, 756, 1012]] },
+    { name: 'phone', vw: 390, vh: 844, hud: [[8, 8, 382, 72], [8, 84, 210, 120], [217, 84, 382, 128], [60, 139, 382, 191], [160, 792, 382, 836]] },
+    { name: 'phone landscape', vw: 844, vh: 390, hud: [[12, 12, 832, 84], [12, 96, 230, 126], [667, 96, 832, 140], [690, 230, 832, 326], [640, 330, 832, 378]] },
+  ];
+  for (const { name, vw, vh, hud } of cases) {
+    const obstacles = hud.map(([left, top, right, bottom]) => ({ left, top, right, bottom }));
+    const fit = fitWorld({ width: vw, height: vh }, world, obstacles);
+    const box = { left: fit.x, top: fit.y, right: fit.x + world.width * fit.scale, bottom: fit.y + world.height * fit.scale };
+    assert.ok(box.left >= 0 && box.top >= 0 && box.right <= vw && box.bottom <= vh, `${name}: whole world on screen`);
+    for (const r of obstacles) {
+      const overlaps = box.left < r.right && box.right > r.left && box.top < r.bottom && box.bottom > r.top;
+      assert.ok(!overlaps, `${name}: world clear of interface ${JSON.stringify(r)}`);
+    }
+    assert.ok(Math.abs((box.right - box.left) / (box.bottom - box.top) - 1940 / 1520) < 1e-9, `${name}: proportions preserved`);
+    assert.ok(fit.scale > 0.1, `${name}: overview stays legible (${fit.scale.toFixed(3)})`);
+  }
+  const phone = fitWorld({ width: 390, height: 844 }, world, []);
+  assert.ok(phone.scale < 0.5, 'a phone overview may be smaller than the 50% explore minimum');
+});
+
+test('overview markers and the surrounding forest leave the nine stations and route untouched', () => {
+  const layout = loadModule('../src/lib/learningMapLayout.ts');
+  assert.equal(layout.overviewMarkers.length, 9);
+  assert.equal(layout.stops.length, 9);
+  for (const [x, y] of layout.overviewMarkers) assert.ok(x > 0 && x < 1940 && y > 0 && y < 1520);
+  assert.equal(layout.stops[8].slice(0, 2).join(','), '638,32', 'summit stays at the top centre');
+  for (const [, width, x, y] of layout.edgeFoliage) {
+    assert.ok(x <= 60 || x >= 1880 || y >= 1540, `edge foliage at ${x},${y} sits on or beyond the world edge`);
+    for (const [mx, my] of layout.overviewMarkers) assert.ok(Math.hypot(mx - x, my - y) > width / 2 + 60, `foliage at ${x},${y} clear of station ${mx},${my}`);
+  }
+  const css = readFileSync(new URL('../src/learning-map.css', import.meta.url), 'utf8');
+  assert.ok(!/scaleY\(-1\)/.test(css), 'no mirrored terrain');
+  assert.ok(!css.includes('wc-backdrop'), 'no stretched backdrop behind the map');
+});

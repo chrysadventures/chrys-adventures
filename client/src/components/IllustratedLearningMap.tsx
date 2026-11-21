@@ -1,16 +1,22 @@
 import type { CSSProperties } from "react";
-import { ArrowRight, Check, Minus, Plus, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Flag, Map as MapIcon, Minus, Plus, RotateCcw } from "lucide-react";
 import chrys from "@assets/chrys_sitting_new_user_nobg.png";
 import alyse from "@assets/alyse_normal_nobg.png";
 import { AdventureProgress } from "./AdventureUI";
 import { landmarks, spriteSize, type MapSprite, type Placement } from "../lib/learningMapArt";
-import { foreground, journey, riverStones, scenery, stops, worldSize, type LandmarkLayout, type MapPoint } from "../lib/learningMapLayout";
+import { edgeFoliage, foreground, journey, overviewMarkers, riverStones, scenery, stops, worldSize, type LandmarkLayout, type MapPoint } from "../lib/learningMapLayout";
 import { useMapCamera } from "../lib/useMapCamera";
 import "../learning-map.css";
 
 const names = {
   en: ["Adventure Camp", "Number Treehouse", "Counting Banana Grove", "River Stone Crossing", "Banana Sorting Grove", "Banana Gathering Meadow", "Takeaway Clearing", "Jungle Market Village", "Grand Star Summit"],
   ms: ["Kem Pengembaraan", "Rumah Pokok Nombor", "Kebun Mengira Pisang", "Lintasan Batu Sungai", "Rimbun Mengumpul Pisang", "Padang Mengumpul Pisang", "Laman Tolak", "Kampung Pasar Rimba", "Puncak Bintang Agung"],
+};
+const labels = {
+  en: { overview: "World Overview", back: "Return to map", explore: "Drag to explore", choose: "Tap a place to visit it",
+    controls: "Map view", places: "All places", start: "Start", done: "Completed", next: "Next adventure", open: "Available" },
+  ms: { overview: "Seluruh Peta", back: "Kembali ke peta", explore: "Seret untuk meneroka", choose: "Ketik tempat untuk melawatnya",
+    controls: "Paparan peta", places: "Semua tempat", start: "Mula", done: "Selesai", next: "Pengembaraan seterusnya", open: "Tersedia" },
 };
 const order = ["camp", "treehouse", "orchard", "river", "sorting", "gathering", "takeaway", "market", "summit"] as const;
 const groundSprites = new Set<MapSprite>(["wc-water", "wc-left-bank", "wc-right-bank"]);
@@ -43,7 +49,9 @@ function at(placement: Placement, [x, y, scale]: LandmarkLayout): Placement {
 type LessonStop = { title: string; complete: boolean; onClick: () => void };
 
 export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; lessons: LessonStop[] }) {
-  const camera = useMapCamera();
+  const camera = useMapCamera(worldSize);
+  const overview = camera.mode === "overview";
+  const text = labels[lang];
   const current = lessons.findIndex(lesson => !lesson.complete);
   const completed = lessons.filter(lesson => lesson.complete).length;
   const [width, height] = worldSize;
@@ -51,20 +59,34 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
   const isEnglish = lang === "en";
 
   return <main className="learning-world-menu" aria-label={isEnglish ? "Learning Adventure" : "Pengembaraan Pembelajaran"}>
-    <p className="world-explorer-hint">{isEnglish ? "Drag to explore" : "Seret untuk meneroka"}</p>
-    <div className="world-journey-progress">
+    <p className="world-explorer-hint" data-map-hud>{overview ? <>
+      <span className="world-hint-choose">{text.choose}</span>
+      {current >= 0 && <span className="world-hint-next">{text.next}: {current + 1}. {names[lang][current + 1]}</span>}
+    </> : text.explore}</p>
+    <div className="world-journey-progress" data-map-hud>
       <AdventureProgress value={completed} total={lessons.length} label={isEnglish ? "Your journey" : "Perjalanan kamu"} />
     </div>
-    <div className="world-zoom-controls" role="group" aria-label={isEnglish ? "Map zoom" : "Zum peta"}>
-      <button type="button" onClick={camera.zoomOut} disabled={camera.zoom <= camera.minZoom + 0.001}
-        aria-label={isEnglish ? "Zoom out" : "Zum keluar"}><Minus aria-hidden="true" /></button>
-      <output aria-live="polite">{Math.round(camera.zoom * 100)}%</output>
-      <button type="button" onClick={camera.zoomIn} disabled={camera.zoom >= camera.maxZoom - 0.001}
-        aria-label={isEnglish ? "Zoom in" : "Zum masuk"}><Plus aria-hidden="true" /></button>
-      <button type="button" onClick={camera.reset}
-        aria-label={isEnglish ? "Reset zoom to 100%" : "Tetapkan semula zum kepada 100%"}>
-        <RotateCcw aria-hidden="true" />
+    <div className="world-camera-controls" role="group" aria-label={text.controls} data-map-hud data-mode={camera.mode}>
+      <button type="button" className="world-overview-toggle"
+        onClick={overview ? () => camera.exitOverview() : camera.enterOverview}>
+        {overview ? <ArrowLeft aria-hidden="true" /> : <MapIcon aria-hidden="true" />}
+        <span>{overview ? text.back : text.overview}</span>
       </button>
+      <div className="world-zoom-controls" role="group" aria-label={isEnglish ? "Map zoom" : "Zum peta"}>
+        {overview ? <output aria-live="polite" className="world-overview-status">
+          <MapIcon aria-hidden="true" />{text.overview}
+        </output> : <>
+          <button type="button" onClick={camera.zoomOut} disabled={camera.zoom <= camera.minZoom + 0.001}
+            aria-label={isEnglish ? "Zoom out" : "Zum keluar"}><Minus aria-hidden="true" /></button>
+          <output aria-live="polite">{Math.round(camera.zoom * 100)}%</output>
+          <button type="button" onClick={camera.zoomIn} disabled={camera.zoom >= camera.maxZoom - 0.001}
+            aria-label={isEnglish ? "Zoom in" : "Zum masuk"}><Plus aria-hidden="true" /></button>
+          <button type="button" onClick={camera.reset}
+            aria-label={isEnglish ? "Reset zoom to 100%" : "Tetapkan semula zum kepada 100%"}>
+            <RotateCcw aria-hidden="true" />
+          </button>
+        </>}
+      </div>
     </div>
     <div className="learning-world-camera" ref={camera.viewport}
       onPointerDown={camera.start} onPointerMove={camera.move}
@@ -72,7 +94,9 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
       onClickCapture={camera.filterClick} onFocusCapture={camera.revealFocus}>
       <div className="learning-world-extent" style={{ "--map-ratio": width / height } as CSSProperties}>
         <div className="learning-world-track" ref={camera.track}>
+          <div className="learning-world-surround" aria-hidden="true"><i className="surround-ground" /><i className="surround-sky" /><i className="surround-hills" /></div>
           <div className="learning-world" data-learning-map style={{ aspectRatio: `${width} / ${height}`, "--map-nameboard": `url("${asset("nameboard")}")` } as CSSProperties}>
+            <div className="learning-world-art">
             {scenery.map((placement, i) => (
               <Sprite key={i} placement={placement} world={worldSize} className="world-verge" />
             ))}
@@ -80,6 +104,7 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
               <Sprite key={`${kit}-${j}`} placement={at(placement, stops[i])} world={worldSize}
                 className="world-ground" eager={i < 2} />
             )))}
+            </div>
             <svg className="learning-world-road" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
               <defs>
                 <pattern id="learning-trail-paint" width="100" height="115" patternUnits="userSpaceOnUse">
@@ -135,6 +160,10 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
             {foreground.map((placement, i) => (
               <Sprite key={i} placement={placement} world={worldSize} className="world-foreground" />
             ))}
+            {edgeFoliage.map(([sprite, span, x, y, flip], i) => (
+              <Sprite key={`edge-${i}`} placement={[sprite, span, x, y]} world={worldSize}
+                className={`world-edge-foliage${flip ? " is-flipped" : ""}`} />
+            ))}
             <img className="world-character" src={chrys} alt="Chrys" width="232" height="243"
               style={{ ...position(campX + 154 * campScale, campY + 272 * campScale, worldSize), width: `${80 / width * 100}%` }} />
             <img className="world-character" src={alyse} alt="Alyse" width="207" height="305"
@@ -163,6 +192,29 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
                 </span>
               </button>;
             })}
+            <nav className="world-overview-pins" aria-label={text.places} hidden={!overview}>
+              {overviewMarkers.map(([x, y], i) => {
+                const lesson = lessons[i - 1];
+                const state = i === 0 ? "start" : lesson.complete ? "complete" : current === i - 1 ? "next" : "open";
+                const status = state === "start" ? text.start : state === "complete" ? text.done : state === "next" ? text.next : text.open;
+                const [signX, signY] = stops[i][3];
+                const go = () => camera.exitOverview({
+                  point: [(x + signX) / 2, (y + signY) / 2],
+                  focus: () => document.querySelector<HTMLElement>(`.world-nameboard[data-destination="${order[i]}"]`)?.focus({ preventScroll: true }),
+                });
+                return <button key={order[i]} type="button" className="world-overview-pin" data-state={state}
+                  data-destination={order[i]} aria-current={state === "next" ? "step" : undefined}
+                  aria-label={`${i ? `${i}. ` : ""}${names[lang][i]}. ${status}`}
+                  style={position(x, y, worldSize)} onClick={go}>
+                  <span className="world-pin-disc" aria-hidden="true">
+                    {state === "start" ? <Flag /> : state === "complete" ? <Check /> : i}
+                  </span>
+                  <span className="world-pin-label" aria-hidden="true">
+                    {i ? `${i}. ` : ""}{names[lang][i]}<small>{status}</small>
+                  </span>
+                </button>;
+              })}
+            </nav>
           </div>
         </div>
       </div>

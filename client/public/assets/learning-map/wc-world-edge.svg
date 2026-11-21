@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1940 1520" width="1940" height="1520" preserveAspectRatio="none">
+  <!-- Alpha mask for the painted terrain: an irregular, soft watercolour edge instead of a rectangle. -->
+  <filter id="edge" x="-5%" y="-5%" width="110%" height="110%" filterUnits="objectBoundingBox">
+    <feTurbulence type="fractalNoise" baseFrequency="0.009 0.012" numOctaves="3" seed="11" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="110" xChannelSelector="R" yChannelSelector="G" result="ragged"/>
+    <feGaussianBlur in="ragged" stdDeviation="24"/>
+  </filter>
+  <rect x="62" y="40" width="1816" height="1420" rx="70" fill="#fff" filter="url(#edge)"/>
+</svg>

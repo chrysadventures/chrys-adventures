@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { GameFileScreen, ModeSelectScreen, MenuScreen, AdvancedMenuScreen, AdditionOnlyLesson, Quiz, UI, recognitionPracticeQuestions, DEFAULT_BACKGROUND_STYLE, CYBER_BACKGROUND_STYLE } from "./App";
-import { REVIEW_LESSONS, REVIEW_TESTS, TestMenu, AdvancedTestMenu, LessonCompletionScreen, AudioEnabledContext, setGlobalAudioMuted, stopNumberAudio } from "./App";
+import { REVIEW_LESSONS, REVIEW_TESTS, TestMenu, AdvancedTestMenu, LessonCompletionScreen, AudioEnabledContext, setGlobalAudioMuted, stopNumberAudio, Header } from "./App";
+import { CloudCheck } from "lucide-react";
 import type { GameSave } from "./lib/gameSaves";
 
 const sample: GameSave = {
@@ -24,6 +25,21 @@ export function DesignPreview() {
   const questions = REVIEW_TESTS[screen as keyof typeof REVIEW_TESTS];
   const advanced = screen.startsWith("advanced");
   const t = UI[lang];
+  // ?frame=app renders the Learning map inside the same full-screen frame, header and save status as the app.
+  if (screen === "menu" && params.get("frame") === "app") {
+    return <AudioEnabledContext.Provider value={sound}><div className="page-bg learning-theme min-h-[100dvh] text-slate-800 font-sans learning-map-page" style={DEFAULT_BACKGROUND_STYLE}>
+      <div className="app-responsive-frame jungle-leaves relative z-10 mx-auto flex min-h-[100dvh] w-full flex-col px-4 py-4 md:px-8 learning-map-frame">
+        <Header lang={lang} onToggleLang={() => setLang(lang === "en" ? "ms" : "en")} title={t.title} stars={sample.stars} t={t}
+          soundEnabled={sound} onToggleSound={() => setSound(!sound)} onOpenGlossary={() => {}} onBack={() => setScreen("modes")} />
+        <div className="app-save-status mb-3 flex justify-end px-1" aria-live="polite" aria-atomic="true">
+          <span className="inline-flex min-h-10 items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-black border-emerald-300 bg-gradient-to-r from-sky-50 via-emerald-50 to-yellow-50 text-emerald-900">
+            <CloudCheck aria-hidden="true" className="h-5 w-5 shrink-0" strokeWidth={3} />{lang === "en" ? "Saved to your game" : "Disimpan dalam permainan"}
+          </span>
+        </div>
+        <MenuScreen lang={lang} t={t} player={sample.player} go={setScreen} />
+      </div>
+    </div></AudioEnabledContext.Provider>;
+  }
   return <AudioEnabledContext.Provider value={sound}><div className={`page-bg ${advanced ? "sunset-theme" : "learning-theme"} min-h-screen p-3 text-emerald-950 md:p-6`} style={advanced ? CYBER_BACKGROUND_STYLE : DEFAULT_BACKGROUND_STYLE}>
     <div className="relative z-10 mx-auto max-w-6xl">
     {showNav && <nav aria-label="Design preview" className="relative z-10 mb-4 flex flex-wrap gap-2">

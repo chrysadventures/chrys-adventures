@@ -1,26 +1,48 @@
-import { useLayoutEffect, useRef, useState, type FocusEvent, type MouseEvent, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FocusEvent, type MouseEvent, type PointerEvent } from "react";
+import { flushSync } from "react-dom";
+import { clampZoom, fitWorld, MAP_CAMERA, nextZoomStop, type Rect } from "./mapCameraConfig";
 
-const zoomStops = [0.25, 0.5, 0.75, 1, 1.25, 1.5] as const;
-const descendingZoomStops = [...zoomStops].reverse();
-const defaultZoom = 1;
-const minZoom = zoomStops[0];
-const maxZoom = zoomStops[zoomStops.length - 1];
-
+export type CameraMode = "explore" | "overview";
 type Point = { x: number; y: number };
 type Pan = { point: Point; left: number; top: number };
 type Pinch = { anchor: Point; distance: number; scale: number };
+type SavedView = { scale: number; center: Point };
 const midpoint = (a: Point, b: Point) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 const distance = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
 
-export function useMapCamera() {
+/** Floating interface the overview must not sit under: the app header, save status and map HUD. */
+const hudSelector = ".app-header, .app-save-status, [data-map-hud]";
+
+function animate(update: () => void) {
+  const doc = document as Document & { startViewTransition?: (callback: () => void) => unknown };
+  const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || typeof doc.startViewTransition !== "function") update();
+  else doc.startViewTransition(update);
+}
+
+/**
+ * One camera with two modes. Explore Mode pans with native scrolling and zooms by
+ * scaling the track between MAP_CAMERA.minZoom and maxZoom. World Overview fits the
+ * whole world into the space left by the floating interface, at whatever scale that needs.
+ */
+export function useMapCamera(worldUnits: readonly [number, number]) {
   const viewport = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
-  const scale = useRef(defaultZoom);
-  const [zoom, setZoom] = useState(defaultZoom);
+  const scale = useRef<number>(MAP_CAMERA.defaultZoom);
+  const [zoom, setZoom] = useState<number>(MAP_CAMERA.defaultZoom);
+  const [mode, setMode] = useState<CameraMode>("explore");
+  const modeRef = useRef<CameraMode>("explore");
+  const saved = useRef<SavedView | null>(null);
   const pointers = useRef(new Map<number, Point>());
   const pan = useRef<Pan | null>(null);
   const pinch = useRef<Pinch | null>(null);
   const dragged = useRef(false);
+
+  function setScale(view: HTMLDivElement, next: number) {
+    scale.current = next;
+    view.style.setProperty("--map-zoom", String(next));
+    if (modeRef.current === "explore") setZoom(Math.round(next * 100) / 100);
+  }
 
   function worldPoint(view: HTMLDivElement, position: Point): Point {
     return {
@@ -30,29 +52,110 @@ export function useMapCamera() {
   }
 
   function applyScale(view: HTMLDivElement, requested: number, position: Point, anchor: Point) {
-    const next = Math.min(maxZoom, Math.max(minZoom, requested));
-    if (next !== scale.current) {
-      scale.current = next;
-      view.style.setProperty("--map-zoom", String(next));
-      setZoom(Math.round(next * 100) / 100);
-    }
+    const next = clampZoom(requested);
+    if (next !== scale.current) setScale(view, next);
     view.scrollTo(
       anchor.x * next + (track.current?.offsetLeft ?? 0) - position.x,
       anchor.y * next + (track.current?.offsetTop ?? 0) - position.y,
     );
   }
 
+  function center(view: HTMLDivElement): Point {
+    return { x: view.clientWidth / 2, y: view.clientHeight / 2 };
+  }
+
   function zoomAtCenter(requested: number) {
     const view = viewport.current;
+    if (!view || modeRef.current !== "explore") return;
+    applyScale(view, requested, center(view), worldPoint(view, center(view)));
+  }
+
+  /** Track coordinates (unscaled px) of a point given in world units. */
+  function trackPoint([x, y]: readonly [number, number]): Point | null {
+    const world = track.current?.querySelector<HTMLElement>("[data-learning-map]");
+    if (!world) return null;
+    return {
+      x: world.offsetLeft + x / worldUnits[0] * world.offsetWidth,
+      y: world.offsetTop + y / worldUnits[1] * world.offsetHeight,
+    };
+  }
+
+  function layoutOverview() {
+    const view = viewport.current, trk = track.current;
+    if (!view || !trk) return;
+    const bounds = view.getBoundingClientRect();
+    const scope = view.closest(".learning-map-frame") ?? document;
+    const obstacles: Rect[] = [...scope.querySelectorAll<HTMLElement>(hudSelector)]
+      .map(element => element.getBoundingClientRect())
+      .filter(r => r.width > 0 && r.height > 0)
+      .map(r => ({ left: r.left - bounds.left, top: r.top - bounds.top, right: r.right - bounds.left, bottom: r.bottom - bounds.top }));
+    const fit = fitWorld(
+      { width: view.clientWidth, height: view.clientHeight },
+      { width: trk.offsetWidth, height: trk.offsetHeight },
+      obstacles,
+    );
+    setScale(view, fit.scale);
+    view.style.setProperty("--overview-x", `${fit.x}px`);
+    view.style.setProperty("--overview-y", `${fit.y}px`);
+    view.scrollTo(0, 0);
+  }
+
+  function switchMode(next: CameraMode) {
+    const view = viewport.current;
     if (!view) return;
-    const center = { x: view.clientWidth / 2, y: view.clientHeight / 2 };
-    applyScale(view, requested, center, worldPoint(view, center));
+    modeRef.current = next;
+    view.dataset.cameraMode = next;
+    flushSync(() => setMode(next));
+  }
+
+  function enterOverview() {
+    const view = viewport.current;
+    if (!view || modeRef.current === "overview") return;
+    saved.current = { scale: scale.current, center: worldPoint(view, center(view)) };
+    pointers.current.clear();
+    pan.current = pinch.current = null;
+    dragged.current = false;
+    delete view.dataset.dragging;
+    animate(() => {
+      switchMode("overview");
+      layoutOverview();
+    });
+  }
+
+  /** Leave World Overview: to a chosen place (world units) at a readable scale, or back to the saved view. */
+  function exitOverview(target?: { point: readonly [number, number]; focus?: () => void }) {
+    const view = viewport.current;
+    if (!view || modeRef.current !== "overview") return;
+    const previous = saved.current;
+    animate(() => {
+      switchMode("explore");
+      const anchor = target ? trackPoint(target.point) : previous?.center;
+      const nextScale = target ? MAP_CAMERA.focusZoom : previous?.scale ?? MAP_CAMERA.defaultZoom;
+      setScale(view, clampZoom(nextScale));
+      if (anchor) applyScale(view, nextScale, center(view), anchor);
+      target?.focus?.();
+    });
+    saved.current = null;
   }
 
   useLayoutEffect(() => {
     const view = viewport.current;
-    view?.scrollTo(0, view.scrollHeight);
+    if (!view) return;
+    view.dataset.cameraMode = "explore";
+    view.scrollTo(0, view.scrollHeight);
   }, []);
+
+  useEffect(() => {
+    if (mode !== "overview") return;
+    const view = viewport.current;
+    if (!view) return;
+    const observer = new ResizeObserver(() => layoutOverview());
+    observer.observe(view);
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") exitOverview(); };
+    window.addEventListener("keydown", onKey);
+    return () => { observer.disconnect(); window.removeEventListener("keydown", onKey); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   function localPoint(event: PointerEvent<HTMLDivElement>): Point {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -60,6 +163,7 @@ export function useMapCamera() {
   }
 
   function start(event: PointerEvent<HTMLDivElement>) {
+    if (modeRef.current !== "explore") { dragged.current = false; return; }
     if (event.button !== 0 || pointers.current.size >= 2) return;
     const view = event.currentTarget;
     const point = localPoint(event);
@@ -121,16 +225,17 @@ export function useMapCamera() {
 
   function revealFocus(event: FocusEvent<HTMLDivElement>) {
     const target = event.target;
-    if (target instanceof HTMLElement && target.matches("button:focus-visible")) {
+    if (modeRef.current === "explore" && target instanceof HTMLElement && target.matches("button:focus-visible")) {
       target.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
     }
   }
 
   return {
     viewport, track, start, move, finish, filterClick, revealFocus,
-    zoom, minZoom, maxZoom,
-    zoomOut: () => zoomAtCenter(descendingZoomStops.find(stop => stop < scale.current - 0.001) ?? minZoom),
-    zoomIn: () => zoomAtCenter(zoomStops.find(stop => stop > scale.current + 0.001) ?? maxZoom),
-    reset: () => zoomAtCenter(defaultZoom),
+    mode, zoom, minZoom: MAP_CAMERA.minZoom, maxZoom: MAP_CAMERA.maxZoom,
+    zoomOut: () => zoomAtCenter(nextZoomStop(scale.current, -1)),
+    zoomIn: () => zoomAtCenter(nextZoomStop(scale.current, 1)),
+    reset: () => zoomAtCenter(MAP_CAMERA.defaultZoom),
+    enterOverview, exitOverview,
   };
 }

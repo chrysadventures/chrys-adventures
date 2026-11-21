@@ -18108,4 +18108,4 @@ export const REVIEW_TESTS = {
   advancedTestSequencing: advancedTestSequencingQuestions, advancedTestAddition: advancedTestAdditionQuestions,
   advancedTestSubtraction: advancedTestSubtractionQuestions,
 };
-export { TestMenu, AdvancedTestMenu, LessonCompletionScreen, AudioEnabledContext, setGlobalAudioMuted, stopNumberAudio };
+export { TestMenu, AdvancedTestMenu, LessonCompletionScreen, AudioEnabledContext, setGlobalAudioMuted, stopNumberAudio, Header };

@@ -54,12 +54,108 @@
   inset: 0;
 }
 
+/* Soft shade at the screen edge so the surrounding forest reads as deeper canopy. Viewport-fixed, decorative. */
+.learning-world-menu::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  box-shadow: inset 0 0 min(9vw, 110px) #28381a40;
+}
+
 .learning-world {
   position: relative;
   isolation: isolate;
+}
+
+/* Painted terrain only. Its rectangle dissolves through an irregular watercolour mask into the surround.
+   Landmarks, the route, characters and signs sit above it unmasked, so nothing playable fades. */
+.learning-world-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   overflow: hidden;
   background: #829461 url("/assets/learning-map/wc-landscape.webp") center / 100% 100% no-repeat;
+  -webkit-mask: url("/assets/learning-map/wc-world-edge.svg") center / 100% 100% no-repeat;
+  mask: url("/assets/learning-map/wc-world-edge.svg") center / 100% 100% no-repeat;
 }
+
+/* The forest beyond the playable world: watercolour washes in colours sampled from the world's own
+   edges. It never copies, mirrors or stretches the map. Positions are relative to the world, so the
+   surround stays aligned in Explore Mode and World Overview alike. */
+.learning-world-surround {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.learning-world-surround > i {
+  position: absolute;
+  display: block;
+}
+
+/* Forest ground at the sides and below: bright verge next to the world, deepening into canopy shade. */
+.surround-ground {
+  top: 0;
+  bottom: -320%;
+  left: -300%;
+  right: -300%;
+  background:
+    radial-gradient(circle at 37% 21%, #a5b54f8c 0, #a5b54f00 3.5%),
+    radial-gradient(circle at 63% 17%, #9fb04a80 0, #9fb04a00 3%),
+    radial-gradient(circle at 46% 33%, #9aac4c99 0, #9aac4c00 4%),
+    radial-gradient(circle at 57% 31%, #8fa24799 0, #8fa24700 4.5%),
+    radial-gradient(circle at 33% 11%, #55692f59 0, #55692f00 3%),
+    radial-gradient(circle at 68% 26%, #55692f59 0, #55692f00 3.5%),
+    radial-gradient(ellipse 14% 22% at 50% 13%, #9cad55 0, #95a553 52%, #87974b 72%, #73833f 100%);
+  background-color: #63733a;
+}
+
+/* Sky above: the world's own sky continues upward, and its tree corners stand against it. */
+.surround-sky {
+  bottom: 80%;
+  height: 400%;
+  left: -300%;
+  right: -300%;
+  background:
+    radial-gradient(ellipse 4% 3% at 47% 80%, #ffffff8c 0, #ffffff00 100%),
+    radial-gradient(ellipse 5% 2.5% at 56% 84%, #ffffff73 0, #ffffff00 100%),
+    radial-gradient(ellipse 3% 2% at 36% 88%, #ffffff66 0, #ffffff00 100%),
+    linear-gradient(180deg, #86a9e0 0, #9bbbee 70%, #b5cbe6 90%, #b9cac6 95%, #b9cac600 100%);
+}
+
+/* Distant misty hills, echoing the world's own mountains, so the horizon is never a ruled line. */
+.surround-hills {
+  bottom: 76%;
+  height: 34%;
+  left: -300%;
+  right: -300%;
+  filter: blur(3px);
+  background:
+    radial-gradient(ellipse 4.2% 62% at 27% 100%, #9ab2a4 0 70%, #9ab2a400 74%),
+    radial-gradient(ellipse 5.5% 82% at 33% 100%, #a6bdb3 0 70%, #a6bdb300 74%),
+    radial-gradient(ellipse 4.5% 58% at 39% 100%, #93ab9a 0 70%, #93ab9a00 74%),
+    radial-gradient(ellipse 4.5% 66% at 61% 100%, #95ad9e 0 70%, #95ad9e00 74%),
+    radial-gradient(ellipse 5.5% 86% at 67% 100%, #a8c0b6 0 70%, #a8c0b600 74%),
+    radial-gradient(ellipse 4% 55% at 73% 100%, #9ab2a4 0 70%, #9ab2a400 74%),
+    linear-gradient(180deg, #a3b9a800 55%, #9fb39a 100%);
+  -webkit-mask: linear-gradient(180deg, #000 72%, #0000);
+  mask: linear-gradient(180deg, #000 72%, #0000);
+}
+
+/* Paper grain over the wash, matching the watercolour stock. */
+.learning-world-surround::after {
+  content: "";
+  position: absolute;
+  inset: -400% -300%;
+  opacity: .22;
+  mix-blend-mode: multiply;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .33 0 0 0 0 .22 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+
+.world-edge-foliage { z-index: 6; filter: saturate(.9) drop-shadow(0 6px 4px #34472940); }
+.world-edge-foliage.is-flipped { transform: translate(-50%, -50%) scaleX(-1); }
 
 .world-landmark-layer,
 .learning-world-road {
@@ -192,7 +288,8 @@ button.world-nameboard:focus-visible {
   pointer-events: none;
 }
 
-.world-explorer-hint { left: var(--map-ui-inset); }
+.world-explorer-hint { left: var(--map-ui-inset); max-width: calc(56% - 2 * var(--map-ui-inset)); }
+.world-hint-next { display: block; }
 .world-journey-progress { right: var(--map-ui-inset); width: min(165px, 44%); }
 .world-journey-progress .adventure-progress { margin: 0; }
 .world-journey-progress .adventure-progress-label { gap: 5px; font-size: 11px; }
@@ -203,7 +300,7 @@ button.world-nameboard:focus-visible {
   inset: 0;
   overflow: auto;
   overscroll-behavior: none;
-  background: #829461 url("/assets/learning-map/wc-backdrop.webp") center / cover no-repeat;
+  background: #6b7b3c;
   scrollbar-width: none;
   overflow-anchor: none;
   scroll-padding: calc(var(--map-toolbar-top) + 42px) 10px 132px;
@@ -237,20 +334,15 @@ button.world-nameboard:focus-visible {
   transform-origin: top left;
 }
 
-/* Reflect only the existing terrain at the edges to give the floating controls clearance. */
+/* Clearance above and below the world for the floating controls; the surround shows through. */
 .learning-world-track::before,
 .learning-world-track::after {
   content: "";
   display: block;
   height: var(--map-top-clearance);
-  background: url("/assets/learning-map/wc-landscape.webp") center top / 100% calc(var(--map-width) / var(--map-ratio)) no-repeat;
-  transform: scaleY(-1);
 }
 
-.learning-world-track::after {
-  height: var(--map-bottom-clearance);
-  background-position: center bottom;
-}
+.learning-world-track::after { height: var(--map-bottom-clearance); }
 
 .learning-world-camera[data-dragging="true"],
 .learning-world-camera[data-dragging="true"] button { cursor: grabbing; }
@@ -328,12 +420,6 @@ button.world-nameboard::before {
   transform: translateY(-50%);
 }
 
-@media (max-width: 480px) {
-  .world-zoom-controls {
-    top: calc(var(--map-toolbar-top) + 55px);
-    bottom: auto;
-  }
-}
 
 
 .mode-destination-learning .mode-destination-scene > img {
@@ -343,4 +429,205 @@ button.world-nameboard::before {
   height: 100%;
   object-fit: cover;
   object-position: center 65%;
+}
+
+/* ---------- World Overview ---------- */
+.learning-world-camera[data-camera-mode="overview"] {
+  overflow: hidden;
+  cursor: default;
+}
+
+.learning-world-camera[data-camera-mode="overview"] .learning-world-extent {
+  --map-top-clearance: 0px;
+  --map-bottom-clearance: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+.learning-world-camera[data-camera-mode="overview"] .learning-world-track {
+  left: var(--overview-x, 0px);
+  top: var(--overview-y, 0px);
+}
+
+/* Signs are unreadable at overview scale; fixed-size pins represent the same places instead. */
+.learning-world-camera[data-camera-mode="overview"] .world-nameboard,
+.learning-world-camera[data-camera-mode="overview"] .world-stone-number { visibility: hidden; }
+
+.world-overview-pins[hidden] { display: none; }
+
+.world-overview-pin {
+  --pin-size: 38px;
+  position: absolute;
+  z-index: 8;
+  width: var(--pin-size);
+  height: var(--pin-size);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #351d0a;
+  cursor: pointer;
+  /* Counter the camera scale so pins and labels stay a readable, tappable size. */
+  transform: translate(-50%, -50%) scale(calc(1 / var(--map-zoom, 1)));
+}
+
+.world-overview-pin::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+}
+
+.world-pin-disc {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid #f6cd89;
+  color: #fff5d3;
+  background: #6d3c19;
+  font-size: 18px;
+  font-weight: 950;
+  box-shadow: 0 3px 3px #492c1773;
+}
+
+.world-pin-disc svg { width: 18px; height: 18px; stroke-width: 3; }
+.world-overview-pin[data-state="complete"] .world-pin-disc { background: #3e6329; }
+.world-overview-pin[data-state="start"] .world-pin-disc { background: #8a5a2b; }
+.world-overview-pin[data-state="next"] .world-pin-disc {
+  background: #8a4f1f;
+  outline: 3px solid #ffe7a1;
+  outline-offset: 2px;
+  animation: world-pin-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes world-pin-glow {
+  50% { box-shadow: 0 0 0 7px #ffe7a166, 0 3px 3px #492c1773; }
+}
+
+.world-pin-label {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px 3px;
+  border: 1px solid #d9b77f;
+  border-radius: 9px;
+  background: #fff8e3;
+  box-shadow: 0 2px 3px #321e0a4d;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.15;
+  pointer-events: none;
+}
+
+.world-pin-label small {
+  display: block;
+  color: #365022;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.world-overview-pin:hover .world-pin-disc { filter: brightness(1.12); }
+.world-overview-pin:focus-visible { outline: none; }
+.world-overview-pin:focus-visible .world-pin-disc { outline: 3px solid #fff8d3; outline-offset: 2px; box-shadow: 0 0 0 7px #2f5b2a; }
+.world-overview-pin:hover, .world-overview-pin:focus-visible { z-index: 9; }
+
+/* Small screens: number-only pins; the hint names the next adventure instead of a label. */
+@media (max-width: 600px), (max-height: 500px) {
+  .world-overview-pin { --pin-size: 34px; }
+  .world-pin-disc { font-size: 16px; }
+  .world-overview-pin:not(:focus-visible) .world-pin-label { display: none; }
+  .world-hint-choose { display: none; }
+}
+
+/* Larger screens label every pin, so the hint only needs to explain what to do. */
+@media (min-width: 601px) and (min-height: 501px) {
+  .world-hint-next { display: none; }
+}
+
+/* ---------- Camera controls: World Overview toggle + zoom ---------- */
+.world-camera-controls {
+  position: absolute;
+  right: var(--map-ui-inset);
+  bottom: calc(var(--map-ui-bottom) + 66px);
+  z-index: 12;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 2 * var(--map-ui-inset));
+}
+
+.world-camera-controls .world-zoom-controls {
+  position: static;
+}
+
+.world-overview-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 52px;
+  padding: 0 16px 0 13px;
+  border: 2px solid #3e6329;
+  border-radius: 16px;
+  color: #fff8dc;
+  background: #3e6329;
+  font-size: 14px;
+  font-weight: 950;
+  white-space: nowrap;
+  box-shadow: 0 3px 0 #29431d, 0 4px 6px #384d3240;
+  cursor: pointer;
+}
+
+.world-overview-toggle svg { width: 20px; height: 20px; flex: none; }
+.world-overview-toggle:hover { background: #4a7432; }
+.world-overview-toggle:focus-visible { outline: 3px solid #fff8d3; outline-offset: 2px; box-shadow: 0 0 0 6px #2f5b2a; }
+
+/* In the overview the same button becomes the way back: light, so it reads as a different action. */
+.world-camera-controls[data-mode="overview"] .world-overview-toggle {
+  color: #2e472b;
+  background: #fff8e3;
+  border-color: #d9b77f;
+  box-shadow: 0 3px 0 #a88452, 0 4px 6px #384d3240;
+}
+
+.world-overview-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.world-overview-status svg { width: 17px; height: 17px; }
+
+@media (max-width: 480px) {
+  .world-camera-controls {
+    top: calc(var(--map-toolbar-top) + 55px);
+    bottom: auto;
+    flex-wrap: wrap;
+  }
+  .world-overview-toggle { height: 50px; padding: 0 12px 0 10px; font-size: 13px; }
+}
+
+/* Short landscape phones: stack the controls in a narrow column so the overview keeps its width. */
+@media (max-height: 500px) and (min-width: 481px) {
+  .world-camera-controls {
+    flex-direction: column;
+    align-items: flex-end;
+    bottom: calc(var(--map-ui-bottom) + 52px);
+  }
+  .world-overview-toggle { height: 44px; padding: 0 12px 0 10px; font-size: 13px; }
+  .world-overview-status { height: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-overview-pin[data-state="next"] .world-pin-disc { animation: none; }
 }

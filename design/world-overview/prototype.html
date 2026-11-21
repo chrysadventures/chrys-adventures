@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Overview Prototype</title>
+<!--
+  Design prototype only. Not application code.
+  The world plate is a render of the current live map (assets/world-plain.jpg).
+  URL parameters: ?lang=en|ms  &mode=overview|explore  &edge=new|current
+-->
+<style>
+  :root {
+    --sky: #a9c3dd; --sky-low: #c7d5c9; --mist: #a8c1b6;
+    --grass: #a7b848; --verge: #90a056; --forest: #6f7f3f; --canopy: #4c5f31; --floor: #7c8a4a;
+    --ink: #351d0a; --paper: #fff8e3; --wood: #6d3c19; --wood-edge: #f6cd89; --leaf: #3e6329;
+    --hud: #f4f6df; --hud-ink: #2e472b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: "Baloo 2", "Nunito", system-ui, sans-serif; color: var(--ink); }
+  body { background: var(--forest); }
+
+  /* ---------- 1. Painted surround: procedural wash, never a copy of the map ---------- */
+  .surround { position: fixed; inset: 0; overflow: hidden; }
+  .surround .wash {
+    position: absolute; inset: 0;
+    background:
+      /* sky continues upward from the world's own sky */
+      linear-gradient(180deg, #8fb5df 0, #b7cfe6 calc(var(--map-top) * .72), #d3e0dc calc(var(--map-top) + 4px), transparent calc(var(--map-top) + 36px)),
+      /* forest floor continues below the world */
+      linear-gradient(0deg, #66763c 0, var(--floor) calc(var(--map-bottom-gap) * .55), transparent calc(var(--map-bottom-gap) + 40px)),
+      /* light pools on the clearing, shade gathers at the canopy */
+      radial-gradient(ellipse 80% 75% at 50% calc(var(--map-top) + var(--map-h) * .55), var(--grass) 0, var(--verge) 58%, #85954c 82%, var(--forest) 100%);
+  }
+  /* watercolour pooling: large soft blots in palette tones, deterministic positions */
+  .surround .blot { position: absolute; border-radius: 50%; filter: blur(34px); opacity: .32; mix-blend-mode: multiply; }
+  .surround .grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .22; mix-blend-mode: multiply; }
+  .surround .ridge { position: absolute; left: 0; right: 0; height: calc(var(--map-top) * .55); top: calc(var(--map-top) * .52); opacity: .75; filter: blur(1.5px);
+    background:
+      radial-gradient(60% 120% at 18% 100%, #a3bdb2 0 48%, transparent 50%),
+      radial-gradient(55% 140% at 52% 100%, #9cb7ab 0 47%, transparent 49%),
+      radial-gradient(60% 110% at 86% 100%, #a8c1b6 0 48%, transparent 50%); }
+  body:not([data-portrait="true"]) .surround .ridge { display: none; }
+  .surround .shade { position: absolute; inset: 0; box-shadow: inset 0 0 min(10vw, 120px) rgba(40, 56, 26, .32); }
+
+  /* ---------- 2. Map with a feathered, irregular watercolour edge ---------- */
+  .world {
+    position: fixed; left: var(--map-left); top: var(--map-top); width: var(--map-w); height: var(--map-h);
+    transition: all 450ms cubic-bezier(.2,.7,.2,1);
+  }
+  .world img.plate { width: 100%; height: 100%; display: block; }
+  body[data-edge="current"] .surround { display: none; }
+  /* "current" reproduces today's behaviour: hard map rectangle over the cover-cropped backdrop */
+  body[data-edge="current"] { background: #829461 url("assets/wc-backdrop.webp") center / cover no-repeat; }
+  body[data-edge="current"] .frame { display: none; }
+
+  /* ---------- 3. Foliage frame overlapping both map edge and surround ---------- */
+  .frame img { position: fixed; pointer-events: none; filter: saturate(.9) drop-shadow(0 6px 4px rgba(40,50,25,.3)); }
+
+  /* ---------- 4. Overview pins (live UI, not painted) ---------- */
+  .pin {
+    position: fixed; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 3px;
+    background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--ink);
+  }
+  .pin::before { content: ""; position: absolute; width: 44px; height: 44px; top: 50%; left: 50%; transform: translate(-50%, -50%); } /* hit area */
+  .pin .disc {
+    width: var(--pin, 34px); height: var(--pin, 34px); border-radius: 50%; display: grid; place-items: center;
+    background: var(--wood); color: #fff5d3; border: 3px solid var(--wood-edge); font-weight: 900; font-size: calc(var(--pin, 34px) * .5);
+    box-shadow: 0 3px 3px rgba(50,30,10,.45);
+  }
+  .pin[data-state="complete"] .disc { background: var(--leaf); }
+  .pin[data-state="next"] .disc { outline: 3px solid #ffe7a1; outline-offset: 3px; background: #8a4f1f; }
+  .pin .label {
+    background: var(--paper); border: 1px solid #d9b77f; border-radius: 9px; padding: 2px 8px 3px; white-space: nowrap;
+    font-size: var(--label, 14px); font-weight: 800; line-height: 1.15; box-shadow: 0 2px 3px rgba(50,30,10,.3); text-align: center;
+  }
+  .pin .label small { display: block; font-size: .78em; font-weight: 800; color: #365022; }
+  .pin[data-state="complete"] .label small { color: var(--leaf); }
+  .pin:focus-visible { outline: none; }
+  .pin:focus-visible .disc { outline: 3px solid #fff8d3; outline-offset: 3px; box-shadow: 0 0 0 7px #2f5b2a; }
+  body[data-compact="true"] .pin .label { display: none; }
+
+  /* ---------- HUD (mock of the existing floating UI) ---------- */
+  .hud-header {
+    position: fixed; z-index: 20; top: 12px; left: 50%; transform: translateX(-50%); width: min(calc(100% - 24px), 76rem);
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 22px;
+    background: linear-gradient(90deg, #f4f9d9, #eef6d0); border: 3px solid #a8e0ef; font-weight: 900; color: #1e3a5f; font-size: 22px;
+  }
+  .hud-header .back { width: 40px; height: 40px; border-radius: 12px; background: #fff; display: grid; place-items: center; box-shadow: 0 2px 0 #c9d8e3; }
+  .hud-header .chips { margin-left: auto; display: flex; gap: 8px; }
+  .hud-header .chip { padding: 7px 12px; border-radius: 12px; background: #fff; font-size: 14px; box-shadow: 0 2px 0 #c9d8e3; }
+  .progress {
+    position: fixed; z-index: 15; right: 12px; top: 96px; width: 170px; padding: 7px 10px; border-radius: 12px;
+    background: #f4f6dfee; color: var(--hud-ink); font-size: 12px; font-weight: 900;
+  }
+  .progress .bar { height: 9px; margin-top: 5px; border-radius: 9px; background: #e2eddf; overflow: hidden; }
+  .progress .bar span { display: block; width: 25%; height: 100%; background: linear-gradient(90deg,#27845a,#6bbd80); }
+  .controls {
+    position: fixed; z-index: 15; right: 12px; bottom: 16px; display: flex; align-items: center; gap: 2px; padding: 3px;
+    border: 1px solid #b1bf86; border-radius: 16px; background: var(--hud); color: var(--hud-ink); box-shadow: 0 2px 4px #384d323b;
+  }
+  .controls button { height: 44px; min-width: 44px; border: 0; border-radius: 11px; background: none; color: inherit; font: inherit; font-weight: 900; font-size: 14px; display: grid; place-items: center; cursor: pointer; padding: 0 10px; }
+  .controls button[disabled] { opacity: .4; }
+  .controls output { min-width: 46px; text-align: center; font-weight: 900; font-size: 13px; }
+  .controls .overview { display: flex; gap: 6px; align-items: center; background: #fff; border: 2px solid #a9bd7e; }
+  .controls .overview[aria-pressed="true"] { background: #3e6329; color: #fff8dc; border-color: #3e6329; }
+  .controls svg { width: 19px; height: 19px; }
+  .hint {
+    position: fixed; z-index: 15; left: 12px; top: 96px; padding: 6px 10px; border-radius: 12px; background: #f4f6dfee;
+    color: var(--hud-ink); font-size: 12px; font-weight: 900;
+  }
+  .next-card {
+    position: fixed; z-index: 15; left: 12px; right: 12px; bottom: 72px; display: none; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 16px; background: var(--paper); border: 2px solid #d9b77f; box-shadow: 0 4px 0 #a88452;
+  }
+  .next-card .disc { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #8a4f1f; color: #fff5d3; border: 3px solid var(--wood-edge); font-weight: 900; flex: none; outline: 3px solid #ffe7a1; outline-offset: 2px; }
+  .next-card .text { font-size: 15px; font-weight: 900; line-height: 1.15; }
+  .next-card .text small { display: block; font-size: 12px; color: #365022; }
+  .next-card .go { margin-left: auto; padding: 10px 14px; border-radius: 12px; background: #27845a; color: #fff; font-weight: 900; font-size: 14px; white-space: nowrap; }
+  body[data-compact="true"][data-short="false"][data-mode="overview"] .next-card { display: flex; }
+  body[data-short="true"] .hud-header { left: 12px; transform: none; width: auto; font-size: 16px; padding: 6px 10px; }
+  body[data-short="true"] .hud-header .chips { display: none; }
+  body[data-short="true"] .hint { top: 70px; }
+  body[data-short="true"] .progress { top: 12px; }
+  body[data-mode="explore"] .pin { display: none; }
+
+  @media (max-width: 600px) {
+    .hud-header { font-size: 17px; padding: 8px 10px; }
+    .hud-header .chip:not(:last-child) { display: none; }
+    .progress { top: 84px; width: 150px; }
+    .hint { top: 84px; }
+    .controls { left: 12px; right: 12px; justify-content: space-between; }
+  }
+  @media (prefers-reduced-motion: reduce) { .world { transition: none; } }
+</style>
+</head>
+<body>
+<div class="surround" aria-hidden="true">
+  <div class="wash"></div>
+  <div class="ridge"></div>
+  <svg class="grain" xmlns="http://www.w3.org/2000/svg"><filter id="paper"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .33  0 0 0 0 .22  0 0 0 .9 0"/></filter><rect width="100%" height="100%" filter="url(#paper)"/></svg>
+  <div class="shade"></div>
+</div>
+<div class="world" aria-hidden="true"><img class="plate" alt="" src="assets/world-plain.jpg"></div>
+<div class="frame" aria-hidden="true"></div>
+<nav class="pins" aria-label="Whole map"></nav>
+
+<header class="hud-header"><span class="back">&larr;</span><span>Chrys's Adventures</span>
+  <span class="chips"><span class="chip">Sound</span><span class="chip">Glossary</span><span class="chip">BM</span><span class="chip">&#9733; 2</span></span></header>
+<p class="hint"></p>
+<div class="progress"><span class="plabel"></span> <span style="float:right">2 / 8</span><div class="bar"><span></span></div></div>
+<div class="next-card"><span class="disc">3</span><span class="text"></span><span class="go"></span></div>
+<div class="controls" role="group">
+  <button class="zoom-out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+  <output></output>
+  <button class="zoom-in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="overview" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg><span class="olabel"></span></button>
+</div>
+
+<script>
+const q = new URLSearchParams(location.search);
+const lang = q.get("lang") === "ms" ? "ms" : "en";
+const mode = q.get("mode") === "explore" ? "explore" : "overview";
+const edge = q.get("edge") === "current" ? "current" : "new";
+document.body.dataset.mode = mode; document.body.dataset.edge = edge; document.documentElement.lang = lang;
+
+const T = {
+  en: { names: ["Adventure Camp","Number Treehouse","Counting Banana Grove","River Stone Crossing","Banana Sorting Grove","Banana Gathering Meadow","Takeaway Clearing","Jungle Market Village","Grand Star Summit"],
+        done: "Completed", next: "Next adventure", open: "Available", start: "Start", whole: "Whole map", explore: "Explore",
+        hint: { overview: "Tap a place to go there", explore: "Drag to explore" }, journey: "Your journey", go: "Go" },
+  ms: { names: ["Kem Pengembaraan","Rumah Pokok Nombor","Kebun Mengira Pisang","Lintasan Batu Sungai","Rimbun Mengumpul Pisang","Padang Mengumpul Pisang","Laman Tolak","Kampung Pasar Rimba","Puncak Bintang Agung"],
+        done: "Selesai", next: "Pengembaraan seterusnya", open: "Tersedia", start: "Mula", whole: "Seluruh peta", explore: "Teroka",
+        hint: { overview: "Ketik tempat untuk ke sana", explore: "Seret untuk meneroka" }, journey: "Perjalanan kamu", go: "Pergi" },
+}[lang];
+// Landmark centres in world units (1940 x 1520), in curriculum order.
+const stations = [[250,1290],[640,1235],[1520,1320],[1585,1050],[1010,800],[480,745],[290,385],[1560,405],[965,255]];
+const state = i => i === 0 ? "start" : i <= 2 ? "complete" : i === 3 ? "next" : "open";
+const W = 1940, H = 1520;
+
+function layout() {
+  const vw = innerWidth, vh = innerHeight, compact = Math.min(vw, vh) < 600, short = vh < 500;
+  document.body.dataset.compact = compact; document.body.dataset.short = short;
+  document.body.dataset.portrait = vh > vw * 1.1;
+  const top = short ? 74 : compact ? 128 : vw < 1000 ? 140 : 92;          // below header + progress
+  const bottom = short ? 10 : compact ? 150 : vw < 1000 ? 84 : 20;        // above controls / next card
+  const pad = short ? 150 : compact ? 6 : 24; // short landscape: keep side columns for HUD
+  let scale = Math.min((vw - pad * 2) / W, (vh - top - bottom) / H);
+  if (mode === "explore") scale = .5;
+  const mw = W * scale, mh = H * scale;
+  const left = mode === "explore" ? Math.min(0, (vw - mw) / 2) : (vw - mw) / 2;
+  const mtop = mode === "explore" ? Math.min(top, (vh - mh) / 2) : top + (vh - top - bottom - mh) / 2;
+  const r = document.documentElement.style;
+  r.setProperty("--map-left", left + "px"); r.setProperty("--map-top", mtop + "px");
+  r.setProperty("--map-w", mw + "px"); r.setProperty("--map-h", mh + "px");
+  r.setProperty("--map-bottom-gap", Math.max(0, vh - mtop - mh) + "px");
+  r.setProperty("--pin", compact ? "28px" : "34px"); r.setProperty("--label", vw < 1000 ? "12px" : "14px");
+
+  // Feathered irregular edge, drawn at the map's own size so feather width stays consistent.
+  const feather = Math.max(14, 46 * scale * 2);
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${mw}' height='${mh}'><filter id='f' x='-20%' y='-20%' width='140%' height='140%'><feTurbulence type='fractalNoise' baseFrequency='${.018 / Math.max(scale, .2)}' numOctaves='3' seed='7'/><feDisplacementMap in='SourceGraphic' scale='${feather * 1.4}'/><feGaussianBlur stdDeviation='${feather * .45}'/></filter><rect x='${feather}' y='${feather * .6}' width='${mw - feather * 2}' height='${mh - feather * 1.6}' rx='${feather}' fill='white' filter='url(%23f)'/></svg>`;
+  const plate = document.querySelector(".plate");
+  if (edge === "new") { plate.style.webkitMaskImage = plate.style.maskImage = `url("data:image/svg+xml,${svg.replace(/#/g, "%23").replace(/"/g, "'")}")`; plate.style.maskSize = plate.style.webkitMaskSize = "100% 100%"; }
+
+  // Watercolour blots: deterministic, sized to the viewport, palette tones only.
+  const wash = document.querySelector(".surround");
+  wash.querySelectorAll(".blot").forEach(b => b.remove());
+  [[.04,.3,.32,"#5d7034"],[.92,.22,.28,"#6a7a3c"],[.1,.82,.36,"#55692f"],[.88,.86,.3,"#5b6d33"],[.5,.98,.5,"#6f7f3f"],[.3,.05,.2,"#bcd2e6"],[.72,.04,.18,"#e3d6e2"]]
+    .forEach(([x, y, s, c]) => { const b = document.createElement("i"); b.className = "blot";
+      Object.assign(b.style, { left: `${x * vw - s * vw / 2}px`, top: `${y * vh - s * vw / 2}px`, width: `${s * vw}px`, height: `${s * vw}px`, background: c });
+      wash.insertBefore(b, wash.querySelector(".grain")); });
+
+  // Foliage frame: stand-ins for commissioned edge art, at viewport corners/edges only.
+  const frame = document.querySelector(".frame"); frame.innerHTML = "";
+  const u = Math.min(vw, vh * 1.4);
+  [["wc-banana-clean", -.03, .78, .30], ["wc-rocks-clean", .1, 1.0, .22], ["wc-banana-clean", 1.03, .7, .24],
+   ["wc-rocks-clean", .9, 1.02, .26], ["wc-banana-clean", -.02, .2, .2], ["wc-banana-clean", 1.02, .16, .17]]
+    .forEach(([name, x, y, s]) => { if (compact && y < .5) return;
+      const img = new Image(); img.src = `assets/${name}.webp`; img.alt = "";
+      Object.assign(img.style, { width: `${s * u}px`, left: `${x * vw - s * u / 2}px`, top: `${y * vh - s * u * .55}px` });
+      frame.append(img); });
+
+  // Pins
+  const nav = document.querySelector(".pins"); nav.innerHTML = "";
+  stations.forEach(([x, y], i) => {
+    const st = state(i), b = document.createElement("button");
+    b.className = "pin"; b.dataset.state = st;
+    const status = st === "complete" ? T.done : st === "next" ? T.next : st === "start" ? T.start : T.open;
+    b.setAttribute("aria-label", `${i ? i + ". " : ""}${T.names[i]}. ${status}`);
+    b.innerHTML = `<span class="disc">${i === 0 ? "&#9873;" : st === "complete" ? "&#10003;" : i}</span><span class="label">${i ? i + ". " : ""}${T.names[i]}<small>${status}</small></span>`;
+    b.style.left = `${left + x * scale}px`; b.style.top = `${mtop + y * scale}px`;
+    nav.append(b);
+  });
+
+  document.querySelector(".hint").textContent = T.hint[mode];
+  document.querySelector(".plabel").textContent = T.journey;
+  document.querySelector("output").textContent = mode === "overview" ? "" : "50%";
+  document.querySelector("output").style.display = mode === "overview" ? "none" : "";
+  document.querySelector(".zoom-out").disabled = mode === "explore";
+  const ov = document.querySelector(".overview"); ov.setAttribute("aria-pressed", mode === "overview");
+  ov.querySelector(".olabel").textContent = mode === "overview" ? T.explore : T.whole;
+  document.querySelector(".next-card .text").innerHTML = `${T.names[3]}<small>${T.next}</small>`;
+  document.querySelector(".next-card .go").textContent = T.go + " →";
+}
+layout(); addEventListener("resize", layout);
+</script>
+</body>
+</html>
