@@ -81,81 +81,29 @@
   mask: url("/assets/learning-map/wc-world-edge.svg") center / 100% 100% no-repeat;
 }
 
-/* The forest beyond the playable world: watercolour washes in colours sampled from the world's own
-   edges. It never copies, mirrors or stretches the map. Positions are relative to the world, so the
-   surround stays aligned in Explore Mode and World Overview alike. */
-.learning-world-surround {
+/* Artwork coordinates are relative to the 1940 × 1520 playable world. */
+.learning-world-surround,
+.world-station-3-water {
   position: absolute;
-  inset: 0;
+  max-width: none;
   pointer-events: none;
+  user-select: none;
 }
 
-.learning-world-surround > i {
-  position: absolute;
-  display: block;
+.learning-world-surround {
+  left: -82.474227%;
+  top: -125%;
+  width: 264.948454%;
+  height: 302.631579%;
 }
 
-/* Forest ground at the sides and below: bright verge next to the world, deepening into canopy shade. */
-.surround-ground {
-  top: 0;
-  bottom: -320%;
-  left: -300%;
-  right: -300%;
-  background:
-    radial-gradient(circle at 37% 21%, #a5b54f8c 0, #a5b54f00 3.5%),
-    radial-gradient(circle at 63% 17%, #9fb04a80 0, #9fb04a00 3%),
-    radial-gradient(circle at 46% 33%, #9aac4c99 0, #9aac4c00 4%),
-    radial-gradient(circle at 57% 31%, #8fa24799 0, #8fa24700 4.5%),
-    radial-gradient(circle at 33% 11%, #55692f59 0, #55692f00 3%),
-    radial-gradient(circle at 68% 26%, #55692f59 0, #55692f00 3.5%),
-    radial-gradient(ellipse 14% 22% at 50% 13%, #9cad55 0, #95a553 52%, #87974b 72%, #73833f 100%);
-  background-color: #63733a;
+.world-station-3-water {
+  left: 88.144330%;
+  top: 25.131579%;
+  width: 45.876289%;
+  height: 31.973684%;
+  z-index: 0;
 }
-
-/* Sky above: the world's own sky continues upward, and its tree corners stand against it. */
-.surround-sky {
-  bottom: 80%;
-  height: 400%;
-  left: -300%;
-  right: -300%;
-  background:
-    radial-gradient(ellipse 4% 3% at 47% 80%, #ffffff8c 0, #ffffff00 100%),
-    radial-gradient(ellipse 5% 2.5% at 56% 84%, #ffffff73 0, #ffffff00 100%),
-    radial-gradient(ellipse 3% 2% at 36% 88%, #ffffff66 0, #ffffff00 100%),
-    linear-gradient(180deg, #86a9e0 0, #9bbbee 70%, #b5cbe6 90%, #b9cac6 95%, #b9cac600 100%);
-}
-
-/* Distant misty hills, echoing the world's own mountains, so the horizon is never a ruled line. */
-.surround-hills {
-  bottom: 76%;
-  height: 34%;
-  left: -300%;
-  right: -300%;
-  filter: blur(3px);
-  background:
-    radial-gradient(ellipse 4.2% 62% at 27% 100%, #9ab2a4 0 70%, #9ab2a400 74%),
-    radial-gradient(ellipse 5.5% 82% at 33% 100%, #a6bdb3 0 70%, #a6bdb300 74%),
-    radial-gradient(ellipse 4.5% 58% at 39% 100%, #93ab9a 0 70%, #93ab9a00 74%),
-    radial-gradient(ellipse 4.5% 66% at 61% 100%, #95ad9e 0 70%, #95ad9e00 74%),
-    radial-gradient(ellipse 5.5% 86% at 67% 100%, #a8c0b6 0 70%, #a8c0b600 74%),
-    radial-gradient(ellipse 4% 55% at 73% 100%, #9ab2a4 0 70%, #9ab2a400 74%),
-    linear-gradient(180deg, #a3b9a800 55%, #9fb39a 100%);
-  -webkit-mask: linear-gradient(180deg, #000 72%, #0000);
-  mask: linear-gradient(180deg, #000 72%, #0000);
-}
-
-/* Paper grain over the wash, matching the watercolour stock. */
-.learning-world-surround::after {
-  content: "";
-  position: absolute;
-  inset: -400% -300%;
-  opacity: .22;
-  mix-blend-mode: multiply;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .33 0 0 0 0 .22 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
-}
-
-.world-edge-foliage { z-index: 6; filter: saturate(.9) drop-shadow(0 6px 4px #34472940); }
-.world-edge-foliage.is-flipped { transform: translate(-50%, -50%) scaleX(-1); }
 
 .world-landmark-layer,
 .learning-world-road {

@@ -54,7 +54,8 @@ export const journey = [
     `M ${point(camp.arrival)} Q 286 1413 ${point(camp.departure)}
     C 435 1450 544 1450 ${point(tree.arrival)} Q 688 1393 ${point(tree.departure)}
     C 910 1418 1130 1488 ${point(orchard.arrival)} Q 1420 1411 ${point(orchard.departure)}
-    C 1700 1432 1832 1349 1850 1195 C 1871 1042 1858 919 ${point(nearBank)}` },
+    C 1700 1432 1832 1349 1850 1195
+    C 1861 1110 1864 1056 1854 1017 C 1839 957 1801 919 ${point(nearBank)}` },
   { surface: "stones", points: [nearBank, ...riverStones.map(([, , x, y]) => mapPoint([x, y], stops[3])), farBank] },
   { surface: "dirt", path:
     `M ${point(farBank)} C 1271 910 1300 987 ${point(sorting.arrival)}

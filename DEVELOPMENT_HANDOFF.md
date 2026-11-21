@@ -143,4 +143,6 @@ These are the same checks the deployment workflow runs.
 |---|---|---|---|
 | World Overview and forest extension | `feature/world-overview` (from `b1b45aa`) | Implemented locally; **not committed, not pushed, not deployed**. Awaiting visual review. | `design/world-overview/IMPLEMENTATION.md`, screenshots in `design/world-overview/implementation/` |
 
+| World Overview canopy, grand waterfall and final Station 3 path | `codex/world-surround-revision-2` | Local visual validation passed. Live release held under the brief's security stop condition because audit finding SEC-01 remains open. | `ART_ASSET_LIBRARY/Learning_Adventure/World_Overview_Surround/Final_Path_Review/` |
+
 Update this table whenever a feature's state changes.

@@ -4,7 +4,7 @@ import chrys from "@assets/chrys_sitting_new_user_nobg.png";
 import alyse from "@assets/alyse_normal_nobg.png";
 import { AdventureProgress } from "./AdventureUI";
 import { landmarks, spriteSize, type MapSprite, type Placement } from "../lib/learningMapArt";
-import { edgeFoliage, foreground, journey, overviewMarkers, riverStones, scenery, stops, worldSize, type LandmarkLayout, type MapPoint } from "../lib/learningMapLayout";
+import { foreground, journey, overviewMarkers, riverStones, scenery, stops, worldSize, type LandmarkLayout, type MapPoint } from "../lib/learningMapLayout";
 import { useMapCamera } from "../lib/useMapCamera";
 import "../learning-map.css";
 
@@ -19,8 +19,8 @@ const labels = {
     controls: "Paparan peta", places: "Semua tempat", start: "Mula", done: "Selesai", next: "Pengembaraan seterusnya", open: "Tersedia" },
 };
 const order = ["camp", "treehouse", "orchard", "river", "sorting", "gathering", "takeaway", "market", "summit"] as const;
-const groundSprites = new Set<MapSprite>(["wc-water", "wc-left-bank", "wc-right-bank"]);
-const asset = (sprite: MapSprite | "trail-texture") => new URL(`assets/learning-map/${sprite}.webp`, document.baseURI).href;
+const groundSprites = new Set<MapSprite>(["wc-water", "wc-left-bank", "wc-right-bank-final"]);
+const asset = (sprite: MapSprite | "trail-texture" | "wc-surround-r3" | "wc-canopy-terrain-r3" | "wc-station-3-grand-falls-r3") => new URL(`assets/learning-map/${sprite}.webp`, document.baseURI).href;
 function position(x: number, y: number, [width, height]: MapPoint): CSSProperties {
   return { left: `${x / width * 100}%`, top: `${y / height * 100}%` };
 }
@@ -94,9 +94,9 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
       onClickCapture={camera.filterClick} onFocusCapture={camera.revealFocus}>
       <div className="learning-world-extent" style={{ "--map-ratio": width / height } as CSSProperties}>
         <div className="learning-world-track" ref={camera.track}>
-          <div className="learning-world-surround" aria-hidden="true"><i className="surround-ground" /><i className="surround-sky" /><i className="surround-hills" /></div>
           <div className="learning-world" data-learning-map style={{ aspectRatio: `${width} / ${height}`, "--map-nameboard": `url("${asset("nameboard")}")` } as CSSProperties}>
-            <div className="learning-world-art">
+            <img className="learning-world-surround" src={asset("wc-surround-r3")} alt="" draggable={false} />
+            <div className="learning-world-art" style={{ backgroundImage: `url("${asset("wc-canopy-terrain-r3")}")` }}>
             {scenery.map((placement, i) => (
               <Sprite key={i} placement={placement} world={worldSize} className="world-verge" />
             ))}
@@ -105,6 +105,7 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
                 className="world-ground" eager={i < 2} />
             )))}
             </div>
+            <img className="world-station-3-water" src={asset("wc-station-3-grand-falls-r3")} alt="" draggable={false} />
             <svg className="learning-world-road" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
               <defs>
                 <pattern id="learning-trail-paint" width="100" height="115" patternUnits="userSpaceOnUse">
@@ -159,10 +160,6 @@ export function IllustratedLearningMap({ lang, lessons }: { lang: "en" | "ms"; l
             })}
             {foreground.map((placement, i) => (
               <Sprite key={i} placement={placement} world={worldSize} className="world-foreground" />
-            ))}
-            {edgeFoliage.map(([sprite, span, x, y, flip], i) => (
-              <Sprite key={`edge-${i}`} placement={[sprite, span, x, y]} world={worldSize}
-                className={`world-edge-foliage${flip ? " is-flipped" : ""}`} />
             ))}
             <img className="world-character" src={chrys} alt="Chrys" width="232" height="243"
               style={{ ...position(campX + 154 * campScale, campY + 272 * campScale, worldSize), width: `${80 / width * 100}%` }} />

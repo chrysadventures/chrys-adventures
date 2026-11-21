@@ -12,7 +12,7 @@ export const spriteSize = {
   "wc-summit": [1000, 648],
   "wc-market": [1000, 631],
   "wc-left-bank": [606, 302],
-  "wc-right-bank": [641, 382],
+  "wc-right-bank-final": [641, 382],
   "wc-water": [681, 381],
   "wc-stone": [486, 219],
   "wc-banana-clean": [498, 496],
@@ -43,7 +43,7 @@ export const landmarks = {
   river: [
     ["wc-water", 600, 334, 180, 275],
     ["wc-left-bank", 213, 76, 133, 189],
-    ["wc-right-bank", 217, 598, 133, 189],
+    ["wc-right-bank-final", 217, 598, 133, 189],
   ],
   sorting: [
     ["wc-sorting", 495, 251, 193, 315],
