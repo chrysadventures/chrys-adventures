@@ -1,28 +1,15 @@
 # Chrys Adventures Project Details
 
-## PowerShell Commands To Update GitHub
-
-Run these commands from PowerShell after changes are completed:
-
-```powershell
-cd "C:\Users\wanha\OneDrive\Dyscalculia App"
-git add -A
-git commit -m "Update Chrys dyscalculia app"
-git push
-```
+> **Superseded.** Project links, the Git workflow, deployment and the required final response format now live in [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md). The earlier `git add -A` / `git push` block and the `jaredtehyh-cell` links are withdrawn: pushing straight to `main` deploys the live app without review.
 
 ## Live App Link
 
-https://jaredtehyh-cell.github.io/chrys-adventures/
+https://chrysadventures.github.io/chrys-adventures/
 
 ## GitHub Repo Link
 
-https://github.com/jaredtehyh-cell/chrys-adventures
+https://github.com/chrysadventures/chrys-adventures
 
-## Response Reminder
+## GitHub Actions
 
-Every final response should include:
-
-- The PowerShell commands to update GitHub.
-- The live app link.
-- The GitHub repo link.
+https://github.com/chrysadventures/chrys-adventures/actions
