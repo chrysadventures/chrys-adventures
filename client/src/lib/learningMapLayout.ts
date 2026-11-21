@@ -5,15 +5,15 @@ export type LandmarkLayout = readonly [x: number, y: number, scale: number, sign
 
 export const worldSize = [1940, 1520] as const;
 export const stops = [
-  [70, 1080, 1, [238, 1426]],
-  [410, 1010, 1, [687, 1382]],
-  [1260, 1050, 1, [1510, 1390]],
-  [1230, 743, 1, [1650, 1061]],
-  [755, 605, 1, [1000, 957]],
-  [265, 566, 1, [466, 870]],
-  [68, 193, 1, [164, 453]],
-  [1266, 166, 1, [1590, 559]],
-  [638, 32, 1, [704, 480]],
+  [70, 1080, 1, [181, 1444]],
+  [410, 1010, 1, [1029, 1347]],
+  [1260, 1050, 1, [1545, 1454]],
+  [1230, 743, 1, [1570, 1068]],
+  [755, 605, 1, [1129, 1049]],
+  [265, 566, 1, [425, 964]],
+  [68, 193, 1, [518, 425]],
+  [1266, 166, 1, [1623, 654]],
+  [638, 32, 1, [785, 525]],
 ] as const satisfies readonly LandmarkLayout[];
 
 export function mapPoint([x, y]: MapPoint, [left, top, scale]: LandmarkLayout): MapPoint {
@@ -69,21 +69,22 @@ export const journey = [
 
 export const scenery: Placement[] = [
   ["wc-falls", 183, 1455, 1060],
-  ["wc-banana", 237, 95, 630], ["wc-banana", 208, 64, 1049],
-  ["wc-rocks", 190, 374, 1068], ["wc-banana", 218, 708, 1110],
-  ["wc-banana", 160, 1160, 1207], ["wc-rocks", 206, 1218, 1165],
-  ["wc-banana", 226, 1797, 1375], ["wc-rocks", 195, 1815, 1065],
-  ["wc-banana", 175, 1875, 659], ["wc-rocks", 201, 1769, 679],
-  ["wc-banana", 230, 1213, 712], ["wc-rocks", 166, 723, 636],
-  ["wc-banana", 208, 546, 536], ["wc-rocks", 185, 99, 467],
-  ["wc-banana", 181, 596, 319], ["wc-banana", 216, 1850, 274],
-  ["wc-rocks", 196, 1149, 671], ["wc-rocks", 156, 185, 922],
-  ["wc-banana", 180, 177, 1451],
+  ["wc-banana-clean", 237, 95, 630], ["wc-banana-clean", 208, 64, 1049],
+  ["wc-rocks-clean", 190, 374, 1068], ["wc-banana-clean", 218, 708, 1110],
+  ["wc-banana-clean", 160, 1160, 1207], ["wc-rocks-clean", 206, 1218, 1165],
+  ["wc-banana-clean", 226, 1797, 1375], ["wc-rocks-clean", 195, 1815, 1065],
+  ["wc-banana-clean", 175, 1875, 659], ["wc-rocks-clean", 201, 1769, 679],
+  ["wc-banana-clean", 230, 1213, 712], ["wc-rocks-clean", 115, 692, 603],
+  ["wc-banana-clean", 208, 546, 536], ["wc-rocks-clean", 185, 99, 467],
+  ["wc-banana-clean", 181, 596, 319], ["wc-banana-clean", 216, 1850, 274],
+  ["wc-rocks-clean", 152, 1168, 715], ["wc-rocks-clean", 156, 185, 922],
+  ["wc-banana-clean", 150, 64, 1460],
 ];
 
 export const foreground: Placement[] = [
-  ["wc-rocks", 175, 334, 1480], ["wc-rocks", 224, 982, 1468],
-  ["wc-banana", 157, 52, 1473], ["wc-rocks", 223, 1911, 1417],
-  ["wc-bird", 59, 472, 1126], ["wc-frog", 65, 1749, 976],
-  ["wc-dragonfly", 52, 1542, 815], ["wc-snail", 57, 1017, 1437],
+  ["wc-rocks-clean", 138, 356, 1492], ["wc-rocks-clean", 224, 982, 1468],
+  ["wc-banana-clean", 157, 52, 1473], ["wc-rocks-clean", 223, 1911, 1417],
+  ["wc-bird-clean", 84, 487, 1128], ["wc-frog-clean", 91, 1760, 984],
+  ["wc-butterfly", 45, 382, 1187], ["wc-butterfly", 39, 308, 719],
+  ["wc-dragonfly-clean", 76, 1535, 824], ["wc-snail-clean", 74, 497, 517],
 ];
